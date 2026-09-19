@@ -204,10 +204,12 @@ integration points, and documentation were touched — confirmed via `git status
 --short`.
 
 Git Commit Status:
-A commit for this milestone's work is created immediately following this checkpoint
-(see the accompanying commit message for the exact hash) — following this
-milestone's Step 27 instruction to inspect git status/diff first and use an honest
-message, with no fabricated incremental history.
+Commit created: 47d6a1c — "Phase B6: Cart, Wishlist & Checkout (Module 11)".
+Verified by direct execution (`git log --oneline` and `git status` both run after
+the commit): working tree clean, history now shows three real commits:
+5dcb815 (Phase B0-B5), b12ae2b (B5 checkpoint git-status correction), 47d6a1c (this
+milestone). No fabricated incremental history — this is the actual, executed commit
+hash, not an invented one.
 
 Recommended Next Milestone:
 Phase B7 — per the approved milestone map, the next core-commerce dependency is
