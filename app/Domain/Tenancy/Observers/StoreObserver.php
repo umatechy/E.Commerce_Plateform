@@ -38,6 +38,7 @@ final class StoreObserver
             'inventory.view', 'inventory.adjust', 'warehouses.manage',
             'orders.view', 'orders.create', 'orders.update', 'orders.cancel',
             'payments.view', 'payments.manage',
+            'shipments.view', 'shipments.fulfill', 'shipping_config.manage',
         ],
         'staff' => [
             'products.view',
@@ -92,6 +93,39 @@ final class StoreObserver
         // store gets its OWN random webhook-signing secret at creation,
         // never a shared/default value (see the migration backfill's
         // docblock for why per-row uniqueness matters here).
-        $store->update(['payment_webhook_secret' => \Illuminate\Support\Str::random(64)]);
+        $store->update([
+            'payment_webhook_secret' => \Illuminate\Support\Str::random(64),
+            'shipment_webhook_secret' => \Illuminate\Support\Str::random(64),
+        ]);
+
+        // Module 13 §8/§15 (Phase B8) — every store gets one working,
+        // serviceable default configuration out of the box (same
+        // "default Warehouse/Roles" precedent): a catch-all Default
+        // Zone (matches every destination, since no geo field is set)
+        // and a free Store Pickup method — the only method type that
+        // needs zero real-world configuration (no carrier account, no
+        // rate table) to be immediately usable. store_id is explicit
+        // for the same reason as Role/Warehouse above.
+        $defaultZone = \App\Domain\Shipping\Models\ShippingZone::query()->withoutTenantScope()->create([
+            'store_id' => $store->id,
+            'name' => 'Default Zone',
+            'is_default' => true,
+            'is_active' => true,
+        ]);
+
+        $pickupMethod = \App\Domain\Shipping\Models\ShippingMethod::query()->withoutTenantScope()->create([
+            'store_id' => $store->id,
+            'name' => 'Store Pickup',
+            'type' => 'store_pickup',
+            'is_active' => true,
+        ]);
+
+        \App\Domain\Shipping\Models\ShippingRate::query()->withoutTenantScope()->create([
+            'store_id' => $store->id,
+            'shipping_zone_id' => $defaultZone->id,
+            'shipping_method_id' => $pickupMethod->id,
+            'currency' => 'USD', // documented placeholder — see Cart's identical DEFAULT_CURRENCY precedent (Phase B6)
+            'base_cost_minor' => 0,
+        ]);
     }
 }

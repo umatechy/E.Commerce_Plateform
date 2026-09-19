@@ -66,6 +66,12 @@ final class Order extends Model
         return $this->hasMany(OrderTimelineEvent::class);
     }
 
+    /** Phase B8 addition — Module 13 §48: "One Order may contain ... Multiple Shipments." */
+    public function shipments(): HasMany
+    {
+        return $this->hasMany(\App\Domain\Shipping\Models\Shipment::class);
+    }
+
     public function cancelledBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'cancelled_by');

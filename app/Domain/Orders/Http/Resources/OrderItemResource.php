@@ -12,6 +12,7 @@ final class OrderItemResource extends JsonResource
     public function toArray(Request $request): array
     {
         return [
+            'id' => $this->id, // Phase B8 addition: staff need this to reference a line item when creating a Shipment (OrderItem has no public_id — this is a staff-only, tenant-scoped-via-parent-Order field, never customer-facing on its own)
             'product_name' => $this->product_name_snapshot,
             'sku' => $this->sku_snapshot,
             'variant' => $this->variant_snapshot,

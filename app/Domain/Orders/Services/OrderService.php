@@ -13,6 +13,7 @@ use App\Domain\Inventory\Models\Warehouse;
 use App\Domain\Inventory\Services\InventoryService;
 use App\Domain\Orders\Exceptions\EmptyOrderException;
 use App\Domain\Orders\Models\CancellationReason;
+use App\Domain\Orders\Models\FulfillmentStatus;
 use App\Domain\Orders\Models\Order;
 use App\Domain\Orders\Models\OrderStatus;
 use App\Domain\Orders\Models\OrderTimelineEvent;
@@ -146,9 +147,20 @@ final class OrderService
             }
 
             // Module 09 §12: Subtotal - Discounts + Tax + Shipping = Grand
-            // Total. Discount/Tax/Shipping are 0 in B5 (no owning module
-            // yet) — see docs/development/b5-inspection-findings.md.
-            $order->update(['subtotal_minor' => $subtotal, 'grand_total_minor' => $subtotal]);
+            // Total. Discount/Tax are still 0 (no owning module yet —
+            // see docs/development/b5-inspection-findings.md). Shipping
+            // is now server-computed by CheckoutService/
+            // ShippingRateService (Phase B8) and passed in via
+            // orderData — this is the minimal, additive extension
+            // Module 13's Step 18 anticipated; existing callers that
+            // omit shipping_total_minor keep B5's original behavior
+            // (grand_total == subtotal) unchanged.
+            $shippingTotal = (int) ($orderData['shipping_total_minor'] ?? 0);
+            $order->update([
+                'subtotal_minor' => $subtotal,
+                'shipping_total_minor' => $shippingTotal,
+                'grand_total_minor' => $subtotal + $shippingTotal,
+            ]);
 
             $this->recordTimelineEvent($order, 'created', null, $order->status, null, null);
 
@@ -160,7 +172,7 @@ final class OrderService
 
             $this->outbox->recordEvent(
                 eventType: 'order.created',
-                payload: ['order_id' => $order->id, 'order_number' => $order->order_number, 'grand_total_minor' => $subtotal],
+                payload: ['order_id' => $order->id, 'order_number' => $order->order_number, 'grand_total_minor' => $subtotal + $shippingTotal],
                 idempotencyKey: "order:{$order->id}:created",
             );
 
@@ -240,6 +252,21 @@ final class OrderService
         $this->recordTimelineEvent(
             $order, 'payment_status_changed', null, null, actorId: null,
             reason: "payment_status:{$status->value}",
+        );
+    }
+
+    /**
+     * Phase B8 addition, mirroring syncPaymentStatus()'s exact pattern.
+     * The ONLY code path that writes Order.fulfillment_status — called
+     * exclusively by App\Domain\Shipping\Services\ShipmentService.
+     */
+    public function syncFulfillmentStatus(Order $order, FulfillmentStatus $status): void
+    {
+        $order->update(['fulfillment_status' => $status]);
+
+        $this->recordTimelineEvent(
+            $order, 'fulfillment_status_changed', null, null, actorId: null,
+            reason: "fulfillment_status:{$status->value}",
         );
     }
 

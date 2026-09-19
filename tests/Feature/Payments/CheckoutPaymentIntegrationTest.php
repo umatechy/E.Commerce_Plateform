@@ -33,7 +33,7 @@ final class CheckoutPaymentIntegrationTest extends TestCase
     {
         $store = Store::factory()->create();
         $package = Package::factory()->create();
-        foreach (['orders.basic', 'payment.cod', 'payment.online'] as $feature) {
+        foreach (['orders.basic', 'payment.cod', 'payment.online', 'shipping.basic'] as $feature) {
             $package->entitlements()->create(['key' => $feature, 'type' => EntitlementType::Feature, 'boolean_value' => true]);
         }
         Subscription::factory()->for($store)->for($package)->create(['status' => SubscriptionStatus::Active]);
@@ -42,19 +42,21 @@ final class CheckoutPaymentIntegrationTest extends TestCase
         $inventory = Inventory::factory()->for($store)->for($warehouse)->create(['product_id' => $product->id]);
         app(TenantContext::class)->resolveToStore($store->id);
         app(InventoryService::class)->setOpeningStock($inventory, 10, 'Init', actorId: 1, idempotencyKey: 'open-'.$store->id);
+        $shippingMethodId = \App\Domain\Shipping\Models\ShippingMethod::query()->where('store_id', $store->id)->where('type', 'store_pickup')->value('id');
 
-        return [$store, $product];
+        return [$store, $product, $shippingMethodId];
     }
 
     public function test_checkout_with_cod_creates_a_pending_payment(): void
     {
-        [$store, $product] = $this->setUpStore();
+        [$store, $product, $shippingMethodId] = $this->setUpStore();
 
         $addResponse = $this->postJson('/api/v1/cart/items', ['product_id' => $product->id, 'quantity' => 1], ['X-Store-Slug' => $store->slug]);
         $token = $addResponse->headers->get('X-Guest-Cart-Token');
 
         $response = $this->postJson('/api/v1/checkout', [
-            'payment_method' => 'cod', 'guest_name' => 'Jane', 'guest_email' => 'jane@example.com',
+            'payment_method' => 'cod', 'shipping_method_id' => $shippingMethodId, 'shipping_address' => ['country' => 'PK'],
+            'guest_name' => 'Jane', 'guest_email' => 'jane@example.com',
             'idempotency_key' => 'checkout-cod-1',
         ], ['X-Store-Slug' => $store->slug, 'X-Guest-Cart-Token' => $token]);
 
@@ -66,13 +68,14 @@ final class CheckoutPaymentIntegrationTest extends TestCase
 
     public function test_checkout_with_mock_redirect_returns_a_redirect_url(): void
     {
-        [$store, $product] = $this->setUpStore();
+        [$store, $product, $shippingMethodId] = $this->setUpStore();
 
         $addResponse = $this->postJson('/api/v1/cart/items', ['product_id' => $product->id, 'quantity' => 1], ['X-Store-Slug' => $store->slug]);
         $token = $addResponse->headers->get('X-Guest-Cart-Token');
 
         $response = $this->postJson('/api/v1/checkout', [
-            'payment_method' => 'mock_redirect', 'guest_name' => 'Jane', 'guest_email' => 'jane@example.com',
+            'payment_method' => 'mock_redirect', 'shipping_method_id' => $shippingMethodId, 'shipping_address' => ['country' => 'PK'],
+            'guest_name' => 'Jane', 'guest_email' => 'jane@example.com',
             'idempotency_key' => 'checkout-mock-1',
         ], ['X-Store-Slug' => $store->slug, 'X-Guest-Cart-Token' => $token]);
 
@@ -82,12 +85,13 @@ final class CheckoutPaymentIntegrationTest extends TestCase
 
     public function test_full_cod_lifecycle_order_confirmed_payment_pending_then_staff_collects_cash(): void
     {
-        [$store, $product] = $this->setUpStore();
+        [$store, $product, $shippingMethodId] = $this->setUpStore();
         $addResponse = $this->postJson('/api/v1/cart/items', ['product_id' => $product->id, 'quantity' => 1], ['X-Store-Slug' => $store->slug]);
         $token = $addResponse->headers->get('X-Guest-Cart-Token');
 
         $checkoutResponse = $this->postJson('/api/v1/checkout', [
-            'payment_method' => 'cod', 'guest_name' => 'Jane', 'guest_email' => 'jane@example.com',
+            'payment_method' => 'cod', 'shipping_method_id' => $shippingMethodId, 'shipping_address' => ['country' => 'PK'],
+            'guest_name' => 'Jane', 'guest_email' => 'jane@example.com',
             'idempotency_key' => 'checkout-cod-lifecycle',
         ], ['X-Store-Slug' => $store->slug, 'X-Guest-Cart-Token' => $token]);
 

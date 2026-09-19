@@ -24,6 +24,7 @@ final class CheckoutRequest extends FormRequest
     {
         return [
             'payment_method' => ['required', 'in:cod,bank_transfer,mock_redirect'],
+            'shipping_method_id' => ['nullable', 'integer'], // required only when the cart is not digital-only — validated in CheckoutService (needs product-type context FormRequest rules can't see)
             'guest_name' => ['nullable', 'string', 'max:255'],
             'guest_email' => ['nullable', 'email', 'max:255'],
             'guest_phone' => ['nullable', 'string', 'max:32'],

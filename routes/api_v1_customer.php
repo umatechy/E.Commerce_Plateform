@@ -4,6 +4,8 @@ use App\Domain\Cart\Http\Controllers\CartController;
 use App\Domain\Cart\Http\Controllers\CheckoutController;
 use App\Domain\Cart\Http\Controllers\WishlistController;
 use App\Domain\Orders\Http\Controllers\CustomerAuthController;
+use App\Domain\Shipping\Http\Controllers\CustomerShipmentController;
+use App\Domain\Shipping\Http\Controllers\ShippingQuoteController;
 use Illuminate\Support\Facades\Route;
 
 // ADR-005: same /api/v1/... prefix as staff routes — this is a
@@ -28,6 +30,9 @@ Route::middleware(['auth:customer', 'customer.principal'])->group(function () {
     Route::post('/wishlist', [WishlistController::class, 'store']);
     Route::delete('/wishlist/{item}', [WishlistController::class, 'destroy']);
     Route::post('/wishlist/{item}/move-to-cart', [WishlistController::class, 'moveToCart']);
+
+    // --- Customer order tracking (Module 13 §74, Phase B8) ---
+    Route::get('/customer/orders/{orderPublicId}/shipments', [CustomerShipmentController::class, 'index']);
 });
 
 // --- Cart & Checkout (Module 11 §6/§60-61 — guest AND authenticated
@@ -44,4 +49,8 @@ Route::middleware(['customer.optional'])->group(function () {
     Route::delete('/cart/items/{item}', [CartController::class, 'removeItem']);
 
     Route::post('/checkout', [CheckoutController::class, 'store'])->middleware('throttle:10,1');
+
+    // --- Shipping quote (Module 13 §81-82 — guest AND authenticated
+    // customer both allowed, same as Cart/Checkout) ---
+    Route::get('/shipping/quote', [ShippingQuoteController::class, 'index']);
 });

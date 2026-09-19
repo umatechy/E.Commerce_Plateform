@@ -17,6 +17,7 @@ use App\Domain\Packages\Exceptions\UsageLimitExceededException;
 use App\Domain\Payments\Exceptions\PaymentAlreadyExistsException;
 use App\Domain\Payments\Http\Resources\PaymentResource;
 use App\Domain\Payments\Models\PaymentMethod;
+use App\Domain\Shipping\Exceptions\DestinationNotServiceableException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Validation\ValidationException;
 
@@ -50,12 +51,14 @@ final class CheckoutController
                 paymentMethod: PaymentMethod::from($request->string('payment_method')->toString()),
                 checkoutData: $request->only([
                     'guest_name', 'guest_email', 'guest_phone',
-                    'billing_address', 'shipping_address', 'notes',
+                    'billing_address', 'shipping_address', 'notes', 'shipping_method_id',
                 ]),
                 idempotencyKey: $request->string('idempotency_key'),
             );
         } catch (CartCheckoutNotAllowedException $e) {
             return response()->json(['message' => $e->getMessage(), 'code' => 'checkout_not_allowed'], 422);
+        } catch (DestinationNotServiceableException $e) {
+            return response()->json(['message' => $e->getMessage(), 'code' => 'destination_not_serviceable'], 422);
         } catch (FeatureNotEntitledException|SubscriptionInactiveException $e) {
             return response()->json(['message' => $e->getMessage()], 403);
         } catch (UsageLimitExceededException $e) {

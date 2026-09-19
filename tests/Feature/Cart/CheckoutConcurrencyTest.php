@@ -39,12 +39,14 @@ final class CheckoutConcurrencyTest extends TestCase
         $package = Package::factory()->create();
         $package->entitlements()->create(['key' => 'orders.basic', 'type' => EntitlementType::Feature, 'boolean_value' => true]);
         $package->entitlements()->create(['key' => 'payment.cod', 'type' => EntitlementType::Feature, 'boolean_value' => true]); // Phase B7: checkout now requires a payment-method entitlement too
+        $package->entitlements()->create(['key' => 'shipping.basic', 'type' => EntitlementType::Feature, 'boolean_value' => true]); // Phase B8: checkout now requires a shipping entitlement too
         Subscription::factory()->for($store)->for($package)->create(['status' => SubscriptionStatus::Active]);
         $product = Product::factory()->for($store)->create(['status' => 'active', 'visibility' => 'public', 'price_minor' => 1000, 'currency' => 'USD']);
         $warehouse = Warehouse::query()->where('store_id', $store->id)->where('is_default', true)->firstOrFail();
         $inventory = Inventory::factory()->for($store)->for($warehouse)->create(['product_id' => $product->id]);
         app(TenantContext::class)->resolveToStore($store->id);
         app(InventoryService::class)->setOpeningStock($inventory, 1, 'Last unit', actorId: 1, idempotencyKey: 'last-unit-b6');
+        $shippingMethodId = \App\Domain\Shipping\Models\ShippingMethod::query()->where('store_id', $store->id)->where('type', 'store_pickup')->value('id');
 
         $cartA = $this->postJson('/api/v1/cart/items', ['product_id' => $product->id, 'quantity' => 1], ['X-Store-Slug' => $store->slug]);
         $tokenA = $cartA->headers->get('X-Guest-Cart-Token');
@@ -55,12 +57,12 @@ final class CheckoutConcurrencyTest extends TestCase
         $this->assertNotSame($tokenA, $tokenB, 'Sanity check: two independent guest carts.');
 
         $checkoutA = $this->postJson('/api/v1/checkout', [
-            'payment_method' => 'cod',
+            'payment_method' => 'cod', 'shipping_method_id' => $shippingMethodId, 'shipping_address' => ['country' => 'PK'],
             'guest_name' => 'A', 'guest_email' => 'a@example.com', 'idempotency_key' => 'checkout-a',
         ], ['X-Store-Slug' => $store->slug, 'X-Guest-Cart-Token' => $tokenA]);
 
         $checkoutB = $this->postJson('/api/v1/checkout', [
-            'payment_method' => 'cod',
+            'payment_method' => 'cod', 'shipping_method_id' => $shippingMethodId, 'shipping_address' => ['country' => 'PK'],
             'guest_name' => 'B', 'guest_email' => 'b@example.com', 'idempotency_key' => 'checkout-b',
         ], ['X-Store-Slug' => $store->slug, 'X-Guest-Cart-Token' => $tokenB]);
 

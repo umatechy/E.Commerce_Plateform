@@ -7,6 +7,7 @@ namespace App\Domain\Orders\Models;
 use App\Domain\Catalog\Models\Product;
 use App\Domain\Catalog\Models\ProductVariant;
 use App\Domain\Tenancy\Support\BelongsToTenant;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
@@ -18,7 +19,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  */
 final class OrderItem extends Model
 {
-    use BelongsToTenant;
+    use BelongsToTenant, HasFactory;
 
     protected $table = 'order_items';
 

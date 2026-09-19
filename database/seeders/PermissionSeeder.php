@@ -46,6 +46,9 @@ final class PermissionSeeder extends Seeder
         ['key' => 'payments.view', 'group' => 'payments', 'description' => 'View payments and transactions (Module 12 — Phase B7)'],
         ['key' => 'payments.manage', 'group' => 'payments', 'description' => 'Record manual payment confirmations, e.g. bank transfer/COD collection (Phase B7)'],
         ['key' => 'payments.refund', 'group' => 'payments', 'description' => 'Issue refunds — high-risk financial permission (Phase B7)'],
+        ['key' => 'shipments.view', 'group' => 'shipments', 'description' => 'View shipments and tracking (Module 13 — Phase B8)'],
+        ['key' => 'shipments.fulfill', 'group' => 'shipments', 'description' => 'Create shipments and update shipment status (Phase B8)'],
+        ['key' => 'shipping_config.manage', 'group' => 'shipments', 'description' => 'Manage shipping zones, methods and rates (Phase B8)'],
     ];
 
     public function run(): void

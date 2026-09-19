@@ -13,6 +13,8 @@ use App\Domain\Inventory\Http\Controllers\WarehouseController;
 use App\Domain\Orders\Http\Controllers\OrderController;
 use App\Domain\Packages\Http\Controllers\SubscriptionController;
 use App\Domain\Payments\Http\Controllers\PaymentController;
+use App\Domain\Shipping\Http\Controllers\ShipmentController;
+use App\Domain\Shipping\Http\Controllers\ShippingConfigController;
 use App\Domain\SuperAdmin\Http\Controllers\SuperAdminPackageController;
 use App\Domain\SuperAdmin\Http\Controllers\SuperAdminStoreController;
 use App\Domain\SuperAdmin\Http\Controllers\SuperAdminSubscriptionController;
@@ -68,6 +70,20 @@ Route::middleware(['auth:sanctum', 'staff.principal'])->group(function () {
     Route::get('/payments/{payment}/transactions', [PaymentController::class, 'transactions']);
     Route::post('/payments/{payment}/manual-confirm', [PaymentController::class, 'manualConfirm']);
     Route::post('/payments/{payment}/refund', [PaymentController::class, 'refund']);
+
+    // --- Shipments (Module 13, Phase B8) ---
+    Route::get('/shipments', [ShipmentController::class, 'index']);
+    Route::get('/shipments/{shipment}', [ShipmentController::class, 'show']);
+    Route::post('/shipments', [ShipmentController::class, 'store']);
+    Route::post('/shipments/{shipment}/status', [ShipmentController::class, 'updateStatus']);
+    Route::get('/shipments/{shipment}/tracking-events', [ShipmentController::class, 'trackingEvents']);
+
+    // --- Shipping configuration (Module 13 §5/§22, Phase B8) ---
+    Route::get('/shipping/zones', [ShippingConfigController::class, 'zones']);
+    Route::post('/shipping/zones', [ShippingConfigController::class, 'storeZone']);
+    Route::get('/shipping/methods', [ShippingConfigController::class, 'methods']);
+    Route::post('/shipping/methods', [ShippingConfigController::class, 'storeMethod']);
+    Route::post('/shipping/rates', [ShippingConfigController::class, 'storeRate']);
 
     // --- Super Admin cross-tenant (ADR-001 Layer 7) ---
     Route::middleware(['can:super-admin.impersonate', 'super_admin.impersonate'])

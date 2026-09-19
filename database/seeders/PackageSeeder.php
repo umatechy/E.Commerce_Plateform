@@ -63,6 +63,7 @@ final class PackageSeeder extends Seeder
             'payment.cod' => true, // Module 12 — every tier gets all 3 B7 methods; no tier restriction is specified by the module, so none is invented
             'payment.bank_transfer' => true,
             'payment.online' => true,
+            'shipping.basic' => true, // Module 13 — core shipping available to every tier
         ],
         'business' => [
             'products.variants' => true,
@@ -83,6 +84,7 @@ final class PackageSeeder extends Seeder
             'payment.cod' => true, // Module 12 — every tier gets all 3 B7 methods; no tier restriction is specified by the module, so none is invented
             'payment.bank_transfer' => true,
             'payment.online' => true,
+            'shipping.basic' => true, // Module 13 — core shipping available to every tier
         ],
         'premium' => [
             'products.variants' => true,
@@ -103,6 +105,7 @@ final class PackageSeeder extends Seeder
             'payment.cod' => true, // Module 12 — every tier gets all 3 B7 methods; no tier restriction is specified by the module, so none is invented
             'payment.bank_transfer' => true,
             'payment.online' => true,
+            'shipping.basic' => true, // Module 13 — core shipping available to every tier
         ],
     ];
 

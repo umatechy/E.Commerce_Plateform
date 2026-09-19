@@ -276,6 +276,75 @@ final class InventoryService
     }
 
     /**
+     * Phase B8 addition — the exact extension point this class's own
+     * Phase B4 docblock deferred ("actual commit/deduction is deferred
+     * to whichever future module introduces a real commit step").
+     * Called by App\Domain\Shipping\Services\ShipmentService when a
+     * ShipmentItem ships some or all of a reservation's quantity.
+     *
+     * Supports PARTIAL fulfillment (a reservation for 5 units may be
+     * fulfilled 3 now, 2 later across a second shipment) — the
+     * reservation's own `quantity` is reduced by the fulfilled amount;
+     * when it reaches 0, the reservation is marked Converted (a
+     * ReservationStatus case that has existed since Phase B4 but was
+     * never reached until this method existed).
+     *
+     * CONCURRENCY: same atomic-conditional-UPDATE strategy as every
+     * other balance mutation in this class — on_hand AND reserved are
+     * decremented in ONE statement, guarded by both having enough,
+     * with the decision made by the database via affected-row count,
+     * never a prior SELECT.
+     *
+     * @throws InsufficientStockException
+     */
+    public function fulfillReservation(StockReservation $reservation, int $quantity, string $idempotencyKey): StockMovement
+    {
+        if ($existing = $this->findByIdempotencyKey($idempotencyKey)) {
+            return $existing;
+        }
+
+        if ($quantity <= 0 || $quantity > $reservation->quantity) {
+            throw new \InvalidArgumentException('Fulfillment quantity must be positive and cannot exceed the reservation\'s remaining quantity.');
+        }
+
+        return DB::transaction(function () use ($reservation, $quantity, $idempotencyKey) {
+            $inventory = Inventory::query()->withoutTenantScope()->find($reservation->inventory_id);
+            $previousOnHand = $inventory->on_hand;
+
+            $affected = DB::table('inventories')
+                ->where('id', $reservation->inventory_id)
+                ->where('on_hand', '>=', $quantity)
+                ->where('reserved', '>=', $quantity)
+                ->update([
+                    'on_hand' => DB::raw("on_hand - {$quantity}"),
+                    'reserved' => DB::raw("reserved - {$quantity}"),
+                    'updated_at' => now(),
+                ]);
+
+            if ($affected === 0) {
+                throw new InsufficientStockException($inventory->id, $quantity);
+            }
+
+            $movement = $this->recordMovement(
+                $inventory, StockMovementType::SaleOut, -$quantity,
+                previousOnHand: $previousOnHand, newOnHand: $previousOnHand - $quantity,
+                reason: 'Shipment fulfillment', actorId: null, idempotencyKey: $idempotencyKey,
+                referenceType: 'reservation', referenceId: $reservation->id,
+            );
+
+            $remaining = $reservation->quantity - $quantity;
+
+            if ($remaining <= 0) {
+                $reservation->update(['status' => ReservationStatus::Converted, 'released_at' => now()]);
+            } else {
+                $reservation->update(['quantity' => $remaining]);
+            }
+
+            return $movement;
+        });
+    }
+
+    /**
      * Module 08 §22 "Reservation Expiry". Called by the scheduled
      * console command (App\Domain\Inventory\Console\ExpireStaleReservations
      * — same dispatcher-pattern precedent as ADR-004's outbox:publish).

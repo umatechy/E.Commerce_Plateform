@@ -1,0 +1,60 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App\Domain\Shipping\Models;
+
+use App\Domain\Inventory\Models\Warehouse;
+use App\Domain\Orders\Models\Order;
+use App\Domain\Tenancy\Support\BelongsToTenant;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+
+/**
+ * Module 13 §47-49. "Dumb" like every other core-state model —
+ * ShipmentService is the only writer of `status`.
+ */
+final class Shipment extends Model
+{
+    use BelongsToTenant, HasFactory;
+
+    protected $table = 'shipments';
+
+    protected $fillable = [
+        'store_id', 'order_id', 'warehouse_id', 'shipping_method_id', 'pickup_location_id',
+        'carrier', 'status', 'tracking_number', 'label_url', 'shipping_cost_minor', 'currency',
+        'estimated_delivery_at', 'shipped_at', 'delivered_at', 'idempotency_key',
+    ];
+
+    protected function casts(): array
+    {
+        return [
+            'status' => ShipmentStatus::class,
+            'estimated_delivery_at' => 'datetime',
+            'shipped_at' => 'datetime',
+            'delivered_at' => 'datetime',
+        ];
+    }
+
+    public function order(): BelongsTo
+    {
+        return $this->belongsTo(Order::class);
+    }
+
+    public function warehouse(): BelongsTo
+    {
+        return $this->belongsTo(Warehouse::class);
+    }
+
+    public function items(): HasMany
+    {
+        return $this->hasMany(ShipmentItem::class);
+    }
+
+    public function trackingEvents(): HasMany
+    {
+        return $this->hasMany(ShipmentTrackingEvent::class);
+    }
+}
