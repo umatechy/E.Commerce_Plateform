@@ -33,6 +33,14 @@ return Application::configure(basePath: dirname(__DIR__))
                 ->prefix('api/v1/public')
                 ->group(base_path('routes/api_v1_public.php'));
 
+            // Phase B7: payment gateway webhooks — deliberately
+            // registered with NO auth middleware at all (Module 12
+            // Non-Negotiable Rule #13: "Webhooks must not use Sanctum
+            // as authentication"). Trust comes entirely from
+            // PaymentService's own signature verification.
+            \Illuminate\Support\Facades\Route::prefix('api/v1')
+                ->group(base_path('routes/api_v1_webhooks.php'));
+
             // Developer API prefix reserved (ADR-005) but not wired with
             // middleware yet — see routes/api_dev_v1.php docblock.
             \Illuminate\Support\Facades\Route::prefix('api/dev/v1')

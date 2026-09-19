@@ -31,6 +31,7 @@ final class CheckoutTest extends TestCase
         $store = Store::factory()->create();
         $package = Package::factory()->create();
         $package->entitlements()->create(['key' => 'orders.basic', 'type' => EntitlementType::Feature, 'boolean_value' => true]);
+        $package->entitlements()->create(['key' => 'payment.cod', 'type' => EntitlementType::Feature, 'boolean_value' => true]); // Phase B7: checkout now requires a payment-method entitlement too
         Subscription::factory()->for($store)->for($package)->create(['status' => SubscriptionStatus::Active]);
 
         $product = Product::factory()->for($store)->create(['status' => 'active', 'visibility' => 'public', 'price_minor' => 2000, 'currency' => 'USD']);
@@ -51,12 +52,13 @@ final class CheckoutTest extends TestCase
         $token = $addResponse->headers->get('X-Guest-Cart-Token');
 
         $response = $this->postJson('/api/v1/checkout', [
+            'payment_method' => 'cod',
             'guest_name' => 'Jane Doe', 'guest_email' => 'jane@example.com', 'idempotency_key' => 'checkout-1',
         ], ['X-Store-Slug' => $store->slug, 'X-Guest-Cart-Token' => $token]);
 
         $response->assertCreated();
-        $response->assertJsonPath('data.status', 'confirmed');
-        $response->assertJsonPath('data.grand_total_minor', 4000);
+        $response->assertJsonPath('data.order.status', 'confirmed');
+        $response->assertJsonPath('data.order.grand_total_minor', 4000);
     }
 
     public function test_checkout_marks_the_cart_as_converted(): void
@@ -68,6 +70,7 @@ final class CheckoutTest extends TestCase
         $cartId = $addResponse->json('data.id');
 
         $this->postJson('/api/v1/checkout', [
+            'payment_method' => 'cod',
             'guest_name' => 'Jane', 'guest_email' => 'jane@example.com', 'idempotency_key' => 'checkout-2',
         ], ['X-Store-Slug' => $store->slug, 'X-Guest-Cart-Token' => $token])->assertCreated();
 
@@ -81,6 +84,7 @@ final class CheckoutTest extends TestCase
         [$store, $product] = $this->setUpEntitledStore();
 
         $response = $this->postJson('/api/v1/checkout', [
+            'payment_method' => 'cod',
             'guest_name' => 'Jane', 'guest_email' => 'jane@example.com', 'idempotency_key' => 'checkout-empty',
         ], ['X-Store-Slug' => $store->slug]);
 
@@ -96,6 +100,7 @@ final class CheckoutTest extends TestCase
         $product->update(['price_minor' => 9999]);
 
         $response = $this->postJson('/api/v1/checkout', [
+            'payment_method' => 'cod',
             'guest_name' => 'Jane', 'guest_email' => 'jane@example.com', 'idempotency_key' => 'checkout-price',
         ], ['X-Store-Slug' => $store->slug, 'X-Guest-Cart-Token' => $token]);
 
@@ -116,6 +121,7 @@ final class CheckoutTest extends TestCase
         app(InventoryService::class)->adjustStock($inventory, -1, 'sold elsewhere', actorId: 1, idempotencyKey: 'reduce-1');
 
         $response = $this->postJson('/api/v1/checkout', [
+            'payment_method' => 'cod',
             'guest_name' => 'Jane', 'guest_email' => 'jane@example.com', 'idempotency_key' => 'checkout-oos',
         ], ['X-Store-Slug' => $store->slug, 'X-Guest-Cart-Token' => $token]);
 
@@ -129,14 +135,14 @@ final class CheckoutTest extends TestCase
         $addResponse = $this->postJson('/api/v1/cart/items', ['product_id' => $product->id, 'quantity' => 1], ['X-Store-Slug' => $store->slug]);
         $token = $addResponse->headers->get('X-Guest-Cart-Token');
         $headers = ['X-Store-Slug' => $store->slug, 'X-Guest-Cart-Token' => $token];
-        $payload = ['guest_name' => 'Jane', 'guest_email' => 'jane@example.com', 'idempotency_key' => 'same-checkout-key'];
+        $payload = ['payment_method' => 'cod', 'guest_name' => 'Jane', 'guest_email' => 'jane@example.com', 'idempotency_key' => 'same-checkout-key'];
 
         $first = $this->postJson('/api/v1/checkout', $payload, $headers);
         $second = $this->postJson('/api/v1/checkout', $payload, $headers);
 
         $first->assertCreated();
         $second->assertOk(); // 200, not 201 — replay
-        $this->assertSame($first->json('data.id'), $second->json('data.id'));
+        $this->assertSame($first->json('data.order.id'), $second->json('data.order.id'));
         $this->assertDatabaseCount('orders', 1);
     }
 
@@ -148,6 +154,7 @@ final class CheckoutTest extends TestCase
         $token = $addResponse->headers->get('X-Guest-Cart-Token');
 
         $response = $this->postJson('/api/v1/checkout', [
+            'payment_method' => 'cod',
             'idempotency_key' => 'checkout-no-contact',
         ], ['X-Store-Slug' => $store->slug, 'X-Guest-Cart-Token' => $token]);
 

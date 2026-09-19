@@ -16,6 +16,7 @@ use App\Domain\Orders\Models\CancellationReason;
 use App\Domain\Orders\Models\Order;
 use App\Domain\Orders\Models\OrderStatus;
 use App\Domain\Orders\Models\OrderTimelineEvent;
+use App\Domain\Orders\Models\PaymentStatus as OrderPaymentStatus;
 use App\Domain\Packages\Services\EntitlementService;
 use App\Domain\Tenancy\Support\TenantContext;
 use Illuminate\Support\Facades\DB;
@@ -220,6 +221,28 @@ final class OrderService
      * Centralized status transition — the ONLY place `orders.status` is
      * written (Module 09 Step 5: "no controller-only state enforcement").
      */
+    /**
+     * Phase B7 addition. The ONLY code path that writes
+     * Order.payment_status — called exclusively by
+     * App\Domain\Payments\Services\PaymentService after a Payment's
+     * own (much more detailed, Module 12 §7) state changes. This
+     * method does NOT re-validate the transition itself
+     * (PaymentService/PaymentStateMachine already did, against the
+     * PAYMENT's state graph) — it exists so no controller or webhook
+     * handler ever calls `$order->update(['payment_status' => ...])`
+     * directly, keeping Order's own "dumb model, service-only writes"
+     * invariant (established since Phase B5) intact for this field too.
+     */
+    public function syncPaymentStatus(Order $order, OrderPaymentStatus $status): void
+    {
+        $order->update(['payment_status' => $status]);
+
+        $this->recordTimelineEvent(
+            $order, 'payment_status_changed', null, null, actorId: null,
+            reason: "payment_status:{$status->value}",
+        );
+    }
+
     private function transitionTo(Order $order, OrderStatus $to, ?int $actorId, ?string $reason, ?string $note = null): void
     {
         $this->stateMachine->assertCanTransition($order->status, $to);

@@ -27,11 +27,20 @@ final class Store extends Model
 
     protected $table = 'stores';
 
+    /**
+     * Phase B7: payment_webhook_secret must never leak through a raw
+     * $store->toArray()/toJson() call even though StoreResource
+     * already excludes it via an explicit allow-list — this is a
+     * defense-in-depth backstop, not the only protection.
+     */
+    protected $hidden = ['payment_webhook_secret'];
+
     protected $fillable = [
         'name',
         'slug',
         'status',
         'allow_overselling',
+        'payment_webhook_secret',
     ];
 
     protected function casts(): array

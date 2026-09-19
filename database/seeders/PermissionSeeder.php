@@ -43,6 +43,9 @@ final class PermissionSeeder extends Seeder
         ['key' => 'orders.create', 'group' => 'orders', 'description' => 'Create orders on behalf of a customer, e.g. admin/POS orders (Phase B5)'],
         ['key' => 'orders.update', 'group' => 'orders', 'description' => 'Update order status (Module 09 — Phase B5)'],
         ['key' => 'orders.cancel', 'group' => 'orders', 'description' => 'Cancel orders (Phase B5)'],
+        ['key' => 'payments.view', 'group' => 'payments', 'description' => 'View payments and transactions (Module 12 — Phase B7)'],
+        ['key' => 'payments.manage', 'group' => 'payments', 'description' => 'Record manual payment confirmations, e.g. bank transfer/COD collection (Phase B7)'],
+        ['key' => 'payments.refund', 'group' => 'payments', 'description' => 'Issue refunds — high-risk financial permission (Phase B7)'],
     ];
 
     public function run(): void

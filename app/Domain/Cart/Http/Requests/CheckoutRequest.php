@@ -23,6 +23,7 @@ final class CheckoutRequest extends FormRequest
     public function rules(): array
     {
         return [
+            'payment_method' => ['required', 'in:cod,bank_transfer,mock_redirect'],
             'guest_name' => ['nullable', 'string', 'max:255'],
             'guest_email' => ['nullable', 'email', 'max:255'],
             'guest_phone' => ['nullable', 'string', 'max:32'],

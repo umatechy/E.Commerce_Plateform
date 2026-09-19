@@ -12,6 +12,7 @@ use App\Domain\Inventory\Http\Controllers\ReservationController;
 use App\Domain\Inventory\Http\Controllers\WarehouseController;
 use App\Domain\Orders\Http\Controllers\OrderController;
 use App\Domain\Packages\Http\Controllers\SubscriptionController;
+use App\Domain\Payments\Http\Controllers\PaymentController;
 use App\Domain\SuperAdmin\Http\Controllers\SuperAdminPackageController;
 use App\Domain\SuperAdmin\Http\Controllers\SuperAdminStoreController;
 use App\Domain\SuperAdmin\Http\Controllers\SuperAdminSubscriptionController;
@@ -60,6 +61,13 @@ Route::middleware(['auth:sanctum', 'staff.principal'])->group(function () {
     Route::apiResource('orders', OrderController::class)->only(['index', 'show', 'store']);
     Route::post('/orders/{order}/cancel', [OrderController::class, 'cancel']);
     Route::get('/orders/{order}/timeline', [OrderController::class, 'timeline']);
+
+    // --- Payments (Module 12, Phase B7) ---
+    Route::get('/payments', [PaymentController::class, 'index']);
+    Route::get('/payments/{payment}', [PaymentController::class, 'show']);
+    Route::get('/payments/{payment}/transactions', [PaymentController::class, 'transactions']);
+    Route::post('/payments/{payment}/manual-confirm', [PaymentController::class, 'manualConfirm']);
+    Route::post('/payments/{payment}/refund', [PaymentController::class, 'refund']);
 
     // --- Super Admin cross-tenant (ADR-001 Layer 7) ---
     Route::middleware(['can:super-admin.impersonate', 'super_admin.impersonate'])

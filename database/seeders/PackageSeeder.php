@@ -60,6 +60,9 @@ final class PackageSeeder extends Seeder
             'inventory.multi_warehouse' => false,
             'orders.basic' => true, // Module 09 — core ordering available to every tier
             'wishlist.basic' => true, // Module 11 §64-71 — core wishlist available to every tier (Phase B6)
+            'payment.cod' => true, // Module 12 — every tier gets all 3 B7 methods; no tier restriction is specified by the module, so none is invented
+            'payment.bank_transfer' => true,
+            'payment.online' => true,
         ],
         'business' => [
             'products.variants' => true,
@@ -77,6 +80,9 @@ final class PackageSeeder extends Seeder
             'inventory.multi_warehouse' => true, // Module 08 §71/§16 — Business+
             'orders.basic' => true,
             'wishlist.basic' => true,
+            'payment.cod' => true, // Module 12 — every tier gets all 3 B7 methods; no tier restriction is specified by the module, so none is invented
+            'payment.bank_transfer' => true,
+            'payment.online' => true,
         ],
         'premium' => [
             'products.variants' => true,
@@ -94,6 +100,9 @@ final class PackageSeeder extends Seeder
             'inventory.multi_warehouse' => true, // Module 08 §71/§16 — Business+/Premium
             'orders.basic' => true,
             'wishlist.basic' => true,
+            'payment.cod' => true, // Module 12 — every tier gets all 3 B7 methods; no tier restriction is specified by the module, so none is invented
+            'payment.bank_transfer' => true,
+            'payment.online' => true,
         ],
     ];
 

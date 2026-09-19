@@ -14,16 +14,21 @@ use App\Domain\Orders\Models\Customer;
 use App\Domain\Packages\Exceptions\FeatureNotEntitledException;
 use App\Domain\Packages\Exceptions\SubscriptionInactiveException;
 use App\Domain\Packages\Exceptions\UsageLimitExceededException;
+use App\Domain\Payments\Exceptions\PaymentAlreadyExistsException;
+use App\Domain\Payments\Http\Resources\PaymentResource;
+use App\Domain\Payments\Models\PaymentMethod;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Validation\ValidationException;
 
 /**
- * Module 11 §61 "Checkout API" / §12 "Checkout". Guest-accessible
- * (same as CartController) — a guest must be able to check out without
- * registering (Module 11 §6, Final Rule #3 "Guest checkout must be
- * supported"). Delegates ALL order-creation logic to CheckoutService
- * → OrderService (Phase B5, unchanged) — this controller contains no
- * pricing, inventory, or order logic of its own.
+ * Module 11 §61 "Checkout API" / Module 12 §69 "Payment API" (the
+ * `POST /payments` concept is folded into checkout itself here, per
+ * the Architectural Decision in b7-inspection-findings.md — a payment
+ * is always created as part of checkout, never as an independent
+ * standalone call in B7's scope). Guest-accessible (same as
+ * CartController). Delegates ALL logic to CheckoutService →
+ * OrderService/PaymentService (Phase B5/B7, unchanged) — this
+ * controller contains no pricing, inventory, or payment logic itself.
  */
 final class CheckoutController
 {
@@ -40,8 +45,9 @@ final class CheckoutController
         }
 
         try {
-            $order = $checkout->checkout(
+            $result = $checkout->checkout(
                 $cart,
+                paymentMethod: PaymentMethod::from($request->string('payment_method')->toString()),
                 checkoutData: $request->only([
                     'guest_name', 'guest_email', 'guest_phone',
                     'billing_address', 'shipping_address', 'notes',
@@ -54,7 +60,7 @@ final class CheckoutController
             return response()->json(['message' => $e->getMessage()], 403);
         } catch (UsageLimitExceededException $e) {
             return response()->json([
-                'message' => "This store has reached its monthly order limit. Please try again later.",
+                'message' => 'This store has reached its monthly order limit. Please try again later.',
                 'code' => 'usage_limit_exceeded',
             ], 403);
         } catch (InsufficientStockException $e) {
@@ -62,8 +68,19 @@ final class CheckoutController
                 'message' => 'One or more items in your cart are out of stock.',
                 'code' => 'insufficient_stock',
             ], 422);
+        } catch (PaymentAlreadyExistsException $e) {
+            return response()->json(['message' => $e->getMessage(), 'code' => 'payment_already_exists'], 409);
         }
 
-        return (new OrderResource($order->load('items')))->response()->setStatusCode($order->wasRecentlyCreated ? 201 : 200);
+        $order = $result['order'];
+        $statusCode = $order->wasRecentlyCreated ? 201 : 200;
+
+        return response()->json([
+            'data' => [
+                'order' => (new OrderResource($order->load('items')))->toArray($request),
+                'payment' => (new PaymentResource($result['payment']))->toArray($request),
+                'redirect_url' => $result['redirect_url'],
+            ],
+        ], $statusCode);
     }
 }

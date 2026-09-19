@@ -24,6 +24,8 @@ use App\Domain\Packages\Models\Package;
 use App\Domain\Packages\Models\Subscription;
 use App\Domain\Packages\Policies\PackagePolicy;
 use App\Domain\Packages\Policies\SubscriptionPolicy;
+use App\Domain\Payments\Models\Payment;
+use App\Domain\Payments\Policies\PaymentPolicy;
 use App\Domain\SuperAdmin\Policies\SuperAdminAccessPolicy;
 use App\Domain\Tenancy\Models\Store;
 use App\Domain\Tenancy\Observers\StoreObserver;
@@ -65,6 +67,7 @@ final class AppServiceProvider extends ServiceProvider
         Gate::policy(Inventory::class, InventoryPolicy::class);
         Gate::policy(Warehouse::class, WarehousePolicy::class);
         Gate::policy(Order::class, OrderPolicy::class);
+        Gate::policy(Payment::class, PaymentPolicy::class);
 
         // Seeds the default Owner/Manager/Staff roles for every new store —
         // see App\Domain\Tenancy\Observers\StoreObserver docblock.

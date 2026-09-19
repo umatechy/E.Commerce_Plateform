@@ -38,6 +38,7 @@ final class CheckoutConcurrencyTest extends TestCase
         $store = Store::factory()->create();
         $package = Package::factory()->create();
         $package->entitlements()->create(['key' => 'orders.basic', 'type' => EntitlementType::Feature, 'boolean_value' => true]);
+        $package->entitlements()->create(['key' => 'payment.cod', 'type' => EntitlementType::Feature, 'boolean_value' => true]); // Phase B7: checkout now requires a payment-method entitlement too
         Subscription::factory()->for($store)->for($package)->create(['status' => SubscriptionStatus::Active]);
         $product = Product::factory()->for($store)->create(['status' => 'active', 'visibility' => 'public', 'price_minor' => 1000, 'currency' => 'USD']);
         $warehouse = Warehouse::query()->where('store_id', $store->id)->where('is_default', true)->firstOrFail();
@@ -54,10 +55,12 @@ final class CheckoutConcurrencyTest extends TestCase
         $this->assertNotSame($tokenA, $tokenB, 'Sanity check: two independent guest carts.');
 
         $checkoutA = $this->postJson('/api/v1/checkout', [
+            'payment_method' => 'cod',
             'guest_name' => 'A', 'guest_email' => 'a@example.com', 'idempotency_key' => 'checkout-a',
         ], ['X-Store-Slug' => $store->slug, 'X-Guest-Cart-Token' => $tokenA]);
 
         $checkoutB = $this->postJson('/api/v1/checkout', [
+            'payment_method' => 'cod',
             'guest_name' => 'B', 'guest_email' => 'b@example.com', 'idempotency_key' => 'checkout-b',
         ], ['X-Store-Slug' => $store->slug, 'X-Guest-Cart-Token' => $tokenB]);
 

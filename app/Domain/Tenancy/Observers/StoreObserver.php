@@ -37,6 +37,7 @@ final class StoreObserver
             'categories.manage', 'brands.manage', 'attributes.manage',
             'inventory.view', 'inventory.adjust', 'warehouses.manage',
             'orders.view', 'orders.create', 'orders.update', 'orders.cancel',
+            'payments.view', 'payments.manage',
         ],
         'staff' => [
             'products.view',
@@ -86,5 +87,11 @@ final class StoreObserver
             'store_id' => $store->id,
             'next_number' => 0,
         ]);
+
+        // Module 12 §31 "Provider Configuration" (Phase B7) — every
+        // store gets its OWN random webhook-signing secret at creation,
+        // never a shared/default value (see the migration backfill's
+        // docblock for why per-row uniqueness matters here).
+        $store->update(['payment_webhook_secret' => \Illuminate\Support\Str::random(64)]);
     }
 }
