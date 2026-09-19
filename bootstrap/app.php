@@ -1,5 +1,8 @@
 <?php
 
+use App\Http\Middleware\AttemptCustomerAuthentication;
+use App\Http\Middleware\EnsureCustomerPrincipal;
+use App\Http\Middleware\EnsureStaffPrincipal;
 use App\Http\Middleware\EnsureSuperAdminImpersonation;
 use App\Http\Middleware\HandleInertiaRequests;
 use App\Http\Middleware\ResolveTenantContext;
@@ -17,6 +20,14 @@ return Application::configure(basePath: dirname(__DIR__))
             \Illuminate\Support\Facades\Route::middleware('api')
                 ->prefix('api/v1')
                 ->group(base_path('routes/api_v1.php'));
+
+            // Phase B6: storefront customer-facing routes — separate
+            // file for a separate authentication boundary (Module 10
+            // §3), same /api/v1/... prefix (ADR-005 — this is not a new
+            // API version, just a different principal type).
+            \Illuminate\Support\Facades\Route::middleware('api')
+                ->prefix('api/v1')
+                ->group(base_path('routes/api_v1_customer.php'));
 
             \Illuminate\Support\Facades\Route::middleware('api')
                 ->prefix('api/v1/public')
@@ -46,6 +57,9 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $middleware->alias([
             'super_admin.impersonate' => EnsureSuperAdminImpersonation::class,
+            'staff.principal' => EnsureStaffPrincipal::class,
+            'customer.principal' => EnsureCustomerPrincipal::class,
+            'customer.optional' => AttemptCustomerAuthentication::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {

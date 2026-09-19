@@ -59,6 +59,7 @@ final class PackageSeeder extends Seeder
             'pwa.enabled' => true,
             'inventory.multi_warehouse' => false,
             'orders.basic' => true, // Module 09 — core ordering available to every tier
+            'wishlist.basic' => true, // Module 11 §64-71 — core wishlist available to every tier (Phase B6)
         ],
         'business' => [
             'products.variants' => true,
@@ -75,6 +76,7 @@ final class PackageSeeder extends Seeder
             'pwa.enabled' => true,
             'inventory.multi_warehouse' => true, // Module 08 §71/§16 — Business+
             'orders.basic' => true,
+            'wishlist.basic' => true,
         ],
         'premium' => [
             'products.variants' => true,
@@ -91,6 +93,7 @@ final class PackageSeeder extends Seeder
             'pwa.enabled' => true,
             'inventory.multi_warehouse' => true, // Module 08 §71/§16 — Business+/Premium
             'orders.basic' => true,
+            'wishlist.basic' => true,
         ],
     ];
 
