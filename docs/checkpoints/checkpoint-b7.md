@@ -222,10 +222,11 @@ Order/Store/permission/entitlement extension points, and documentation were
 touched.
 
 Git Commit Status:
-A commit for this milestone's work follows immediately after this checkpoint. The
-real, executed commit hash is recorded via a follow-up correction commit
-immediately after (same pattern used for Phase B5/B6's checkpoints), so this
-checkpoint's own text does not need to predict a hash before it exists.
+Commit created: 66d66a5 — "Phase B7: Payment Management & Gateways (Module 12)".
+Verified by direct execution (git log --oneline after the commit): working tree
+clean, history now shows four real commits: 5dcb815 (Phase B0-B5), b12ae2b (B5
+checkpoint correction), 47d6a1c (Phase B6), 24b7bd3 (B6 checkpoint correction),
+66d66a5 (this milestone). No fabricated incremental history.
 
 Recommended Next Milestone:
 Phase B8 — per the approved milestone map, Module 13 (Shipping & Delivery
