@@ -1,0 +1,51 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App\Domain\Catalog\Http\Resources;
+
+use Illuminate\Http\Request;
+use Illuminate\Http\Resources\Json\JsonResource;
+use Illuminate\Support\Facades\Gate;
+
+/**
+ * Module 06 §25: "Cost price must never be exposed to customers. Access
+ * must be restricted through permissions." cost_price_minor is included
+ * ONLY when Gate::authorize('viewCostPrice', ...) passes for the
+ * CURRENT authenticated user — not merely omitted by convention, but
+ * conditionally built via Gate::forUser()->allows(), so a caller
+ * without the products.view_cost permission (or Owner) never receives
+ * the field in the JSON payload at all, not just a null-masked one.
+ */
+final class ProductResource extends JsonResource
+{
+    public function toArray(Request $request): array
+    {
+        $canViewCost = $request->user()
+            && Gate::forUser($request->user())->allows('viewCostPrice', $this->resource);
+
+        return [
+            'id' => $this->public_id,
+            'type' => $this->type->value,
+            'name' => $this->name,
+            'slug' => $this->slug,
+            'sku' => $this->sku,
+            'short_description' => $this->short_description,
+            'description' => $this->description,
+            'status' => $this->status->value,
+            'visibility' => $this->visibility->value,
+            'brand' => $this->whenLoaded('brand', fn () => ['id' => $this->brand->public_id, 'name' => $this->brand->name]),
+            'primary_category_id' => $this->primary_category_id,
+            'price_minor' => $this->price_minor,
+            'sale_price_minor' => $this->sale_price_minor,
+            'effective_price_minor' => $this->effectivePriceMinor(),
+            'currency' => $this->currency,
+            $this->mergeWhen($canViewCost, [
+                'cost_price_minor' => $this->cost_price_minor,
+            ]),
+            'published_at' => $this->published_at?->toIso8601String(),
+            'archived_at' => $this->archived_at?->toIso8601String(),
+            'variants' => ProductVariantResource::collection($this->whenLoaded('variants')),
+        ];
+    }
+}
