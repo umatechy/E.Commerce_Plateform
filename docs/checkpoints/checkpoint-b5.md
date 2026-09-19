@@ -203,6 +203,30 @@ before writing any Cart/Checkout code, since Checkout is the first real caller
 beyond this milestone's own staff-facing controller.
 
 Git/Commit Status:
-Git execution is unavailable in this Claude App sandbox (no git binary invocation
-has been performed in this environment for any milestone) — commit execution remains
-deferred to the VS Code phase, consistent with every prior checkpoint.
+CORRECTION to an initial assumption made earlier in this milestone: git IS available
+in this Claude App sandbox (git version 2.43.0) — only the repository itself had
+never been initialized (no PHP/MySQL/Redis runtime availability was the actual
+constraint throughout B0-B5, not git). This was verified and corrected within this
+same milestone.
+
+Actions actually performed (EXECUTED, not merely inspected):
+1. `git init` — initialized the repository for the first time (default branch:
+   master).
+2. `git config user.name` / `user.email` set for this environment.
+3. `git add -A` — staged all 270 tracked files (respecting .gitignore).
+4. `git commit` — created the repository's first commit.
+
+Resulting commit: 5dcb815 — "Phase B0-B5: Foundation, Identity/Auth,
+Packages/Entitlements, Catalog, Inventory, Orders". The commit message explicitly
+states that it represents a single snapshot of all B0-B5 work rather than a
+fabricated incremental history of six separate phase commits, since no earlier
+per-phase snapshots exist to commit separately and inventing them would misrepresent
+actual development history.
+
+`git status` after the commit: "nothing to commit, working tree clean" — confirmed
+by direct execution, not assumed.
+
+Not yet done, deferred to VS Code: pushing to any remote (no remote has been
+configured, and no push was requested or performed); creating per-phase historical
+commits (not possible retroactively without misrepresenting history, as noted
+above); any commit signing or CI trigger.
