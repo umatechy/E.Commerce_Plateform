@@ -263,9 +263,14 @@ additive extension points, console command registration, and documentation
 were touched.
 
 Git Commit Status:
-A commit for this milestone's work follows immediately after this checkpoint;
-the real, executed commit hash is recorded via a follow-up correction commit
-immediately after, same pattern used for every prior phase's checkpoint.
+Commit created: b62c512 - "Phase B10: Marketing & Customer Engagement (Module
+15)". Verified by direct execution (git log --oneline after the commit):
+working tree clean, history now shows ten real commits: 5dcb815 (Phase B0-B5),
+b12ae2b (B5 checkpoint correction), 47d6a1c (Phase B6), 24b7bd3 (B6 checkpoint
+correction), 66d66a5 (Phase B7), 6888a16 (B7 checkpoint correction), 3184400
+(Phase B8), 3259813 (B8 checkpoint correction), e781aad (Phase B9), dc065c9
+(B9 checkpoint correction), b62c512 (this milestone). No fabricated
+incremental history.
 
 Recommended Next Milestone:
 Phase B11 - Module 21 (Notifications & Communication), per the user's own
