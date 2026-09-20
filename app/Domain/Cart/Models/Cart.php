@@ -24,7 +24,7 @@ final class Cart extends Model
     protected $table = 'carts';
 
     protected $fillable = [
-        'store_id', 'customer_id', 'guest_token', 'status', 'currency',
+        'store_id', 'customer_id', 'guest_token', 'status', 'currency', 'coupon_code',
         'shipping_address_snapshot', 'billing_address_snapshot',
         'expires_at', 'converted_at', 'converted_order_id',
     ];

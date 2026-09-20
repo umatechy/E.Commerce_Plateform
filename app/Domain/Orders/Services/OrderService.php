@@ -134,6 +134,15 @@ final class OrderService
                 $lineTotal = $resolved['unit_price_minor'] * $resolved['quantity'];
                 $subtotal += $lineTotal;
 
+                // Phase B9 addition: line-targeted promotion discounts
+                // (product/category/brand-scoped), computed by
+                // PromotionEligibilityEngine and passed straight
+                // through — OrderService never computes a discount
+                // itself, it only applies an already-server-calculated
+                // one. Absent for every pre-B9 caller (backward
+                // compatible — defaults to 0).
+                $lineDiscount = (int) ($orderData['line_discounts'][$index] ?? 0);
+
                 $order->items()->create([
                     'product_id' => $resolved['product']?->id,
                     'product_variant_id' => $resolved['variant']?->id,
@@ -142,13 +151,14 @@ final class OrderService
                     'variant_snapshot' => $resolved['variant_snapshot'],
                     'quantity' => $resolved['quantity'],
                     'unit_price_minor' => $resolved['unit_price_minor'],
-                    'line_total_minor' => $lineTotal,
+                    'discount_minor' => $lineDiscount,
+                    'line_total_minor' => $lineTotal - $lineDiscount,
                 ]);
             }
 
             // Module 09 §12: Subtotal - Discounts + Tax + Shipping = Grand
-            // Total. Discount/Tax are still 0 (no owning module yet —
-            // see docs/development/b5-inspection-findings.md). Shipping
+            // Total. Tax is still 0 (no owning module yet — see
+            // docs/development/b5-inspection-findings.md). Shipping
             // is now server-computed by CheckoutService/
             // ShippingRateService (Phase B8) and passed in via
             // orderData — this is the minimal, additive extension
@@ -156,10 +166,12 @@ final class OrderService
             // omit shipping_total_minor keep B5's original behavior
             // (grand_total == subtotal) unchanged.
             $shippingTotal = (int) ($orderData['shipping_total_minor'] ?? 0);
+            $discountTotal = (int) ($orderData['discount_total_minor'] ?? 0);
             $order->update([
                 'subtotal_minor' => $subtotal,
+                'discount_total_minor' => $discountTotal,
                 'shipping_total_minor' => $shippingTotal,
-                'grand_total_minor' => $subtotal + $shippingTotal,
+                'grand_total_minor' => $subtotal - $discountTotal + $shippingTotal,
             ]);
 
             $this->recordTimelineEvent($order, 'created', null, $order->status, null, null);
@@ -172,7 +184,7 @@ final class OrderService
 
             $this->outbox->recordEvent(
                 eventType: 'order.created',
-                payload: ['order_id' => $order->id, 'order_number' => $order->order_number, 'grand_total_minor' => $subtotal + $shippingTotal],
+                payload: ['order_id' => $order->id, 'order_number' => $order->order_number, 'grand_total_minor' => $subtotal - $discountTotal + $shippingTotal],
                 idempotencyKey: "order:{$order->id}:created",
             );
 
@@ -298,6 +310,18 @@ final class OrderService
             'reason' => $reason,
             'note' => $note,
         ]);
+    }
+
+    /**
+     * Phase B9 addition — lets CheckoutService detect an idempotent
+     * replay BEFORE re-running promotion evaluation (see that class's
+     * docblock for why this matters: promotions, unlike shipping
+     * rates, can have a usage limit the original request itself may
+     * have just consumed). Read-only; never creates anything.
+     */
+    public function findExistingOrderByIdempotencyKey(string $key): ?Order
+    {
+        return $this->findByIdempotencyKey($key);
     }
 
     private function findByIdempotencyKey(string $key): ?Order

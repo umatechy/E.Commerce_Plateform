@@ -14,6 +14,9 @@ use App\Domain\Packages\Services\EntitlementService;
 use App\Domain\Payments\Models\Payment;
 use App\Domain\Payments\Models\PaymentMethod;
 use App\Domain\Payments\Services\PaymentService;
+use App\Domain\Promotions\Exceptions\CouponNotEligibleException;
+use App\Domain\Promotions\Services\PromotionEligibilityEngine;
+use App\Domain\Promotions\Services\PromotionService;
 use App\Domain\Shipping\Exceptions\DestinationNotServiceableException;
 use App\Domain\Shipping\Services\ShippingRateService;
 use Illuminate\Support\Facades\DB;
@@ -21,20 +24,29 @@ use Illuminate\Validation\ValidationException;
 
 /**
  * Module 11 §12/§42-58 "Checkout" + Module 12 §7 "Payment Initiation" +
- * Module 13 §18/§38 "Shipping Cost / Rate Engine". A thin orchestration
- * layer — this class contains NO order-creation, pricing, inventory,
- * payment-gateway, or shipping-rate-calculation logic of its own. Its
- * entire job is:
+ * Module 13 §18/§38 "Shipping Cost / Rate Engine" + Module 14 §56
+ * "Promotion Eligibility Engine". A thin orchestration layer — this
+ * class contains NO order-creation, pricing, inventory, payment-
+ * gateway, shipping-rate, or promotion-calculation logic of its own.
+ * Its entire job is:
  *   1. Final cart-level validation (via CartService::totals()).
  *   2. If the cart is not digital-only, compute a server-authoritative
  *      shipping quote (via ShippingRateService::quote() — Phase B8,
- *      UNCHANGED here) and fold its cost into the Order total.
- *   3. Translate cart items into OrderService::createOrder()'s existing
+ *      UNCHANGED here).
+ *   3. Evaluate promotions/coupon (via
+ *      PromotionEligibilityEngine::evaluate() — Phase B9, UNCHANGED
+ *      here) using the cart's stored coupon_code, folding the result
+ *      into the Order total and, for free shipping, zeroing the
+ *      shipping cost.
+ *   4. Translate cart items into OrderService::createOrder()'s existing
  *      input shape.
- *   4. Call OrderService::createOrder() (Phase B5, extended additively
- *      in B8 only to accept `shipping_total_minor` — see that class).
- *   5. Call PaymentService::createForOrder() UNCHANGED (Phase B7).
- *   6. Mark the cart Converted, in the SAME outer transaction as order
+ *   5. Call OrderService::createOrder() (Phase B5, extended additively
+ *      in B8/B9 to accept `shipping_total_minor`/`discount_total_minor`/
+ *      `line_discounts` — see that class).
+ *   6. Call PaymentService::createForOrder() UNCHANGED (Phase B7).
+ *   7. Record promotion usage — ONLY when the Order was genuinely just
+ *      created (never on an idempotent replay).
+ *   8. Mark the cart Converted, in the SAME outer transaction as order
  *      + payment creation (Step 13 "Transactional Consistency").
  *
  * Shipment creation is Deliberately NOT part of Checkout — see
@@ -52,6 +64,8 @@ final class CheckoutService
         private readonly PaymentService $payments,
         private readonly EntitlementService $entitlements,
         private readonly ShippingRateService $shippingRates,
+        private readonly PromotionEligibilityEngine $promotionEngine,
+        private readonly PromotionService $promotions,
     ) {}
 
     /** Module 12 §88 "Package Entitlements" — every tier is entitled to all 3 B7 methods by default (see docs/development/b7-inspection-findings.md); the check exists so a future tier restriction is configurable without a code change. */
@@ -66,16 +80,34 @@ final class CheckoutService
      * @throws CartCheckoutNotAllowedException
      * @throws ValidationException
      * @throws DestinationNotServiceableException
+     * @throws CouponNotEligibleException
      * @throws \App\Domain\Packages\Exceptions\FeatureNotEntitledException
      * @throws \App\Domain\Packages\Exceptions\SubscriptionInactiveException
      * @throws \App\Domain\Packages\Exceptions\UsageLimitExceededException
      * @throws \App\Domain\Inventory\Exceptions\InsufficientStockException
      * @throws \App\Domain\Payments\Exceptions\PaymentAlreadyExistsException
+     * @throws \App\Domain\Promotions\Exceptions\PromotionUsageLimitExceededException
      */
     public function checkout(Cart $cart, PaymentMethod $paymentMethod, array $checkoutData, string $idempotencyKey): array
     {
         if (! $cart->status->isActionable()) {
             throw new CartCheckoutNotAllowedException('This cart is no longer active and cannot be checked out.');
+        }
+
+        // Phase B9 correctness fix: an idempotent REPLAY must short-
+        // circuit before any promotion evaluation runs. Promotions
+        // (unlike shipping rates) can have a finite usage_limit that
+        // the ORIGINAL request itself may have just fully consumed —
+        // without this check, a legitimate retry of an already-
+        // successful checkout could re-run PromotionEligibilityEngine
+        // and incorrectly throw (e.g. CouponNotEligibleException,
+        // "usage limit reached") even though the first request already
+        // succeeded and a valid Order/Payment already exist. Caught
+        // during design, before being left in the codebase.
+        if ($existing = $this->orders->findExistingOrderByIdempotencyKey($idempotencyKey)) {
+            $payment = \App\Domain\Payments\Models\Payment::query()->where('order_id', $existing->id)->first();
+
+            return ['order' => $existing, 'payment' => $payment, 'redirect_url' => $payment !== null ? $this->payments->redirectUrlFor($payment) : null];
         }
 
         $this->entitlements->assertFeatureEntitled('shipping.basic');
@@ -91,7 +123,7 @@ final class CheckoutService
             throw new CartCheckoutNotAllowedException('One or more items in your cart need attention before checkout can continue.');
         }
 
-        $cartItems = $cart->items->load(['product', 'variant']);
+        $cartItems = $cart->items->load(['product.categories', 'variant']);
 
         // Module 13 Final Rule #8: "Digital-only carts must not require
         // physical shipping." Reuses Phase B3's existing ProductType —
@@ -128,13 +160,35 @@ final class CheckoutService
             $shippingTotalMinor = $quote['cost_minor'];
         }
 
+        // Module 14 §56 "Promotion Eligibility Engine" — evaluated with
+        // the ACTUAL shipping cost so a free_shipping promotion's
+        // benefit is compared on equal footing with a cash discount
+        // (see PromotionEligibilityEngine::shippingBenefitValue()).
+        $promotionItemContexts = $cartItems->map(fn ($item) => [
+            'product_id' => $item->product_id,
+            'category_ids' => $item->product?->categories->pluck('id')->all() ?? [],
+            'brand_id' => $item->product?->brand_id,
+            'line_total_minor' => $totals['items'][array_search($item->id, array_column($totals['items'], 'cart_item_id'), true)]['line_total_minor'] ?? 0,
+        ])->values()->all();
+
+        $promotionResult = $this->promotionEngine->evaluate(
+            $promotionItemContexts, $totals['subtotal_minor'], $totals['currency'] ?? 'USD',
+            $cart->customer, $cart->coupon_code, $shippingTotalMinor,
+        );
+
+        $discountTotalMinor = $promotionResult->freeShipping ? 0 : $promotionResult->discountAmountMinor;
+
+        if ($promotionResult->freeShipping) {
+            $shippingTotalMinor = 0;
+        }
+
         $items = $cart->items->map(fn ($item) => [
             'product_id' => $item->product_variant_id === null ? $item->product_id : null,
             'product_variant_id' => $item->product_variant_id,
             'quantity' => $item->quantity,
         ])->all();
 
-        return DB::transaction(function () use ($cart, $items, $checkoutData, $idempotencyKey, $paymentMethod, $shippingTotalMinor) {
+        return DB::transaction(function () use ($cart, $items, $checkoutData, $idempotencyKey, $paymentMethod, $shippingTotalMinor, $discountTotalMinor, $promotionResult) {
             $order = $this->orders->createOrder(
                 items: $items,
                 orderData: [
@@ -147,9 +201,18 @@ final class CheckoutService
                     'notes' => $checkoutData['notes'] ?? null,
                     'source' => 'storefront',
                     'shipping_total_minor' => $shippingTotalMinor,
+                    'discount_total_minor' => $discountTotalMinor,
+                    'line_discounts' => $promotionResult->lineDiscounts,
                 ],
                 idempotencyKey: $idempotencyKey,
             );
+
+            // Usage is recorded ONLY on genuine creation (Architectural
+            // Decision — see b9-inspection-findings.md "Usage Counting
+            // Timing") — never re-consumed on an idempotent replay.
+            if ($order->wasRecentlyCreated) {
+                $this->promotions->recordUsage($promotionResult, $order, $cart->customer);
+            }
 
             // Payment idempotency key is derived from the order-level
             // key (never the client's raw value reused verbatim as a

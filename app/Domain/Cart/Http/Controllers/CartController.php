@@ -82,6 +82,30 @@ final class CartController
         return new CartResource($cart->fresh());
     }
 
+    /** Module 14 §23-26 "Coupon Code / Coupon Validation" (Phase B9). */
+    public function applyCoupon(Request $request, CartService $carts): JsonResponse
+    {
+        [$cart] = $this->resolveCart($request, $carts);
+        $request->validate(['code' => ['required', 'string', 'max:64']]);
+
+        try {
+            $carts->applyCoupon($cart, $request->string('code'));
+        } catch (\App\Domain\Promotions\Exceptions\CouponNotEligibleException $e) {
+            return response()->json(['message' => $e->getMessage(), 'code' => 'coupon_not_eligible'], 422);
+        }
+
+        return (new CartResource($cart->fresh()))->response();
+    }
+
+    /** Module 14 §27 "Coupon Removal" — cart recalculates immediately (the response's live totals() reflect it). */
+    public function removeCoupon(Request $request, CartService $carts): CartResource
+    {
+        [$cart] = $this->resolveCart($request, $carts);
+        $carts->removeCoupon($cart);
+
+        return new CartResource($cart->fresh());
+    }
+
     /**
      * Module 11 §62 "Customer Ownership": the cart is ALWAYS resolved
      * from the authenticated principal or a possessed guest token

@@ -27,6 +27,8 @@ final class CartResource extends JsonResource
             'items' => $totals['items'],
             'subtotal_minor' => $totals['subtotal_minor'],
             'has_issues' => $totals['has_issues'],
+            'coupon_code' => $totals['coupon_code'],
+            'promotion' => $totals['promotion'],
             'guest_token' => $this->when($this->isGuestCart(), $this->guest_token),
         ];
     }

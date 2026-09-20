@@ -15,6 +15,8 @@ use App\Domain\Packages\Http\Controllers\SubscriptionController;
 use App\Domain\Payments\Http\Controllers\PaymentController;
 use App\Domain\Shipping\Http\Controllers\ShipmentController;
 use App\Domain\Shipping\Http\Controllers\ShippingConfigController;
+use App\Domain\Promotions\Http\Controllers\PromotionController;
+use App\Domain\Promotions\Http\Controllers\CouponController;
 use App\Domain\SuperAdmin\Http\Controllers\SuperAdminPackageController;
 use App\Domain\SuperAdmin\Http\Controllers\SuperAdminStoreController;
 use App\Domain\SuperAdmin\Http\Controllers\SuperAdminSubscriptionController;
@@ -84,6 +86,15 @@ Route::middleware(['auth:sanctum', 'staff.principal'])->group(function () {
     Route::get('/shipping/methods', [ShippingConfigController::class, 'methods']);
     Route::post('/shipping/methods', [ShippingConfigController::class, 'storeMethod']);
     Route::post('/shipping/rates', [ShippingConfigController::class, 'storeRate']);
+
+    // --- Promotions & Coupons (Module 14, Phase B9) ---
+    Route::get('/promotions', [PromotionController::class, 'index']);
+    Route::get('/promotions/{promotion}', [PromotionController::class, 'show']);
+    Route::post('/promotions', [PromotionController::class, 'store']);
+    Route::put('/promotions/{promotion}', [PromotionController::class, 'update']);
+    Route::get('/promotions/{promotion}/coupons', [CouponController::class, 'index']);
+    Route::post('/coupons', [CouponController::class, 'store']);
+    Route::delete('/coupons/{coupon}', [CouponController::class, 'destroy']);
 
     // --- Super Admin cross-tenant (ADR-001 Layer 7) ---
     Route::middleware(['can:super-admin.impersonate', 'super_admin.impersonate'])

@@ -245,7 +245,76 @@ final class CartService
             'subtotal_minor' => $subtotal,
             'currency' => $cart->currency,
             'has_issues' => $hasIssues,
+            'coupon_code' => $cart->coupon_code,
+            'promotion' => $this->promotionPreview($cart, $items, $subtotal),
         ];
+    }
+
+    /**
+     * Module 11 §13-14 / Module 14 Step 10 "Cart Integration" — a
+     * PREVIEW only, using the exact same
+     * PromotionEligibilityEngine::evaluate() call CheckoutService uses
+     * authoritatively (never a duplicated/approximated calculation).
+     * An invalid/ineligible stored coupon is shown as "no discount"
+     * here rather than thrown — Checkout is where an invalid coupon
+     * actually blocks the request (this is just informational display).
+     */
+    private function promotionPreview(Cart $cart, array $items, int $subtotalMinor): array
+    {
+        $cartItemContexts = $cart->items()->with('product.categories')->get()->map(fn ($item) => [
+            'product_id' => $item->product_id,
+            'category_ids' => $item->product?->categories->pluck('id')->all() ?? [],
+            'brand_id' => $item->product?->brand_id,
+            'line_total_minor' => $items[array_search($item->id, array_column($items, 'cart_item_id'), true)]['line_total_minor'] ?? 0,
+        ])->all();
+
+        try {
+            $result = app(\App\Domain\Promotions\Services\PromotionEligibilityEngine::class)->evaluate(
+                $cartItemContexts, $subtotalMinor, $cart->currency ?? 'USD',
+                $cart->customer, $cart->coupon_code,
+            );
+        } catch (\App\Domain\Promotions\Exceptions\CouponNotEligibleException) {
+            return ['applied' => false, 'discount_amount_minor' => 0, 'free_shipping' => false, 'error' => $cart->coupon_code !== null ? 'coupon_not_eligible' : null];
+        }
+
+        return [
+            'applied' => $result->hasPromotion(),
+            'discount_amount_minor' => $result->freeShipping ? 0 : $result->discountAmountMinor,
+            'free_shipping' => $result->freeShipping,
+            'error' => null,
+        ];
+    }
+
+    /**
+     * Module 14 §26-27 "Coupon Validation / Coupon Removal". Does a
+     * LIGHTWEIGHT existence/eligibility check (via the same engine) so
+     * an obviously-invalid code is rejected immediately rather than
+     * only surfacing as a checkout failure — but Checkout ALWAYS
+     * re-validates from scratch regardless (this is a UX convenience,
+     * never the authoritative check).
+     *
+     * @throws \App\Domain\Promotions\Exceptions\CouponNotEligibleException
+     */
+    public function applyCoupon(Cart $cart, string $code): Cart
+    {
+        $this->assertCartActionable($cart);
+
+        $totals = $this->totals($cart);
+        app(\App\Domain\Promotions\Services\PromotionEligibilityEngine::class)->evaluate(
+            [], $totals['subtotal_minor'], $totals['currency'] ?? 'USD', $cart->customer, $code,
+        );
+
+        $cart->update(['coupon_code' => $code]);
+
+        return $cart->fresh();
+    }
+
+    public function removeCoupon(Cart $cart): Cart
+    {
+        $this->assertCartActionable($cart);
+        $cart->update(['coupon_code' => null]);
+
+        return $cart->fresh();
     }
 
     /**

@@ -47,6 +47,8 @@ Route::middleware(['customer.optional'])->group(function () {
     Route::post('/cart/items', [CartController::class, 'addItem']);
     Route::put('/cart/items/{item}', [CartController::class, 'updateItem']);
     Route::delete('/cart/items/{item}', [CartController::class, 'removeItem']);
+    Route::post('/cart/coupon', [CartController::class, 'applyCoupon']);
+    Route::delete('/cart/coupon', [CartController::class, 'removeCoupon']);
 
     Route::post('/checkout', [CheckoutController::class, 'store'])->middleware('throttle:10,1');
 
