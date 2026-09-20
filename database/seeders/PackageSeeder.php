@@ -65,6 +65,7 @@ final class PackageSeeder extends Seeder
             'payment.online' => true,
             'shipping.basic' => true, // Module 13 — core shipping available to every tier
             'promotions.basic' => true, // Module 14 — core promotions/coupons available to every tier
+            'marketing.basic' => true, // Module 15 — core campaigns/segments available to every tier
         ],
         'business' => [
             'products.variants' => true,
@@ -87,6 +88,7 @@ final class PackageSeeder extends Seeder
             'payment.online' => true,
             'shipping.basic' => true, // Module 13 — core shipping available to every tier
             'promotions.basic' => true, // Module 14 — core promotions/coupons available to every tier
+            'marketing.basic' => true, // Module 15 — core campaigns/segments available to every tier
         ],
         'premium' => [
             'products.variants' => true,
@@ -109,6 +111,7 @@ final class PackageSeeder extends Seeder
             'payment.online' => true,
             'shipping.basic' => true, // Module 13 — core shipping available to every tier
             'promotions.basic' => true, // Module 14 — core promotions/coupons available to every tier
+            'marketing.basic' => true, // Module 15 — core campaigns/segments available to every tier
         ],
     ];
 

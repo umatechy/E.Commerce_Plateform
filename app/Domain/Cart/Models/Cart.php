@@ -26,7 +26,7 @@ final class Cart extends Model
     protected $fillable = [
         'store_id', 'customer_id', 'guest_token', 'status', 'currency', 'coupon_code',
         'shipping_address_snapshot', 'billing_address_snapshot',
-        'expires_at', 'converted_at', 'converted_order_id',
+        'expires_at', 'converted_at', 'converted_order_id', 'abandoned_marketing_notified_at',
     ];
 
     protected function casts(): array
@@ -37,6 +37,7 @@ final class Cart extends Model
             'billing_address_snapshot' => 'array',
             'expires_at' => 'datetime',
             'converted_at' => 'datetime',
+            'abandoned_marketing_notified_at' => 'datetime',
         ];
     }
 

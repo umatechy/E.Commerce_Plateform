@@ -38,13 +38,14 @@ final class Customer extends Model implements AuthenticatableContract
 
     protected $table = 'customers';
 
-    protected $fillable = ['store_id', 'user_id', 'name', 'email', 'phone', 'password'];
+    protected $fillable = ['store_id', 'user_id', 'name', 'email', 'phone', 'password', 'marketing_email_opt_in'];
 
     protected $hidden = ['password', 'remember_token'];
 
     protected function casts(): array
     {
         return [
+            'marketing_email_opt_in' => 'boolean',
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
         ];

@@ -12,3 +12,6 @@ Schedule::command('outbox:publish')->everyMinute();
 
 // Module 08 §22 "Reservation Expiry".
 Schedule::command('inventory:expire-reservations')->everyMinute();
+
+// Module 15 §33-35 "Abandoned Cart Recovery" (Phase B10).
+Schedule::command('marketing:detect-abandoned-carts')->everyFifteenMinutes();

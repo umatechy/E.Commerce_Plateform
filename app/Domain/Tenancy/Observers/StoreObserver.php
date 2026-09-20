@@ -40,6 +40,7 @@ final class StoreObserver
             'payments.view', 'payments.manage',
             'shipments.view', 'shipments.fulfill', 'shipping_config.manage',
             'promotions.view', 'promotions.manage',
+            'marketing.view', 'marketing.manage',
         ],
         'staff' => [
             'products.view',

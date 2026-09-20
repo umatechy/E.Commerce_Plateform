@@ -17,6 +17,8 @@ use App\Domain\Shipping\Http\Controllers\ShipmentController;
 use App\Domain\Shipping\Http\Controllers\ShippingConfigController;
 use App\Domain\Promotions\Http\Controllers\PromotionController;
 use App\Domain\Promotions\Http\Controllers\CouponController;
+use App\Domain\Marketing\Http\Controllers\SegmentController;
+use App\Domain\Marketing\Http\Controllers\CampaignController;
 use App\Domain\SuperAdmin\Http\Controllers\SuperAdminPackageController;
 use App\Domain\SuperAdmin\Http\Controllers\SuperAdminStoreController;
 use App\Domain\SuperAdmin\Http\Controllers\SuperAdminSubscriptionController;
@@ -95,6 +97,19 @@ Route::middleware(['auth:sanctum', 'staff.principal'])->group(function () {
     Route::get('/promotions/{promotion}/coupons', [CouponController::class, 'index']);
     Route::post('/coupons', [CouponController::class, 'store']);
     Route::delete('/coupons/{coupon}', [CouponController::class, 'destroy']);
+
+    // --- Marketing & Customer Engagement (Module 15, Phase B10) ---
+    Route::get('/marketing/segments', [SegmentController::class, 'index']);
+    Route::post('/marketing/segments', [SegmentController::class, 'store']);
+    Route::get('/marketing/segments/{segment}/preview', [SegmentController::class, 'preview']);
+    Route::get('/campaigns', [CampaignController::class, 'index']);
+    Route::get('/campaigns/{campaign}', [CampaignController::class, 'show']);
+    Route::post('/campaigns', [CampaignController::class, 'store']);
+    Route::post('/campaigns/{campaign}/activate', [CampaignController::class, 'activate']);
+    Route::post('/campaigns/{campaign}/pause', [CampaignController::class, 'pause']);
+    Route::post('/campaigns/{campaign}/resume', [CampaignController::class, 'resume']);
+    Route::post('/campaigns/{campaign}/cancel', [CampaignController::class, 'cancel']);
+    Route::get('/campaigns/{campaign}/recipients', [CampaignController::class, 'recipients']);
 
     // --- Super Admin cross-tenant (ADR-001 Layer 7) ---
     Route::middleware(['can:super-admin.impersonate', 'super_admin.impersonate'])

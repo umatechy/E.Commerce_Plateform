@@ -51,6 +51,8 @@ final class PermissionSeeder extends Seeder
         ['key' => 'shipping_config.manage', 'group' => 'shipments', 'description' => 'Manage shipping zones, methods and rates (Phase B8)'],
         ['key' => 'promotions.view', 'group' => 'promotions', 'description' => 'View promotions, coupons and usage (Module 14 — Phase B9)'],
         ['key' => 'promotions.manage', 'group' => 'promotions', 'description' => 'Create/edit promotions and coupons (Phase B9)'],
+        ['key' => 'marketing.view', 'group' => 'marketing', 'description' => 'View marketing campaigns and segments (Module 15 — Phase B10)'],
+        ['key' => 'marketing.manage', 'group' => 'marketing', 'description' => 'Create/edit/activate marketing campaigns and segments (Phase B10)'],
     ];
 
     public function run(): void

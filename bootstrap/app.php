@@ -13,6 +13,18 @@ use Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful;
 
 // Laravel 12 bootstrap-file style middleware/route registration.
 return Application::configure(basePath: dirname(__DIR__))
+    ->withCommands([
+        // Phase B10 correctness fix: Laravel's default command auto-
+        // discovery only scans app/Console/Commands. This codebase
+        // places console commands inside their owning domain (Phase
+        // B4's ExpireStaleReservations, Phase B10's
+        // DetectAbandonedCarts) — neither was actually discoverable by
+        // Artisan without this explicit registration, a latent gap
+        // since Phase B4 that went unnoticed until this milestone's
+        // own command needed it. Both are registered here now.
+        app_path('Domain/Inventory/Console'),
+        app_path('Domain/Marketing/Console'),
+    ])
     ->withRouting(
         web: __DIR__.'/../routes/web.php',
         commands: __DIR__.'/../routes/console.php',
