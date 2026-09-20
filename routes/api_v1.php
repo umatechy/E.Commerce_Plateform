@@ -19,6 +19,8 @@ use App\Domain\Promotions\Http\Controllers\PromotionController;
 use App\Domain\Promotions\Http\Controllers\CouponController;
 use App\Domain\Marketing\Http\Controllers\SegmentController;
 use App\Domain\Marketing\Http\Controllers\CampaignController;
+use App\Domain\Notifications\Http\Controllers\NotificationTemplateController;
+use App\Domain\Notifications\Http\Controllers\NotificationMessageController;
 use App\Domain\SuperAdmin\Http\Controllers\SuperAdminPackageController;
 use App\Domain\SuperAdmin\Http\Controllers\SuperAdminStoreController;
 use App\Domain\SuperAdmin\Http\Controllers\SuperAdminSubscriptionController;
@@ -110,6 +112,13 @@ Route::middleware(['auth:sanctum', 'staff.principal'])->group(function () {
     Route::post('/campaigns/{campaign}/resume', [CampaignController::class, 'resume']);
     Route::post('/campaigns/{campaign}/cancel', [CampaignController::class, 'cancel']);
     Route::get('/campaigns/{campaign}/recipients', [CampaignController::class, 'recipients']);
+
+    // --- Notifications & Communication (Module 21, Phase B11) ---
+    Route::get('/notification-templates', [NotificationTemplateController::class, 'index']);
+    Route::post('/notification-templates', [NotificationTemplateController::class, 'store']);
+    Route::put('/notification-templates/{template}', [NotificationTemplateController::class, 'update']);
+    Route::get('/notification-messages', [NotificationMessageController::class, 'index']);
+    Route::get('/notification-messages/{message}/attempts', [NotificationMessageController::class, 'attempts']);
 
     // --- Super Admin cross-tenant (ADR-001 Layer 7) ---
     Route::middleware(['can:super-admin.impersonate', 'super_admin.impersonate'])

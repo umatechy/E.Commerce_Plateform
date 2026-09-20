@@ -6,6 +6,7 @@ namespace App\Domain\Events\Jobs;
 
 use App\Domain\Events\Models\OutboxEvent;
 use App\Domain\Events\Models\OutboxEventStatus;
+use App\Domain\Notifications\Services\NotificationEventRouter;
 use App\Domain\Tenancy\Support\TenantContext;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -40,7 +41,7 @@ final class ConsumeOutboxEventJob implements ShouldQueue
         return [10, 30, 60, 300, 900]; // seconds, exponential-ish ceiling
     }
 
-    public function handle(TenantContext $context): void
+    public function handle(TenantContext $context, NotificationEventRouter $notifications): void
     {
         $row = OutboxEvent::query()->withoutTenantScope()->findOrFail($this->outboxEventId);
 
@@ -51,9 +52,15 @@ final class ConsumeOutboxEventJob implements ShouldQueue
         // Idempotency guard (ADR-004 §8): each concrete handler is
         // responsible for checking/recording $row->idempotency_key in its
         // own processed-events tracking table before doing real work.
-        // Concrete per-event-type routing is added as each owning module
-        // (Orders, Payments, Notifications, ...) is implemented — Phase
-        // B0 establishes only the transport/retry/idempotency contract.
+        //
+        // Phase B11: NotificationEventRouter is this platform's first
+        // real per-event-type consumer (see
+        // docs/development/b11-inspection-findings.md "Critical
+        // Finding") — every domain-specific idempotency guarantee is
+        // its OWN (NotificationService checks notification_messages'
+        // unique idempotency_key before creating anything), so a
+        // retried/duplicate dispatch of this same job is always safe.
+        $notifications->route($row->event_type, $row->payload);
 
         $row->update(['status' => OutboxEventStatus::Published]);
     }

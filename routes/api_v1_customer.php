@@ -5,6 +5,7 @@ use App\Domain\Cart\Http\Controllers\CheckoutController;
 use App\Domain\Cart\Http\Controllers\WishlistController;
 use App\Domain\Orders\Http\Controllers\CustomerAuthController;
 use App\Domain\Shipping\Http\Controllers\CustomerShipmentController;
+use App\Domain\Notifications\Http\Controllers\CustomerNotificationController;
 use App\Domain\Shipping\Http\Controllers\ShippingQuoteController;
 use Illuminate\Support\Facades\Route;
 
@@ -33,6 +34,12 @@ Route::middleware(['auth:customer', 'customer.principal'])->group(function () {
 
     // --- Customer order tracking (Module 13 §74, Phase B8) ---
     Route::get('/customer/orders/{orderPublicId}/shipments', [CustomerShipmentController::class, 'index']);
+
+    // --- Notifications (Module 21, Phase B11) ---
+    Route::get('/customer/notifications', [CustomerNotificationController::class, 'index']);
+    Route::post('/customer/notifications/{message}/read', [CustomerNotificationController::class, 'markRead']);
+    Route::post('/customer/notifications/read-all', [CustomerNotificationController::class, 'markAllRead']);
+    Route::patch('/customer/notification-preferences', [CustomerNotificationController::class, 'updatePreferences']);
 });
 
 // --- Cart & Checkout (Module 11 §6/§60-61 — guest AND authenticated

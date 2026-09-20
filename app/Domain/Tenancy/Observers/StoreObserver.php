@@ -41,6 +41,7 @@ final class StoreObserver
             'shipments.view', 'shipments.fulfill', 'shipping_config.manage',
             'promotions.view', 'promotions.manage',
             'marketing.view', 'marketing.manage',
+            'notifications.view', 'notifications.manage',
         ],
         'staff' => [
             'products.view',
@@ -98,6 +99,7 @@ final class StoreObserver
         $store->update([
             'payment_webhook_secret' => \Illuminate\Support\Str::random(64),
             'shipment_webhook_secret' => \Illuminate\Support\Str::random(64),
+            'notification_signing_secret' => \Illuminate\Support\Str::random(64),
         ]);
 
         // Module 13 §8/§15 (Phase B8) — every store gets one working,

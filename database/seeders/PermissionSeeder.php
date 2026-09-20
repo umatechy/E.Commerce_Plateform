@@ -53,6 +53,8 @@ final class PermissionSeeder extends Seeder
         ['key' => 'promotions.manage', 'group' => 'promotions', 'description' => 'Create/edit promotions and coupons (Phase B9)'],
         ['key' => 'marketing.view', 'group' => 'marketing', 'description' => 'View marketing campaigns and segments (Module 15 — Phase B10)'],
         ['key' => 'marketing.manage', 'group' => 'marketing', 'description' => 'Create/edit/activate marketing campaigns and segments (Phase B10)'],
+        ['key' => 'notifications.view', 'group' => 'notifications', 'description' => 'View notification messages, delivery attempts and templates (Module 21 — Phase B11)'],
+        ['key' => 'notifications.manage', 'group' => 'notifications', 'description' => 'Create/edit/publish notification templates (Phase B11)'],
     ];
 
     public function run(): void

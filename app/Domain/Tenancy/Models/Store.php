@@ -33,7 +33,7 @@ final class Store extends Model
      * already excludes it via an explicit allow-list — this is a
      * defense-in-depth backstop, not the only protection.
      */
-    protected $hidden = ['payment_webhook_secret', 'shipment_webhook_secret'];
+    protected $hidden = ['payment_webhook_secret', 'shipment_webhook_secret', 'notification_signing_secret'];
 
     protected $fillable = [
         'name',
@@ -42,6 +42,7 @@ final class Store extends Model
         'allow_overselling',
         'payment_webhook_secret',
         'shipment_webhook_secret',
+        'notification_signing_secret',
     ];
 
     protected function casts(): array
