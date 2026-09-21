@@ -55,6 +55,9 @@ final class PermissionSeeder extends Seeder
         ['key' => 'marketing.manage', 'group' => 'marketing', 'description' => 'Create/edit/activate marketing campaigns and segments (Phase B10)'],
         ['key' => 'notifications.view', 'group' => 'notifications', 'description' => 'View notification messages, delivery attempts and templates (Module 21 — Phase B11)'],
         ['key' => 'notifications.manage', 'group' => 'notifications', 'description' => 'Create/edit/publish notification templates (Phase B11)'],
+        ['key' => 'analytics.view', 'group' => 'analytics', 'description' => 'View dashboard and non-financial reports (Module 22 — Phase B12)'],
+        ['key' => 'analytics.financial', 'group' => 'analytics', 'description' => 'View revenue/payment/financial reports — sensitive (Phase B12)'],
+        ['key' => 'analytics.export', 'group' => 'analytics', 'description' => 'Request and download report exports (Phase B12)'],
     ];
 
     public function run(): void

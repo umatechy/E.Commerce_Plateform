@@ -21,6 +21,9 @@ use App\Domain\Marketing\Http\Controllers\SegmentController;
 use App\Domain\Marketing\Http\Controllers\CampaignController;
 use App\Domain\Notifications\Http\Controllers\NotificationTemplateController;
 use App\Domain\Notifications\Http\Controllers\NotificationMessageController;
+use App\Domain\Analytics\Http\Controllers\DashboardController;
+use App\Domain\Analytics\Http\Controllers\ReportController;
+use App\Domain\Analytics\Http\Controllers\ReportExportController;
 use App\Domain\SuperAdmin\Http\Controllers\SuperAdminPackageController;
 use App\Domain\SuperAdmin\Http\Controllers\SuperAdminStoreController;
 use App\Domain\SuperAdmin\Http\Controllers\SuperAdminSubscriptionController;
@@ -119,6 +122,20 @@ Route::middleware(['auth:sanctum', 'staff.principal'])->group(function () {
     Route::put('/notification-templates/{template}', [NotificationTemplateController::class, 'update']);
     Route::get('/notification-messages', [NotificationMessageController::class, 'index']);
     Route::get('/notification-messages/{message}/attempts', [NotificationMessageController::class, 'attempts']);
+
+    // --- Reports, Analytics & Dashboard (Module 22, Phase B12) ---
+    Route::get('/dashboard', [DashboardController::class, 'summary']);
+    Route::get('/reports/sales', [ReportController::class, 'sales']);
+    Route::get('/reports/products', [ReportController::class, 'products']);
+    Route::get('/reports/customers', [ReportController::class, 'customers']);
+    Route::get('/reports/payments', [ReportController::class, 'payments']);
+    Route::get('/reports/shipping', [ReportController::class, 'shipping']);
+    Route::get('/reports/promotions', [ReportController::class, 'promotions']);
+    Route::get('/reports/marketing', [ReportController::class, 'marketing']);
+    Route::get('/reports/notifications', [ReportController::class, 'notifications']);
+    Route::get('/reports/inventory', [ReportController::class, 'inventory']);
+    Route::post('/exports', [ReportExportController::class, 'store']);
+    Route::get('/exports/{export}', [ReportExportController::class, 'show']);
 
     // --- Super Admin cross-tenant (ADR-001 Layer 7) ---
     Route::middleware(['can:super-admin.impersonate', 'super_admin.impersonate'])
