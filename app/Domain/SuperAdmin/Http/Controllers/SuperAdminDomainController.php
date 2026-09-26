@@ -23,6 +23,12 @@ use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
  */
 final class SuperAdminDomainController
 {
+    /** Module 19 §31/Module 30 §14 "Domain Oversight" — platform-wide, cross-store visibility. Sits under the 'super_admin.platform' group (no target store), distinct from suspend()/reactivate() below which are per-domain but still platform-global actions (a Domain's own store_id is read from the resolved model, never from an impersonated TenantContext). */
+    public function indexAll(): AnonymousResourceCollection
+    {
+        return DomainResource::collection(Domain::query()->withoutTenantScope()->paginate(50));
+    }
+
     public function index(): AnonymousResourceCollection
     {
         return DomainResource::collection(Domain::query()->get());

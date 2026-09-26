@@ -43,6 +43,22 @@ final class LoginRequest extends FormRequest
             ]);
         }
 
+        // Module 30 §12 "User & Staff Oversight" (Phase B16) — a
+        // platform-wide account lock a Super Admin can apply. Checked
+        // AFTER a successful credential match (never reveals whether an
+        // email/password pair was correct if the account happens to be
+        // deactivated — same generic failure message either way) and
+        // the session is torn down immediately if the account is
+        // inactive, never left half-authenticated.
+        if (! Auth::user()->is_active) {
+            Auth::guard('web')->logout();
+            RateLimiter::hit($this->throttleKey());
+
+            throw ValidationException::withMessages([
+                'email' => trans('auth.failed'),
+            ]);
+        }
+
         RateLimiter::clear($this->throttleKey());
     }
 

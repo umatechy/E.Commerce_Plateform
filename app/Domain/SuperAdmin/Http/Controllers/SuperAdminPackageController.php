@@ -34,6 +34,10 @@ final class SuperAdminPackageController
 
         $package = Package::query()->create($request->validated());
 
+        \Illuminate\Support\Facades\Log::channel('audit')->info('super_admin.package.created', [
+            'acting_super_admin_id' => $request->user()->id, 'package_id' => $package->id, 'code' => $package->code,
+        ]);
+
         return new PackageResource($package);
     }
 
@@ -41,7 +45,13 @@ final class SuperAdminPackageController
     {
         \Illuminate\Support\Facades\Gate::forUser($request->user())->authorize('manage', Package::class);
 
+        $before = $package->only(array_keys($request->validated()));
         $package->update($request->validated());
+
+        \Illuminate\Support\Facades\Log::channel('audit')->info('super_admin.package.updated', [
+            'acting_super_admin_id' => $request->user()->id, 'package_id' => $package->id,
+            'before' => $before, 'after' => $package->fresh()->only(array_keys($request->validated())),
+        ]);
 
         return new PackageResource($package->load('entitlements'));
     }

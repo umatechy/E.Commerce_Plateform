@@ -30,6 +30,11 @@ use App\Domain\Seo\Http\Controllers\RedirectController;
 use App\Domain\Domains\Http\Controllers\DomainController;
 use App\Domain\SuperAdmin\Http\Controllers\SuperAdminDomainController;
 use App\Domain\Theme\Http\Controllers\StoreThemeController;
+use App\Domain\SuperAdmin\Http\Controllers\SuperAdminThemeController;
+use App\Domain\SuperAdmin\Http\Controllers\SuperAdminDashboardController;
+use App\Domain\SuperAdmin\Http\Controllers\SuperAdminUserController;
+use App\Domain\SuperAdmin\Http\Controllers\SuperAdminPaymentController;
+use App\Domain\SuperAdmin\Http\Controllers\SuperAdminNotificationController;
 use App\Domain\SuperAdmin\Http\Controllers\SuperAdminPackageController;
 use App\Domain\SuperAdmin\Http\Controllers\SuperAdminStoreController;
 use App\Domain\SuperAdmin\Http\Controllers\SuperAdminSubscriptionController;
@@ -169,18 +174,40 @@ Route::middleware(['auth:sanctum', 'staff.principal'])->group(function () {
     Route::get('/store/theme/publications', [StoreThemeController::class, 'publications']);
     Route::post('/store/theme/publications/{publicationId}/rollback', [StoreThemeController::class, 'rollback']);
 
+    // --- Super Admin: platform-global actions (no target store — Phase
+    // B16 fix, see docs/development/b16-inspection-findings.md
+    // "Critical Bug Found") ---
+    Route::middleware(['can:super-admin.platform', 'super_admin.platform'])
+        ->prefix('super-admin')
+        ->group(function () {
+            Route::get('/packages', [SuperAdminPackageController::class, 'index']);
+            Route::post('/packages', [SuperAdminPackageController::class, 'store']);
+            Route::put('/packages/{package}', [SuperAdminPackageController::class, 'update']);
+
+            Route::get('/themes', [SuperAdminThemeController::class, 'index']);
+            Route::post('/themes', [SuperAdminThemeController::class, 'store']);
+            Route::put('/themes/{theme}', [SuperAdminThemeController::class, 'update']);
+
+            Route::get('/dashboard', [SuperAdminDashboardController::class, 'show']);
+            Route::get('/stores', [SuperAdminStoreController::class, 'index']);
+            Route::get('/users', [SuperAdminUserController::class, 'index']);
+            Route::get('/users/{user}', [SuperAdminUserController::class, 'show']);
+            Route::post('/users/{user}/deactivate', [SuperAdminUserController::class, 'deactivate']);
+            Route::post('/users/{user}/reactivate', [SuperAdminUserController::class, 'reactivate']);
+            Route::get('/payments/failures', [SuperAdminPaymentController::class, 'failures']);
+            Route::get('/notifications/failures', [SuperAdminNotificationController::class, 'failures']);
+            Route::get('/domains', [SuperAdminDomainController::class, 'indexAll']);
+        });
+
     // --- Super Admin cross-tenant (ADR-001 Layer 7) ---
     Route::middleware(['can:super-admin.impersonate', 'super_admin.impersonate'])
         ->prefix('super-admin')
         ->group(function () {
             Route::get('/stores/{store}/impersonate', [SuperAdminStoreController::class, 'impersonate']);
+            Route::get('/stores/{store}', [SuperAdminStoreController::class, 'show']);
 
             // Package/subscription platform administration (Module 04
             // "Package Administration" / "Subscription Administration").
-            Route::get('/packages', [SuperAdminPackageController::class, 'index']);
-            Route::post('/packages', [SuperAdminPackageController::class, 'store']);
-            Route::put('/packages/{package}', [SuperAdminPackageController::class, 'update']);
-
             Route::post('/stores/{store}/subscription/change-package', [SuperAdminSubscriptionController::class, 'changePackage']);
             Route::post('/stores/{store}/subscription/suspend', [SuperAdminSubscriptionController::class, 'suspend']);
             Route::post('/stores/{store}/subscription/reactivate', [SuperAdminSubscriptionController::class, 'reactivate']);

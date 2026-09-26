@@ -92,5 +92,11 @@ final class AppServiceProvider extends ServiceProvider
         // independent enforcement points for the platform's highest-risk
         // capability, deliberately not collapsed into one.
         Gate::define('super-admin.impersonate', [SuperAdminAccessPolicy::class, 'impersonate']);
+        // Phase B16 fix — see docs/development/b16-inspection-findings.md
+        // "Critical Bug Found": a SEPARATE ability for genuinely platform-
+        // global Super Admin routes (no target store at all), so they are
+        // never forced through EnsureSuperAdminImpersonation's per-store
+        // logic.
+        Gate::define('super-admin.platform', [SuperAdminAccessPolicy::class, 'platformAction']);
     }
 }

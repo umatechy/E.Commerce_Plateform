@@ -20,4 +20,10 @@ final class SuperAdminAccessPolicy
     {
         return $user->isPlatformStaff();
     }
+
+    /** Phase B16 — see docs/development/b16-inspection-findings.md. Same underlying check as impersonate() today (single-tier platform-role boundary, see "Architectural Decision — No New Platform Role Hierarchy"), kept as a SEPARATE named ability so the two concerns (per-store impersonation vs platform-global action) never share one Gate and can diverge safely later without touching every route. */
+    public function platformAction(User $user): bool
+    {
+        return $user->isPlatformStaff();
+    }
 }

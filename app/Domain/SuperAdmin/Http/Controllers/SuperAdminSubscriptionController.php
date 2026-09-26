@@ -28,6 +28,7 @@ final class SuperAdminSubscriptionController
         SubscriptionLifecycleService $subscriptions,
     ): JsonResponse {
         $newPackage = Package::query()->where('code', $request->string('package_code'))->firstOrFail();
+        $previousPackageCode = \App\Domain\Packages\Models\Subscription::query()->withoutTenantScope()->where('store_id', $store->id)->latest()->first()?->package?->code;
 
         $overLimit = $subscriptions->changePackage(
             $store,
@@ -35,6 +36,16 @@ final class SuperAdminSubscriptionController
             actorDescription: $request->user()->email,
             source: 'super_admin',
         );
+
+        // Phase B16 hardening — see docs/development/b16-inspection-findings.md
+        // "Third Finding": an ACTION-SPECIFIC audit entry (before/after
+        // state), in ADDITION to (never replacing) the existing generic
+        // 'super_admin.impersonation.started' log the route's own
+        // middleware already writes.
+        \Illuminate\Support\Facades\Log::channel('audit')->info('super_admin.subscription.package_changed', [
+            'acting_super_admin_id' => $request->user()->id, 'store_id' => $store->id,
+            'from_package_code' => $previousPackageCode, 'to_package_code' => $newPackage->code, 'over_limit' => $overLimit,
+        ]);
 
         return response()->json([
             'data' => [
@@ -47,14 +58,24 @@ final class SuperAdminSubscriptionController
 
     public function suspend(Request $request, Store $store, SubscriptionLifecycleService $subscriptions): JsonResponse
     {
-        $subscriptions->suspend($store, $request->input('reason', 'manual_super_admin_action'));
+        $reason = $request->input('reason', 'manual_super_admin_action');
+        $subscriptions->suspend($store, $reason);
+
+        \Illuminate\Support\Facades\Log::channel('audit')->info('super_admin.subscription.suspended', [
+            'acting_super_admin_id' => $request->user()->id, 'store_id' => $store->id, 'reason' => $reason,
+        ]);
 
         return response()->json(status: 204);
     }
 
     public function reactivate(Request $request, Store $store, SubscriptionLifecycleService $subscriptions): JsonResponse
     {
-        $subscriptions->reactivate($store, $request->input('reason', 'manual_super_admin_action'));
+        $reason = $request->input('reason', 'manual_super_admin_action');
+        $subscriptions->reactivate($store, $reason);
+
+        \Illuminate\Support\Facades\Log::channel('audit')->info('super_admin.subscription.reactivated', [
+            'acting_super_admin_id' => $request->user()->id, 'store_id' => $store->id, 'reason' => $reason,
+        ]);
 
         return response()->json(status: 204);
     }
