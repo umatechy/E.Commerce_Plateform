@@ -29,6 +29,7 @@ use App\Domain\Seo\Http\Controllers\ContentPageController;
 use App\Domain\Seo\Http\Controllers\RedirectController;
 use App\Domain\Domains\Http\Controllers\DomainController;
 use App\Domain\SuperAdmin\Http\Controllers\SuperAdminDomainController;
+use App\Domain\Theme\Http\Controllers\StoreThemeController;
 use App\Domain\SuperAdmin\Http\Controllers\SuperAdminPackageController;
 use App\Domain\SuperAdmin\Http\Controllers\SuperAdminStoreController;
 use App\Domain\SuperAdmin\Http\Controllers\SuperAdminSubscriptionController;
@@ -160,6 +161,13 @@ Route::middleware(['auth:sanctum', 'staff.principal'])->group(function () {
     Route::post('/domains/{domain}/verify', [DomainController::class, 'verify']);
     Route::post('/domains/{domain}/primary', [DomainController::class, 'setPrimary']);
     Route::delete('/domains/{domain}', [DomainController::class, 'destroy']);
+
+    // --- Theme, Branding & Design System (Module 17, Phase B15) ---
+    Route::get('/store/theme', [StoreThemeController::class, 'show']);
+    Route::put('/store/theme/draft', [StoreThemeController::class, 'updateDraft']);
+    Route::post('/store/theme/publish', [StoreThemeController::class, 'publish']);
+    Route::get('/store/theme/publications', [StoreThemeController::class, 'publications']);
+    Route::post('/store/theme/publications/{publicationId}/rollback', [StoreThemeController::class, 'rollback']);
 
     // --- Super Admin cross-tenant (ADR-001 Layer 7) ---
     Route::middleware(['can:super-admin.impersonate', 'super_admin.impersonate'])

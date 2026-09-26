@@ -62,6 +62,9 @@ final class PermissionSeeder extends Seeder
         ['key' => 'seo.manage', 'group' => 'seo', 'description' => 'Manage SEO settings, content pages and redirects (Phase B13)'],
         ['key' => 'domains.view', 'group' => 'domains', 'description' => 'View domains and verification status (Module 19 — Phase B14)'],
         ['key' => 'domains.manage', 'group' => 'domains', 'description' => 'Add/verify/activate/remove domains, change primary domain (Phase B14)'],
+        ['key' => 'theme.view', 'group' => 'theme', 'description' => 'View storefront theme configuration and branding (Module 17 — Phase B15)'],
+        ['key' => 'theme.manage', 'group' => 'theme', 'description' => 'Edit draft theme configuration and branding (Phase B15)'],
+        ['key' => 'theme.publish', 'group' => 'theme', 'description' => 'Publish or roll back the live storefront theme (Phase B15)'],
     ];
 
     public function run(): void

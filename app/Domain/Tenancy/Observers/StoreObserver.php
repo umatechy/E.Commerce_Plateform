@@ -45,6 +45,7 @@ final class StoreObserver
             'analytics.view', 'analytics.export',
             'seo.view', 'seo.manage',
             'domains.view',
+            'theme.view', 'theme.manage', 'theme.publish',
         ],
         'staff' => [
             'products.view',
@@ -140,5 +141,12 @@ final class StoreObserver
         // domain the platform itself controls (no external verification
         // needed or possible).
         app(\App\Domain\Domains\Services\DomainService::class)->createPlatformSubdomain($store);
+
+        // Module 17 §16 "Theme Lifecycle" (Phase B15) — every new store
+        // automatically gets a real, resolvable, auto-published default
+        // theme configuration (see docs/development/b15-inspection-findings.md
+        // "Bug Found and Fixed" — auto-published, not left as a draft
+        // with nothing yet resolvable).
+        app(\App\Domain\Theme\Services\ThemeService::class)->createDefaultForStore($store);
     }
 }

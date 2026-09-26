@@ -13,6 +13,7 @@ final class DatabaseSeeder extends Seeder
         $this->call([
             PermissionSeeder::class,
             PackageSeeder::class, // must run before any store registers, so DEFAULT_TRIAL_PACKAGE_CODE resolves
+            ThemeSeeder::class, // must run before any store registers — StoreObserver looks up the 'default' theme by key
         ]);
 
         // No demo Store/User data is seeded here (this milestone: "do not

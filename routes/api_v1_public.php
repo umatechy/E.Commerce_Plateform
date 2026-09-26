@@ -40,3 +40,7 @@ Route::get('/seo/{storeSlug}/products/{productSlug}/structured-data', [SeoPublic
 Route::get('/seo/{storeSlug}/categories/{categorySlug}', [SeoPublicController::class, 'category']);
 Route::get('/seo/{storeSlug}/brands/{brandSlug}', [SeoPublicController::class, 'brand']);
 Route::get('/seo/{storeSlug}/pages/{pageSlug}', [SeoPublicController::class, 'contentPage']);
+
+// Module 17 "Theme + Domain + SEO Flow" (Phase B15) — resolved,
+// PUBLISHED-only theme configuration for a future rendering layer.
+Route::get('/theme/{storeSlug}', [\App\Domain\Theme\Http\Controllers\ThemePublicController::class, 'show']);
