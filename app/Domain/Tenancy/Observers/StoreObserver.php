@@ -44,6 +44,7 @@ final class StoreObserver
             'notifications.view', 'notifications.manage',
             'analytics.view', 'analytics.export',
             'seo.view', 'seo.manage',
+            'domains.view',
         ],
         'staff' => [
             'products.view',
@@ -133,5 +134,11 @@ final class StoreObserver
             'currency' => 'USD', // documented placeholder — see Cart's identical DEFAULT_CURRENCY precedent (Phase B6)
             'base_cost_minor' => 0,
         ]);
+
+        // Module 19 §8 "Platform Subdomain System" (Phase B14) — every
+        // new store automatically gets one auto-Active, auto-primary
+        // domain the platform itself controls (no external verification
+        // needed or possible).
+        app(\App\Domain\Domains\Services\DomainService::class)->createPlatformSubdomain($store);
     }
 }

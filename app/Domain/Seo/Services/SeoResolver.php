@@ -99,8 +99,39 @@ final class SeoResolver
      * configured base URL (not a verified per-tenant domain) is used —
      * no Module 19 domain-verification system exists yet.
      */
+    /**
+     * Module 19 §22 "Canonical URL Integration" (Phase B14) — REPLACES
+     * B13's original placeholder body (config base URL + store slug as
+     * a path segment) with the real, verified primary Domain. This is
+     * the ONE method B14 changes in this entire class — every other
+     * line of SeoResolver, and every other B13 service
+     * (RedirectService, ContentSanitizer, SitemapService,
+     * StructuredDataService), is untouched; they all inherit this fix
+     * automatically because they call through this one method.
+     *
+     * Falls back to the old config-based placeholder ONLY if a store
+     * somehow has no Active primary domain yet (should not happen in
+     * practice — every store gets an auto-Active platform subdomain at
+     * creation, Phase B14 — but this keeps SEO output well-formed
+     * rather than throwing during, e.g., test setup that bypasses
+     * StoreObserver).
+     */
     private function canonicalUrl(Store $store, string $path): string
     {
+        $domain = app(\App\Domain\Domains\Services\DomainResolverService::class)->primaryDomainFor($store);
+
+        if ($domain !== null) {
+            // Always https:// — the platform's own reverse-proxy/CDN
+            // terminates TLS for every platform subdomain via a
+            // wildcard certificate; Domain.ssl_status tracks CUSTOM
+            // domain SSL provisioning specifically (Module 19 §17-18),
+            // a separate concern from whether THIS canonical URL uses
+            // https (documented decision, not an SSL-truthfulness gap).
+            $base = 'https://'.$domain->normalized_hostname;
+
+            return $path === '' ? $base : "{$base}/{$path}";
+        }
+
         $base = rtrim(config('seo.storefront_base_url'), '/');
         $segments = array_filter([$store->slug, $path]);
 

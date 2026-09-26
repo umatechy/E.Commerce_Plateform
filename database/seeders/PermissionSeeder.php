@@ -60,6 +60,8 @@ final class PermissionSeeder extends Seeder
         ['key' => 'analytics.export', 'group' => 'analytics', 'description' => 'Request and download report exports (Phase B12)'],
         ['key' => 'seo.view', 'group' => 'seo', 'description' => 'View SEO settings, content pages and redirects (Module 16 — Phase B13)'],
         ['key' => 'seo.manage', 'group' => 'seo', 'description' => 'Manage SEO settings, content pages and redirects (Phase B13)'],
+        ['key' => 'domains.view', 'group' => 'domains', 'description' => 'View domains and verification status (Module 19 — Phase B14)'],
+        ['key' => 'domains.manage', 'group' => 'domains', 'description' => 'Add/verify/activate/remove domains, change primary domain (Phase B14)'],
     ];
 
     public function run(): void

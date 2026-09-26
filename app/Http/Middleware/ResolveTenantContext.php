@@ -79,24 +79,43 @@ final class ResolveTenantContext
             return $next($request);
         }
 
-        // Anonymous (guest) request: Module 19 (Domain Management —
-        // resolving tenant from the storefront's own domain/subdomain)
-        // is not built yet. Phase B6 needs SOME way to resolve which
-        // store a guest is shopping at (guest cart/checkout — Module 11
-        // §6/§63), so this interim mechanism is used until Module 19
-        // exists: an explicit `X-Store-Slug` header, resolved against
-        // the PUBLIC `stores.slug` column.
-        //
-        // This is NOT a security/authorization credential — a store
-        // slug is public information (equivalent to a subdomain a
-        // visitor's browser would already be pointed at once Module 19
-        // exists), and it only selects WHICH TENANT'S PUBLIC STOREFRONT
-        // to serve. It grants no access to any specific guest's private
-        // data: a cart's `guest_token` (a separate, high-entropy secret
-        // — Module 11 §63) is the actual authorization credential for
+        // Anonymous (guest) request. Module 19 (Domain Management,
+        // Phase B14) is now built — the AUTHORITATIVE resolution path
+        // for a real storefront request is the verified Domain
+        // registry, checked against the request's own Host header
+        // FIRST. This can NEVER be overridden by X-Store-Slug or any
+        // other client-supplied header/parameter (Module 19 Non-
+        // Negotiable Step 20) — X-Store-Slug is consulted only when
+        // the Host header matches NO registered, Active domain (local
+        // development, this Claude App sandbox, or a client with no
+        // meaningful Host of its own, e.g. a native mobile app calling
+        // the API directly).
+        $storeFromDomain = app(\App\Domain\Domains\Services\DomainResolverService::class)->resolveHost($request->getHost());
+
+        if ($storeFromDomain !== null) {
+            $this->context->resolveToStore($storeFromDomain->id);
+
+            return $next($request);
+        }
+
+        // Fallback mechanism, preserved from Phase B6 exactly as
+        // instructed (Module 19 Step 64: "do not rewrite B13 SEO
+        // unnecessarily... existing B6 guest-store header behavior must
+        // remain limited to the exact contexts where it was
+        // intentionally introduced"). This is NOT a security/
+        // authorization credential — a store slug is public information
+        // (equivalent to a subdomain a visitor's browser would already
+        // be pointed at for a real domain-resolved request), and it
+        // only selects WHICH TENANT'S PUBLIC STOREFRONT to serve. It
+        // grants no access to any specific guest's private data: a
+        // cart's `guest_token` (a separate, high-entropy secret —
+        // Module 11 §63) is the actual authorization credential for
         // that cart's contents, checked independently in
         // CartController/CartService. Knowing a store's slug alone
-        // never reveals or grants access to any guest's cart.
+        // never reveals or grants access to any guest's cart. This
+        // fallback can NEVER override a request whose Host header DID
+        // match a verified, Active domain — that branch already
+        // returned above.
         $storeSlug = $request->header('X-Store-Slug');
 
         if ($storeSlug !== null) {

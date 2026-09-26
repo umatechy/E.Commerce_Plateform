@@ -69,6 +69,7 @@ final class PackageSeeder extends Seeder
             'notifications.basic' => true, // Module 21 — core notification delivery available to every tier
             'analytics.basic' => true, // Module 22 — core dashboard/reports available to every tier
             'seo.basic' => true, // Module 16 — core SEO/content management available to every tier
+            'domains.custom_domain' => true, // Module 19 — custom domain attachment available to every tier
         ],
         'business' => [
             'products.variants' => true,
@@ -95,6 +96,7 @@ final class PackageSeeder extends Seeder
             'notifications.basic' => true, // Module 21 — core notification delivery available to every tier
             'analytics.basic' => true, // Module 22 — core dashboard/reports available to every tier
             'seo.basic' => true, // Module 16 — core SEO/content management available to every tier
+            'domains.custom_domain' => true, // Module 19 — custom domain attachment available to every tier
         ],
         'premium' => [
             'products.variants' => true,
@@ -121,6 +123,7 @@ final class PackageSeeder extends Seeder
             'notifications.basic' => true, // Module 21 — core notification delivery available to every tier
             'analytics.basic' => true, // Module 22 — core dashboard/reports available to every tier
             'seo.basic' => true, // Module 16 — core SEO/content management available to every tier
+            'domains.custom_domain' => true, // Module 19 — custom domain attachment available to every tier
         ],
     ];
 

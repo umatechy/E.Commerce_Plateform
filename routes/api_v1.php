@@ -27,6 +27,8 @@ use App\Domain\Analytics\Http\Controllers\ReportExportController;
 use App\Domain\Seo\Http\Controllers\SeoSettingController;
 use App\Domain\Seo\Http\Controllers\ContentPageController;
 use App\Domain\Seo\Http\Controllers\RedirectController;
+use App\Domain\Domains\Http\Controllers\DomainController;
+use App\Domain\SuperAdmin\Http\Controllers\SuperAdminDomainController;
 use App\Domain\SuperAdmin\Http\Controllers\SuperAdminPackageController;
 use App\Domain\SuperAdmin\Http\Controllers\SuperAdminStoreController;
 use App\Domain\SuperAdmin\Http\Controllers\SuperAdminSubscriptionController;
@@ -151,6 +153,14 @@ Route::middleware(['auth:sanctum', 'staff.principal'])->group(function () {
     Route::post('/redirects', [RedirectController::class, 'store']);
     Route::delete('/redirects/{redirect}', [RedirectController::class, 'destroy']);
 
+    // --- Domain Management (Module 19, Phase B14) ---
+    Route::get('/domains', [DomainController::class, 'index']);
+    Route::post('/domains', [DomainController::class, 'store']);
+    Route::post('/domains/{domain}/verification', [DomainController::class, 'initiateVerification']);
+    Route::post('/domains/{domain}/verify', [DomainController::class, 'verify']);
+    Route::post('/domains/{domain}/primary', [DomainController::class, 'setPrimary']);
+    Route::delete('/domains/{domain}', [DomainController::class, 'destroy']);
+
     // --- Super Admin cross-tenant (ADR-001 Layer 7) ---
     Route::middleware(['can:super-admin.impersonate', 'super_admin.impersonate'])
         ->prefix('super-admin')
@@ -166,5 +176,10 @@ Route::middleware(['auth:sanctum', 'staff.principal'])->group(function () {
             Route::post('/stores/{store}/subscription/change-package', [SuperAdminSubscriptionController::class, 'changePackage']);
             Route::post('/stores/{store}/subscription/suspend', [SuperAdminSubscriptionController::class, 'suspend']);
             Route::post('/stores/{store}/subscription/reactivate', [SuperAdminSubscriptionController::class, 'reactivate']);
+
+            // Module 19 §31 "Super Admin Domain Management" (Phase B14).
+            Route::get('/stores/{store}/domains', [SuperAdminDomainController::class, 'index']);
+            Route::post('/stores/{store}/domains/{domain}/suspend', [SuperAdminDomainController::class, 'suspend']);
+            Route::post('/stores/{store}/domains/{domain}/reactivate', [SuperAdminDomainController::class, 'reactivate']);
         });
 });
