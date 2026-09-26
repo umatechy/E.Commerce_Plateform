@@ -221,10 +221,20 @@ under app/Domain/Payments/, Shipping/, Notifications/, Seo/, Domains/, or
 Theme/ were touched.
 
 Git Commit Status:
-A commit for this milestone's work follows immediately after this
-checkpoint; the real, executed commit hash is recorded via a follow-up
-correction commit immediately after, same pattern used for every prior
-phase's checkpoint.
+Commit created: 1947a3b - "Phase B17: System Settings & Configuration
+(Module 33)". Verified by direct execution (git log --oneline after the
+commit): working tree clean, history now shows twenty-four real commits:
+5dcb815 (Phase B0-B5), b12ae2b (B5 checkpoint correction), 47d6a1c (Phase
+B6), 24b7bd3 (B6 checkpoint correction), 66d66a5 (Phase B7), 6888a16 (B7
+checkpoint correction), 3184400 (Phase B8), 3259813 (B8 checkpoint
+correction), e781aad (Phase B9), dc065c9 (B9 checkpoint correction), b62c512
+(Phase B10), 3bf153d (B10 checkpoint correction), bb08fc8 (Phase B11),
+7f9ac4b (B11 checkpoint correction), 4788f9d (Phase B12), e4914ba (B12
+checkpoint correction), 1a0d391 (Phase B13), 9207c7f (B13 checkpoint
+correction), 69edb67 (Phase B14), ae69918 (B14 checkpoint correction),
+2675533 (Phase B15), 3fde434 (B15 checkpoint correction), 41800af (Phase
+B16), 3db50ad (B16 checkpoint correction), 1947a3b (this milestone). No
+fabricated incremental history.
 
 Final Status:
 PASS. All new capability is additive and tenant-safe; three design-time
