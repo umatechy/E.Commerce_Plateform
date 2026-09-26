@@ -65,6 +65,8 @@ final class PermissionSeeder extends Seeder
         ['key' => 'theme.view', 'group' => 'theme', 'description' => 'View storefront theme configuration and branding (Module 17 — Phase B15)'],
         ['key' => 'theme.manage', 'group' => 'theme', 'description' => 'Edit draft theme configuration and branding (Phase B15)'],
         ['key' => 'theme.publish', 'group' => 'theme', 'description' => 'Publish or roll back the live storefront theme (Phase B15)'],
+        ['key' => 'settings.view', 'group' => 'settings', 'description' => 'View store-level configuration (Module 33 — Phase B17)'],
+        ['key' => 'settings.manage', 'group' => 'settings', 'description' => 'Edit store-level configuration (Phase B17)'],
     ];
 
     public function run(): void

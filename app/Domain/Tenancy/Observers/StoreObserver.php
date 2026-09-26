@@ -46,6 +46,7 @@ final class StoreObserver
             'seo.view', 'seo.manage',
             'domains.view',
             'theme.view', 'theme.manage', 'theme.publish',
+            'settings.view', 'settings.manage',
         ],
         'staff' => [
             'products.view',

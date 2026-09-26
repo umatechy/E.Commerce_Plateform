@@ -35,6 +35,8 @@ use App\Domain\SuperAdmin\Http\Controllers\SuperAdminDashboardController;
 use App\Domain\SuperAdmin\Http\Controllers\SuperAdminUserController;
 use App\Domain\SuperAdmin\Http\Controllers\SuperAdminPaymentController;
 use App\Domain\SuperAdmin\Http\Controllers\SuperAdminNotificationController;
+use App\Domain\SuperAdmin\Http\Controllers\SuperAdminSettingController;
+use App\Domain\Settings\Http\Controllers\StoreSettingController;
 use App\Domain\SuperAdmin\Http\Controllers\SuperAdminPackageController;
 use App\Domain\SuperAdmin\Http\Controllers\SuperAdminStoreController;
 use App\Domain\SuperAdmin\Http\Controllers\SuperAdminSubscriptionController;
@@ -174,6 +176,13 @@ Route::middleware(['auth:sanctum', 'staff.principal'])->group(function () {
     Route::get('/store/theme/publications', [StoreThemeController::class, 'publications']);
     Route::post('/store/theme/publications/{publicationId}/rollback', [StoreThemeController::class, 'rollback']);
 
+    // --- System Settings & Configuration, store scope (Module 33, Phase B17) ---
+    Route::get('/store/settings', [StoreSettingController::class, 'index']);
+    Route::get('/store/settings/{key}', [StoreSettingController::class, 'show']);
+    Route::put('/store/settings/{key}', [StoreSettingController::class, 'update']);
+    Route::get('/store/settings/{key}/history', [StoreSettingController::class, 'history']);
+    Route::post('/store/settings/revisions/{revisionId}/rollback', [StoreSettingController::class, 'rollback']);
+
     // --- Super Admin: platform-global actions (no target store — Phase
     // B16 fix, see docs/development/b16-inspection-findings.md
     // "Critical Bug Found") ---
@@ -197,6 +206,9 @@ Route::middleware(['auth:sanctum', 'staff.principal'])->group(function () {
             Route::get('/payments/failures', [SuperAdminPaymentController::class, 'failures']);
             Route::get('/notifications/failures', [SuperAdminNotificationController::class, 'failures']);
             Route::get('/domains', [SuperAdminDomainController::class, 'indexAll']);
+
+            Route::get('/settings', [SuperAdminSettingController::class, 'index']);
+            Route::put('/settings/{key}', [SuperAdminSettingController::class, 'update']);
         });
 
     // --- Super Admin cross-tenant (ADR-001 Layer 7) ---
