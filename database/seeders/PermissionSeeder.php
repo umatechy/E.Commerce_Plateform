@@ -58,6 +58,8 @@ final class PermissionSeeder extends Seeder
         ['key' => 'analytics.view', 'group' => 'analytics', 'description' => 'View dashboard and non-financial reports (Module 22 — Phase B12)'],
         ['key' => 'analytics.financial', 'group' => 'analytics', 'description' => 'View revenue/payment/financial reports — sensitive (Phase B12)'],
         ['key' => 'analytics.export', 'group' => 'analytics', 'description' => 'Request and download report exports (Phase B12)'],
+        ['key' => 'seo.view', 'group' => 'seo', 'description' => 'View SEO settings, content pages and redirects (Module 16 — Phase B13)'],
+        ['key' => 'seo.manage', 'group' => 'seo', 'description' => 'Manage SEO settings, content pages and redirects (Phase B13)'],
     ];
 
     public function run(): void

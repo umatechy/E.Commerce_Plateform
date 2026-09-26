@@ -24,6 +24,9 @@ use App\Domain\Notifications\Http\Controllers\NotificationMessageController;
 use App\Domain\Analytics\Http\Controllers\DashboardController;
 use App\Domain\Analytics\Http\Controllers\ReportController;
 use App\Domain\Analytics\Http\Controllers\ReportExportController;
+use App\Domain\Seo\Http\Controllers\SeoSettingController;
+use App\Domain\Seo\Http\Controllers\ContentPageController;
+use App\Domain\Seo\Http\Controllers\RedirectController;
 use App\Domain\SuperAdmin\Http\Controllers\SuperAdminPackageController;
 use App\Domain\SuperAdmin\Http\Controllers\SuperAdminStoreController;
 use App\Domain\SuperAdmin\Http\Controllers\SuperAdminSubscriptionController;
@@ -136,6 +139,17 @@ Route::middleware(['auth:sanctum', 'staff.principal'])->group(function () {
     Route::get('/reports/inventory', [ReportController::class, 'inventory']);
     Route::post('/exports', [ReportExportController::class, 'store']);
     Route::get('/exports/{export}', [ReportExportController::class, 'show']);
+
+    // --- SEO & Content Management (Module 16, Phase B13) ---
+    Route::get('/seo-settings', [SeoSettingController::class, 'index']);
+    Route::post('/seo-settings', [SeoSettingController::class, 'store']);
+    Route::get('/content-pages', [ContentPageController::class, 'index']);
+    Route::post('/content-pages', [ContentPageController::class, 'store']);
+    Route::put('/content-pages/{page}', [ContentPageController::class, 'update']);
+    Route::post('/content-pages/{page}/transition', [ContentPageController::class, 'transition']);
+    Route::get('/redirects', [RedirectController::class, 'index']);
+    Route::post('/redirects', [RedirectController::class, 'store']);
+    Route::delete('/redirects/{redirect}', [RedirectController::class, 'destroy']);
 
     // --- Super Admin cross-tenant (ADR-001 Layer 7) ---
     Route::middleware(['can:super-admin.impersonate', 'super_admin.impersonate'])

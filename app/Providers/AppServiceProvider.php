@@ -79,6 +79,13 @@ final class AppServiceProvider extends ServiceProvider
         // see App\Domain\Tenancy\Observers\StoreObserver docblock.
         Store::observe(StoreObserver::class);
 
+        // Module 16 §11 "Slug Changes" (Phase B13) — additive
+        // observers that record a redirect when a public-facing slug
+        // changes; never touch each domain's own update logic.
+        \App\Domain\Catalog\Models\Product::observe(\App\Domain\Seo\Observers\ProductSlugObserver::class);
+        \App\Domain\Catalog\Models\Category::observe(\App\Domain\Seo\Observers\CategorySlugObserver::class);
+        \App\Domain\Catalog\Models\Brand::observe(\App\Domain\Seo\Observers\BrandSlugObserver::class);
+
         // ADR-001 Layer 7 defense-in-depth: this Gate is checked by the
         // 'can:super-admin.impersonate' route middleware IN ADDITION TO
         // (not instead of) EnsureSuperAdminImpersonation's own check — two

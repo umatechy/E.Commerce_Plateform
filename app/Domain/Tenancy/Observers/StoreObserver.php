@@ -43,6 +43,7 @@ final class StoreObserver
             'marketing.view', 'marketing.manage',
             'notifications.view', 'notifications.manage',
             'analytics.view', 'analytics.export',
+            'seo.view', 'seo.manage',
         ],
         'staff' => [
             'products.view',

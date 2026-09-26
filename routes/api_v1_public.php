@@ -3,6 +3,7 @@
 use App\Domain\Packages\Http\Controllers\PackageController;
 use App\Domain\Notifications\Http\Controllers\UnsubscribeController;
 use App\Domain\Analytics\Http\Controllers\ReportExportController;
+use App\Domain\Seo\Http\Controllers\SeoPublicController;
 use Illuminate\Support\Facades\Route;
 
 // ADR-005: /api/v1/public/... — unauthenticated storefront-data
@@ -28,3 +29,14 @@ Route::get('/notifications/unsubscribe', UnsubscribeController::class);
 Route::get('/report-exports/{exportPublicId}/download', [ReportExportController::class, 'download'])
     ->middleware('signed')
     ->name('report-exports.download');
+
+// Module 16 "Sitemap / Robots.txt / Storefront Integration" (Phase
+// B13) — tenant resolved from the explicit {storeSlug} path segment,
+// never the Host header (see SeoPublicController's own docblock).
+Route::get('/seo/{storeSlug}/sitemap.xml', [SeoPublicController::class, 'sitemap']);
+Route::get('/seo/{storeSlug}/robots.txt', [SeoPublicController::class, 'robots']);
+Route::get('/seo/{storeSlug}/products/{productSlug}', [SeoPublicController::class, 'product']);
+Route::get('/seo/{storeSlug}/products/{productSlug}/structured-data', [SeoPublicController::class, 'productStructuredData']);
+Route::get('/seo/{storeSlug}/categories/{categorySlug}', [SeoPublicController::class, 'category']);
+Route::get('/seo/{storeSlug}/brands/{brandSlug}', [SeoPublicController::class, 'brand']);
+Route::get('/seo/{storeSlug}/pages/{pageSlug}', [SeoPublicController::class, 'contentPage']);
