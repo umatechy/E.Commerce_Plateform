@@ -1,0 +1,59 @@
+# Module 20 Phase 38 "Staging Environment" / Phase 43 "Docker Readiness"
+# — local/staging parity only. NOT a production deployment
+# specification (production is documented separately — see
+# docs/architecture/b20-deployment.md — since a single-host Compose
+# file is not how this platform's production VPS/managed-hosting
+# target is meant to run). NOT EXECUTED — ENVIRONMENT LIMITATION: never
+# run in this Claude App sandbox.
+services:
+  app:
+    build: .
+    depends_on: [mysql, redis]
+    environment:
+      DB_HOST: mysql
+      REDIS_HOST: redis
+    volumes:
+      - storage_data:/var/www/html/storage/app
+    networks: [umartechy]
+
+  queue-worker:
+    build: .
+    command: php artisan queue:work --tries=3 --timeout=120
+    depends_on: [mysql, redis]
+    environment:
+      DB_HOST: mysql
+      REDIS_HOST: redis
+    networks: [umartechy]
+
+  scheduler:
+    build: .
+    # Module 20 Phase 12 — Laravel's own scheduler, run via a 1-minute
+    # loop inside the container rather than host cron (Compose has no
+    # native cron equivalent); a real VPS/managed-hosting deployment
+    # uses host cron instead (see deployment guide).
+    command: sh -c "while true; do php artisan schedule:run; sleep 60; done"
+    depends_on: [mysql, redis]
+    environment:
+      DB_HOST: mysql
+      REDIS_HOST: redis
+    networks: [umartechy]
+
+  mysql:
+    image: mysql:8.0
+    environment:
+      MYSQL_DATABASE: umartechy_ecommerce
+      MYSQL_ROOT_PASSWORD: "${DB_ROOT_PASSWORD:?set DB_ROOT_PASSWORD in your local .env — never commit a real value}"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    networks: [umartechy]
+
+  redis:
+    image: redis:7-alpine
+    networks: [umartechy]
+
+networks:
+  umartechy:
+
+volumes:
+  mysql_data:
+  storage_data:

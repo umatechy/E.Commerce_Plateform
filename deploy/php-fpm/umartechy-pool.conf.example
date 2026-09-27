@@ -1,0 +1,36 @@
+; Module 20 Phase 8 "PHP-FPM" — production pool template.
+; NOT EXECUTED — ENVIRONMENT LIMITATION. Copy to
+; /etc/php/8.3/fpm/pool.d/umartechy.conf, adjust the user/group for
+; your deployment's non-root deployment user, then
+; `systemctl reload php8.3-fpm`.
+;
+; Worker-count values below are STARTING POINTS, not measured
+; production sizing — Module 20 gives no numeric target and this
+; project's own instruction is "do not invent production worker counts
+; without capacity data." REQUIRES CAPACITY VALIDATION once real
+; traffic/load data exists.
+
+[umartechy]
+user = umartechy
+group = umartechy
+listen = /run/php/php8.3-fpm-umartechy.sock
+listen.owner = www-data
+listen.group = www-data
+
+pm = dynamic
+pm.max_children = 20
+pm.start_servers = 4
+pm.min_spare_servers = 2
+pm.max_spare_servers = 8
+
+request_terminate_timeout = 120s
+
+php_admin_value[opcache.enable] = 1
+php_admin_value[opcache.validate_timestamps] = 0  ; disabled in production — requires an explicit reload on deploy (see deployment guide)
+php_admin_value[upload_max_filesize] = 20M
+php_admin_value[post_max_size] = 20M
+php_admin_value[memory_limit] = 256M
+
+; Non-Negotiable: never expose PHP runtime configuration through a
+; public endpoint. phpinfo()/expose_php are disabled platform-wide.
+php_admin_flag[expose_php] = off

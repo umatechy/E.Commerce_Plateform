@@ -1,0 +1,60 @@
+# Module 20 Phase 7 "Nginx / Web Server" — production-ready template.
+# NOT EXECUTED — ENVIRONMENT LIMITATION: never installed/tested in this
+# Claude App sandbox. Copy to /etc/nginx/sites-available/, adjust the
+# placeholders in ALL CAPS, symlink into sites-enabled, then
+# `nginx -t && systemctl reload nginx`.
+
+server {
+    listen 80;
+    server_name PLATFORM_DOMAIN *.PLATFORM_DOMAIN;
+    # Module 20 Phase 17 "SSL/TLS" — HTTP -> HTTPS redirect. Custom
+    # tenant domains (B14/Module 19) are added here dynamically by
+    # whatever provisioning tooling manages this file — see
+    # docs/architecture/b20-domain-dns.md.
+    return 301 https://$host$request_uri;
+}
+
+server {
+    listen 443 ssl http2;
+    server_name PLATFORM_DOMAIN *.PLATFORM_DOMAIN;
+
+    ssl_certificate     /etc/letsencrypt/live/PLATFORM_DOMAIN/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/PLATFORM_DOMAIN/privkey.pem;
+
+    root /var/www/umartechy/public;
+    index index.php;
+
+    client_max_body_size 20m;  # A reasonable general default — no established platform-wide upload-size convention exists yet (B15's own inspection findings confirmed no media/file-upload system exists in B0-B19); revisit once one is built.
+
+    # Security headers (Module 20 Phase 34 hardening).
+    add_header X-Content-Type-Options "nosniff" always;
+    add_header X-Frame-Options "SAMEORIGIN" always;
+    add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+
+    # Non-Negotiable: never expose .env, Git metadata, private storage,
+    # or backup artifacts.
+    location ~ /\.(env|git) { deny all; return 404; }
+    location ~ ^/storage/app/(?!public/) { deny all; return 404; }
+    location ~ /backups/ { deny all; return 404; }
+
+    location / {
+        try_files $uri $uri/ /index.php?$query_string;
+    }
+
+    location ~ \.php$ {
+        fastcgi_pass unix:/run/php/php8.3-fpm-umartechy.sock;
+        fastcgi_split_path_info ^(.+\.php)(/.+)$;
+        fastcgi_index index.php;
+        include fastcgi_params;
+        fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
+        fastcgi_read_timeout 120;
+    }
+
+    location ~* \.(css|js|jpg|jpeg|png|gif|svg|woff2?)$ {
+        expires 30d;
+        access_log off;
+    }
+
+    access_log /var/log/nginx/umartechy-access.log;
+    error_log  /var/log/nginx/umartechy-error.log;
+}

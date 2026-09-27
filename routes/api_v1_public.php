@@ -44,3 +44,8 @@ Route::get('/seo/{storeSlug}/pages/{pageSlug}', [SeoPublicController::class, 'co
 // Module 17 "Theme + Domain + SEO Flow" (Phase B15) — resolved,
 // PUBLISHED-only theme configuration for a future rendering layer.
 Route::get('/theme/{storeSlug}', [\App\Domain\Theme\Http\Controllers\ThemePublicController::class, 'show']);
+
+// Module 20 Phase 30 "Health Checks" (Phase B20) — deliberately
+// unauthenticated, no tenant resolution needed. Intended caller: a
+// load balancer / uptime monitor.
+Route::get('/health', [\App\Domain\Infrastructure\Http\Controllers\HealthController::class, 'show']);

@@ -1,0 +1,9 @@
+# Module 20 Phase 12 "Scheduler / Cron" — the ONE required production
+# cron entry. Laravel's own scheduler (routes/console.php) owns every
+# actual scheduled task (B10/B11/B19's commands, this milestone's own
+# health check is NOT scheduled — it's called on-demand by a load
+# balancer/deploy script); cron's only job is invoking
+# `schedule:run` every minute. NOT EXECUTED — ENVIRONMENT LIMITATION.
+# Install with `crontab -u umartechy -e` (as the deployment user, never root).
+
+* * * * * cd /var/www/umartechy && php artisan schedule:run >> /dev/null 2>&1

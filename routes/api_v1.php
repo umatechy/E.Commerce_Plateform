@@ -38,6 +38,7 @@ use App\Domain\SuperAdmin\Http\Controllers\SuperAdminNotificationController;
 use App\Domain\SuperAdmin\Http\Controllers\SuperAdminSettingController;
 use App\Domain\SuperAdmin\Http\Controllers\SuperAdminDeveloperPlatformController;
 use App\Domain\SuperAdmin\Http\Controllers\SuperAdminBackupController;
+use App\Domain\SuperAdmin\Http\Controllers\SuperAdminInfrastructureController;
 use App\Domain\DataProtection\Http\Controllers\BackupController;
 use App\Domain\Settings\Http\Controllers\StoreSettingController;
 use App\Domain\DeveloperPlatform\Http\Controllers\DeveloperApplicationController;
@@ -244,6 +245,8 @@ Route::middleware(['auth:sanctum', 'staff.principal'])->group(function () {
             Route::post('/backups', [SuperAdminBackupController::class, 'storePlatformBackup']);
             Route::get('/restore-jobs', [SuperAdminBackupController::class, 'restoreJobs']);
             Route::post('/restore-jobs/{backupRestoreJob}/authorize', [SuperAdminBackupController::class, 'authorizeRestore']);
+
+            Route::get('/infrastructure/health', [SuperAdminInfrastructureController::class, 'health']);
         });
 
     // --- Super Admin cross-tenant (ADR-001 Layer 7) ---

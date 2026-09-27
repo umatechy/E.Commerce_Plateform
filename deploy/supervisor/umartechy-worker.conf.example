@@ -1,0 +1,22 @@
+; Module 20 Phase 11 "Queues & Workers" — reuses Laravel's OWN queue
+; system (`php artisan queue:work`), never a second queue mechanism.
+; NOT EXECUTED — ENVIRONMENT LIMITATION. Copy to
+; /etc/supervisor/conf.d/umartechy-worker.conf, then
+; `supervisorctl reread && supervisorctl update && supervisorctl start umartechy-worker:*`.
+;
+; numprocs is a STARTING POINT (REQUIRES CAPACITY VALIDATION), not
+; measured production sizing.
+
+[program:umartechy-worker]
+process_name=%(program_name)s_%(process_num)02d
+command=php /var/www/umartechy/artisan queue:work redis --sleep=3 --tries=3 --max-time=3600
+directory=/var/www/umartechy
+autostart=true
+autorestart=true
+stopasgroup=true
+killasgroup=true
+user=umartechy
+numprocs=2
+redirect_stderr=true
+stdout_logfile=/var/log/umartechy/worker.log
+stopwaitsecs=30
