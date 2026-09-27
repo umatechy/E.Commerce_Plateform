@@ -36,7 +36,11 @@ use App\Domain\SuperAdmin\Http\Controllers\SuperAdminUserController;
 use App\Domain\SuperAdmin\Http\Controllers\SuperAdminPaymentController;
 use App\Domain\SuperAdmin\Http\Controllers\SuperAdminNotificationController;
 use App\Domain\SuperAdmin\Http\Controllers\SuperAdminSettingController;
+use App\Domain\SuperAdmin\Http\Controllers\SuperAdminDeveloperPlatformController;
 use App\Domain\Settings\Http\Controllers\StoreSettingController;
+use App\Domain\DeveloperPlatform\Http\Controllers\DeveloperApplicationController;
+use App\Domain\DeveloperPlatform\Http\Controllers\ApiKeyController;
+use App\Domain\DeveloperPlatform\Http\Controllers\WebhookSubscriptionController;
 use App\Domain\SuperAdmin\Http\Controllers\SuperAdminPackageController;
 use App\Domain\SuperAdmin\Http\Controllers\SuperAdminStoreController;
 use App\Domain\SuperAdmin\Http\Controllers\SuperAdminSubscriptionController;
@@ -183,6 +187,22 @@ Route::middleware(['auth:sanctum', 'staff.principal'])->group(function () {
     Route::get('/store/settings/{key}/history', [StoreSettingController::class, 'history']);
     Route::post('/store/settings/revisions/{revisionId}/rollback', [StoreSettingController::class, 'rollback']);
 
+    // --- Developer Platform, staff-facing management (Module 31, Phase B18) ---
+    Route::get('/developer/applications', [DeveloperApplicationController::class, 'index']);
+    Route::post('/developer/applications', [DeveloperApplicationController::class, 'store']);
+    Route::post('/developer/applications/{developerApplication}/suspend', [DeveloperApplicationController::class, 'suspend']);
+    Route::post('/developer/applications/{developerApplication}/reactivate', [DeveloperApplicationController::class, 'reactivate']);
+    Route::delete('/developer/applications/{developerApplication}', [DeveloperApplicationController::class, 'revoke']);
+
+    Route::get('/developer/applications/{application}/keys', [ApiKeyController::class, 'index']);
+    Route::post('/developer/applications/{application}/keys', [ApiKeyController::class, 'store']);
+    Route::delete('/developer/applications/{application}/keys/{apiKey}', [ApiKeyController::class, 'revoke']);
+    Route::post('/developer/applications/{application}/keys/{apiKey}/rotate', [ApiKeyController::class, 'rotate']);
+
+    Route::get('/developer/applications/{application}/webhooks', [WebhookSubscriptionController::class, 'index']);
+    Route::post('/developer/applications/{application}/webhooks', [WebhookSubscriptionController::class, 'store']);
+    Route::post('/developer/applications/{application}/webhooks/{webhookSubscription}/disable', [WebhookSubscriptionController::class, 'disable']);
+
     // --- Super Admin: platform-global actions (no target store — Phase
     // B16 fix, see docs/development/b16-inspection-findings.md
     // "Critical Bug Found") ---
@@ -209,6 +229,9 @@ Route::middleware(['auth:sanctum', 'staff.principal'])->group(function () {
 
             Route::get('/settings', [SuperAdminSettingController::class, 'index']);
             Route::put('/settings/{key}', [SuperAdminSettingController::class, 'update']);
+
+            Route::get('/developer/applications', [SuperAdminDeveloperPlatformController::class, 'index']);
+            Route::post('/developer/applications/{application}/suspend', [SuperAdminDeveloperPlatformController::class, 'suspend']);
         });
 
     // --- Super Admin cross-tenant (ADR-001 Layer 7) ---

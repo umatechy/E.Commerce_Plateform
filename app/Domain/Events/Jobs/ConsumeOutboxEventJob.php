@@ -7,6 +7,7 @@ namespace App\Domain\Events\Jobs;
 use App\Domain\Events\Models\OutboxEvent;
 use App\Domain\Events\Models\OutboxEventStatus;
 use App\Domain\Notifications\Services\NotificationEventRouter;
+use App\Domain\DeveloperPlatform\Services\WebhookEventRouter;
 use App\Domain\Tenancy\Support\TenantContext;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -41,7 +42,7 @@ final class ConsumeOutboxEventJob implements ShouldQueue
         return [10, 30, 60, 300, 900]; // seconds, exponential-ish ceiling
     }
 
-    public function handle(TenantContext $context, NotificationEventRouter $notifications): void
+    public function handle(TenantContext $context, NotificationEventRouter $notifications, WebhookEventRouter $webhooks): void
     {
         $row = OutboxEvent::query()->withoutTenantScope()->findOrFail($this->outboxEventId);
 
@@ -61,6 +62,13 @@ final class ConsumeOutboxEventJob implements ShouldQueue
         // unique idempotency_key before creating anything), so a
         // retried/duplicate dispatch of this same job is always safe.
         $notifications->route($row->event_type, $row->payload);
+
+        // Phase B18: WebhookEventRouter is the SECOND consumer, added
+        // beside (never replacing) NotificationEventRouter — see
+        // docs/development/b18-inspection-findings.md. Its own
+        // idempotency guarantee lives in DispatchWebhookJob (checks
+        // webhook_delivery_attempts before sending).
+        $webhooks->route($row->event_type, $row->store_id, $row->payload, $row->idempotency_key);
 
         $row->update(['status' => OutboxEventStatus::Published]);
     }

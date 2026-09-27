@@ -67,6 +67,8 @@ final class PermissionSeeder extends Seeder
         ['key' => 'theme.publish', 'group' => 'theme', 'description' => 'Publish or roll back the live storefront theme (Phase B15)'],
         ['key' => 'settings.view', 'group' => 'settings', 'description' => 'View store-level configuration (Module 33 — Phase B17)'],
         ['key' => 'settings.manage', 'group' => 'settings', 'description' => 'Edit store-level configuration (Phase B17)'],
+        ['key' => 'developer_platform.view', 'group' => 'developer_platform', 'description' => 'View developer applications, API keys, and webhooks (Module 31 — Phase B18)'],
+        ['key' => 'developer_platform.manage', 'group' => 'developer_platform', 'description' => 'Create/revoke developer applications, API keys, and webhooks (Phase B18)'],
     ];
 
     public function run(): void

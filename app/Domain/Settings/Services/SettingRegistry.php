@@ -50,6 +50,10 @@ final class SettingRegistry
                 key: 'store.default_locale', scope: SettingScope::Store, type: SettingType::String,
                 default: null, fallsBackToPlatformKey: 'platform.default_locale',
             ),
+            'api.default_rate_limit_per_minute' => new SettingDefinition(
+                key: 'api.default_rate_limit_per_minute', scope: SettingScope::Platform, type: SettingType::Integer,
+                default: 60, // Module 31 §17/§43 "Rate Limiting / Configuration" — Phase B18's own integration point
+            ),
         ];
     }
 

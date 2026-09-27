@@ -24,10 +24,20 @@ final class SettingValidator
     {
         return match ($definition->type) {
             SettingType::Boolean => $this->validateBoolean($value),
+            SettingType::Integer => $this->validateInteger($value),
             SettingType::String => $this->validateString($value, $definition),
             SettingType::StringArray => $this->validateStringArray($value),
             SettingType::Secret => $this->validateString($value, $definition),
         };
+    }
+
+    private function validateInteger(mixed $value): int
+    {
+        if (! is_int($value) || $value < 1) {
+            throw new InvalidSettingValueException('Value must be a positive integer.');
+        }
+
+        return $value;
     }
 
     private function validateBoolean(mixed $value): bool

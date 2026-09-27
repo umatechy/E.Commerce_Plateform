@@ -78,6 +78,9 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'super_admin.impersonate' => EnsureSuperAdminImpersonation::class,
             'super_admin.platform' => \App\Http\Middleware\EnsureSuperAdminPlatformAction::class,
+            'api_key.authenticate' => \App\Http\Middleware\EnsureApiKeyAuthenticated::class,
+            'api_key.scope' => \App\Http\Middleware\EnsureApiScope::class,
+            'api_key.log' => \App\Http\Middleware\LogApiRequest::class,
             'staff.principal' => EnsureStaffPrincipal::class,
             'customer.principal' => EnsureCustomerPrincipal::class,
             'customer.optional' => AttemptCustomerAuthentication::class,

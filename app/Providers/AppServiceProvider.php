@@ -49,6 +49,9 @@ final class AppServiceProvider extends ServiceProvider
         // a plain, unbound class or a true singleton() would either lose state
         // between calls or leak state across queue-worker job boundaries.
         $this->app->scoped(TenantContext::class);
+        // Phase B18 — same reasoning as TenantContext directly above:
+        // scoped(), never singleton(), so it resets per request/job.
+        $this->app->scoped(\App\Domain\DeveloperPlatform\Support\ApiKeyContext::class);
     }
 
     public function boot(): void
@@ -98,5 +101,25 @@ final class AppServiceProvider extends ServiceProvider
         // never forced through EnsureSuperAdminImpersonation's per-store
         // logic.
         Gate::define('super-admin.platform', [SuperAdminAccessPolicy::class, 'platformAction']);
+
+        // Module 31 §17-19 "Rate Limiting" (Phase B18) — keyed by the
+        // authenticated ApiKey's id (never by IP alone, which would
+        // wrongly share one bucket across every developer behind the
+        // same NAT/proxy), limit sourced from B17's ConfigService
+        // rather than a hardcoded number (§43: "integrate with B17,
+        // don't invent a second config mechanism"). Uses Laravel's own
+        // real, distributed-cache-backed limiter — never an in-memory
+        // process-local counter.
+        \Illuminate\Support\Facades\RateLimiter::for('developer_api', function (\Illuminate\Http\Request $request) {
+            $context = app(\App\Domain\DeveloperPlatform\Support\ApiKeyContext::class);
+
+            if (! $context->isSet()) {
+                return \Illuminate\Cache\RateLimiting\Limit::perMinute(10)->by($request->ip()); // pre-authentication requests (e.g. a malformed header) still get a conservative floor
+            }
+
+            $perMinute = app(\App\Domain\Settings\Services\ConfigService::class)->get('api.default_rate_limit_per_minute');
+
+            return \Illuminate\Cache\RateLimiting\Limit::perMinute($perMinute)->by((string) $context->get()->id);
+        });
     }
 }
