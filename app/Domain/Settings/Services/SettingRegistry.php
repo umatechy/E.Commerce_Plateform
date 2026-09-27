@@ -54,6 +54,14 @@ final class SettingRegistry
                 key: 'api.default_rate_limit_per_minute', scope: SettingScope::Platform, type: SettingType::Integer,
                 default: 60, // Module 31 §17/§43 "Rate Limiting / Configuration" — Phase B18's own integration point
             ),
+            'backup.retention_days' => new SettingDefinition(
+                key: 'backup.retention_days', scope: SettingScope::Platform, type: SettingType::Integer,
+                default: 30, // Module 23 §9/§14 "Backup Frequency / Retention" — Phase B19's own integration point
+            ),
+            'backup.automated_backups_enabled' => new SettingDefinition(
+                key: 'backup.automated_backups_enabled', scope: SettingScope::Platform, type: SettingType::Boolean,
+                default: true,
+            ),
         ];
     }
 

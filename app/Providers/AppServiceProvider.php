@@ -52,6 +52,23 @@ final class AppServiceProvider extends ServiceProvider
         // Phase B18 — same reasoning as TenantContext directly above:
         // scoped(), never singleton(), so it resets per request/job.
         $this->app->scoped(\App\Domain\DeveloperPlatform\Support\ApiKeyContext::class);
+
+        // Phase B19 — interface bindings so BackupService/RunBackupJob
+        // depend only on the abstraction (Module 23 Phase 4/10), never
+        // a concrete provider. Swapping to a real S3 adapter later is a
+        // one-line change here, not a change to any business logic.
+        $this->app->bind(
+            \App\Domain\DataProtection\Services\Storage\BackupStorageAdapter::class,
+            \App\Domain\DataProtection\Services\Storage\LocalBackupStorageAdapter::class,
+        );
+        $this->app->bind(
+            \App\Domain\DataProtection\Services\DumpStrategies\DatabaseDumpStrategy::class,
+            \App\Domain\DataProtection\Services\DumpStrategies\MysqldumpStrategy::class,
+        );
+        $this->app->bind(
+            \App\Domain\DataProtection\Services\DumpStrategies\DatabaseRestoreStrategy::class,
+            \App\Domain\DataProtection\Services\DumpStrategies\MysqlRestoreStrategy::class,
+        );
     }
 
     public function boot(): void

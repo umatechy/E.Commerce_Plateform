@@ -37,6 +37,8 @@ use App\Domain\SuperAdmin\Http\Controllers\SuperAdminPaymentController;
 use App\Domain\SuperAdmin\Http\Controllers\SuperAdminNotificationController;
 use App\Domain\SuperAdmin\Http\Controllers\SuperAdminSettingController;
 use App\Domain\SuperAdmin\Http\Controllers\SuperAdminDeveloperPlatformController;
+use App\Domain\SuperAdmin\Http\Controllers\SuperAdminBackupController;
+use App\Domain\DataProtection\Http\Controllers\BackupController;
 use App\Domain\Settings\Http\Controllers\StoreSettingController;
 use App\Domain\DeveloperPlatform\Http\Controllers\DeveloperApplicationController;
 use App\Domain\DeveloperPlatform\Http\Controllers\ApiKeyController;
@@ -203,6 +205,11 @@ Route::middleware(['auth:sanctum', 'staff.principal'])->group(function () {
     Route::post('/developer/applications/{application}/webhooks', [WebhookSubscriptionController::class, 'store']);
     Route::post('/developer/applications/{application}/webhooks/{webhookSubscription}/disable', [WebhookSubscriptionController::class, 'disable']);
 
+    // --- Backup, Restore & Data Protection, staff-facing (Module 23, Phase B19) ---
+    Route::get('/backups', [BackupController::class, 'index']);
+    Route::post('/backups', [BackupController::class, 'store']);
+    Route::post('/backups/{backup}/restore-request', [BackupController::class, 'requestRestore']);
+
     // --- Super Admin: platform-global actions (no target store — Phase
     // B16 fix, see docs/development/b16-inspection-findings.md
     // "Critical Bug Found") ---
@@ -232,6 +239,11 @@ Route::middleware(['auth:sanctum', 'staff.principal'])->group(function () {
 
             Route::get('/developer/applications', [SuperAdminDeveloperPlatformController::class, 'index']);
             Route::post('/developer/applications/{application}/suspend', [SuperAdminDeveloperPlatformController::class, 'suspend']);
+
+            Route::get('/backups', [SuperAdminBackupController::class, 'index']);
+            Route::post('/backups', [SuperAdminBackupController::class, 'storePlatformBackup']);
+            Route::get('/restore-jobs', [SuperAdminBackupController::class, 'restoreJobs']);
+            Route::post('/restore-jobs/{backupRestoreJob}/authorize', [SuperAdminBackupController::class, 'authorizeRestore']);
         });
 
     // --- Super Admin cross-tenant (ADR-001 Layer 7) ---
