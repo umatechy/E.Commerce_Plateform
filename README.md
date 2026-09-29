@@ -5,10 +5,12 @@ Core Multi-Tenant E-Commerce SaaS. Basic / Business / Premium are entitlement ti
 
 ## Status
 
-Foundation (Phase B0) + start of Phase B1 (Identity/Tenancy), built inside the Claude
-App environment. **Not yet executed against a real PHP/MySQL/Redis runtime** — see
-`docs/checkpoints/checkpoint-b0.md` for the honest execution status of every artifact
-below before relying on any of it.
+Phases B0–B21 are built. As of Phase B21 the platform has been **executed
+against a real runtime** (PHP 8.4, MySQL 8.0, Redis 7, Node 22): migrations
+run cleanly, the full test suite passes (719 backend tests, 5 frontend
+tests), PHPStan level 5 is clean, and the frontend lints and builds. See
+`docs/checkpoints/checkpoint-b21.md` for what was verified and what still
+needs a real deployment target.
 
 ## Stack
 
@@ -17,7 +19,10 @@ MySQL 8.0+ · Redis · Laravel Sanctum · Laravel Reverb · GitHub Actions · Ng
 Ubuntu 24.04 LTS. See `docs/adr/` for the implementation-level decisions this stack is
 built on.
 
-## Local Setup (to be verified in VS Code phase)
+## Local Setup
+
+Requirements: PHP 8.3+ (with pdo_mysql, redis, mbstring, intl), Composer,
+MySQL 8.0+, Redis, Node 22.
 
 ```bash
 composer install
@@ -25,12 +30,21 @@ cp .env.example .env
 php artisan key:generate
 npm install
 
-# Configure DB_* and REDIS_* in .env, then:
+# Create the database named by DB_DATABASE, set DB_USERNAME/DB_PASSWORD
+# and REDIS_* in .env, then:
 php artisan migrate
+php artisan db:seed          # permissions, packages, default theme
 
-npm run dev        # Vite dev server
-php artisan serve  # Laravel dev server
+npm run dev                  # Vite dev server
+php artisan serve            # Laravel dev server
 ```
+
+For the staff SPA login, the host you browse from (e.g. `localhost:8000`)
+must be listed in `SANCTUM_STATEFUL_DOMAINS`.
+
+Background processes: `php artisan queue:work` and the scheduler
+(`php artisan schedule:work` locally, cron in production — see
+`deploy/crontab.example`).
 
 ## Architecture
 
@@ -54,15 +68,24 @@ with strict, layered tenant isolation (`docs/adr/ADR-001-tenant-resolution-and-i
 
 ## Testing
 
-`php artisan test` (PHPUnit/Feature), `npm run test` (Vitest), `npm run test:e2e`
-(Playwright — minimal scaffold only per Milestone-0 Step 0.9). See
-`docs/testing/tenant-isolation-tests.md` for the mandatory tenant-isolation suite and
-its current (unexecuted) status.
+```bash
+php artisan test     # PHPUnit feature suite — needs the MySQL test database from phpunit.xml
+composer stan        # PHPStan / Larastan, level 5
+npm run lint
+npm run test         # Vitest
+npm run build
+```
+
+Tests run on MySQL (not SQLite): the code relies on MySQL-only SQL. Create
+the `umartechy_ecommerce_test` database (or override `DB_DATABASE`) before
+running them. Playwright E2E is scaffolded only. See
+`docs/testing/tenant-isolation-tests.md` for the tenant-isolation suite.
 
 ## Documentation Map
 
 - `docs/adr/` — Architecture Decision Records (ADR-001–005), all `PROPOSED`.
-- `docs/architecture/` — foundation structure and what Phase B0 does/does not cover.
+- `docs/architecture/` — foundation structure plus one architecture note per phase (B1–B21).
 - `docs/database/` — schema foundation, ADR-003 conventions applied.
-- `docs/testing/` — test status, honestly reported.
+- `docs/testing/` — how to run the suite and what the tenant-isolation tests cover.
+- `docs/development/` / `docs/security/` — per-phase inspection findings and security reviews.
 - `docs/checkpoints/` — development checkpoints per milestone.

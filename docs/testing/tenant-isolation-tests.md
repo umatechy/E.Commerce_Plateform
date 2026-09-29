@@ -1,48 +1,48 @@
 # Tenant Isolation Test Suite — Status
 
-**NOT EXECUTED — CLAUDE APP ENVIRONMENT LIMITATION.** No PHP runtime, Composer, MySQL,
-or Redis is available in this Claude App sandbox (confirmed during Milestone-0
-preflight: `php`, `composer`, `mysql`, `redis-server` all report "not found", and
-outbound network access is blocked). The tests below are written to the real
-PHPUnit/Laravel Feature-test API and are believed correct by static reasoning, but
-**have not actually run**, and no test count, pass/fail result, or coverage number is
-claimed.
+**EXECUTED (Phase B21) — PASSING** against a real MySQL 8.0 database
+(PHP 8.4, Laravel 12). Before B21 no PHP/MySQL runtime was available and
+none of these tests had ever run; see
+`docs/development/b21-inspection-findings.md` for what the first real run
+found.
 
-## Written (not executed)
+## How to Run
+
+```bash
+composer install
+cp .env.example .env && php artisan key:generate
+# create the MySQL databases named by DB_DATABASE in .env and in phpunit.xml
+php artisan migrate
+php artisan test                     # whole suite
+php artisan test tests/Feature/Tenancy
+```
+
+Tests run against MySQL, not SQLite: the code uses MySQL-only SQL
+(`ON DUPLICATE KEY UPDATE`, `LAST_INSERT_ID()`, `REGEXP_SUBSTR`).
+
+## Coverage
 
 - `tests/Feature/Tenancy/TenantIsolationTest.php`
-  - Tenant A cannot **read** Tenant B's resource via a guessed ID → expects 404.
-  - Tenant A cannot **update** Tenant B's resource → expects 404, verifies no mutation occurred.
-  - Tenant A cannot **delete** Tenant B's resource → expects 404, verifies row still exists.
-  - Tenant A cannot override tenant via a spoofed `store_id` in the request payload →
-    verifies the server-resolved context wins, not client input.
-  - Relationship-level protection: a cross-tenant child row does not resolve through an
-    unscoped-then-filtered query chain.
-  - Cache keys are tenant-prefixed and do not collide across tenants.
-  - **Incomplete (flagged, not faked):** queued-job tenant-context re-resolution test —
-    marked `markTestIncomplete()` pending a concrete module job to test against
-    (the generic `ConsumeOutboxEventJob` contract exists; a first real consumer is
-    needed for a meaningful assertion, expected once Phase B5+ ships).
-- `tests/Feature/Tenancy/SuperAdminCrossTenantAccessTest.php`
-  - Non-platform user is denied the Super Admin impersonation route (403).
-  - Platform-staff impersonation writes an audit log entry (asserted via `Log::shouldReceive`).
+  - Tenant A cannot **read**, **update** or **delete** Tenant B's resource
+    via a guessed id → 404, with no mutation.
+  - A spoofed `store_id` in the payload is ignored; the server-resolved
+    context wins.
+  - Relationship-level protection for cross-tenant child rows.
+  - Cache keys are tenant-prefixed.
+  - A queued job re-applies the tenant from its own stored `store_id`, not
+    from ambient state (implemented in B21; previously incomplete).
+- `tests/Feature/Tenancy/SuperAdminCrossTenantAccessTest.php` — impersonation
+  is platform-staff only and audit-logged.
+- Every module has its own `*TenantIsolationTest` (catalog, inventory,
+  orders, payments, shipping, promotions, backups, …) and B21 adds store
+  health isolation (`tests/Feature/Monitoring`).
 
-## Required Before These Can Actually Run
+## Test-Harness Guarantees (tests/TestCase.php)
 
-1. `composer install` (Laravel framework, Sanctum, testing packages).
-2. A configured MySQL test database + `php artisan migrate`.
-3. `Tests\TestCase` base class configuration (standard Laravel `tests/TestCase.php`,
-   not yet created in this Phase B0 pass — VS Code phase should run
-   `php artisan test` once, note any missing base-class wiring, and fix it before
-   trusting these results).
-4. Route registrations these tests assume (`/api/v1/roles/*`,
-   `/api/v1/super-admin/stores/{store}/impersonate`) are **not yet implemented** — they
-   are the Phase B1/B24 controllers this test suite is written ahead of, intentionally,
-   as a test-first specification. Running the suite now would fail on missing routes,
-   not on a tenant-isolation defect — this is expected and documented, not a hidden bug.
-
-## Honesty Statement
-
-No PASS/FAIL result, no test count, and no coverage percentage is reported anywhere in
-this checkpoint for these tests, per the "NO FAKE VERIFICATION" rule. The VS Code phase
-must run them for real before any of these tests may be reported as passing.
+- Each simulated HTTP request starts with fresh request-scoped state
+  (`TenantContext`, `ApiKeyContext`), as in production. Previously a test's
+  own resolved tenant leaked into the request, so a test could pass under
+  the test's tenant instead of the one the middleware resolved.
+- `outbox.ambient_transaction_level` is set to RefreshDatabase's level, so
+  a service that writes an outbox event outside its own transaction fails
+  in tests exactly as it would in production.
