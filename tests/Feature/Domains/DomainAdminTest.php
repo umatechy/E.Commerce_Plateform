@@ -36,6 +36,7 @@ final class DomainAdminTest extends TestCase
     public function test_owner_can_add_a_custom_domain(): void
     {
         $store = Store::factory()->create();
+        $this->entitle($store, ['domains.custom_domain']);
         $owner = $this->ownerOf($store);
 
         $response = $this->actingAs($owner)->postJson('/api/v1/domains', ['hostname' => 'shop.mystore.com']);
@@ -47,6 +48,7 @@ final class DomainAdminTest extends TestCase
     public function test_invalid_hostname_is_rejected_with_a_clear_error(): void
     {
         $store = Store::factory()->create();
+        $this->entitle($store, ['domains.custom_domain']);
         $owner = $this->ownerOf($store);
 
         $response = $this->actingAs($owner)->postJson('/api/v1/domains', ['hostname' => 'https://not-a-hostname/x']);
@@ -75,7 +77,10 @@ final class DomainAdminTest extends TestCase
 
         $response = $this->actingAs($ownerA)->postJson("/api/v1/domains/{$domainB->id}/primary");
 
-        $response->assertStatus(403);
+        // ADR-001 Layer 4: another tenant's row is unreachable, so a guessed
+        // id is "not found" (404) — never "forbidden" (403), which would
+        // confirm the row exists.
+        $response->assertStatus(404);
     }
 
     public function test_customer_token_cannot_access_staff_domain_routes(): void

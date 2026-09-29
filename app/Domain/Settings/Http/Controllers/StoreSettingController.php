@@ -68,9 +68,12 @@ final class StoreSettingController
             $definition = SettingRegistry::find($key);
 
             return response()->json(['data' => new SettingResource($definition, $config->get($key))]);
-        } catch (UnknownSettingKeyException $e) {
-            return response()->json(['message' => $e->getMessage(), 'code' => 'unknown_setting'], 404);
-        } catch (SettingScopeMismatchException|InvalidSettingValueException $e) {
+        } catch (UnknownSettingKeyException|SettingScopeMismatchException $e) {
+            // A platform-scope key is not addressable through the store
+            // endpoint at all: answer exactly like an unknown key, so the
+            // response never reveals which platform settings exist.
+            return response()->json(['message' => (new UnknownSettingKeyException($key))->getMessage(), 'code' => 'unknown_setting'], 404);
+        } catch (InvalidSettingValueException $e) {
             return response()->json(['message' => $e->getMessage(), 'code' => 'invalid_setting'], 422);
         }
     }

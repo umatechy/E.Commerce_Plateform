@@ -66,7 +66,7 @@ final class AuthController
             return $user;
         });
 
-        Auth::login($user);
+        Auth::guard('web')->login($user);
 
         // Session-fixation protection applies to the stateful SPA flow
         // (ADR-002 Surface A). A non-stateful request carries no session
@@ -86,7 +86,7 @@ final class AuthController
             $request->session()->regenerate();
         }
 
-        return (new UserResource(Auth::user()))->response();
+        return (new UserResource(Auth::guard('web')->user()))->response();
     }
 
     public function logout(Request $request): JsonResponse

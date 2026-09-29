@@ -134,11 +134,23 @@ final class TenantIsolationTest extends TestCase
     /** A queued job re-applies tenant scope from its OWN stored store_id, not ambient state. */
     public function test_queued_job_reapplies_stored_tenant_context(): void
     {
-        $this->markTestIncomplete(
-            'Requires a concrete queued job under test (e.g. a Phase B2+ module job). '.
-            'The contract is established in App\Domain\Events\Jobs\ConsumeOutboxEventJob; '.
-            'a module-specific job test is added once that module is implemented.'
+        $context = app(\App\Domain\Tenancy\Support\TenantContext::class);
+
+        // An event owned by Store B, while the ambient context is Store A.
+        \Illuminate\Support\Facades\DB::transaction(fn () => app(\App\Domain\Events\Support\RecordsOutboxEvents::class)
+            ->recordEventFor($this->storeB->id, 'test.event', [], 'tenant-isolation-job-test'));
+        $eventId = \App\Domain\Events\Models\OutboxEvent::query()->withoutTenantScope()
+            ->where('idempotency_key', 'tenant-isolation-job-test')->value('id');
+        $context->resolveToStore($this->storeA->id);
+
+        (new \App\Domain\Events\Jobs\ConsumeOutboxEventJob($eventId))->handle(
+            $context,
+            app(\App\Domain\Notifications\Services\NotificationEventRouter::class),
+            app(\App\Domain\DeveloperPlatform\Services\WebhookEventRouter::class),
         );
+
+        $this->assertSame($this->storeB->id, $context->storeId());
+        $this->assertSame('published', \App\Domain\Events\Models\OutboxEvent::query()->withoutTenantScope()->find($eventId)->status->value);
     }
 
     /**

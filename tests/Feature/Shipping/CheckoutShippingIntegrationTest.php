@@ -72,6 +72,13 @@ final class CheckoutShippingIntegrationTest extends TestCase
         $digitalProduct = Product::factory()->for($store)->create([
             'status' => 'active', 'visibility' => 'public', 'price_minor' => 1500, 'currency' => 'USD', 'type' => 'digital',
         ]);
+        // Every sellable SKU needs an inventory record, digital ones
+        // included (documented Phase B5 decision); this test is about
+        // shipping being skipped, not about stock.
+        $warehouse = Warehouse::query()->withoutTenantScope()->where('store_id', $store->id)->where('is_default', true)->firstOrFail();
+        $inventory = Inventory::factory()->for($store)->for($warehouse)->create(['product_id' => $digitalProduct->id]);
+        app(TenantContext::class)->resolveToStore($store->id);
+        app(InventoryService::class)->setOpeningStock($inventory, 10, 'Init', actorId: $this->actorId(), idempotencyKey: 'open-digital-'.$store->id);
 
         $addResponse = $this->postJson('/api/v1/cart/items', ['product_id' => $digitalProduct->id, 'quantity' => 1], ['X-Store-Slug' => $store->slug]);
         $token = $addResponse->headers->get('X-Guest-Cart-Token');

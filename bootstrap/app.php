@@ -122,5 +122,13 @@ return Application::configure(basePath: dirname(__DIR__))
         // Module 31 §2.23-consistent standard error envelope for API
         // responses is added when the first real API endpoints ship
         // (Phase B3+) — Phase B0 establishes the registration point only.
+
+        // Safety net for package-entitlement refusals (Module 04): most
+        // controllers catch these and answer 403 themselves, but one that
+        // forgets (DomainController did) must still refuse cleanly instead
+        // of surfacing a 500. Same body shape as StoreThemeController.
+        $exceptions->render(function (\App\Domain\Packages\Exceptions\FeatureNotEntitledException|\App\Domain\Packages\Exceptions\SubscriptionInactiveException $e) {
+            return response()->json(['message' => $e->getMessage(), 'code' => 'feature_not_entitled'], 403);
+        });
     })
     ->create();

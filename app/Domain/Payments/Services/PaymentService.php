@@ -227,13 +227,17 @@ final class PaymentService
             return $existing;
         }
 
-        $refundable = $payment->refundableAmountMinor();
+        return DB::transaction(function () use ($payment, $amountMinor, $reason, $actorId, $idempotencyKey) {
+            // The refundable balance is read under a row lock: checked
+            // outside the transaction, two concurrent partial refunds could
+            // both pass the check and together exceed the captured amount.
+            $payment = Payment::query()->lockForUpdate()->findOrFail($payment->id);
+            $refundable = $payment->refundableAmountMinor();
 
-        if ($amountMinor > $refundable) {
-            throw new RefundExceedsRefundableBalanceException($amountMinor, $refundable);
-        }
+            if ($amountMinor > $refundable) {
+                throw new RefundExceedsRefundableBalanceException($amountMinor, $refundable);
+            }
 
-        return DB::transaction(function () use ($payment, $amountMinor, $reason, $actorId, $idempotencyKey, $refundable) {
             $isFullRefund = $amountMinor === $refundable;
 
             $transaction = $this->recordTransaction(
@@ -243,7 +247,14 @@ final class PaymentService
                 actorId: $actorId, idempotencyKey: $idempotencyKey,
             );
 
-            $this->transitionTo($payment, $isFullRefund ? PaymentStatus::Refunded : PaymentStatus::PartiallyRefunded);
+            $newStatus = $isFullRefund ? PaymentStatus::Refunded : PaymentStatus::PartiallyRefunded;
+
+            // A second partial refund leaves the status unchanged; asking the
+            // state machine for partially_refunded -> partially_refunded
+            // made every second partial refund fail.
+            if ($payment->status !== $newStatus) {
+                $this->transitionTo($payment, $newStatus);
+            }
 
             $this->outbox->recordEvent(
                 eventType: 'payment.refunded',

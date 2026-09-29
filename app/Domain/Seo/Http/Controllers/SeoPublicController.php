@@ -34,14 +34,14 @@ final class SeoPublicController
         $store = $this->resolveStore($storeSlug);
         $urls = $sitemaps->urlsFor($store);
 
-        return response($sitemaps->toXml($urls), 200, ['Content-Type' => 'application/xml']);
+        return response($sitemaps->toXml($urls), 200, ['Content-Type' => 'application/xml; charset=UTF-8']);
     }
 
     public function robots(string $storeSlug, RobotsService $robots): Response
     {
         $store = $this->resolveStore($storeSlug);
 
-        return response($robots->generate($store), 200, ['Content-Type' => 'text/plain']);
+        return response($robots->generate($store), 200, ['Content-Type' => 'text/plain; charset=UTF-8']);
     }
 
     public function product(string $storeSlug, string $productSlug, SeoResolver $resolver): ResolvedSeoResource

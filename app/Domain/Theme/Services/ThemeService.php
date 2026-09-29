@@ -52,13 +52,28 @@ final class ThemeService
         // theme from the moment it exists, mirroring how B8's
         // StoreObserver seeds an ACTIVE (not draft) default shipping
         // zone for the same reason.
-        return StoreTheme::query()->create([
-            'store_id' => $store->id,
-            'theme_id' => $theme->id,
-            'draft_config' => $validated,
-            'published_config' => $validated,
-            'published_at' => now(),
-        ]);
+        //
+        // The auto-publication is recorded in the publication history like
+        // any other, so the original default stays a rollback target —
+        // without that row a store could never return to it.
+        return DB::transaction(function () use ($store, $theme, $validated) {
+            $storeTheme = StoreTheme::query()->create([
+                'store_id' => $store->id,
+                'theme_id' => $theme->id,
+                'draft_config' => $validated,
+                'published_config' => $validated,
+                'published_at' => now(),
+            ]);
+
+            StoreThemePublication::query()->create([
+                'store_id' => $store->id, // explicit: no tenant context exists while a store is being created
+                'store_theme_id' => $storeTheme->id,
+                'config' => $validated,
+                'published_by_user_id' => null,
+            ]);
+
+            return $storeTheme;
+        });
     }
 
     /**
@@ -94,6 +109,7 @@ final class ThemeService
             $storeTheme->update(['published_config' => $storeTheme->draft_config, 'published_at' => now()]);
 
             StoreThemePublication::query()->create([
+                'store_id' => $storeTheme->store_id,
                 'store_theme_id' => $storeTheme->id,
                 'config' => $storeTheme->draft_config,
                 'published_by_user_id' => $publishedByUserId,
@@ -130,6 +146,7 @@ final class ThemeService
             $storeTheme->update(['draft_config' => $publication->config, 'published_config' => $publication->config, 'published_at' => now()]);
 
             StoreThemePublication::query()->create([
+                'store_id' => $storeTheme->store_id,
                 'store_theme_id' => $storeTheme->id,
                 'config' => $publication->config,
                 'published_by_user_id' => $publishedByUserId,

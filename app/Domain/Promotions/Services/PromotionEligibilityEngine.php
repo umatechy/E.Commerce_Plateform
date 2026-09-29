@@ -47,7 +47,16 @@ final class PromotionEligibilityEngine
 
         foreach ($this->automaticPromotions() as $promotion) {
             if ($this->isEligible($promotion, $now, $subtotalMinor, $customer)) {
-                $candidates[] = $this->priceCandidate($promotion, null, $cartItems, $subtotalMinor, $shippingCostMinor);
+                $candidate = $this->priceCandidate($promotion, null, $cartItems, $subtotalMinor, $shippingCostMinor);
+
+                // An automatic promotion that gives this cart nothing (e.g. a
+                // brand promotion with no matching line) is not applied at
+                // all — otherwise it was snapshotted onto the order and
+                // consumed its usage limit for zero benefit. Free shipping is
+                // kept: its value is only known once shipping is quoted.
+                if ($candidate->freeShipping || $candidate->discountAmountMinor > 0) {
+                    $candidates[] = $candidate;
+                }
             }
         }
 
