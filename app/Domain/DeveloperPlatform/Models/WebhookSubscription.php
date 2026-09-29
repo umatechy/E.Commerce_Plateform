@@ -35,11 +35,13 @@ final class WebhookSubscription extends Model
         return ['subscribed_events' => 'array', 'status' => WebhookSubscriptionStatus::class];
     }
 
+    /** @return BelongsTo<DeveloperApplication, $this> */
     public function application(): BelongsTo
     {
         return $this->belongsTo(DeveloperApplication::class, 'developer_application_id');
     }
 
+    /** @return HasMany<WebhookDeliveryAttempt, $this> */
     public function deliveryAttempts(): HasMany
     {
         return $this->hasMany(WebhookDeliveryAttempt::class);

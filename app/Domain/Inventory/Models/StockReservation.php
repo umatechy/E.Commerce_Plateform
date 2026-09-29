@@ -40,6 +40,7 @@ final class StockReservation extends Model
         ];
     }
 
+    /** @return BelongsTo<Inventory, $this> */
     public function inventory(): BelongsTo
     {
         return $this->belongsTo(Inventory::class);

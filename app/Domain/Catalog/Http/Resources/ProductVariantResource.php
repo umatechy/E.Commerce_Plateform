@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Support\Facades\Gate;
 
+/** @mixin \App\Domain\Catalog\Models\ProductVariant */
 final class ProductVariantResource extends JsonResource
 {
     public function toArray(Request $request): array

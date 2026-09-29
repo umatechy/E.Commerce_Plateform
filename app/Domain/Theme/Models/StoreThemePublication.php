@@ -27,6 +27,7 @@ final class StoreThemePublication extends Model
         return ['config' => 'array', 'created_at' => 'datetime'];
     }
 
+    /** @return BelongsTo<StoreTheme, $this> */
     public function storeTheme(): BelongsTo
     {
         return $this->belongsTo(StoreTheme::class);

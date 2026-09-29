@@ -60,13 +60,19 @@ final class ShippingRateService
             return collect();
         }
 
-        return $zone->rates()->with('method')->get()
-            ->filter(fn (ShippingRate $rate) => $rate->method->is_active && $rate->currency === $currency)
-            ->map(fn (ShippingRate $rate) => [
-                'method' => $rate->method,
-                'cost_minor' => $this->calculateCost($rate, $rate->method, $subtotalMinor, $items),
-            ])
-            ->values();
+        $eligible = collect();
+
+        foreach ($zone->rates()->with('method')->get() as $rate) {
+            $method = $rate->method; // null if the method row is gone — never offered
+
+            if ($method === null || ! $method->is_active || $rate->currency !== $currency) {
+                continue;
+            }
+
+            $eligible->push(['method' => $method, 'cost_minor' => $this->calculateCost($rate, $method, $subtotalMinor, $items)]);
+        }
+
+        return $eligible;
     }
 
     /**

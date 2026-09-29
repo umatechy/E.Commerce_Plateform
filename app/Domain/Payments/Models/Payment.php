@@ -51,16 +51,19 @@ final class Payment extends Model
         ];
     }
 
+    /** @return BelongsTo<Order, $this> */
     public function order(): BelongsTo
     {
         return $this->belongsTo(Order::class);
     }
 
+    /** @return BelongsTo<Customer, $this> */
     public function customer(): BelongsTo
     {
         return $this->belongsTo(Customer::class);
     }
 
+    /** @return HasMany<PaymentTransaction, $this> */
     public function transactions(): HasMany
     {
         return $this->hasMany(PaymentTransaction::class);

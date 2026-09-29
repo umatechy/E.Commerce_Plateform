@@ -211,7 +211,7 @@ final class EntitlementService
         return Cache::remember(
             "tenant:{$storeId}:entitlement:{$key}",
             now()->addMinutes(5),
-            function () use ($storeId, $key): ?array {
+            function () use ($key): ?array {
                 $row = $this->currentSubscription()
                     ?->package
                     ?->entitlements

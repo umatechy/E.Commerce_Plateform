@@ -16,6 +16,7 @@ final class PromotionTarget extends Model
 
     protected $fillable = ['store_id', 'promotion_id', 'target_type', 'target_id'];
 
+    /** @return BelongsTo<Promotion, $this> */
     public function promotion(): BelongsTo
     {
         return $this->belongsTo(Promotion::class);

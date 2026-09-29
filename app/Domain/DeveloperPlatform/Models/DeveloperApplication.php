@@ -33,11 +33,13 @@ final class DeveloperApplication extends Model
         return ['status' => ApplicationStatus::class];
     }
 
+    /** @return HasMany<ApiKey, $this> */
     public function apiKeys(): HasMany
     {
         return $this->hasMany(ApiKey::class);
     }
 
+    /** @return HasMany<WebhookSubscription, $this> */
     public function webhookSubscriptions(): HasMany
     {
         return $this->hasMany(WebhookSubscription::class);

@@ -81,6 +81,6 @@ final class SettingValidator
             }
         }
 
-        return array_map('trim', array_values($value));
+        return array_map('trim', $value);
     }
 }

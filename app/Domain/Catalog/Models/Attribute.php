@@ -22,6 +22,7 @@ final class Attribute extends Model
         return ['type' => AttributeType::class];
     }
 
+    /** @return HasMany<AttributeValue, $this> */
     public function values(): HasMany
     {
         return $this->hasMany(AttributeValue::class);

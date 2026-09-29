@@ -101,6 +101,7 @@ final class DomainService
      * counter atomic-UPDATE pattern used elsewhere in this codebase.
      *
      * @throws \App\Domain\Domains\Exceptions\DomainNotEligibleForPrimaryException
+     * @throws \App\Domain\Domains\Exceptions\InvalidDomainStateTransitionException
      */
     public function setPrimary(Domain $domain): Domain
     {

@@ -52,6 +52,7 @@ final class User extends Authenticatable
         ];
     }
 
+    /** @return BelongsToMany<Store, $this> */
     public function stores(): BelongsToMany
     {
         return $this->belongsToMany(Store::class, 'store_user')

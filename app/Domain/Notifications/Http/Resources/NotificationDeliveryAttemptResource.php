@@ -7,6 +7,7 @@ namespace App\Domain\Notifications\Http\Resources;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
+/** @mixin \App\Domain\Notifications\Models\NotificationDeliveryAttempt */
 final class NotificationDeliveryAttemptResource extends JsonResource
 {
     public function toArray(Request $request): array

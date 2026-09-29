@@ -23,11 +23,13 @@ final class CampaignRecipient extends Model
         return ['status' => CampaignRecipientStatus::class, 'queued_at' => 'datetime'];
     }
 
+    /** @return BelongsTo<Campaign, $this> */
     public function campaign(): BelongsTo
     {
         return $this->belongsTo(Campaign::class);
     }
 
+    /** @return BelongsTo<Customer, $this> */
     public function customer(): BelongsTo
     {
         return $this->belongsTo(Customer::class);

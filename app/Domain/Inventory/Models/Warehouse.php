@@ -38,6 +38,7 @@ final class Warehouse extends Model
         ];
     }
 
+    /** @return HasMany<Inventory, $this> */
     public function inventories(): HasMany
     {
         return $this->hasMany(Inventory::class);

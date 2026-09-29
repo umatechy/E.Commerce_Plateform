@@ -22,11 +22,13 @@ final class ShipmentItem extends Model
         return ['quantity' => 'integer'];
     }
 
+    /** @return BelongsTo<Shipment, $this> */
     public function shipment(): BelongsTo
     {
         return $this->belongsTo(Shipment::class);
     }
 
+    /** @return BelongsTo<OrderItem, $this> */
     public function orderItem(): BelongsTo
     {
         return $this->belongsTo(OrderItem::class);

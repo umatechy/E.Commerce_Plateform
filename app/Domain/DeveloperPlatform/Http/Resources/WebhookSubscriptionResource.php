@@ -7,7 +7,11 @@ namespace App\Domain\DeveloperPlatform\Http\Resources;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
-/** Module 31 §37 "Webhook Signing" — the signing secret is NEVER returned here (only in the one-time creation response); signing_secret is also model-$hidden as defense-in-depth. */
+/**
+ * Module 31 §37 "Webhook Signing" — the signing secret is NEVER returned here (only in the one-time creation response); signing_secret is also model-$hidden as defense-in-depth.
+ *
+ * @mixin \App\Domain\DeveloperPlatform\Models\WebhookSubscription
+ */
 final class WebhookSubscriptionResource extends JsonResource
 {
     public function toArray(Request $request): array

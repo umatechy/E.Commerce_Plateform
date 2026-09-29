@@ -63,6 +63,7 @@ final class Store extends Model
         ];
     }
 
+    /** @return BelongsToMany<User, $this> */
     public function users(): BelongsToMany
     {
         return $this->belongsToMany(User::class, 'store_user')
@@ -80,6 +81,8 @@ final class Store extends Model
      * feature access. EntitlementService and SubscriptionLifecycleService
      * both use THIS relation, not activeSubscription(), so a trialing
      * store's entitlements resolve correctly.
+     *
+     * @return HasOne<Subscription, $this>
      */
     public function currentSubscription(): HasOne
     {
@@ -91,6 +94,8 @@ final class Store extends Model
      * status = 'active' subscription (e.g. a billing report that
      * intentionally excludes trials). Prefer currentSubscription() for
      * anything related to feature/entitlement access.
+     *
+     * @return HasOne<Subscription, $this>
      */
     public function activeSubscription(): HasOne
     {

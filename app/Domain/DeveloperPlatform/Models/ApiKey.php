@@ -44,6 +44,7 @@ final class ApiKey extends Model
         ];
     }
 
+    /** @return BelongsTo<DeveloperApplication, $this> */
     public function application(): BelongsTo
     {
         return $this->belongsTo(DeveloperApplication::class, 'developer_application_id');

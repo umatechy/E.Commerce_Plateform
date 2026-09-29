@@ -7,6 +7,7 @@ namespace App\Domain\Inventory\Http\Resources;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
+/** @mixin \App\Domain\Inventory\Models\Warehouse */
 final class WarehouseResource extends JsonResource
 {
     public function toArray(Request $request): array

@@ -64,27 +64,35 @@ final class Order extends Model
         ];
     }
 
+    /** @return BelongsTo<Customer, $this> */
     public function customer(): BelongsTo
     {
         return $this->belongsTo(Customer::class);
     }
 
+    /** @return HasMany<OrderItem, $this> */
     public function items(): HasMany
     {
         return $this->hasMany(OrderItem::class);
     }
 
+    /** @return HasMany<OrderTimelineEvent, $this> */
     public function timelineEvents(): HasMany
     {
         return $this->hasMany(OrderTimelineEvent::class);
     }
 
-    /** Phase B8 addition — Module 13 §48: "One Order may contain ... Multiple Shipments." */
+    /**
+     * Phase B8 addition — Module 13 §48: "One Order may contain ... Multiple Shipments."
+     *
+     * @return HasMany<\App\Domain\Shipping\Models\Shipment, $this>
+     */
     public function shipments(): HasMany
     {
         return $this->hasMany(\App\Domain\Shipping\Models\Shipment::class);
     }
 
+    /** @return BelongsTo<User, $this> */
     public function cancelledBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'cancelled_by');

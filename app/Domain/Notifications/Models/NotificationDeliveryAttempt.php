@@ -27,6 +27,7 @@ final class NotificationDeliveryAttempt extends Model
         return ['result' => DeliveryAttemptResult::class, 'occurred_at' => 'datetime'];
     }
 
+    /** @return BelongsTo<NotificationMessage, $this> */
     public function message(): BelongsTo
     {
         return $this->belongsTo(NotificationMessage::class, 'notification_message_id');

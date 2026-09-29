@@ -42,6 +42,7 @@ final class ShipmentWebhookEvent extends Model
         ];
     }
 
+    /** @return BelongsTo<Shipment, $this> */
     public function shipment(): BelongsTo
     {
         return $this->belongsTo(Shipment::class);

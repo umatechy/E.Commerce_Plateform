@@ -28,6 +28,7 @@ final class Theme extends Model
         return ['status' => ThemeStatus::class];
     }
 
+    /** @return HasMany<StoreTheme, $this> */
     public function storeThemes(): HasMany
     {
         return $this->hasMany(StoreTheme::class);

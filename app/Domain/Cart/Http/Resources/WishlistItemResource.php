@@ -12,6 +12,8 @@ use Illuminate\Http\Resources\Json\JsonResource;
 /**
  * Module 11 §67 "Wishlist Availability" — always reports LIVE status,
  * never assumes a saved product remains purchasable forever.
+ *
+ * @mixin \App\Domain\Cart\Models\WishlistItem
  */
 final class WishlistItemResource extends JsonResource
 {

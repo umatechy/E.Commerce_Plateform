@@ -31,11 +31,13 @@ final class BackupRestoreJob extends Model
         return ['status' => RestoreStatus::class, 'started_at' => 'datetime', 'completed_at' => 'datetime'];
     }
 
+    /** @return BelongsTo<Backup, $this> */
     public function backup(): BelongsTo
     {
         return $this->belongsTo(Backup::class);
     }
 
+    /** @return BelongsTo<Backup, $this> */
     public function preRestoreBackup(): BelongsTo
     {
         return $this->belongsTo(Backup::class, 'pre_restore_backup_id');

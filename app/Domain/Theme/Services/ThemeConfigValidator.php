@@ -143,7 +143,7 @@ final class ThemeConfigValidator
             SectionType::Footer->value => [],
         ];
 
-        $allowedKeys = $allowedByType[$type->value] ?? [];
+        $allowedKeys = $allowedByType[$type->value]; // every SectionType has an entry
         $this->assertNoUnknownKeys($config, $allowedKeys, "sections.{$type->value}.config");
 
         $clean = [];

@@ -7,6 +7,7 @@ namespace App\Domain\Promotions\Http\Resources;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
+/** @mixin \App\Domain\Promotions\Models\Coupon */
 final class CouponResource extends JsonResource
 {
     public function toArray(Request $request): array

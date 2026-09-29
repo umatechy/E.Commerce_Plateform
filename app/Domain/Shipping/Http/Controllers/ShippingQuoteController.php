@@ -27,7 +27,7 @@ final class ShippingQuoteController
         $totals = $carts->totals($cart);
 
         $items = $cart->items->load('variant')->map(fn ($item) => [
-            'weight' => (float) ($item->variant?->weight ?? 0) * $item->quantity,
+            'weight' => (float) ($item->variant->weight ?? 0) * $item->quantity,
         ])->all();
 
         $destination = [

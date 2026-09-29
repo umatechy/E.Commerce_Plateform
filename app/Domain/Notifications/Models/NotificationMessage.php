@@ -50,11 +50,13 @@ final class NotificationMessage extends Model
         ];
     }
 
+    /** @return HasMany<NotificationDeliveryAttempt, $this> */
     public function attempts(): HasMany
     {
         return $this->hasMany(NotificationDeliveryAttempt::class);
     }
 
+    /** @return BelongsTo<NotificationTemplate, $this> */
     public function template(): BelongsTo
     {
         return $this->belongsTo(NotificationTemplate::class, 'notification_template_id');

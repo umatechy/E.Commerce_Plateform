@@ -199,7 +199,7 @@ final class InventoryService
             throw new \InvalidArgumentException('Reservation quantity must be positive.');
         }
 
-        $allowOverselling = Store::query()->find($this->context->storeId())?->allow_overselling ?? false;
+        $allowOverselling = Store::query()->find($this->context->storeId())->allow_overselling ?? false;
 
         return DB::transaction(function () use ($inventory, $quantity, $idempotencyKey, $ttlMinutes, $referenceType, $referenceId, $allowOverselling) {
             $query = DB::table('inventories')->where('id', $inventory->id);

@@ -13,6 +13,8 @@ use Illuminate\Http\Resources\Json\JsonResource;
  * $cart->toArray() — every field here reflects LIVE, server-recomputed
  * data (Module 11 §13 "Cart prices are provisional"), never a stale
  * stored value.
+ *
+ * @mixin \App\Domain\Cart\Models\Cart
  */
 final class CartResource extends JsonResource
 {

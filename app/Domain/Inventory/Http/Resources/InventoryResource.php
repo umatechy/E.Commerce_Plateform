@@ -12,6 +12,8 @@ use Illuminate\Http\Resources\Json\JsonResource;
  * field at all (B4 does not model inventory cost — see
  * docs/development/b4-inspection-findings.md "Scope Decision"), so
  * there is nothing to accidentally leak here.
+ *
+ * @mixin \App\Domain\Inventory\Models\Inventory
  */
 final class InventoryResource extends JsonResource
 {

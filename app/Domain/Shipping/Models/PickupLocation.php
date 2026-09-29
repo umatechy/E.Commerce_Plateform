@@ -33,6 +33,7 @@ final class PickupLocation extends Model
         return ['status' => PickupLocationStatus::class];
     }
 
+    /** @return BelongsTo<Warehouse, $this> */
     public function warehouse(): BelongsTo
     {
         return $this->belongsTo(Warehouse::class);

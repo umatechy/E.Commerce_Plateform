@@ -22,6 +22,7 @@ final class MarketingSegment extends Model
         return ['rules' => 'array'];
     }
 
+    /** @return HasMany<Campaign, $this> */
     public function campaigns(): HasMany
     {
         return $this->hasMany(Campaign::class, 'marketing_segment_id');

@@ -51,6 +51,7 @@ final class Backup extends Model
         ];
     }
 
+    /** @return BelongsTo<\App\Domain\Tenancy\Models\Store, $this> */
     public function store(): BelongsTo
     {
         return $this->belongsTo(\App\Domain\Tenancy\Models\Store::class);

@@ -143,7 +143,7 @@ final class CheckoutService
             }
 
             $weightedItems = $cartItems->map(fn ($item) => [
-                'weight' => (float) ($item->variant?->weight ?? 0) * $item->quantity,
+                'weight' => (float) ($item->variant->weight ?? 0) * $item->quantity,
             ])->all();
 
             // Module 13 §39 "Server-Authoritative Rate" — the client

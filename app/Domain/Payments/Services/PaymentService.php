@@ -47,7 +47,6 @@ final class PaymentService
         private readonly GatewayResolver $gateways,
         private readonly PaymentStateMachine $stateMachine,
         private readonly OrderService $orders,
-        private readonly InventoryService $inventory,
         private readonly RecordsOutboxEvents $outbox,
     ) {}
 
@@ -134,6 +133,9 @@ final class PaymentService
                 $payment, TransactionType::Sale, TransactionStatus::Succeeded, $amountMinor,
                 $reference, null, null, actorId: $actorId,
                 idempotencyKey: "payment:{$payment->id}:manual:".Str::ulid(),
+                // Staff notes are part of the audit trail (Module 12 §63);
+                // they were accepted by the request but never stored.
+                metadata: $notes !== null ? ['notes' => $notes] : null,
             );
 
             $this->transitionTo($payment, PaymentStatus::Paid);
@@ -184,7 +186,7 @@ final class PaymentService
         }
 
         $gateway = $this->gateways->resolveByProviderName($provider);
-        $storeSecret = \App\Domain\Tenancy\Models\Store::query()->find($payment->store_id)?->payment_webhook_secret ?? '';
+        $storeSecret = \App\Domain\Tenancy\Models\Store::query()->find($payment->store_id)->payment_webhook_secret ?? '';
 
         if (! $gateway->verifyWebhookSignature($rawPayload, $signatureHeader, $storeSecret)) {
             $event->update(['status' => WebhookEventStatus::Failed, 'failure_reason' => 'Signature verification failed.', 'processed_at' => now()]);
@@ -331,6 +333,7 @@ final class PaymentService
         ?string $failureReason,
         ?int $actorId,
         string $idempotencyKey,
+        ?array $metadata = null,
     ): PaymentTransaction {
         return PaymentTransaction::query()->create([
             'payment_id' => $payment->id,
@@ -343,6 +346,7 @@ final class PaymentService
             'failure_reason' => $failureReason,
             'actor_id' => $actorId,
             'idempotency_key' => $idempotencyKey,
+            'metadata' => $metadata,
         ]);
     }
 }

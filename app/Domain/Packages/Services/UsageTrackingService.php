@@ -53,7 +53,7 @@ final class UsageTrackingService
             ->where('store_id', $this->context->storeId())
             ->where('metric_key', $metricKey)
             ->where('period_start', $periodStart)
-            ->value('count') ?? 0;
+            ->value('count');
     }
 
     private function applyDelta(string $metricKey, UsagePeriod $period, int $delta): void

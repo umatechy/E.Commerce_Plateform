@@ -30,6 +30,7 @@ final class OrderTimelineEvent extends Model
         return ['created_at' => 'datetime'];
     }
 
+    /** @return BelongsTo<Order, $this> */
     public function order(): BelongsTo
     {
         return $this->belongsTo(Order::class);

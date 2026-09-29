@@ -21,3 +21,4 @@ yarn-error.log
 /.zed
 .DS_Store
 /.phpunit.result.cache
+/tsconfig.tsbuildinfo

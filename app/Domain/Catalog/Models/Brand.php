@@ -19,6 +19,7 @@ final class Brand extends Model
 
     protected $fillable = ['store_id', 'name', 'slug', 'description'];
 
+    /** @return HasMany<Product, $this> */
     public function products(): HasMany
     {
         return $this->hasMany(Product::class);

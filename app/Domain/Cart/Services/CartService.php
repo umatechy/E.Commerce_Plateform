@@ -14,7 +14,6 @@ use App\Domain\Catalog\Models\ProductVisibility;
 use App\Domain\Inventory\Models\Inventory;
 use App\Domain\Inventory\Models\Warehouse;
 use App\Domain\Orders\Models\Customer;
-use App\Domain\Tenancy\Support\TenantContext;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
@@ -32,8 +31,6 @@ use Illuminate\Validation\ValidationException;
  */
 final class CartService
 {
-    public function __construct(private readonly TenantContext $context) {}
-
     /**
      * Resolves (creating if necessary) the ONE active cart for the
      * given principal. Exactly one of $customer/$guestToken is
@@ -189,7 +186,7 @@ final class CartService
      * single centralized place cart totals are calculated, consumed by
      * both GET /cart (display) and CheckoutService (final validation).
      *
-     * @return array{items: list<array>, subtotal_minor: int, currency: ?string, has_issues: bool}
+     * @return array{items: list<array<string, mixed>>, subtotal_minor: int, currency: ?string, has_issues: bool, coupon_code: ?string, promotion: array<string, mixed>}
      */
     public function totals(Cart $cart): array
     {

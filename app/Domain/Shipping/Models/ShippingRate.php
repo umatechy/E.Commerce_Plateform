@@ -22,11 +22,13 @@ final class ShippingRate extends Model
         return ['base_cost_minor' => 'integer', 'per_unit_cost_minor' => 'integer', 'unit_threshold' => 'decimal:3'];
     }
 
+    /** @return BelongsTo<ShippingZone, $this> */
     public function zone(): BelongsTo
     {
         return $this->belongsTo(ShippingZone::class, 'shipping_zone_id');
     }
 
+    /** @return BelongsTo<ShippingMethod, $this> */
     public function method(): BelongsTo
     {
         return $this->belongsTo(ShippingMethod::class, 'shipping_method_id');

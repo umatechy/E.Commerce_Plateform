@@ -19,6 +19,7 @@ final class AttributeValue extends Model
 
     protected $fillable = ['attribute_id', 'value', 'normalized_value', 'sort_order'];
 
+    /** @return BelongsTo<Attribute, $this> */
     public function attribute(): BelongsTo
     {
         return $this->belongsTo(Attribute::class);

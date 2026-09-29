@@ -52,7 +52,7 @@ final class NotificationEventRouter
             return;
         }
 
-        $destination = $order->customer?->email ?? $order->guest_email;
+        $destination = $order->customer->email ?? $order->guest_email;
         if ($destination === null) {
             return;
         }
@@ -70,7 +70,7 @@ final class NotificationEventRouter
                 'order.number' => $order->order_number,
                 'order.total' => number_format($order->grand_total_minor / 100, 2),
                 'order.currency' => $order->currency,
-                'customer.name' => $order->customer?->name ?? $order->guest_name ?? 'there',
+                'customer.name' => $order->customer->name ?? $order->guest_name ?? 'there',
             ],
             "notification:order:{$order->id}:created",
             'order.created',
@@ -84,7 +84,7 @@ final class NotificationEventRouter
             return;
         }
 
-        $destination = $order->customer?->email ?? $order->guest_email;
+        $destination = $order->customer->email ?? $order->guest_email;
         if ($destination === null) {
             return;
         }
@@ -101,7 +101,7 @@ final class NotificationEventRouter
             [
                 'order.number' => $order->order_number,
                 'order.cancellation_reason' => $payload['reason'] ?? 'not specified',
-                'customer.name' => $order->customer?->name ?? $order->guest_name ?? 'there',
+                'customer.name' => $order->customer->name ?? $order->guest_name ?? 'there',
             ],
             "notification:order:{$order->id}:cancelled",
             'order.cancelled',
@@ -116,7 +116,7 @@ final class NotificationEventRouter
             return;
         }
 
-        $destination = $order->customer?->email ?? $order->guest_email;
+        $destination = $order->customer->email ?? $order->guest_email;
         if ($destination === null) {
             return;
         }
@@ -133,7 +133,7 @@ final class NotificationEventRouter
             [
                 'order.number' => $order->order_number,
                 'payment.method' => $payment->method->value,
-                'customer.name' => $order->customer?->name ?? $order->guest_name ?? 'there',
+                'customer.name' => $order->customer->name ?? $order->guest_name ?? 'there',
             ],
             "notification:payment:{$payment->id}:initiated",
             'payment.initiated',
@@ -148,7 +148,7 @@ final class NotificationEventRouter
             return;
         }
 
-        $destination = $order->customer?->email ?? $order->guest_email;
+        $destination = $order->customer->email ?? $order->guest_email;
         if ($destination === null) {
             return;
         }
@@ -166,7 +166,7 @@ final class NotificationEventRouter
                 'order.number' => $order->order_number,
                 'order.currency' => $order->currency,
                 'payment.refund_amount' => number_format(((int) $payload['amount_minor']) / 100, 2),
-                'customer.name' => $order->customer?->name ?? $order->guest_name ?? 'there',
+                'customer.name' => $order->customer->name ?? $order->guest_name ?? 'there',
             ],
             "notification:payment:{$payment->id}:refunded:".($payload['amount_minor'] ?? '0'),
             'payment.refunded',
@@ -181,7 +181,7 @@ final class NotificationEventRouter
             return;
         }
 
-        $destination = $order->customer?->email ?? $order->guest_email;
+        $destination = $order->customer->email ?? $order->guest_email;
         if ($destination === null) {
             return;
         }
@@ -207,7 +207,7 @@ final class NotificationEventRouter
                 'shipment.tracking_line' => $shipment->tracking_number !== null
                     ? " Tracking number: {$shipment->tracking_number}"
                     : '',
-                'customer.name' => $order->customer?->name ?? $order->guest_name ?? 'there',
+                'customer.name' => $order->customer->name ?? $order->guest_name ?? 'there',
             ],
             "notification:shipment:{$shipment->id}:created",
             'shipment.created',

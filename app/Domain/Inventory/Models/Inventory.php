@@ -41,26 +41,31 @@ final class Inventory extends Model
         ];
     }
 
+    /** @return BelongsTo<Warehouse, $this> */
     public function warehouse(): BelongsTo
     {
         return $this->belongsTo(Warehouse::class);
     }
 
+    /** @return BelongsTo<Product, $this> */
     public function product(): BelongsTo
     {
         return $this->belongsTo(Product::class);
     }
 
+    /** @return BelongsTo<ProductVariant, $this> */
     public function variant(): BelongsTo
     {
         return $this->belongsTo(ProductVariant::class, 'product_variant_id');
     }
 
+    /** @return HasMany<StockMovement, $this> */
     public function movements(): HasMany
     {
         return $this->hasMany(StockMovement::class);
     }
 
+    /** @return HasMany<StockReservation, $this> */
     public function reservations(): HasMany
     {
         return $this->hasMany(StockReservation::class);

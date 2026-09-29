@@ -51,16 +51,19 @@ final class Cart extends Model
         ];
     }
 
+    /** @return BelongsTo<Customer, $this> */
     public function customer(): BelongsTo
     {
         return $this->belongsTo(Customer::class);
     }
 
+    /** @return HasMany<CartItem, $this> */
     public function items(): HasMany
     {
         return $this->hasMany(CartItem::class);
     }
 
+    /** @return BelongsTo<Order, $this> */
     public function convertedOrder(): BelongsTo
     {
         return $this->belongsTo(Order::class, 'converted_order_id');

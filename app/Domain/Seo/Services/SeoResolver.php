@@ -76,18 +76,18 @@ final class SeoResolver
         $entitySetting = SeoSetting::query()->where('seoable_type', $type)->where('seoable_id', $id)->first();
         $storeDefault = $type === SeoableType::Store ? null : SeoSetting::query()->where('seoable_type', SeoableType::Store)->whereNull('seoable_id')->first();
 
-        $title = $entitySetting?->title ?? $storeDefault?->title ?? $fallbackTitle;
-        $description = $entitySetting?->meta_description ?? $storeDefault?->meta_description ?? $fallbackDescription;
+        $title = $entitySetting->title ?? $storeDefault->title ?? $fallbackTitle;
+        $description = $entitySetting->meta_description ?? $storeDefault->meta_description ?? $fallbackDescription;
 
         return new ResolvedSeo(
             title: $title,
             metaDescription: $description,
-            canonicalUrl: $entitySetting?->canonical_override ?? $this->canonicalUrl($store, $path),
-            ogTitle: $entitySetting?->og_title ?? $storeDefault?->og_title ?? $title,
-            ogDescription: $entitySetting?->og_description ?? $storeDefault?->og_description ?? $description,
-            ogImageUrl: $entitySetting?->og_image_url ?? $storeDefault?->og_image_url,
-            robotsIndex: ($entitySetting?->robots_index ?? $storeDefault?->robots_index ?? RobotsDirective::Index)->value,
-            robotsFollow: ($entitySetting?->robots_follow ?? $storeDefault?->robots_follow ?? RobotsDirective::Follow)->value,
+            canonicalUrl: $entitySetting->canonical_override ?? $this->canonicalUrl($store, $path),
+            ogTitle: $entitySetting->og_title ?? $storeDefault->og_title ?? $title,
+            ogDescription: $entitySetting->og_description ?? $storeDefault->og_description ?? $description,
+            ogImageUrl: $entitySetting->og_image_url ?? $storeDefault?->og_image_url,
+            robotsIndex: ($entitySetting->robots_index ?? $storeDefault->robots_index ?? RobotsDirective::Index)->value,
+            robotsFollow: ($entitySetting->robots_follow ?? $storeDefault->robots_follow ?? RobotsDirective::Follow)->value,
         );
     }
 

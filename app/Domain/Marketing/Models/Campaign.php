@@ -49,16 +49,19 @@ final class Campaign extends Model
         ];
     }
 
+    /** @return BelongsTo<MarketingSegment, $this> */
     public function segment(): BelongsTo
     {
         return $this->belongsTo(MarketingSegment::class, 'marketing_segment_id');
     }
 
+    /** @return BelongsTo<Promotion, $this> */
     public function promotion(): BelongsTo
     {
         return $this->belongsTo(Promotion::class);
     }
 
+    /** @return HasMany<CampaignRecipient, $this> */
     public function recipients(): HasMany
     {
         return $this->hasMany(CampaignRecipient::class);

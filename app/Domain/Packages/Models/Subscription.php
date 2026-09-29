@@ -43,6 +43,7 @@ final class Subscription extends Model
         ];
     }
 
+    /** @return BelongsTo<Package, $this> */
     public function package(): BelongsTo
     {
         return $this->belongsTo(Package::class);

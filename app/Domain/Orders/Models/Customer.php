@@ -57,22 +57,27 @@ final class Customer extends Model implements AuthenticatableContract
      * "one human, multiple stores" identity federation) — NOT the
      * authentication mechanism. A Customer never authenticates by
      * being a User; see class docblock.
+     *
+     * @return BelongsTo<User, $this>
      */
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
     }
 
+    /** @return HasMany<Order, $this> */
     public function orders(): HasMany
     {
         return $this->hasMany(Order::class);
     }
 
+    /** @return HasMany<\App\Domain\Cart\Models\Cart, $this> */
     public function carts(): HasMany
     {
         return $this->hasMany(\App\Domain\Cart\Models\Cart::class);
     }
 
+    /** @return HasMany<\App\Domain\Cart\Models\WishlistItem, $this> */
     public function wishlistItems(): HasMany
     {
         return $this->hasMany(\App\Domain\Cart\Models\WishlistItem::class);

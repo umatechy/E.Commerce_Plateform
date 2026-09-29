@@ -32,6 +32,7 @@ final class Package extends Model
         ];
     }
 
+    /** @return HasMany<PackageEntitlement, $this> */
     public function entitlements(): HasMany
     {
         return $this->hasMany(PackageEntitlement::class);

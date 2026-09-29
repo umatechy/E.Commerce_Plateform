@@ -30,6 +30,7 @@ final class ShipmentTrackingEvent extends Model
         return ['status' => ShipmentStatus::class, 'occurred_at' => 'datetime', 'created_at' => 'datetime'];
     }
 
+    /** @return BelongsTo<Shipment, $this> */
     public function shipment(): BelongsTo
     {
         return $this->belongsTo(Shipment::class);

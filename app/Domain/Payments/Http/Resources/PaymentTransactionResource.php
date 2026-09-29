@@ -12,6 +12,8 @@ use Illuminate\Http\Resources\Json\JsonResource;
  * PaymentController::transactions()'s Policy check). Still never
  * includes `metadata` or the full raw webhook payload — only the
  * already-safe, structured fields every transaction carries.
+ *
+ * @mixin \App\Domain\Payments\Models\PaymentTransaction
  */
 final class PaymentTransactionResource extends JsonResource
 {

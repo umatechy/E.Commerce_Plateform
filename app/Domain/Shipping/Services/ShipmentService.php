@@ -155,7 +155,7 @@ final class ShipmentService
         }
 
         $gateway = $this->carriers->resolve($provider);
-        $storeSecret = \App\Domain\Tenancy\Models\Store::query()->find($shipment->store_id)?->shipment_webhook_secret ?? '';
+        $storeSecret = \App\Domain\Tenancy\Models\Store::query()->find($shipment->store_id)->shipment_webhook_secret ?? '';
 
         if (! $gateway->verifyWebhookSignature($rawPayload, $signatureHeader, $storeSecret)) {
             $event->update(['status' => WebhookEventStatus::Failed, 'failure_reason' => 'Signature verification failed.', 'processed_at' => now()]);

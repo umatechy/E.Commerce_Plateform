@@ -57,7 +57,7 @@ final class MockCourierCarrier implements CarrierGatewayContract
 
         return [
             'status' => $status,
-            'carrier_event_code' => $payload['event'] ?? null,
+            'carrier_event_code' => $payload['event'],
             'description' => $payload['description'] ?? null,
             'location' => $payload['location'] ?? null,
             'occurred_at' => isset($payload['occurred_at']) ? CarbonImmutable::parse($payload['occurred_at']) : CarbonImmutable::now(),

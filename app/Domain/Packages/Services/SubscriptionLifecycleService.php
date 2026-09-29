@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Domain\Packages\Services;
 
-use App\Domain\Events\Support\RecordsOutboxEvents;
 use App\Domain\Packages\Models\Package;
 use App\Domain\Packages\Models\Subscription;
 use App\Domain\Packages\Models\SubscriptionStatus;
@@ -32,8 +31,6 @@ use Illuminate\Support\Facades\Log;
  */
 final class SubscriptionLifecycleService
 {
-    public function __construct(private readonly RecordsOutboxEvents $outbox) {}
-
     /**
      * Module 04 §14 "Trial System". Called once, at store registration
      * (AuthController::register(), same transaction as Store creation —

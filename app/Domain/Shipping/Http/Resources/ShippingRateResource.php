@@ -7,6 +7,7 @@ namespace App\Domain\Shipping\Http\Resources;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
+/** @mixin \App\Domain\Shipping\Models\ShippingRate */
 final class ShippingRateResource extends JsonResource
 {
     public function toArray(Request $request): array

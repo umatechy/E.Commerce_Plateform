@@ -13,6 +13,8 @@ use Illuminate\Http\Resources\Json\JsonResource;
  * Umar Techy. Usage/limits are served separately by UsageOverviewResource
  * (kept apart so a lightweight subscription check doesn't always pay
  * the cost of computing every metric's usage).
+ *
+ * @mixin \App\Domain\Packages\Models\Subscription
  */
 final class SubscriptionResource extends JsonResource
 {

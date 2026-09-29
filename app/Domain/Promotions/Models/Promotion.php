@@ -50,16 +50,19 @@ final class Promotion extends Model
         ];
     }
 
+    /** @return HasMany<PromotionTarget, $this> */
     public function targets(): HasMany
     {
         return $this->hasMany(PromotionTarget::class);
     }
 
+    /** @return HasMany<Coupon, $this> */
     public function coupons(): HasMany
     {
         return $this->hasMany(Coupon::class);
     }
 
+    /** @return HasMany<PromotionUsage, $this> */
     public function usages(): HasMany
     {
         return $this->hasMany(PromotionUsage::class);
