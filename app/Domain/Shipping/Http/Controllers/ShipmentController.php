@@ -49,17 +49,17 @@ final class ShipmentController
         // BelongsToTenant's global scope makes a cross-tenant order_id
         // simply not found (404), mirroring every other cross-tenant
         // reference check in this codebase since Phase B3.
-        $order = Order::query()->where('public_id', $request->string('order_id'))->firstOrFail();
+        $order = Order::query()->where('public_id', $request->string('order_id')->toString())->firstOrFail();
 
         try {
             $shipment = $shipments->createShipment(
                 $order,
                 warehouseId: (int) $request->input('warehouse_id'),
-                carrier: $request->string('carrier'),
+                carrier: $request->string('carrier')->toString(),
                 items: $request->input('items'),
                 shippingMethodId: $request->input('shipping_method_id'),
                 pickupLocationId: $request->input('pickup_location_id'),
-                idempotencyKey: $request->string('idempotency_key'),
+                idempotencyKey: $request->string('idempotency_key')->toString(),
             );
         } catch (FulfillmentNotAllowedException $e) {
             return response()->json(['message' => $e->getMessage(), 'code' => 'fulfillment_not_allowed'], 422);

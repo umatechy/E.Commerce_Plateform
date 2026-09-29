@@ -29,7 +29,7 @@ final class StockAdjustmentTest extends TestCase
 
     private function ownerOf(Store $store): User
     {
-        $role = Role::factory()->for($store)->create(['slug' => 'owner']);
+        $role = $this->systemRole($store, 'owner');
         $user = User::factory()->create();
         $store->users()->attach($user, ['role_id' => $role->id, 'status' => 'active']);
 
@@ -50,7 +50,7 @@ final class StockAdjustmentTest extends TestCase
         $inventory = Inventory::factory()->for($store)->for($warehouse)->create(['on_hand' => 0]);
         $service = $this->serviceFor($store);
 
-        $movement = $service->setOpeningStock($inventory, 100, 'Initial stock count', actorId: 1, idempotencyKey: 'open-1');
+        $movement = $service->setOpeningStock($inventory, 100, 'Initial stock count', actorId: $this->actorId(), idempotencyKey: 'open-1');
 
         $this->assertSame(StockMovementType::OpeningBalance, $movement->type);
         $this->assertSame(100, $inventory->fresh()->on_hand);
@@ -63,10 +63,10 @@ final class StockAdjustmentTest extends TestCase
         $inventory = Inventory::factory()->for($store)->for($warehouse)->create(['on_hand' => 0]);
         $service = $this->serviceFor($store);
 
-        $service->setOpeningStock($inventory, 100, 'First', actorId: 1, idempotencyKey: 'open-1');
+        $service->setOpeningStock($inventory, 100, 'First', actorId: $this->actorId(), idempotencyKey: 'open-1');
 
         $this->expectException(DuplicateOpeningStockException::class);
-        $service->setOpeningStock($inventory->fresh(), 50, 'Second attempt', actorId: 1, idempotencyKey: 'open-2');
+        $service->setOpeningStock($inventory->fresh(), 50, 'Second attempt', actorId: $this->actorId(), idempotencyKey: 'open-2');
     }
 
     public function test_positive_adjustment_increases_on_hand(): void
@@ -76,7 +76,7 @@ final class StockAdjustmentTest extends TestCase
         $inventory = Inventory::factory()->for($store)->for($warehouse)->create(['on_hand' => 50]);
         $service = $this->serviceFor($store);
 
-        $movement = $service->adjustStock($inventory, 10, 'Found stock', actorId: 1, idempotencyKey: 'adj-1');
+        $movement = $service->adjustStock($inventory, 10, 'Found stock', actorId: $this->actorId(), idempotencyKey: 'adj-1');
 
         $this->assertSame(StockMovementType::AdjustmentIn, $movement->type);
         $this->assertSame(60, $inventory->fresh()->on_hand);
@@ -89,7 +89,7 @@ final class StockAdjustmentTest extends TestCase
         $inventory = Inventory::factory()->for($store)->for($warehouse)->create(['on_hand' => 50]);
         $service = $this->serviceFor($store);
 
-        $movement = $service->adjustStock($inventory, -10, 'Damaged goods', actorId: 1, idempotencyKey: 'adj-2');
+        $movement = $service->adjustStock($inventory, -10, 'Damaged goods', actorId: $this->actorId(), idempotencyKey: 'adj-2');
 
         $this->assertSame(StockMovementType::AdjustmentOut, $movement->type);
         $this->assertSame(40, $inventory->fresh()->on_hand);
@@ -103,7 +103,7 @@ final class StockAdjustmentTest extends TestCase
         $service = $this->serviceFor($store);
 
         $this->expectException(InsufficientStockException::class);
-        $service->adjustStock($inventory, -10, 'Too much', actorId: 1, idempotencyKey: 'adj-3');
+        $service->adjustStock($inventory, -10, 'Too much', actorId: $this->actorId(), idempotencyKey: 'adj-3');
     }
 
     public function test_adjustment_cannot_go_negative_even_when_store_allows_overselling(): void
@@ -116,7 +116,7 @@ final class StockAdjustmentTest extends TestCase
         $service = $this->serviceFor($store);
 
         $this->expectException(InsufficientStockException::class);
-        $service->adjustStock($inventory, -10, 'Too much', actorId: 1, idempotencyKey: 'adj-4');
+        $service->adjustStock($inventory, -10, 'Too much', actorId: $this->actorId(), idempotencyKey: 'adj-4');
     }
 
     public function test_duplicate_adjustment_request_is_idempotent(): void
@@ -126,8 +126,8 @@ final class StockAdjustmentTest extends TestCase
         $inventory = Inventory::factory()->for($store)->for($warehouse)->create(['on_hand' => 50]);
         $service = $this->serviceFor($store);
 
-        $service->adjustStock($inventory, 10, 'Found stock', actorId: 1, idempotencyKey: 'same-key');
-        $service->adjustStock($inventory->fresh(), 10, 'Found stock', actorId: 1, idempotencyKey: 'same-key');
+        $service->adjustStock($inventory, 10, 'Found stock', actorId: $this->actorId(), idempotencyKey: 'same-key');
+        $service->adjustStock($inventory->fresh(), 10, 'Found stock', actorId: $this->actorId(), idempotencyKey: 'same-key');
 
         $this->assertSame(60, $inventory->fresh()->on_hand); // NOT 70 — the second call was a no-op replay
         $this->assertSame(1, \App\Domain\Inventory\Models\StockMovement::query()->where('idempotency_key', 'same-key')->count());
@@ -154,7 +154,7 @@ final class StockAdjustmentTest extends TestCase
         $store = Store::factory()->create();
         $warehouse = Warehouse::factory()->for($store)->create();
         $inventory = Inventory::factory()->for($store)->for($warehouse)->create(['on_hand' => 50]);
-        $role = Role::factory()->for($store)->create(['slug' => 'staff']);
+        $role = $this->systemRole($store, 'staff');
         $staff = User::factory()->create();
         $store->users()->attach($staff, ['role_id' => $role->id, 'status' => 'active']);
 

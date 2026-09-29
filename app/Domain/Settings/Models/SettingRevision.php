@@ -11,7 +11,10 @@ final class SettingRevision extends Model
 {
     protected $table = 'setting_revisions';
 
-    public $timestamps = false; // created_at only, see migration
+    // created_at only (see migration). UPDATED_AT = null keeps Eloquent
+    // filling created_at itself, so a just-created row exposes it
+    // without a refresh (resources call ->toIso8601String() on it).
+    public const UPDATED_AT = null;
 
     protected $fillable = ['scope', 'store_id', 'key', 'value', 'changed_by_user_id', 'reason'];
 

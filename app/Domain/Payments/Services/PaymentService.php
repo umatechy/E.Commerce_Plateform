@@ -25,6 +25,7 @@ use App\Domain\Payments\Models\TransactionType;
 use App\Domain\Payments\Models\WebhookEventStatus;
 use App\Domain\Tenancy\Support\TenantContext;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 
 /**
  * The ONLY code path that creates/mutates a Payment or
@@ -132,7 +133,7 @@ final class PaymentService
             $transaction = $this->recordTransaction(
                 $payment, TransactionType::Sale, TransactionStatus::Succeeded, $amountMinor,
                 $reference, null, null, actorId: $actorId,
-                idempotencyKey: "payment:{$payment->id}:manual:".now()->timestamp,
+                idempotencyKey: "payment:{$payment->id}:manual:".Str::ulid(),
             );
 
             $this->transitionTo($payment, PaymentStatus::Paid);

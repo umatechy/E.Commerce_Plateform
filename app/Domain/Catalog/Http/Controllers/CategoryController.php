@@ -35,7 +35,7 @@ final class CategoryController
 
         $category = Category::query()->create([
             ...$request->validated(),
-            'slug' => Str::slug($request->string('name')).'-'.Str::lower(Str::random(6)),
+            'slug' => Str::slug($request->string('name')->toString()).'-'.Str::lower(Str::random(6)),
         ]);
 
         return new CategoryResource($category);

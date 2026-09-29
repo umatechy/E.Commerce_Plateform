@@ -30,7 +30,7 @@ final class CampaignExecutionTest extends TestCase
         $store = Store::factory()->create();
         app(TenantContext::class)->resolveToStore($store->id);
         $customer = Customer::factory()->for($store)->create(['marketing_email_opt_in' => true]);
-        $campaign = Campaign::factory()->for($store)->create();
+        $campaign = Campaign::factory()->for($store)->create(['status' => CampaignStatus::Active]);
 
         (new ProcessCampaignExecutionJob($campaign->id))->handle(
             app(TenantContext::class), app(CampaignService::class),
@@ -45,7 +45,7 @@ final class CampaignExecutionTest extends TestCase
         $store = Store::factory()->create();
         app(TenantContext::class)->resolveToStore($store->id);
         $customer = Customer::factory()->for($store)->create(['marketing_email_opt_in' => false]);
-        $campaign = Campaign::factory()->for($store)->create();
+        $campaign = Campaign::factory()->for($store)->create(['status' => CampaignStatus::Active]);
 
         (new ProcessCampaignExecutionJob($campaign->id))->handle(
             app(TenantContext::class), app(CampaignService::class),
@@ -64,7 +64,7 @@ final class CampaignExecutionTest extends TestCase
         CampaignRecipient::query()->create([
             'campaign_id' => $earlierCampaign->id, 'customer_id' => $customer->id, 'status' => 'queued', 'queued_at' => now()->subHours(2),
         ]);
-        $campaign = Campaign::factory()->for($store)->create();
+        $campaign = Campaign::factory()->for($store)->create(['status' => CampaignStatus::Active]);
 
         (new ProcessCampaignExecutionJob($campaign->id))->handle(
             app(TenantContext::class), app(CampaignService::class),
@@ -116,7 +116,7 @@ final class CampaignExecutionTest extends TestCase
         $segment = \App\Domain\Marketing\Models\MarketingSegment::factory()->for($store)->create([
             'rules' => [['field' => 'total_orders_count', 'operator' => '>=', 'value' => 1]],
         ]);
-        $campaign = Campaign::factory()->for($store)->create(['audience_type' => 'segment', 'marketing_segment_id' => $segment->id]);
+        $campaign = Campaign::factory()->for($store)->create(['audience_type' => 'segment', 'marketing_segment_id' => $segment->id, 'status' => CampaignStatus::Active]);
 
         (new ProcessCampaignExecutionJob($campaign->id))->handle(
             app(TenantContext::class), app(CampaignService::class),

@@ -8,6 +8,7 @@ use App\Domain\Events\Support\RecordsOutboxEvents;
 use App\Domain\Marketing\Jobs\ProcessCampaignExecutionJob;
 use App\Domain\Marketing\Models\Campaign;
 use App\Domain\Marketing\Models\CampaignStatus;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
 /**
@@ -52,20 +53,33 @@ final class CampaignService
      */
     public function dispatchExecution(Campaign $campaign): Campaign
     {
-        if ($campaign->idempotency_key !== null) {
-            return $campaign; // execution already dispatched — never dispatch twice
+        // The idempotency check runs on the row locked inside the same
+        // transaction as the state change and its outbox event, so two
+        // overlapping scheduler runs cannot both pass it. The job is
+        // dispatched only after commit.
+        $dispatched = DB::transaction(function () use ($campaign) {
+            $locked = Campaign::query()->lockForUpdate()->findOrFail($campaign->id);
+
+            if ($locked->idempotency_key !== null) {
+                return false; // execution already dispatched — never dispatch twice
+            }
+
+            $this->transitionTo($locked, CampaignStatus::Active);
+            $locked->update(['activated_at' => now(), 'idempotency_key' => (string) Str::uuid()]);
+
+            $this->outbox->recordEventFor(
+                $locked->store_id,
+                eventType: 'marketing.campaign_activated',
+                payload: ['campaign_id' => $locked->id],
+                idempotencyKey: "campaign:{$locked->id}:activated",
+            );
+
+            return true;
+        });
+
+        if ($dispatched) {
+            ProcessCampaignExecutionJob::dispatch($campaign->id);
         }
-
-        $this->transitionTo($campaign, CampaignStatus::Active);
-        $campaign->update(['activated_at' => now(), 'idempotency_key' => (string) Str::uuid()]);
-
-        $this->outbox->recordEvent(
-            eventType: 'marketing.campaign_activated',
-            payload: ['campaign_id' => $campaign->id],
-            idempotencyKey: "campaign:{$campaign->id}:activated",
-        );
-
-        ProcessCampaignExecutionJob::dispatch($campaign->id);
 
         return $campaign->fresh();
     }
@@ -100,14 +114,17 @@ final class CampaignService
      */
     public function markCompleted(Campaign $campaign): void
     {
-        $this->transitionTo($campaign, CampaignStatus::Completed);
-        $campaign->update(['completed_at' => now()]);
+        DB::transaction(function () use ($campaign) {
+            $this->transitionTo($campaign, CampaignStatus::Completed);
+            $campaign->update(['completed_at' => now()]);
 
-        $this->outbox->recordEvent(
-            eventType: 'marketing.campaign_completed',
-            payload: ['campaign_id' => $campaign->id],
-            idempotencyKey: "campaign:{$campaign->id}:completed",
-        );
+            $this->outbox->recordEventFor(
+                $campaign->store_id,
+                eventType: 'marketing.campaign_completed',
+                payload: ['campaign_id' => $campaign->id],
+                idempotencyKey: "campaign:{$campaign->id}:completed",
+            );
+        });
     }
 
     private function transitionTo(Campaign $campaign, CampaignStatus $to): void

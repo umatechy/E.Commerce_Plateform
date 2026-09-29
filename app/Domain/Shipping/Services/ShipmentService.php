@@ -112,7 +112,10 @@ final class ShipmentService
                 idempotencyKey: "shipment:{$shipment->id}:created",
             );
 
-            return $shipment->fresh(['items']);
+            // refresh(), not fresh(): same OrderService precedent — a new
+            // instance loses wasRecentlyCreated, and the controller relies
+            // on it to answer 201 (created) vs 200 (idempotent replay).
+            return $shipment->refresh()->load('items');
         });
     }
 

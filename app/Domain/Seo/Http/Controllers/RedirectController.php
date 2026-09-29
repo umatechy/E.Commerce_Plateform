@@ -29,7 +29,7 @@ final class RedirectController
         abort_unless(app(SeoPolicy::class)->manage($request->user()), 403);
 
         try {
-            $redirect = $redirects->create($request->string('source_path'), $request->string('destination_path'), (int) $request->input('status_code', 301));
+            $redirect = $redirects->create($request->string('source_path')->toString(), $request->string('destination_path')->toString(), (int) $request->input('status_code', 301));
         } catch (InvalidRedirectException $e) {
             return response()->json(['message' => $e->getMessage(), 'code' => 'invalid_redirect'], 422);
         }

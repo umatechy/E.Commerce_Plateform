@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Domain\Catalog\Models;
 
 use App\Domain\Tenancy\Support\BelongsToTenant;
+use App\Support\HasPublicId;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -20,9 +21,20 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  */
 final class Product extends Model
 {
-    use BelongsToTenant, HasFactory, SoftDeletes;
+    use BelongsToTenant, HasFactory, HasPublicId, SoftDeletes;
 
     protected $table = 'products';
+
+    /**
+     * Mirrors the column defaults in the migration so a freshly created
+     * model exposes them without a refresh() — resources read ->value on
+     * these enum casts and threw on null (found on the first real run).
+     */
+    protected $attributes = [
+        'type' => 'simple',
+        'status' => 'draft',
+        'visibility' => 'hidden',
+    ];
 
     protected $fillable = [
         'store_id', 'type', 'name', 'slug', 'sku', 'short_description', 'description',

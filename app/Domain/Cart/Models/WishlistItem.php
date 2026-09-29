@@ -15,7 +15,10 @@ final class WishlistItem extends Model
 {
     use BelongsToTenant;
 
-    public $timestamps = false; // created_at only, see migration
+    // created_at only (see migration). UPDATED_AT = null keeps Eloquent
+    // filling created_at itself, so a just-created row exposes it
+    // without a refresh (resources call ->toIso8601String() on it).
+    public const UPDATED_AT = null;
 
     protected $table = 'wishlist_items';
 

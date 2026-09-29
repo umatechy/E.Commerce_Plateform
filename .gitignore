@@ -20,3 +20,4 @@ yarn-error.log
 /.vscode
 /.zed
 .DS_Store
+/.phpunit.result.cache

@@ -18,7 +18,10 @@ final class StockMovement extends Model
 
     protected $table = 'stock_movements';
 
-    public $timestamps = false; // created_at only, see migration
+    // created_at only (see migration). UPDATED_AT = null keeps Eloquent
+    // filling created_at itself, so a just-created row exposes it
+    // without a refresh (resources call ->toIso8601String() on it).
+    public const UPDATED_AT = null;
 
     protected $fillable = [
         'store_id', 'inventory_id', 'type', 'quantity',

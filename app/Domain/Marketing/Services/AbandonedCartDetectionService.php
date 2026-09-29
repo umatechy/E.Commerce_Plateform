@@ -8,6 +8,7 @@ use App\Domain\Cart\Models\Cart;
 use App\Domain\Cart\Models\CartStatus;
 use App\Domain\Events\Support\RecordsOutboxEvents;
 use App\Domain\Tenancy\Support\TenantContext;
+use Illuminate\Support\Facades\DB;
 
 /**
  * Module 15 §33-35 "Abandoned Cart Recovery / Rules" — the one
@@ -47,13 +48,19 @@ final class AbandonedCartDetectionService
         foreach ($candidates as $cart) {
             $this->context->resolveToStore($cart->store_id);
 
-            $cart->update(['abandoned_marketing_notified_at' => now()]);
+            // Marker and event commit together (ADR-004), so a crash can
+            // neither mark a cart without emitting its event nor emit the
+            // event twice.
+            DB::transaction(function () use ($cart) {
+                $cart->update(['abandoned_marketing_notified_at' => now()]);
 
-            $this->outbox->recordEvent(
-                eventType: 'marketing.abandoned_cart_detected',
-                payload: ['cart_id' => $cart->id, 'customer_id' => $cart->customer_id],
-                idempotencyKey: "cart:{$cart->id}:abandoned_detected",
-            );
+                $this->outbox->recordEventFor(
+                    $cart->store_id,
+                    eventType: 'marketing.abandoned_cart_detected',
+                    payload: ['cart_id' => $cart->id, 'customer_id' => $cart->customer_id],
+                    idempotencyKey: "cart:{$cart->id}:abandoned_detected",
+                );
+            });
         }
 
         return $candidates->count();

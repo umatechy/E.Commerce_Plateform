@@ -33,7 +33,10 @@ final class CartController
     {
         [$cart, $newGuestToken] = $this->resolveCart($request, $carts);
 
-        $response = (new CartResource($cart))->response();
+        // Explicit 200: a GET that lazily creates the guest cart would
+        // otherwise be answered 201 (JsonResource infers it from the
+        // model's wasRecentlyCreated flag).
+        $response = (new CartResource($cart))->response()->setStatusCode(200);
 
         if ($newGuestToken !== null) {
             $response->headers->set(self::GUEST_TOKEN_HEADER, $newGuestToken);
@@ -89,7 +92,7 @@ final class CartController
         $request->validate(['code' => ['required', 'string', 'max:64']]);
 
         try {
-            $carts->applyCoupon($cart, $request->string('code'));
+            $carts->applyCoupon($cart, $request->string('code')->toString());
         } catch (\App\Domain\Promotions\Exceptions\CouponNotEligibleException $e) {
             return response()->json(['message' => $e->getMessage(), 'code' => 'coupon_not_eligible'], 422);
         }

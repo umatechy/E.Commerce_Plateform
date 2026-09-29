@@ -53,7 +53,7 @@ final class CheckoutController
                     'guest_name', 'guest_email', 'guest_phone',
                     'billing_address', 'shipping_address', 'notes', 'shipping_method_id',
                 ]),
-                idempotencyKey: $request->string('idempotency_key'),
+                idempotencyKey: $request->string('idempotency_key')->toString(),
             );
         } catch (CartCheckoutNotAllowedException $e) {
             return response()->json(['message' => $e->getMessage(), 'code' => 'checkout_not_allowed'], 422);

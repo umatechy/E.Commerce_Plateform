@@ -83,7 +83,7 @@ final class ProductController
         $product = DB::transaction(function () use ($request, $status) {
             $product = Product::query()->create([
                 ...$request->validated(),
-                'slug' => Str::slug($request->string('name')).'-'.Str::lower(Str::random(6)),
+                'slug' => Str::slug($request->string('name')->toString()).'-'.Str::lower(Str::random(6)),
                 'status' => $status,
             ]);
 
@@ -108,7 +108,7 @@ final class ProductController
         $this->assertRelationsBelongToTenant($request);
 
         $previousStatus = $product->status;
-        $newStatus = $request->has('status') ? ProductStatus::from($request->string('status')) : $previousStatus;
+        $newStatus = $request->has('status') ? ProductStatus::from($request->string('status')->toString()) : $previousStatus;
 
         // A status change that would START counting again (e.g.
         // unarchiving) must pass the same limit check a brand-new

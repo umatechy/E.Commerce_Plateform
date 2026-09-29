@@ -28,7 +28,7 @@ final class DomainServiceTest extends TestCase
     {
         $store = Store::factory()->create(['slug' => 'my-shop']);
 
-        $domain = Domain::query()->where('store_id', $store->id)->first();
+        $domain = Domain::query()->withoutTenantScope()->where('store_id', $store->id)->first();
 
         $this->assertNotNull($domain);
         $this->assertSame('active', $domain->status->value);

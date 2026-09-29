@@ -31,7 +31,7 @@ final class CustomerAuthController
         // require a permanent account" and the migration's documented
         // decision.
         $exists = Customer::query()
-            ->where('email', $request->string('email'))
+            ->where('email', $request->string('email')->toString())
             ->whereNotNull('password')
             ->exists();
 
@@ -40,9 +40,9 @@ final class CustomerAuthController
         }
 
         $customer = Customer::query()->create([
-            'name' => $request->string('name'),
-            'email' => $request->string('email'),
-            'password' => $request->string('password'),
+            'name' => $request->string('name')->toString(),
+            'email' => $request->string('email')->toString(),
+            'password' => $request->string('password')->toString(),
             'phone' => $request->input('phone'),
         ]);
 

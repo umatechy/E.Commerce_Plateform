@@ -81,6 +81,6 @@ final class UnsubscribeControllerTest extends TestCase
         $this->getJson($url)->assertOk();
         $this->getJson($url)->assertOk();
 
-        $this->assertSame(1, \App\Domain\Notifications\Models\NotificationSuppression::query()->where('destination', 'jane@example.com')->count());
+        $this->assertSame(1, \App\Domain\Notifications\Models\NotificationSuppression::query()->withoutTenantScope()->where('destination', 'jane@example.com')->count());
     }
 }

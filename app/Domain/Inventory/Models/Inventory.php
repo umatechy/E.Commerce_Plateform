@@ -7,6 +7,7 @@ namespace App\Domain\Inventory\Models;
 use App\Domain\Catalog\Models\Product;
 use App\Domain\Catalog\Models\ProductVariant;
 use App\Domain\Tenancy\Support\BelongsToTenant;
+use App\Support\HasPublicId;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -22,7 +23,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  */
 final class Inventory extends Model
 {
-    use BelongsToTenant, HasFactory;
+    use BelongsToTenant, HasFactory, HasPublicId;
 
     protected $table = 'inventories';
 

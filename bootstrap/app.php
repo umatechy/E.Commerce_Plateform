@@ -6,9 +6,11 @@ use App\Http\Middleware\EnsureStaffPrincipal;
 use App\Http\Middleware\EnsureSuperAdminImpersonation;
 use App\Http\Middleware\HandleInertiaRequests;
 use App\Http\Middleware\ResolveTenantContext;
+use Illuminate\Contracts\Auth\Middleware\AuthenticatesRequests;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
+use Illuminate\Routing\Middleware\SubstituteBindings;
 use Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful;
 
 // Laravel 12 bootstrap-file style middleware/route registration.
@@ -76,6 +78,34 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->appendToGroup('web', ResolveTenantContext::class);
         $middleware->appendToGroup('web', HandleInertiaRequests::class);
         $middleware->appendToGroup('api', ResolveTenantContext::class);
+
+        // Laravel sorts route middleware by a priority list that puts
+        // auth before SubstituteBindings; ResolveTenantContext (a group
+        // middleware outside that list) therefore ran AFTER route-model
+        // binding, so every binding of a tenant-owned model threw
+        // TenantContextMissingException (500) — and it ran BEFORE the
+        // route's own auth:* middleware had identified the principal.
+        // Pinning it into the priority list fixes both: the principal is
+        // authenticated first (including the optional customer token),
+        // then the tenant is resolved, then bindings run under it.
+        $middleware->appendToPriorityList(AuthenticatesRequests::class, AttemptCustomerAuthentication::class);
+        $middleware->appendToPriorityList(AttemptCustomerAuthentication::class, ResolveTenantContext::class);
+
+        // Principal-type checks and the Super Admin context switches must
+        // also run before route-model binding: a {domain}/{application}
+        // bound on a Super Admin route is a tenant-owned model that can
+        // only resolve once the impersonated store (or the platform
+        // context) is set. Both Super Admin middlewares re-check
+        // isPlatformStaff() themselves, so running them ahead of the
+        // route's `can:` gate never skips an authorization check.
+        $middleware->appendToPriorityList(ResolveTenantContext::class, EnsureStaffPrincipal::class);
+        $middleware->appendToPriorityList(EnsureStaffPrincipal::class, EnsureCustomerPrincipal::class);
+        $middleware->appendToPriorityList(EnsureCustomerPrincipal::class, \App\Http\Middleware\EnsureSuperAdminPlatformAction::class);
+        $middleware->appendToPriorityList(\App\Http\Middleware\EnsureSuperAdminPlatformAction::class, EnsureSuperAdminImpersonation::class);
+
+        // Developer API: an API key lacking the endpoint's scope is refused
+        // (403) before any {model} binding is attempted.
+        $middleware->prependToPriorityList(SubstituteBindings::class, \App\Http\Middleware\EnsureApiScope::class);
 
         $middleware->alias([
             'super_admin.impersonate' => EnsureSuperAdminImpersonation::class,

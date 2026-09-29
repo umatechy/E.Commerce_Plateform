@@ -15,7 +15,10 @@ final class OrderTimelineEvent extends Model
 
     protected $table = 'order_timeline_events';
 
-    public $timestamps = false; // created_at only
+    // created_at only (see migration). UPDATED_AT = null keeps Eloquent
+    // filling created_at itself, so a just-created row exposes it
+    // without a refresh (resources call ->toIso8601String() on it).
+    public const UPDATED_AT = null;
 
     protected $fillable = [
         'store_id', 'order_id', 'event_type', 'from_status', 'to_status',

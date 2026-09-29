@@ -58,7 +58,7 @@ final class InventoryController
      */
     public function store(StoreInventoryRequest $request): JsonResponse
     {
-        Gate::forUser($request->user())->authorize('adjust', Inventory::class);
+        Gate::forUser($request->user())->authorize('create', Inventory::class);
 
         $this->assertCatalogRelationsBelongToTenant($request);
 
@@ -92,7 +92,7 @@ final class InventoryController
             $movement = $service->adjustStock(
                 $inventory,
                 delta: (int) $request->input('quantity'),
-                reason: $request->string('reason'),
+                reason: $request->string('reason')->toString(),
                 actorId: $request->user()->id,
                 idempotencyKey: $request->input('idempotency_key') ?? (string) Str::uuid(),
             );
@@ -114,7 +114,7 @@ final class InventoryController
             $movement = $service->setOpeningStock(
                 $inventory,
                 quantity: (int) $request->input('quantity'),
-                reason: $request->string('reason'),
+                reason: $request->string('reason')->toString(),
                 actorId: $request->user()->id,
                 idempotencyKey: $request->input('idempotency_key') ?? (string) Str::uuid(),
             );

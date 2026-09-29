@@ -16,6 +16,7 @@ use App\Domain\Settings\Models\StoreSetting;
 use App\Domain\Tenancy\Support\TenantContext;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Crypt;
+use Illuminate\Support\Facades\DB;
 
 /**
  * Module 33 §9/§22 "Configuration Resolution Service" — the ONE place
@@ -85,28 +86,37 @@ final class ConfigService
 
         $storedValue = $definition->type === SettingType::Secret ? Crypt::encryptString($validated) : $validated;
 
-        if ($definition->scope === SettingScope::Platform) {
-            PlatformSetting::query()->updateOrCreate(['key' => $key], ['value' => [$storedValue], 'updated_by_user_id' => $actorUserId]);
-            $storeId = null;
-        } else {
-            $storeId = $this->context->storeId();
-            StoreSetting::query()->updateOrCreate(['store_id' => $storeId, 'key' => $key], ['value' => [$storedValue], 'updated_by_user_id' => $actorUserId]);
-        }
+        $storeId = $definition->scope === SettingScope::Platform ? null : $this->context->storeId();
 
-        SettingRevision::query()->create([
-            'scope' => $definition->scope, 'store_id' => $storeId, 'key' => $key,
-            'value' => [$storedValue], 'changed_by_user_id' => $actorUserId, 'reason' => $reason,
-        ]);
+        // Value, revision and outbox event commit together (ADR-004).
+        DB::transaction(function () use ($definition, $key, $storedValue, $storeId, $actorUserId, $reason) {
+            if ($storeId === null) {
+                PlatformSetting::query()->updateOrCreate(['key' => $key], ['value' => [$storedValue], 'updated_by_user_id' => $actorUserId]);
+            } else {
+                StoreSetting::query()->updateOrCreate(['store_id' => $storeId, 'key' => $key], ['value' => [$storedValue], 'updated_by_user_id' => $actorUserId]);
+            }
 
+            $revision = SettingRevision::query()->create([
+                'scope' => $definition->scope, 'store_id' => $storeId, 'key' => $key,
+                'value' => [$storedValue], 'changed_by_user_id' => $actorUserId, 'reason' => $reason,
+            ]);
+
+            // Module 33 §29/§60 — Non-Negotiable: never place a secret value
+            // into an event payload. A platform setting is a platform-scope
+            // event (null store). The revision id makes the key unique per
+            // change — the previous timestamp suffix collided whenever one
+            // setting changed twice within a second.
+            $this->outbox->recordEventFor(
+                $storeId,
+                eventType: 'setting.changed',
+                payload: ['key' => $key, 'scope' => $definition->scope->value, 'store_id' => $storeId, 'sensitive' => $definition->type === SettingType::Secret],
+                idempotencyKey: "setting:revision:{$revision->id}",
+            );
+        });
+
+        // After commit: a concurrent reader must not re-cache the old value
+        // between the forget and the commit.
         Cache::forget($this->cacheKey($definition));
-
-        // Module 33 §29/§60 — Non-Negotiable: never place a secret value
-        // into an event payload.
-        $this->outbox->recordEvent(
-            eventType: 'setting.changed',
-            payload: ['key' => $key, 'scope' => $definition->scope->value, 'store_id' => $storeId, 'sensitive' => $definition->type === SettingType::Secret],
-            idempotencyKey: "setting:{$definition->scope->value}:".($storeId ?? 'platform').":{$key}:".now()->timestamp,
-        );
     }
 
     /**

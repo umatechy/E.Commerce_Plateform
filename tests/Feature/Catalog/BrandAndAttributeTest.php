@@ -20,7 +20,7 @@ final class BrandAndAttributeTest extends TestCase
 
     private function ownerOf(Store $store): User
     {
-        $role = Role::factory()->for($store)->create(['slug' => 'owner']);
+        $role = $this->systemRole($store, 'owner');
         $user = User::factory()->create();
         $store->users()->attach($user, ['role_id' => $role->id, 'status' => 'active']);
 
@@ -48,7 +48,7 @@ final class BrandAndAttributeTest extends TestCase
         ]);
 
         $response->assertCreated();
-        $attributeId = \App\Domain\Catalog\Models\Attribute::query()->where('key', 'color')->value('id');
+        $attributeId = \App\Domain\Catalog\Models\Attribute::query()->withoutTenantScope()->where('key', 'color')->value('id');
 
         $this->assertDatabaseHas('attribute_values', ['attribute_id' => $attributeId, 'normalized_value' => 'black']);
         $this->assertDatabaseHas('attribute_values', ['attribute_id' => $attributeId, 'normalized_value' => 'white']);
@@ -72,7 +72,7 @@ final class BrandAndAttributeTest extends TestCase
     public function test_non_owner_without_permission_cannot_create_brands(): void
     {
         $store = Store::factory()->create();
-        $role = Role::factory()->for($store)->create(['slug' => 'staff']);
+        $role = $this->systemRole($store, 'staff');
         $staff = User::factory()->create();
         $store->users()->attach($staff, ['role_id' => $role->id, 'status' => 'active']);
 

@@ -44,13 +44,13 @@ final class OrderCreationTest extends TestCase
         }
         Subscription::factory()->for($store)->for($package)->create(['status' => SubscriptionStatus::Active]);
 
-        $role = Role::factory()->for($store)->create(['slug' => 'owner']);
+        $role = $this->systemRole($store, 'owner');
         $owner = User::factory()->create();
         $store->users()->attach($owner, ['role_id' => $role->id, 'status' => 'active']);
 
         $product = Product::factory()->for($store)->create(['price_minor' => 2500, 'currency' => 'USD']);
 
-        $warehouse = Warehouse::query()->where('store_id', $store->id)->where('is_default', true)->firstOrFail();
+        $warehouse = Warehouse::query()->withoutTenantScope()->where('store_id', $store->id)->where('is_default', true)->firstOrFail();
         $inventory = Inventory::factory()->for($store)->for($warehouse)->create(['product_id' => $product->id]);
 
         $this->app->make(TenantContext::class)->resolveToStore($store->id);
@@ -126,7 +126,7 @@ final class OrderCreationTest extends TestCase
         $store = Store::factory()->create();
         $package = Package::factory()->create(); // no orders.basic entitlement
         Subscription::factory()->for($store)->for($package)->create(['status' => SubscriptionStatus::Active]);
-        $role = Role::factory()->for($store)->create(['slug' => 'owner']);
+        $role = $this->systemRole($store, 'owner');
         $owner = User::factory()->create();
         $store->users()->attach($owner, ['role_id' => $role->id, 'status' => 'active']);
         $product = Product::factory()->for($store)->create();

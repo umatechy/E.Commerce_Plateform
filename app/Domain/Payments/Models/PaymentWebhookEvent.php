@@ -22,6 +22,15 @@ final class PaymentWebhookEvent extends Model
 {
     protected $table = 'payment_webhook_events';
 
+    /**
+     * Mirrors the column defaults in the migration so a freshly created
+     * model exposes them without a refresh() — resources read ->value on
+     * these enum casts and threw on null (found on the first real run).
+     */
+    protected $attributes = [
+        'status' => 'received',
+    ];
+
     protected $fillable = [
         'store_id', 'payment_id', 'provider', 'external_event_id',
         'status', 'payload', 'failure_reason', 'processed_at',

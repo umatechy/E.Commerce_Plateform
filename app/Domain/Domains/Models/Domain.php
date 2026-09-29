@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Domain\Domains\Models;
 
 use App\Domain\Tenancy\Support\BelongsToTenant;
+use App\Support\HasPublicId;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -18,9 +19,19 @@ use Illuminate\Database\Eloquent\Model;
  */
 final class Domain extends Model
 {
-    use BelongsToTenant, HasFactory;
+    use BelongsToTenant, HasFactory, HasPublicId;
 
     protected $table = 'domains';
+
+    /**
+     * Mirrors the column defaults in the migration so a freshly created
+     * model exposes them without a refresh() — resources read ->value on
+     * these enum casts and threw on null (found on the first real run).
+     */
+    protected $attributes = [
+        'status' => 'pending',
+        'ssl_status' => 'none',
+    ];
 
     protected $fillable = [
         'store_id', 'hostname', 'normalized_hostname', 'domain_type', 'status',

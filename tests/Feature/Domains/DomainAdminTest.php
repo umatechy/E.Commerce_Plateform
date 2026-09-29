@@ -26,7 +26,7 @@ final class DomainAdminTest extends TestCase
 
     private function ownerOf(Store $store): User
     {
-        $role = Role::factory()->for($store)->create(['slug' => 'owner']);
+        $role = $this->systemRole($store, 'owner');
         $user = User::factory()->create();
         $store->users()->attach($user, ['role_id' => $role->id, 'status' => 'active']);
 
@@ -57,7 +57,7 @@ final class DomainAdminTest extends TestCase
     public function test_manager_without_domains_manage_cannot_add_a_domain(): void
     {
         $store = Store::factory()->create();
-        $role = Role::factory()->for($store)->create(['slug' => 'manager']);
+        $role = $this->systemRole($store, 'manager');
         $manager = User::factory()->create();
         $store->users()->attach($manager, ['role_id' => $role->id, 'status' => 'active']);
 
@@ -105,7 +105,7 @@ final class DomainAdminTest extends TestCase
     {
         $store = Store::factory()->create();
         $owner = $this->ownerOf($store);
-        $domain = Domain::query()->where('store_id', $store->id)->firstOrFail();
+        $domain = Domain::query()->withoutTenantScope()->where('store_id', $store->id)->firstOrFail();
 
         $response = $this->actingAs($owner)->postJson("/api/v1/super-admin/stores/{$store->id}/domains/{$domain->id}/suspend");
 

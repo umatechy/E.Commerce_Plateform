@@ -32,7 +32,7 @@ final class ReportExportTest extends TestCase
 
     private function ownerOf(Store $store): User
     {
-        $role = Role::factory()->for($store)->create(['slug' => 'owner']);
+        $role = $this->systemRole($store, 'owner');
         $user = User::factory()->create();
         $store->users()->attach($user, ['role_id' => $role->id, 'status' => 'active']);
 

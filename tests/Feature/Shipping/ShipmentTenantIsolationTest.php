@@ -24,7 +24,7 @@ final class ShipmentTenantIsolationTest extends TestCase
 
     private function ownerOf(Store $store): User
     {
-        $role = Role::factory()->for($store)->create(['slug' => 'owner']);
+        $role = $this->systemRole($store, 'owner');
         $user = User::factory()->create();
         $store->users()->attach($user, ['role_id' => $role->id, 'status' => 'active']);
 
@@ -38,7 +38,7 @@ final class ShipmentTenantIsolationTest extends TestCase
         $ownerA = $this->ownerOf($storeA);
         $shipmentB = Shipment::factory()->for($storeB)->create([
             'order_id' => \App\Domain\Orders\Models\Order::factory()->for($storeB)->create()->id,
-            'warehouse_id' => \App\Domain\Inventory\Models\Warehouse::query()->where('store_id', $storeB->id)->value('id'),
+            'warehouse_id' => \App\Domain\Inventory\Models\Warehouse::query()->withoutTenantScope()->where('store_id', $storeB->id)->value('id'),
         ]);
 
         $this->actingAs($ownerA)->getJson("/api/v1/shipments/{$shipmentB->id}")->assertStatus(404);
@@ -51,7 +51,7 @@ final class ShipmentTenantIsolationTest extends TestCase
         $ownerA = $this->ownerOf($storeA);
         $shipmentB = Shipment::factory()->for($storeB)->create([
             'order_id' => \App\Domain\Orders\Models\Order::factory()->for($storeB)->create()->id,
-            'warehouse_id' => \App\Domain\Inventory\Models\Warehouse::query()->where('store_id', $storeB->id)->value('id'),
+            'warehouse_id' => \App\Domain\Inventory\Models\Warehouse::query()->withoutTenantScope()->where('store_id', $storeB->id)->value('id'),
             'tracking_number' => 'UNIQUE-TRACKING-B',
         ]);
 

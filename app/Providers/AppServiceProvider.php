@@ -12,6 +12,7 @@ use App\Domain\Catalog\Policies\AttributePolicy;
 use App\Domain\Catalog\Policies\BrandPolicy;
 use App\Domain\Catalog\Policies\CategoryPolicy;
 use App\Domain\Catalog\Policies\ProductPolicy;
+use App\Domain\Identity\Models\PersonalAccessToken;
 use App\Domain\Identity\Models\Role;
 use App\Domain\Identity\Policies\RolePolicy;
 use App\Domain\Inventory\Models\Inventory;
@@ -34,8 +35,10 @@ use App\Domain\SuperAdmin\Policies\SuperAdminAccessPolicy;
 use App\Domain\Tenancy\Models\Store;
 use App\Domain\Tenancy\Observers\StoreObserver;
 use App\Domain\Tenancy\Support\TenantContext;
+use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
+use Laravel\Sanctum\Sanctum;
 
 final class AppServiceProvider extends ServiceProvider
 {
@@ -73,6 +76,19 @@ final class AppServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
+        // App\Domain\* models live outside App\Models, so Laravel's default
+        // factory guess (Database\Factories\Domain\...\StoreFactory) never
+        // matches the flat database/factories/ layout. Every Model::factory()
+        // call failed with "class not found" until this resolver was added
+        // (found on the first real test run).
+        Factory::guessFactoryNamesUsing(
+            static fn (string $modelName): string => 'Database\\Factories\\'.class_basename($modelName).'Factory'
+        );
+
+        // See PersonalAccessToken's docblock: token -> owner resolution
+        // must not depend on a TenantContext that cannot exist yet.
+        Sanctum::usePersonalAccessTokenModel(PersonalAccessToken::class);
+
         // App\Domain\* models/policies do not follow Laravel's default
         // App\Models / App\Policies convention, so auto-discovery does not apply
         // to them — every Policy MUST be registered here explicitly. A Policy

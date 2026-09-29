@@ -27,7 +27,7 @@ final class SuperAdminSubscriptionController
         Store $store,
         SubscriptionLifecycleService $subscriptions,
     ): JsonResponse {
-        $newPackage = Package::query()->where('code', $request->string('package_code'))->firstOrFail();
+        $newPackage = Package::query()->where('code', $request->string('package_code')->toString())->firstOrFail();
         $previousPackageCode = \App\Domain\Packages\Models\Subscription::query()->withoutTenantScope()->where('store_id', $store->id)->latest()->first()?->package?->code;
 
         $overLimit = $subscriptions->changePackage(

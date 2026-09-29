@@ -7,6 +7,7 @@ namespace App\Domain\Shipping\Models;
 use App\Domain\Inventory\Models\Warehouse;
 use App\Domain\Orders\Models\Order;
 use App\Domain\Tenancy\Support\BelongsToTenant;
+use App\Support\HasPublicId;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -18,9 +19,18 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  */
 final class Shipment extends Model
 {
-    use BelongsToTenant, HasFactory;
+    use BelongsToTenant, HasFactory, HasPublicId;
 
     protected $table = 'shipments';
+
+    /**
+     * Mirrors the column defaults in the migration so a freshly created
+     * model exposes them without a refresh() — resources read ->value on
+     * these enum casts and threw on null (found on the first real run).
+     */
+    protected $attributes = [
+        'status' => 'draft',
+    ];
 
     protected $fillable = [
         'store_id', 'order_id', 'warehouse_id', 'shipping_method_id', 'pickup_location_id',

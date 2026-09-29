@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Domain\Promotions\Models;
 
 use App\Domain\Tenancy\Support\BelongsToTenant;
+use App\Support\HasPublicId;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -15,9 +16,19 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  */
 final class Promotion extends Model
 {
-    use BelongsToTenant, HasFactory;
+    use BelongsToTenant, HasFactory, HasPublicId;
 
     protected $table = 'promotions';
+
+    /**
+     * Mirrors the column defaults in the migration so a freshly created
+     * model exposes them without a refresh() — resources read ->value on
+     * these enum casts and threw on null (found on the first real run).
+     */
+    protected $attributes = [
+        'target_scope' => 'order',
+        'status' => 'draft',
+    ];
 
     protected $fillable = [
         'store_id', 'name', 'type', 'target_scope', 'status',

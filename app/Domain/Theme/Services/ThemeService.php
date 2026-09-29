@@ -11,6 +11,7 @@ use App\Domain\Theme\Models\StoreThemePublication;
 use App\Domain\Theme\Models\Theme;
 use App\Domain\Tenancy\Models\Store;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 
 /**
  * The ONLY code path that creates a StoreTheme or mutates
@@ -67,18 +68,23 @@ final class ThemeService
     {
         $validated = $this->validator->validate($config);
 
-        $storeTheme->update([
-            'draft_config' => $validated,
-            'custom_css' => $this->cssSanitizer->sanitize($customCss),
-        ]);
+        $customCss = $this->cssSanitizer->sanitize($customCss);
 
-        $this->outbox->recordEvent(
-            eventType: 'theme.configuration_updated',
-            payload: ['store_theme_id' => $storeTheme->id],
-            idempotencyKey: "store_theme:{$storeTheme->id}:draft_updated:".now()->timestamp,
-        );
+        return DB::transaction(function () use ($storeTheme, $validated, $customCss) {
+            $storeTheme->update([
+                'draft_config' => $validated,
+                'custom_css' => $customCss,
+            ]);
 
-        return $storeTheme->fresh();
+            $this->outbox->recordEventFor(
+                $storeTheme->store_id,
+                eventType: 'theme.configuration_updated',
+                payload: ['store_theme_id' => $storeTheme->id],
+                idempotencyKey: "store_theme:{$storeTheme->id}:draft_updated:".Str::ulid(),
+            );
+
+            return $storeTheme->fresh();
+        });
     }
 
     /** Module 17 §16/§44 "Theme Lifecycle / Theme Publishing" — atomic: the draft becomes the new published config, and a ledger snapshot is recorded, in one transaction. */
@@ -93,10 +99,11 @@ final class ThemeService
                 'published_by_user_id' => $publishedByUserId,
             ]);
 
-            $this->outbox->recordEvent(
+            $this->outbox->recordEventFor(
+                $storeTheme->store_id,
                 eventType: 'theme.published',
                 payload: ['store_theme_id' => $storeTheme->id],
-                idempotencyKey: "store_theme:{$storeTheme->id}:published:".now()->timestamp,
+                idempotencyKey: "store_theme:{$storeTheme->id}:published:".Str::ulid(),
             );
 
             return $storeTheme->fresh();
@@ -128,10 +135,11 @@ final class ThemeService
                 'published_by_user_id' => $publishedByUserId,
             ]);
 
-            $this->outbox->recordEvent(
+            $this->outbox->recordEventFor(
+                $storeTheme->store_id,
                 eventType: 'theme.rolled_back',
                 payload: ['store_theme_id' => $storeTheme->id, 'restored_from_publication_id' => $publication->id],
-                idempotencyKey: "store_theme:{$storeTheme->id}:rolled_back:".now()->timestamp,
+                idempotencyKey: "store_theme:{$storeTheme->id}:rolled_back:".Str::ulid(),
             );
 
             return $storeTheme->fresh();

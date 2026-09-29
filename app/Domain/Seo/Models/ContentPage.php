@@ -15,6 +15,15 @@ final class ContentPage extends Model
 
     protected $table = 'content_pages';
 
+    /**
+     * Mirrors the column defaults in the migration so a freshly created
+     * model exposes them without a refresh() — resources read ->value on
+     * these enum casts and threw on null (found on the first real run).
+     */
+    protected $attributes = [
+        'status' => 'draft',
+    ];
+
     protected $fillable = ['store_id', 'title', 'slug', 'body', 'status', 'published_at'];
 
     protected function casts(): array

@@ -14,6 +14,7 @@ use App\Domain\DataProtection\Models\BackupStatus;
 use App\Domain\DataProtection\Services\DumpStrategies\DatabaseDumpStrategy;
 use App\Domain\DataProtection\Services\Storage\BackupStorageAdapter;
 use App\Domain\Events\Support\RecordsOutboxEvents;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 /**
@@ -55,11 +56,17 @@ final class RestoreService
             return $restoreJob->fresh();
         }
 
-        $this->outbox->recordEvent(
+        // The restore job row itself is already committed (a failed
+        // preflight above must stay recorded); the event gets its own
+        // transaction, as ADR-004's guard requires. Attributed to the
+        // backup's store explicitly: a Super Admin may call this from
+        // platform context.
+        DB::transaction(fn () => $this->outbox->recordEventFor(
+            $backup->store_id,
             eventType: 'restore.requested',
             payload: ['restore_job_id' => $restoreJob->id, 'backup_id' => $backup->id, 'target_store_id' => $targetStoreId],
             idempotencyKey: "restore_job:{$restoreJob->id}:requested",
-        );
+        ));
 
         return $restoreJob;
     }

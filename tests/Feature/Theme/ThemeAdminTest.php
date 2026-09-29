@@ -24,7 +24,7 @@ final class ThemeAdminTest extends TestCase
 
     private function ownerOf(Store $store): User
     {
-        $role = Role::factory()->for($store)->create(['slug' => 'owner']);
+        $role = $this->systemRole($store, 'owner');
         $user = User::factory()->create();
         $store->users()->attach($user, ['role_id' => $role->id, 'status' => 'active']);
 
@@ -99,7 +99,7 @@ final class ThemeAdminTest extends TestCase
         $storeA = Store::factory()->create();
         $storeB = Store::factory()->create();
         $ownerA = $this->ownerOf($storeA);
-        $storeThemeB = StoreTheme::query()->where('store_id', $storeB->id)->firstOrFail();
+        $storeThemeB = StoreTheme::query()->withoutTenantScope()->where('store_id', $storeB->id)->firstOrFail();
         app(\App\Domain\Tenancy\Support\TenantContext::class)->resolveToStore($storeB->id);
         app(\App\Domain\Theme\Services\ThemeService::class)->updateDraft($storeThemeB, ['tokens' => ['primary' => '#B00B00']], null);
 
@@ -130,7 +130,7 @@ final class ThemeAdminTest extends TestCase
         $store = Store::factory()->create();
         $owner = $this->ownerOf($store);
         $basicPackage = \App\Domain\Packages\Models\Package::factory()->create(['code' => 'basic-test']);
-        \App\Domain\Packages\Models\Subscription::query()->updateOrCreate(
+        \App\Domain\Packages\Models\Subscription::query()->withoutTenantScope()->updateOrCreate(
             ['store_id' => $store->id],
             ['package_id' => $basicPackage->id, 'status' => \App\Domain\Packages\Models\SubscriptionStatus::Active],
         );

@@ -34,9 +34,9 @@ final class AttributeController
 
         $attribute = DB::transaction(function () use ($request) {
             $attribute = Attribute::query()->create([
-                'name' => $request->string('name'),
-                'key' => $request->string('key'),
-                'type' => $request->string('type'),
+                'name' => $request->string('name')->toString(),
+                'key' => $request->string('key')->toString(),
+                'type' => $request->string('type')->toString(),
             ]);
 
             foreach ($request->input('values', []) as $index => $value) {

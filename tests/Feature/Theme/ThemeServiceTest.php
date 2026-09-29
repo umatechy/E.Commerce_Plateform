@@ -33,7 +33,7 @@ final class ThemeServiceTest extends TestCase
 
         $store = Store::factory()->create();
 
-        $storeTheme = StoreTheme::query()->where('store_id', $store->id)->first();
+        $storeTheme = StoreTheme::query()->withoutTenantScope()->where('store_id', $store->id)->first();
         $this->assertNotNull($storeTheme);
         $this->assertNotNull($storeTheme->published_config); // auto-published, not left as draft-only
         $this->assertTrue($storeTheme->isPublished());

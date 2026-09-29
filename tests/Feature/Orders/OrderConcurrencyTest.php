@@ -38,11 +38,11 @@ final class OrderConcurrencyTest extends TestCase
         $package = Package::factory()->create();
         $package->entitlements()->create(['key' => 'orders.basic', 'type' => EntitlementType::Feature, 'boolean_value' => true]);
         Subscription::factory()->for($store)->for($package)->create(['status' => SubscriptionStatus::Active]);
-        $role = Role::factory()->for($store)->create(['slug' => 'owner']);
+        $role = $this->systemRole($store, 'owner');
         $owner = User::factory()->create();
         $store->users()->attach($owner, ['role_id' => $role->id, 'status' => 'active']);
         $product = Product::factory()->for($store)->create(['price_minor' => 1000, 'currency' => 'USD']);
-        $warehouse = Warehouse::query()->where('store_id', $store->id)->where('is_default', true)->firstOrFail();
+        $warehouse = Warehouse::query()->withoutTenantScope()->where('store_id', $store->id)->where('is_default', true)->firstOrFail();
         $inventory = Inventory::factory()->for($store)->for($warehouse)->create(['product_id' => $product->id]);
         $this->app->make(TenantContext::class)->resolveToStore($store->id);
         $this->app->make(InventoryService::class)->setOpeningStock($inventory, 1, 'Last unit', actorId: $owner->id, idempotencyKey: 'last-unit');

@@ -21,7 +21,7 @@ final class CategoryTest extends TestCase
 
     private function ownerOf(Store $store): User
     {
-        $role = Role::factory()->for($store)->create(['slug' => 'owner']);
+        $role = $this->systemRole($store, 'owner');
         $user = User::factory()->create();
         $store->users()->attach($user, ['role_id' => $role->id, 'status' => 'active']);
 
@@ -110,7 +110,7 @@ final class CategoryTest extends TestCase
     public function test_non_owner_without_permission_cannot_manage_categories(): void
     {
         $store = Store::factory()->create();
-        $role = Role::factory()->for($store)->create(['slug' => 'staff']);
+        $role = $this->systemRole($store, 'staff');
         $staff = User::factory()->create();
         $store->users()->attach($staff, ['role_id' => $role->id, 'status' => 'active']);
 

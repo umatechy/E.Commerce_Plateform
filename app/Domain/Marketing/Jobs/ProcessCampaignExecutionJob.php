@@ -9,6 +9,7 @@ use App\Domain\Marketing\Models\Campaign;
 use App\Domain\Marketing\Models\CampaignAudienceType;
 use App\Domain\Marketing\Models\CampaignRecipient;
 use App\Domain\Marketing\Models\CampaignRecipientStatus;
+use App\Domain\Marketing\Models\CampaignStatus;
 use App\Domain\Marketing\Services\CampaignService;
 use App\Domain\Marketing\Services\MarketingSegmentService;
 use App\Domain\Orders\Models\Customer;
@@ -62,7 +63,12 @@ final class ProcessCampaignExecutionJob implements ShouldQueue
         // arrives after the campaign already reached a terminal state,
         // this is a safe no-op, never a crash (markCompleted() would
         // otherwise throw, since Completed has no outgoing transition).
-        if ($campaign->status->isTerminal()) {
+        //
+        // Only an Active campaign executes: dispatchExecution() activates
+        // before dispatching, so a Draft/Scheduled/Paused campaign reaching
+        // here (a stale or duplicate job) must not send anything either —
+        // markCompleted() would otherwise throw on the invalid transition.
+        if ($campaign->status !== CampaignStatus::Active) {
             return;
         }
 

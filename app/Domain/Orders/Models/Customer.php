@@ -6,6 +6,7 @@ namespace App\Domain\Orders\Models;
 
 use App\Domain\Identity\Models\User;
 use App\Domain\Tenancy\Support\BelongsToTenant;
+use App\Support\HasPublicId;
 use Illuminate\Auth\Authenticatable;
 use Illuminate\Contracts\Auth\Authenticatable as AuthenticatableContract;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -34,7 +35,7 @@ use Laravel\Sanctum\HasApiTokens;
  */
 final class Customer extends Model implements AuthenticatableContract
 {
-    use Authenticatable, BelongsToTenant, HasApiTokens, HasFactory, SoftDeletes;
+    use Authenticatable, BelongsToTenant, HasApiTokens, HasFactory, HasPublicId, SoftDeletes;
 
     protected $table = 'customers';
 

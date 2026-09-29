@@ -86,6 +86,9 @@ final class TenantIsolationTest extends TestCase
     /** Manipulating a request payload's store_id must never change which tenant a write affects. */
     public function test_tenant_a_cannot_override_tenant_via_request_payload(): void
     {
+        // userA needs permission to create roles at all, otherwise the
+        // request is rejected (403) before the spoofed store_id matters.
+        $this->storeA->users()->updateExistingPivot($this->userA->id, ['role_id' => $this->systemRole($this->storeA, 'owner')->id]);
         $this->actingAs($this->userA);
 
         $response = $this->postJson('/api/v1/roles', [
@@ -106,8 +109,9 @@ final class TenantIsolationTest extends TestCase
         $roleBelongingToB = Role::factory()->for($this->storeB)->create();
 
         $this->assertNull(
-            Role::query()->withoutTenantScope()->find($roleBelongingToB->id)
-                ?->where('store_id', $this->storeA->id)
+            Role::query()->withoutTenantScope()
+                ->whereKey($roleBelongingToB->id)
+                ->where('store_id', $this->storeA->id)
                 ->first()
         );
     }

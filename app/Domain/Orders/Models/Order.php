@@ -6,6 +6,7 @@ namespace App\Domain\Orders\Models;
 
 use App\Domain\Identity\Models\User;
 use App\Domain\Tenancy\Support\BelongsToTenant;
+use App\Support\HasPublicId;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -20,9 +21,21 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  */
 final class Order extends Model
 {
-    use BelongsToTenant, HasFactory;
+    use BelongsToTenant, HasFactory, HasPublicId;
 
     protected $table = 'orders';
+
+    /**
+     * Mirrors the column defaults in the migration so a freshly created
+     * model exposes them without a refresh() — resources read ->value on
+     * these enum casts and threw on null (found on the first real run).
+     */
+    protected $attributes = [
+        'status' => 'pending_confirmation',
+        'payment_status' => 'unpaid',
+        'fulfillment_status' => 'unfulfilled',
+        'source' => 'storefront',
+    ];
 
     protected $fillable = [
         'store_id', 'order_number', 'customer_id',

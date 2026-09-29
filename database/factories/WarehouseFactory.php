@@ -14,11 +14,16 @@ final class WarehouseFactory extends Factory
 
     public function definition(): array
     {
+        // StoreObserver already seeds every store's default 'main'
+        // warehouse, so a factory row must use its own code and must not
+        // claim to be a second default (uniq_warehouses_store_id_code).
+        $code = 'wh-'.fake()->unique()->numerify('####');
+
         return [
-            'name' => 'Main Warehouse',
-            'code' => 'main',
+            'name' => 'Warehouse '.strtoupper($code),
+            'code' => $code,
             'status' => 'active',
-            'is_default' => true,
+            'is_default' => false,
         ];
     }
 }

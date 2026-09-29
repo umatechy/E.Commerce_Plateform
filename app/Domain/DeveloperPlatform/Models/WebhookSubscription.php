@@ -17,6 +17,15 @@ final class WebhookSubscription extends Model
 
     protected $table = 'webhook_subscriptions';
 
+    /**
+     * Mirrors the column defaults in the migration so a freshly created
+     * model exposes them without a refresh() — resources read ->value on
+     * these enum casts and threw on null (found on the first real run).
+     */
+    protected $attributes = [
+        'status' => 'active',
+    ];
+
     protected $fillable = ['developer_application_id', 'store_id', 'url', 'signing_secret', 'subscribed_events', 'status'];
 
     protected $hidden = ['signing_secret'];

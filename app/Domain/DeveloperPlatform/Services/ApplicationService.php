@@ -19,34 +19,42 @@ final class ApplicationService
 
     public function create(Store $store, string $name, ?int $createdByUserId): DeveloperApplication
     {
-        $application = DeveloperApplication::query()->create([
-            'public_id' => (string) Str::ulid(),
-            'store_id' => $store->id,
-            'name' => $name,
-            'status' => ApplicationStatus::Active,
-            'created_by_user_id' => $createdByUserId,
-        ]);
+        return DB::transaction(function () use ($store, $name, $createdByUserId) {
+            $application = DeveloperApplication::query()->create([
+                'public_id' => (string) Str::ulid(),
+                'store_id' => $store->id,
+                'name' => $name,
+                'status' => ApplicationStatus::Active,
+                'created_by_user_id' => $createdByUserId,
+            ]);
 
-        $this->outbox->recordEvent(
-            eventType: 'developer.application.created',
-            payload: ['application_id' => $application->id, 'store_id' => $store->id],
-            idempotencyKey: "developer_application:{$application->id}:created",
-        );
+            $this->outbox->recordEventFor(
+                $store->id,
+                eventType: 'developer.application.created',
+                payload: ['application_id' => $application->id, 'store_id' => $store->id],
+                idempotencyKey: "developer_application:{$application->id}:created",
+            );
 
-        return $application;
+            return $application;
+        });
     }
 
     public function suspend(DeveloperApplication $application): DeveloperApplication
     {
-        $application->update(['status' => ApplicationStatus::Suspended]);
+        // Also reached from Super Admin platform context (no store
+        // resolved), so the event names the application's own store.
+        return DB::transaction(function () use ($application) {
+            $application->update(['status' => ApplicationStatus::Suspended]);
 
-        $this->outbox->recordEvent(
-            eventType: 'developer.application.suspended',
-            payload: ['application_id' => $application->id, 'store_id' => $application->store_id],
-            idempotencyKey: "developer_application:{$application->id}:suspended:".now()->timestamp,
-        );
+            $this->outbox->recordEventFor(
+                $application->store_id,
+                eventType: 'developer.application.suspended',
+                payload: ['application_id' => $application->id, 'store_id' => $application->store_id],
+                idempotencyKey: "developer_application:{$application->id}:suspended:".Str::ulid(),
+            );
 
-        return $application->fresh();
+            return $application->fresh();
+        });
     }
 
     public function reactivate(DeveloperApplication $application): DeveloperApplication
@@ -68,10 +76,11 @@ final class ApplicationService
             $application->update(['status' => ApplicationStatus::Revoked]);
             $application->apiKeys()->where('status', ApiKeyStatus::Active)->update(['status' => ApiKeyStatus::Revoked, 'revoked_at' => now()]);
 
-            $this->outbox->recordEvent(
+            $this->outbox->recordEventFor(
+                $application->store_id,
                 eventType: 'developer.application.revoked',
                 payload: ['application_id' => $application->id, 'store_id' => $application->store_id],
-                idempotencyKey: "developer_application:{$application->id}:revoked:".now()->timestamp,
+                idempotencyKey: "developer_application:{$application->id}:revoked:".Str::ulid(),
             );
 
             return $application->fresh();
