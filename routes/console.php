@@ -20,3 +20,7 @@ Schedule::command('marketing:detect-abandoned-carts')->everyFifteenMinutes();
 // scheduler, never a custom one. NOT EXECUTED — ENVIRONMENT LIMITATION
 // in this Claude App sandbox (no real cron/queue worker runs here).
 Schedule::command('backups:expire')->daily();
+
+// Module 24 (Phase B21): hourly store-health history for the Super Admin
+// overview; also prunes snapshots past their retention.
+Schedule::command('store-health:snapshot')->hourly()->withoutOverlapping();

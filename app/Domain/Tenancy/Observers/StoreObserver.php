@@ -48,6 +48,7 @@ final class StoreObserver
             'theme.view', 'theme.manage', 'theme.publish',
             'settings.view', 'settings.manage',
             'developer_platform.view', // developer_platform.manage withheld from Manager — API key issuance/revocation is Owner-only, same sensitivity precedent as domains.manage (Phase B14)
+            'store_health.view', // Module 24 (Phase B21) — read-only operational view
             'backups.view', // backups.manage/backups.restore withheld from Manager — requesting a backup or restore is Owner-only, same sensitivity precedent (Phase B19)
         ],
         'staff' => [

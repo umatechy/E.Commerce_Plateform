@@ -44,10 +44,12 @@ use App\Domain\Settings\Http\Controllers\StoreSettingController;
 use App\Domain\DeveloperPlatform\Http\Controllers\DeveloperApplicationController;
 use App\Domain\DeveloperPlatform\Http\Controllers\ApiKeyController;
 use App\Domain\DeveloperPlatform\Http\Controllers\WebhookSubscriptionController;
+use App\Domain\SuperAdmin\Http\Controllers\SuperAdminMonitoringController;
 use App\Domain\SuperAdmin\Http\Controllers\SuperAdminPackageController;
 use App\Domain\SuperAdmin\Http\Controllers\SuperAdminStoreController;
 use App\Domain\SuperAdmin\Http\Controllers\SuperAdminSubscriptionController;
 use App\Domain\Tenancy\Http\Controllers\StoreSwitchController;
+use App\Domain\Monitoring\Http\Controllers\StoreHealthController;
 use Illuminate\Support\Facades\Route;
 
 // ADR-005: first-party API, /api/v1/... . Registered under the 'api'
@@ -177,6 +179,11 @@ Route::middleware(['auth:sanctum', 'staff.principal'])->group(function () {
     Route::delete('/domains/{domain}', [DomainController::class, 'destroy']);
 
     // --- Theme, Branding & Design System (Module 17, Phase B15) ---
+    // Module 24 "Store Health, Monitoring & Resource Usage" (Phase B21)
+    // — always the current tenant's own store (ADR-001).
+    Route::get('/store/health', [StoreHealthController::class, 'show']);
+    Route::get('/store/health/history', [StoreHealthController::class, 'history']);
+
     Route::get('/store/theme', [StoreThemeController::class, 'show']);
     Route::put('/store/theme/draft', [StoreThemeController::class, 'updateDraft']);
     Route::post('/store/theme/publish', [StoreThemeController::class, 'publish']);
@@ -247,6 +254,12 @@ Route::middleware(['auth:sanctum', 'staff.principal'])->group(function () {
             Route::post('/restore-jobs/{backupRestoreJob}/authorize', [SuperAdminBackupController::class, 'authorizeRestore']);
 
             Route::get('/infrastructure/health', [SuperAdminInfrastructureController::class, 'health']);
+
+            // Module 24 (Phase B21): platform-wide store health and the
+            // ADR-004 §17 / ADR-005 §17 operational signals.
+            Route::get('/store-health', [SuperAdminMonitoringController::class, 'storeHealthOverview']);
+            Route::get('/monitoring/outbox', [SuperAdminMonitoringController::class, 'outbox']);
+            Route::get('/monitoring/api-usage', [SuperAdminMonitoringController::class, 'apiUsage']);
         });
 
     // --- Super Admin cross-tenant (ADR-001 Layer 7) ---
@@ -255,6 +268,7 @@ Route::middleware(['auth:sanctum', 'staff.principal'])->group(function () {
         ->group(function () {
             Route::get('/stores/{store}/impersonate', [SuperAdminStoreController::class, 'impersonate']);
             Route::get('/stores/{store}', [SuperAdminStoreController::class, 'show']);
+            Route::get('/stores/{store}/health', [SuperAdminMonitoringController::class, 'storeHealth']);
 
             // Package/subscription platform administration (Module 04
             // "Package Administration" / "Subscription Administration").

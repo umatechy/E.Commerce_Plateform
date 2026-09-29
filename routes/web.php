@@ -16,6 +16,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/billing', fn () => Inertia::render('Billing/Overview'));
     Route::get('/inventory', fn () => Inertia::render('Inventory/Index'));
     Route::get('/orders', fn () => Inertia::render('Orders/Index'));
+    Route::get('/store-health', fn () => Inertia::render('StoreHealth/Index')); // Module 24 (Phase B21)
 });
 
 Route::middleware('guest')->group(function () {
