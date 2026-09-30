@@ -47,6 +47,7 @@ final class CustomerAuthController
         ]);
 
         $token = $customer->createToken('customer-api')->plainTextToken;
+        app(\App\Domain\Compliance\Services\AuditLogger::class)->record('customer.registered', [], $customer, $customer->store_id, $customer);
 
         return response()->json([
             'data' => new CustomerResource($customer),
@@ -58,6 +59,7 @@ final class CustomerAuthController
     {
         $customer = $request->authenticateCustomer();
         $token = $customer->createToken('customer-api')->plainTextToken;
+        app(\App\Domain\Compliance\Services\AuditLogger::class)->record('auth.login.succeeded', ['guard' => 'customer'], $customer, $customer->store_id, $customer);
 
         // Module 11 §22 "Cart Merge" — if the client presents a guest
         // cart token from the pre-login session, merge it now.
@@ -74,6 +76,7 @@ final class CustomerAuthController
     public function logout(Request $request): JsonResponse
     {
         $request->user()->currentAccessToken()->delete();
+        app(\App\Domain\Compliance\Services\AuditLogger::class)->record('auth.logout', ['guard' => 'customer'], $request->user());
 
         return response()->json(status: 204);
     }

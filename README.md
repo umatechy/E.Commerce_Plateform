@@ -5,12 +5,14 @@ Core Multi-Tenant E-Commerce SaaS. Basic / Business / Premium are entitlement ti
 
 ## Status
 
-Phases B0–B21 are built. As of Phase B21 the platform has been **executed
+Phases B0–B22 are built. As of Phase B21 the platform has been **executed
 against a real runtime** (PHP 8.4, MySQL 8.0, Redis 7, Node 22): migrations
-run cleanly, the full test suite passes (719 backend tests, 5 frontend
-tests), PHPStan level 5 is clean, and the frontend lints and builds. See
-`docs/checkpoints/checkpoint-b21.md` for what was verified and what still
-needs a real deployment target.
+run cleanly, the full test suite passes (754 backend tests, 5 frontend
+tests), PHPStan level 5 is clean, and the frontend lints and builds. Phase
+B22 added Module 32 (Security, Audit & Compliance): a tamper-evident,
+per-store audit trail, customer data export/erasure, security headers and
+a password policy. See `docs/checkpoints/checkpoint-b22.md` for the latest
+checkpoint and what still needs a real deployment target.
 
 ## Stack
 
@@ -84,7 +86,7 @@ running them. Playwright E2E is scaffolded only. See
 ## Documentation Map
 
 - `docs/adr/` — Architecture Decision Records (ADR-001–005), all `PROPOSED`.
-- `docs/architecture/` — foundation structure plus one architecture note per phase (B1–B21).
+- `docs/architecture/` — foundation structure plus one architecture note per phase (B1–B22).
 - `docs/database/` — schema foundation, ADR-003 conventions applied.
 - `docs/testing/` — how to run the suite and what the tenant-isolation tests cover.
 - `docs/development/` / `docs/security/` — per-phase inspection findings and security reviews.

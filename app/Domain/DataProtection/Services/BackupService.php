@@ -117,7 +117,7 @@ final class BackupService
                 );
             });
 
-            Log::channel('audit')->info('backup.failed', ['backup_id' => $backup->id, 'reason' => $e->getMessage()]);
+            app(\App\Domain\Compliance\Services\AuditLogger::class)->record('backup.failed', ['backup_id' => $backup->id, 'reason' => $e->getMessage()], $backup, $backup->store_id);
 
             throw $e; // lets the queue's own retry/backoff handle it
         }
@@ -152,7 +152,7 @@ final class BackupService
             );
         });
 
-        Log::channel('audit')->info('backup.verified', ['backup_id' => $backup->id, 'store_id' => $backup->store_id]);
+        app(\App\Domain\Compliance\Services\AuditLogger::class)->record('backup.verified', ['backup_id' => $backup->id, 'store_id' => $backup->store_id], $backup, $backup->store_id);
     }
 
     private function generateStoragePath(Backup $backup): string

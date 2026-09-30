@@ -49,6 +49,7 @@ final class Customer extends Model implements AuthenticatableContract
             'marketing_email_opt_in' => 'boolean',
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'erased_at' => 'datetime', // Module 32 — personal data erased on request
         ];
     }
 

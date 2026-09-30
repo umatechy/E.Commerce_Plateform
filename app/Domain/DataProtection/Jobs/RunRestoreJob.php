@@ -60,7 +60,7 @@ final class RunRestoreJob implements ShouldQueue
                 );
             });
 
-            Log::channel('audit')->info('restore.completed', ['restore_job_id' => $restoreJob->id, 'backup_id' => $restoreJob->backup_id]);
+            app(\App\Domain\Compliance\Services\AuditLogger::class)->record('restore.completed', ['restore_job_id' => $restoreJob->id, 'backup_id' => $restoreJob->backup_id], $restoreJob, $restoreJob->backup->store_id);
         } catch (\Throwable $e) {
             DB::transaction(function () use ($restoreJob, $outbox, $e) {
                 $restoreJob->update(['status' => 'failed', 'failure_reason' => $e->getMessage()]);
@@ -73,7 +73,7 @@ final class RunRestoreJob implements ShouldQueue
                 );
             });
 
-            Log::channel('audit')->info('restore.failed', ['restore_job_id' => $restoreJob->id, 'reason' => $e->getMessage()]);
+            app(\App\Domain\Compliance\Services\AuditLogger::class)->record('restore.failed', ['restore_job_id' => $restoreJob->id, 'reason' => $e->getMessage()], $restoreJob, $restoreJob->backup->store_id);
 
             // Deliberately NOT re-thrown — Module 23 Phase 21 "never
             // silently leave the system in a falsely healthy state" is

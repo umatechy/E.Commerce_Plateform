@@ -24,3 +24,6 @@ Schedule::command('backups:expire')->daily();
 // Module 24 (Phase B21): hourly store-health history for the Super Admin
 // overview; also prunes snapshots past their retention.
 Schedule::command('store-health:snapshot')->hourly()->withoutOverlapping();
+
+// Module 32 (Phase B22): audit retention; chains stay verifiable.
+Schedule::command('audit:prune')->dailyAt('03:10')->withoutOverlapping();

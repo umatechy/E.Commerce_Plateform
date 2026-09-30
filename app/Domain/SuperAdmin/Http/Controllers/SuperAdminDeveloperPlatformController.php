@@ -31,9 +31,9 @@ final class SuperAdminDeveloperPlatformController
     {
         $applications->suspend($application);
 
-        Log::channel('audit')->info('super_admin.developer_application.suspended', [
+        app(\App\Domain\Compliance\Services\AuditLogger::class)->record('super_admin.developer_application.suspended', [
             'acting_super_admin_id' => $request->user()->id, 'application_id' => $application->id, 'store_id' => $application->store_id,
-        ]);
+        ], $application, $application->store_id);
 
         return response()->json(status: 204);
     }

@@ -25,6 +25,8 @@ Route::post('/customer/login', [CustomerAuthController::class, 'login'])->middle
 Route::middleware(['auth:customer', 'customer.principal'])->group(function () {
     Route::post('/customer/logout', [CustomerAuthController::class, 'logout']);
     Route::get('/customer/me', [CustomerAuthController::class, 'me']);
+    // Module 32 (Phase B22): right of access, self-service.
+    Route::get('/customer/personal-data', [\App\Domain\Compliance\Http\Controllers\CustomerPrivacyController::class, 'exportOwn']);
 
     // --- Wishlist (Module 11 §64-71 — authenticated customers only) ---
     Route::get('/wishlist', [WishlistController::class, 'index']);

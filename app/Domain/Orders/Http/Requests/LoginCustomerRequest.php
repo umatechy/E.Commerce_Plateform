@@ -54,6 +54,9 @@ final class LoginCustomerRequest extends FormRequest
         if ($customer === null || ! Hash::check($this->string('password')->toString(), $customer->password)) {
             RateLimiter::hit($this->throttleKey());
 
+            // Module 32: recorded against the store this request resolved to.
+            app(\App\Domain\Compliance\Services\AuditLogger::class)->record('auth.login.failed', ['guard' => 'customer', 'email' => $this->string('email')->toString()]);
+
             throw ValidationException::withMessages(['email' => trans('auth.failed')]);
         }
 

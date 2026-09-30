@@ -29,6 +29,7 @@ return Application::configure(basePath: dirname(__DIR__))
         app_path('Domain/DataProtection/Console'),
         app_path('Domain/Infrastructure/Console'),
         app_path('Domain/Monitoring/Console'),
+        app_path('Domain/Compliance/Console'),
     ])
     ->withRouting(
         web: __DIR__.'/../routes/web.php',
@@ -72,6 +73,9 @@ return Application::configure(basePath: dirname(__DIR__))
         // silently fall back to token-only mode. Fixed in Phase B1 (see
         // docs/security/b1-security-review.md — flagged, then fixed).
         $middleware->prependToGroup('api', EnsureFrontendRequestsAreStateful::class);
+
+        // Module 32 (Phase B22): baseline security headers on every response.
+        $middleware->append(\App\Http\Middleware\AddSecurityHeaders::class);
 
         // ADR-001: tenant resolution runs on every web + api request,
         // AFTER auth (so it can read the authenticated user's store

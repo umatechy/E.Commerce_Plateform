@@ -137,13 +137,13 @@ final class SubscriptionLifecycleService
         // actually work against Laravel's generic cache contract).
         $this->invalidateAllEntitlementCacheKeys($store);
 
-        Log::channel('audit')->info($eventType, [
+        app(\App\Domain\Compliance\Services\AuditLogger::class)->record($eventType, [
             'store_id' => $store->id,
             'previous_status' => $previousStatus->value,
             'new_status' => $newStatus->value,
             'reason' => $reason,
             'timestamp' => now()->toIso8601String(),
-        ]);
+        ], storeId: $store->id);
     }
 
     private function auditAndInvalidate(
@@ -156,14 +156,14 @@ final class SubscriptionLifecycleService
     ): void {
         $this->invalidateAllEntitlementCacheKeys(Store::query()->find($storeId));
 
-        Log::channel('audit')->info($eventType, [
+        app(\App\Domain\Compliance\Services\AuditLogger::class)->record($eventType, [
             'store_id' => $storeId,
             'previous_package' => $previousPackage?->code,
             'new_package' => $newPackage->code,
             'actor' => $actorDescription,
             'source' => $source,
             'timestamp' => now()->toIso8601String(),
-        ]);
+        ], storeId: $storeId);
     }
 
     /**

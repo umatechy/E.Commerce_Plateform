@@ -36,7 +36,9 @@ use App\Domain\Tenancy\Models\Store;
 use App\Domain\Tenancy\Observers\StoreObserver;
 use App\Domain\Tenancy\Support\TenantContext;
 use Illuminate\Database\Eloquent\Factories\Factory;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Validation\Rules\Password;
 use Illuminate\Support\ServiceProvider;
 use Laravel\Sanctum\Sanctum;
 
@@ -81,6 +83,17 @@ final class AppServiceProvider extends ServiceProvider
         // matches the flat database/factories/ layout. Every Model::factory()
         // call failed with "class not found" until this resolver was added
         // (found on the first real test run).
+        // Module 32 (Phase B22): staff authentication outcomes are audited.
+        Event::subscribe(\App\Domain\Compliance\Listeners\RecordAuthenticationEvents::class);
+
+        // Module 32 password policy for staff and customer accounts
+        // (Password::defaults() is what both registration requests use).
+        // The breached-password check calls an external API, so it runs in
+        // production only.
+        Password::defaults(fn () => $this->app->isProduction()
+            ? Password::min(10)->letters()->uncompromised()
+            : Password::min(10)->letters());
+
         Factory::guessFactoryNamesUsing(
             static fn (string $modelName): string => 'Database\\Factories\\'.class_basename($modelName).'Factory'
         );

@@ -51,7 +51,7 @@ final class RestoreService
         } catch (BackupNotRestoreEligibleException $e) {
             $restoreJob->update(['status' => 'preflight_failed', 'failure_reason' => $e->getMessage()]);
 
-            Log::channel('audit')->info('restore.preflight_failed', ['restore_job_id' => $restoreJob->id, 'backup_id' => $backup->id, 'reason' => $e->getMessage()]);
+            app(\App\Domain\Compliance\Services\AuditLogger::class)->record('restore.preflight_failed', ['restore_job_id' => $restoreJob->id, 'backup_id' => $backup->id, 'reason' => $e->getMessage()], $restoreJob, $backup->store_id);
 
             return $restoreJob->fresh();
         }
@@ -118,7 +118,7 @@ final class RestoreService
             'started_at' => now(),
         ]);
 
-        Log::channel('audit')->info('restore.authorized', ['restore_job_id' => $restoreJob->id, 'authorized_by_user_id' => $authorizedByUserId, 'pre_restore_backup_id' => $preRestoreBackup->id]);
+        app(\App\Domain\Compliance\Services\AuditLogger::class)->record('restore.authorized', ['restore_job_id' => $restoreJob->id, 'authorized_by_user_id' => $authorizedByUserId, 'pre_restore_backup_id' => $preRestoreBackup->id], $restoreJob, $restoreJob->backup->store_id);
 
         RunRestoreJob::dispatch($restoreJob->id);
     }

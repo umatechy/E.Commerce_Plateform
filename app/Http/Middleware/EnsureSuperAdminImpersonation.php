@@ -36,7 +36,7 @@ final class EnsureSuperAdminImpersonation
 
         $this->context->markImpersonation($user->id, $targetStoreId);
 
-        Log::channel('audit')->info('super_admin.impersonation.started', [
+        app(\App\Domain\Compliance\Services\AuditLogger::class)->record('super_admin.impersonation.started', [
             'acting_super_admin_id' => $user->id,
             'target_store_id' => $targetStoreId,
             'route' => $request->path(),

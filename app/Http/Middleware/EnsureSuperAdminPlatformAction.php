@@ -37,7 +37,7 @@ final class EnsureSuperAdminPlatformAction
 
         $this->context->resolveToPlatform();
 
-        Log::channel('audit')->info('super_admin.platform_action', [
+        app(\App\Domain\Compliance\Services\AuditLogger::class)->record('super_admin.platform_action', [
             'acting_super_admin_id' => $user->id,
             'route' => $request->path(),
             'method' => $request->method(),

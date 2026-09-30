@@ -44,11 +44,14 @@ use App\Domain\Settings\Http\Controllers\StoreSettingController;
 use App\Domain\DeveloperPlatform\Http\Controllers\DeveloperApplicationController;
 use App\Domain\DeveloperPlatform\Http\Controllers\ApiKeyController;
 use App\Domain\DeveloperPlatform\Http\Controllers\WebhookSubscriptionController;
+use App\Domain\SuperAdmin\Http\Controllers\SuperAdminAuditController;
 use App\Domain\SuperAdmin\Http\Controllers\SuperAdminMonitoringController;
 use App\Domain\SuperAdmin\Http\Controllers\SuperAdminPackageController;
 use App\Domain\SuperAdmin\Http\Controllers\SuperAdminStoreController;
 use App\Domain\SuperAdmin\Http\Controllers\SuperAdminSubscriptionController;
 use App\Domain\Tenancy\Http\Controllers\StoreSwitchController;
+use App\Domain\Compliance\Http\Controllers\AuditLogController;
+use App\Domain\Compliance\Http\Controllers\CustomerPrivacyController;
 use App\Domain\Monitoring\Http\Controllers\StoreHealthController;
 use Illuminate\Support\Facades\Route;
 
@@ -181,6 +184,13 @@ Route::middleware(['auth:sanctum', 'staff.principal'])->group(function () {
     // --- Theme, Branding & Design System (Module 17, Phase B15) ---
     // Module 24 "Store Health, Monitoring & Resource Usage" (Phase B21)
     // — always the current tenant's own store (ADR-001).
+    // Module 32 "Security, Audit & Compliance" (Phase B22) — the store's
+    // own tamper-evident audit trail and data-subject requests.
+    Route::get('/audit-logs', [AuditLogController::class, 'index']);
+    Route::get('/audit-logs/integrity', [AuditLogController::class, 'integrity']);
+    Route::get('/customers/{customer}/personal-data', [CustomerPrivacyController::class, 'export']);
+    Route::post('/customers/{customer}/erase', [CustomerPrivacyController::class, 'erase']);
+
     Route::get('/store/health', [StoreHealthController::class, 'show']);
     Route::get('/store/health/history', [StoreHealthController::class, 'history']);
 
@@ -258,6 +268,10 @@ Route::middleware(['auth:sanctum', 'staff.principal'])->group(function () {
             // Module 24 (Phase B21): platform-wide store health and the
             // ADR-004 §17 / ADR-005 §17 operational signals.
             Route::get('/store-health', [SuperAdminMonitoringController::class, 'storeHealthOverview']);
+
+            // Module 32 (Phase B22): the platform-wide audit trail.
+            Route::get('/audit-logs', [SuperAdminAuditController::class, 'index']);
+            Route::get('/audit-logs/integrity', [SuperAdminAuditController::class, 'integrity']);
             Route::get('/monitoring/outbox', [SuperAdminMonitoringController::class, 'outbox']);
             Route::get('/monitoring/api-usage', [SuperAdminMonitoringController::class, 'apiUsage']);
         });
