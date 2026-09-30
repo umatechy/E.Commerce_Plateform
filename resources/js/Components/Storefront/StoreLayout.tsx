@@ -50,9 +50,14 @@ export default function StoreLayout({ shell, seo, children }: PropsWithChildren<
           <div className="order-last w-full sm:order-none sm:w-auto sm:flex-1">
             <SearchBox shell={shell} />
           </div>
-          <Link href={`${base}/cart`} className="ml-auto rounded-sf border border-sf-border px-3 py-2 text-sm font-medium">
-            Cart
-          </Link>
+          <div className="ml-auto flex items-center gap-2">
+            <Link href={`${base}/account`} className="rounded-sf px-3 py-2 text-sm font-medium hover:bg-sf-surface">
+              Account
+            </Link>
+            <Link href={`${base}/cart`} className="rounded-sf border border-sf-border px-3 py-2 text-sm font-medium">
+              Cart
+            </Link>
+          </div>
         </div>
         <nav aria-label="Categories" className="mx-auto max-w-6xl px-4 pb-3">
           <ul className="flex flex-wrap gap-4 text-sm">

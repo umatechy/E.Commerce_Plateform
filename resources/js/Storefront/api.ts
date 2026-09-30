@@ -10,6 +10,8 @@ import type { Shell } from './types';
  *   §63), kept per store in localStorage — it is the cart's credential.
  * - Same-origin requests are Sanctum-stateful, so writes carry the
  *   XSRF token from Laravel's cookie.
+ * - A signed-in customer is identified by an HttpOnly cookie the browser
+ *   sends by itself; this code never sees the token.
  */
 export class StorefrontApiError extends Error {
   constructor(
@@ -61,7 +63,9 @@ export async function storefrontFetch<T = Record<string, unknown>>(
   path: string,
   init: { method?: string; body?: unknown; query?: Record<string, string> } = {},
 ): Promise<T> {
-  const headers: Record<string, string> = { Accept: 'application/json' };
+  // X-Storefront-Request lets the API honour the HttpOnly session cookie
+  // (Phase B25); other sites cannot send it without passing CORS.
+  const headers: Record<string, string> = { Accept: 'application/json', 'X-Storefront-Request': '1' };
   if (shell.base_path !== '') headers['X-Store-Slug'] = shell.store.slug;
   const token = cartToken(shell);
   if (token) headers['X-Guest-Cart-Token'] = token;
@@ -104,4 +108,9 @@ export function errorMessage(error: unknown): string {
 
 export function storeHref(shell: Shell, path = ''): string {
   return `${shell.base_path}${path}` || '/';
+}
+
+/** Field errors of a 422, keyed by field. */
+export function validationErrors(error: unknown): Record<string, string[]> {
+  return error instanceof StorefrontApiError && error.status === 422 ? ((error.body.errors as Record<string, string[]>) ?? {}) : {};
 }

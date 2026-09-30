@@ -5,9 +5,9 @@ Core Multi-Tenant E-Commerce SaaS. Basic / Business / Premium are entitlement ti
 
 ## Status
 
-Phases B0–B24 are built. As of Phase B21 the platform has been **executed
+Phases B0–B25 are built. As of Phase B21 the platform has been **executed
 against a real runtime** (PHP 8.4, MySQL 8.0, Redis 7, Node 22): migrations
-run cleanly, the full test suite passes (829 backend tests, 16 frontend
+run cleanly, the full test suite passes (851 backend tests, 19 frontend
 tests), PHPStan level 5 is clean, and the frontend lints and builds. Phase
 B22 added Module 32 (Security, Audit & Compliance): a tamper-evident,
 per-store audit trail, customer data export/erasure, security headers and
@@ -16,9 +16,11 @@ Renewals): package prices, invoices, an hourly renewal and dunning engine,
 payments and a revenue summary. Phase B24 added Module 05 (Storefront): the
 shopper-facing store at `/shop/{slug}` and on custom domains (catalog,
 search, product pages, cart, guest checkout), server-rendered SEO, a public
-storefront API, product images and the store launch flow. See
-`docs/checkpoints/checkpoint-b24.md` for the latest checkpoint and what
-still needs a real deployment target.
+storefront API, product images and the store launch flow. Phase B25 added
+storefront customer accounts: sign-in with an HttpOnly session cookie, order
+history, an address book, wishlist, profile and password management, and
+password reset. See `docs/checkpoints/checkpoint-b25.md` for the latest
+checkpoint and what still needs a real deployment target.
 
 ## Stack
 
@@ -92,7 +94,7 @@ running them. Playwright E2E is scaffolded only. See
 ## Documentation Map
 
 - `docs/adr/` — Architecture Decision Records (ADR-001–005), all `PROPOSED`.
-- `docs/architecture/` — foundation structure plus one architecture note per phase (B1–B24).
+- `docs/architecture/` — foundation structure plus one architecture note per phase (B1–B25).
 - `docs/database/` — schema foundation, ADR-003 conventions applied.
 - `docs/testing/` — how to run the suite and what the tenant-isolation tests cover.
 - `docs/development/` / `docs/security/` — per-phase inspection findings and security reviews.

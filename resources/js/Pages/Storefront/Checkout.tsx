@@ -5,6 +5,7 @@ import LoadingState from '@/Components/LoadingState';
 import EmptyState from '@/Components/EmptyState';
 import { formatMoney } from '@/lib/money';
 import { errorMessage, forgetCart, storefrontFetch } from '@/Storefront/api';
+import { formatAddress, useCustomer, type Address } from '@/Storefront/account';
 import type { StorefrontPageProps } from '@/Storefront/types';
 import type { CartData } from './Cart';
 
@@ -15,6 +16,18 @@ const PAYMENT_METHODS = [
   { value: 'cod', label: 'Cash on delivery' },
   { value: 'bank_transfer', label: 'Bank transfer' },
 ] as const;
+
+/** A saved address as checkout form fields. */
+function addressFields(address: Address, phone: string) {
+  return {
+    name: address.name,
+    phone: address.phone ?? phone,
+    line1: [address.line1, address.line2].filter(Boolean).join(', '),
+    city: address.city,
+    postal_code: address.postal_code ?? '',
+    country: address.country,
+  };
+}
 
 function newIdempotencyKey(): string {
   return typeof crypto !== 'undefined' && 'randomUUID' in crypto ? crypto.randomUUID() : `${Date.now()}-${Math.random().toString(36).slice(2)}`;
@@ -38,6 +51,21 @@ export default function Checkout({ storefront, seo, payment_methods }: Storefron
   const [busy, setBusy] = useState(false);
   const [order, setOrder] = useState<PlacedOrder | null>(null);
   const idempotencyKey = useMemo(newIdempotencyKey, []);
+  // Signed-in shoppers: contact details and saved addresses fill the form.
+  const { customer } = useCustomer(storefront);
+  const [addresses, setAddresses] = useState<Address[]>([]);
+
+  useEffect(() => {
+    if (!customer) return;
+    setForm((current) => ({ ...current, name: current.name || customer.name, email: current.email || customer.email, phone: current.phone || (customer.phone ?? '') }));
+    storefrontFetch<{ data: Address[] }>(storefront, '/customer/addresses')
+      .then((res) => {
+        setAddresses(res.data);
+        const preferred = res.data.find((a) => a.is_default) ?? res.data[0];
+        if (preferred) setForm((current) => ({ ...current, ...addressFields(preferred, current.phone) }));
+      })
+      .catch(() => setAddresses([]));
+  }, [customer, storefront]);
   const base = storefront.base_path;
   const currency = cart?.currency ?? storefront.store.currency;
 
@@ -105,6 +133,11 @@ export default function Checkout({ storefront, seo, payment_methods }: Storefron
             Your order <strong>{order.order_number}</strong> has been placed. Total: {formatMoney(order.grand_total_minor, order.currency)}.
           </p>
           <p className="mt-2 text-sf-muted">A confirmation has been sent to {form.email}.</p>
+          {customer && (
+            <Link href={`${base}/account/orders`} className="mt-2 block text-sf-accent">
+              View your orders
+            </Link>
+          )}
           {payment === 'bank_transfer' && <p className="mt-2 text-sf-muted">Please use your order number as the transfer reference.</p>}
           <Link href={base || '/'} className="mt-8 inline-block rounded-sf bg-sf-primary px-5 py-2 font-medium text-white">
             Continue shopping
@@ -137,6 +170,24 @@ export default function Checkout({ storefront, seo, payment_methods }: Storefron
             </fieldset>
             <fieldset className="grid gap-3 sm:grid-cols-2">
               <legend className="mb-2 font-semibold">Delivery address</legend>
+              {addresses.length > 0 && (
+                <select
+                  aria-label="Saved addresses"
+                  onChange={(e) => {
+                    const chosen = addresses.find((a) => a.id === e.target.value);
+                    if (chosen) setForm((current) => ({ ...current, ...addressFields(chosen, current.phone) }));
+                  }}
+                  defaultValue={(addresses.find((a) => a.is_default) ?? addresses[0]).id}
+                  className={`${input} sm:col-span-2`}
+                >
+                  {addresses.map((address) => (
+                    <option key={address.id} value={address.id}>
+                      {address.label ? `${address.label} — ` : ''}
+                      {formatAddress(address)}
+                    </option>
+                  ))}
+                </select>
+              )}
               <input {...field('line1')} required placeholder="Street address" aria-label="Street address" autoComplete="address-line1" className={`${input} sm:col-span-2`} />
               <input {...field('city')} required placeholder="City" aria-label="City" autoComplete="address-level2" className={input} />
               <input {...field('postal_code')} placeholder="Postal code" aria-label="Postal code" autoComplete="postal-code" className={input} />

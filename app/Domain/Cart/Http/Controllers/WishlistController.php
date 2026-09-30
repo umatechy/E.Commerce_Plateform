@@ -36,7 +36,7 @@ final class WishlistController
         $customer = $request->user();
 
         return WishlistItemResource::collection(
-            $customer->wishlistItems()->with(['product', 'variant'])->get()
+            $customer->wishlistItems()->with(['product.images', 'variant.product.images'])->get()
         );
     }
 
@@ -56,25 +56,35 @@ final class WishlistController
             return response()->json(['message' => $e->getMessage()], 403);
         }
 
-        $productId = $request->input('product_id');
-        $variantId = $request->input('product_variant_id');
-
-        // Tenant-scoped existence check (mirrors Phase B3/B5's
-        // identical cross-tenant relation-validation pattern).
-        if ($variantId !== null && ProductVariant::query()->find($variantId) === null) {
+        // Tenant-scoped existence checks (mirrors Phase B3/B5's identical
+        // cross-tenant relation-validation pattern); public ids (Phase
+        // B25) resolve the same way.
+        $variant = match (true) {
+            $request->filled('variant') => ProductVariant::query()->where('public_id', $request->string('variant')->toString())->first(),
+            $request->filled('product_variant_id') => ProductVariant::query()->find($request->input('product_variant_id')),
+            default => null,
+        };
+        if (($request->filled('variant') || $request->filled('product_variant_id')) && $variant === null) {
             throw ValidationException::withMessages(['product_variant_id' => 'This variant does not exist in this store.']);
         }
-        if ($variantId === null && Product::query()->find($productId) === null) {
+
+        $product = $variant !== null ? $variant->product : ($request->filled('product')
+            ? Product::query()->where('public_id', $request->string('product')->toString())->first()
+            : Product::query()->find($request->input('product_id')));
+        if ($product === null) {
             throw ValidationException::withMessages(['product_id' => 'This product does not exist in this store.']);
         }
 
+        // Phase B25 fix: a variant item used to be saved with product_id
+        // NULL, so the wishlist showed it without a name and as
+        // "unavailable". The product is now always recorded.
         $item = WishlistItem::query()->firstOrCreate([
             'customer_id' => $customer->id,
-            'product_id' => $variantId !== null ? null : $productId,
-            'product_variant_id' => $variantId,
+            'product_id' => $product->id,
+            'product_variant_id' => $variant?->id,
         ]);
 
-        return (new WishlistItemResource($item->load(['product', 'variant'])))->response()->setStatusCode(201);
+        return (new WishlistItemResource($item->load(['product.images', 'variant.product.images'])))->response()->setStatusCode(201);
     }
 
     public function destroy(Request $request, WishlistItem $item): \Illuminate\Http\Response

@@ -84,6 +84,11 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->appendToGroup('web', ResolveTenantContext::class);
         $middleware->appendToGroup('web', HandleInertiaRequests::class);
         $middleware->appendToGroup('api', ResolveTenantContext::class);
+        // Phase B25: the web storefront's HttpOnly session cookie becomes a
+        // bearer token before any auth middleware runs. After Sanctum's
+        // stateful pipeline in the group (which decrypts cookies).
+        $middleware->appendToGroup('api', \App\Domain\CustomerAccount\Http\Middleware\UseStorefrontCustomerSession::class);
+        $middleware->prependToPriorityList(AuthenticatesRequests::class, \App\Domain\CustomerAccount\Http\Middleware\UseStorefrontCustomerSession::class);
 
         // Laravel sorts route middleware by a priority list that puts
         // auth before SubstituteBindings; ResolveTenantContext (a group

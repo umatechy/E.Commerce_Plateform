@@ -86,6 +86,42 @@ final class StorefrontWebController
     }
 
     /**
+     * Phase B25 — the customer account pages. The server only renders the
+     * page shell; the page reads the signed-in customer's data from the
+     * customer APIs itself (the session is an HttpOnly cookie the API
+     * understands), so no personal data is ever put into page HTML.
+     */
+    public function account(Request $request): Response
+    {
+        $page = (string) $request->route('page');
+        $props = match ($page) {
+            'Order' => ['order_id' => (string) $request->route('orderId')],
+            // Read from the link in the reset email; only echoed back to the API.
+            'ResetPassword' => ['token' => (string) $request->query('token', ''), 'email' => (string) $request->query('email', '')],
+            'Login' => ['redirect' => $this->safeRedirect($request)],
+            default => [],
+        };
+
+        return $this->render($request, "Storefront/Account/{$page}", $props, $this->privatePageSeo($request, match ($page) {
+            'Login' => 'Sign in',
+            'Register' => 'Create an account',
+            'ForgotPassword', 'ResetPassword' => 'Reset your password',
+            default => 'Your account',
+        }));
+    }
+
+    /** Where to go after signing in: a path inside this storefront only, never another site. */
+    private function safeRedirect(Request $request): ?string
+    {
+        $target = (string) $request->query('redirect', '');
+        $base = (string) $request->attributes->get('storefront.base_path');
+
+        return preg_match('#^/[A-Za-z0-9/_\-]*$#', $target) === 1 && ! str_starts_with($target, '//') && str_starts_with($target, $base.'/')
+            ? $target
+            : null;
+    }
+
+    /**
      * @param array<string, string> $fixed filters implied by the URL (category/brand)
      * @param ?array<string, mixed> $context
      * @param ?array<string, mixed> $seo

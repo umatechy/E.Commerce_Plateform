@@ -1,9 +1,10 @@
-import { Link } from '@inertiajs/react';
+import { Link, router } from '@inertiajs/react';
 import { useMemo, useState } from 'react';
 import StoreLayout from '@/Components/Storefront/StoreLayout';
 import ProductGrid from '@/Components/Storefront/ProductGrid';
 import Price from '@/Components/Storefront/Price';
-import { errorMessage, storefrontFetch } from '@/Storefront/api';
+import { errorMessage, StorefrontApiError, storefrontFetch } from '@/Storefront/api';
+import { loginHref } from '@/Storefront/account';
 import { findVariant, initialSelection, isSelectable, type Selection } from '@/Storefront/variants';
 import type { Availability, ProductCard, ProductDetail, StorefrontPageProps } from '@/Storefront/types';
 
@@ -19,7 +20,7 @@ export default function Product({ storefront, seo, product, related }: Storefron
   const axes = product.options.map((option) => option.name);
   const [selection, setSelection] = useState<Selection>(() => initialSelection(product.variants));
   const [quantity, setQuantity] = useState(1);
-  const [status, setStatus] = useState<{ type: 'idle' | 'busy' | 'added' | 'error'; message?: string }>({ type: 'idle' });
+  const [status, setStatus] = useState<{ type: 'idle' | 'busy' | 'added' | 'saved' | 'error'; message?: string }>({ type: 'idle' });
   const variant = useMemo(() => findVariant(product.variants, selection, axes), [product.variants, selection, axes]);
   const [activeImageId, setActiveImageId] = useState<string | null>(product.images[0]?.id ?? null);
   const hasVariants = product.variants.length > 0;
@@ -45,6 +46,20 @@ export default function Product({ storefront, seo, product, related }: Storefron
       });
       setStatus({ type: 'added' });
     } catch (error) {
+      setStatus({ type: 'error', message: errorMessage(error) });
+    }
+  }
+
+  async function saveToWishlist() {
+    setStatus({ type: 'busy' });
+    try {
+      await storefrontFetch(storefront, '/wishlist', { method: 'POST', body: hasVariants && variant ? { variant: variant.id } : { product: product.id } });
+      setStatus({ type: 'saved' });
+    } catch (error) {
+      if (error instanceof StorefrontApiError && error.status === 401) {
+        router.visit(loginHref(storefront));
+        return;
+      }
       setStatus({ type: 'error', message: errorMessage(error) });
     }
   }
@@ -148,6 +163,14 @@ export default function Product({ storefront, seo, product, related }: Storefron
               {status.type === 'busy' ? 'Adding…' : purchasable ? 'Add to cart' : 'Unavailable'}
             </button>
           </div>
+          <button type="button" onClick={saveToWishlist} disabled={status.type === 'busy'} className="mt-3 text-sm text-sf-accent disabled:opacity-50">
+            ♡ Save to wishlist
+          </button>
+          {status.type === 'saved' && (
+            <p className="mt-3 text-sm text-sf-success" role="status">
+              Saved to your wishlist. <Link href={`${base}/account/wishlist`} className="underline">View wishlist</Link>
+            </p>
+          )}
           {status.type === 'added' && (
             <p className="mt-3 text-sm text-sf-success" role="status">
               Added to your cart. <Link href={`${base}/cart`} className="underline">View cart</Link>

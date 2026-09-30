@@ -26,6 +26,17 @@ $storefrontPages = function (): void {
     Route::get('/pages/{pageSlug}', [StorefrontWebController::class, 'page']);
     Route::get('/cart', [StorefrontWebController::class, 'cart']);
     Route::get('/checkout', [StorefrontWebController::class, 'checkout']);
+
+    // Phase B25: customer account pages (data loaded by the page from the
+    // customer APIs with the HttpOnly session cookie; never indexed).
+    foreach ([
+        '/account' => 'Dashboard', '/account/login' => 'Login', '/account/register' => 'Register',
+        '/account/forgot-password' => 'ForgotPassword', '/account/reset-password' => 'ResetPassword',
+        '/account/orders' => 'Orders', '/account/orders/{orderId}' => 'Order', '/account/addresses' => 'Addresses',
+        '/account/profile' => 'Profile', '/account/wishlist' => 'Wishlist',
+    ] as $uri => $page) {
+        Route::get($uri, [StorefrontWebController::class, 'account'])->defaults('page', $page);
+    }
 };
 
 Route::domain('{storefrontHost}')
