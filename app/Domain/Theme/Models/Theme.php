@@ -12,6 +12,15 @@ final class Theme extends Model
 {
     protected $table = 'themes';
 
+    /**
+     * Mirrors the column defaults in the migration so a freshly created
+     * model exposes them without a refresh() — resources read ->value on
+     * these enum casts and threw on null (found on the first real run).
+     */
+    protected $attributes = [
+        'status' => 'active',
+    ];
+
     protected $fillable = ['key', 'name', 'version', 'status'];
 
     protected function casts(): array
@@ -19,6 +28,7 @@ final class Theme extends Model
         return ['status' => ThemeStatus::class];
     }
 
+    /** @return HasMany<StoreTheme, $this> */
     public function storeThemes(): HasMany
     {
         return $this->hasMany(StoreTheme::class);

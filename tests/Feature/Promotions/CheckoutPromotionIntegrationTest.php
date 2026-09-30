@@ -43,10 +43,10 @@ final class CheckoutPromotionIntegrationTest extends TestCase
         }
         Subscription::factory()->for($store)->for($package)->create(['status' => SubscriptionStatus::Active]);
         $product = Product::factory()->for($store)->create(['status' => 'active', 'visibility' => 'public', 'price_minor' => 10000, 'currency' => 'USD']);
-        $warehouse = Warehouse::query()->where('store_id', $store->id)->where('is_default', true)->firstOrFail();
+        $warehouse = Warehouse::query()->withoutTenantScope()->where('store_id', $store->id)->where('is_default', true)->firstOrFail();
         $inventory = Inventory::factory()->for($store)->for($warehouse)->create(['product_id' => $product->id]);
         app(TenantContext::class)->resolveToStore($store->id);
-        app(InventoryService::class)->setOpeningStock($inventory, 10, 'Init', actorId: 1, idempotencyKey: 'open-'.$store->id);
+        app(InventoryService::class)->setOpeningStock($inventory, 10, 'Init', actorId: $this->actorId(), idempotencyKey: 'open-'.$store->id);
         $zone = ShippingZone::factory()->for($store)->create(['country' => 'PK']);
         $method = ShippingMethod::factory()->for($store)->create();
         ShippingRate::factory()->for($zone, 'zone')->for($method, 'method')->create(['base_cost_minor' => 0]);

@@ -33,7 +33,11 @@ final class BackupController
         $storeId = app(TenantContext::class)->storeId();
         $backups = Backup::query()->where('store_id', $storeId)->orderByDesc('created_at')->paginate(25);
 
-        return response()->json(['data' => BackupResource::collection($backups)]);
+        // The paginator itself goes under `data` (same shape as every other
+        // Super Admin list: data.total, data.data, ...), with each item
+        // transformed by its Resource. Wrapping a ResourceCollection in an
+        // array instead silently dropped all pagination metadata.
+        return response()->json(['data' => $backups->through(fn (Backup $backup) => (new BackupResource($backup))->resolve($request))]);
     }
 
     public function store(Request $request, BackupService $backups): JsonResponse

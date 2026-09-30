@@ -26,11 +26,15 @@ use Illuminate\Http\Request;
  */
 final class SuperAdminBackupController
 {
-    public function index(): JsonResponse
+    public function index(Request $request): JsonResponse
     {
         $backups = Backup::query()->orderByDesc('created_at')->paginate(50);
 
-        return response()->json(['data' => BackupResource::collection($backups)]);
+        // The paginator itself goes under `data` (same shape as every other
+        // Super Admin list: data.total, data.data, ...), with each item
+        // transformed by its Resource. Wrapping a ResourceCollection in an
+        // array instead silently dropped all pagination metadata.
+        return response()->json(['data' => $backups->through(fn (Backup $backup) => (new BackupResource($backup))->resolve($request))]);
     }
 
     public function storePlatformBackup(Request $request, BackupService $backups): JsonResponse
@@ -40,11 +44,11 @@ final class SuperAdminBackupController
         return (new BackupResource($backup))->response()->setStatusCode(201);
     }
 
-    public function restoreJobs(): JsonResponse
+    public function restoreJobs(Request $request): JsonResponse
     {
         $jobs = BackupRestoreJob::query()->with('backup')->orderByDesc('created_at')->paginate(50);
 
-        return response()->json(['data' => BackupRestoreJobResource::collection($jobs)]);
+        return response()->json(['data' => $jobs->through(fn (BackupRestoreJob $job) => (new BackupRestoreJobResource($job))->resolve($request))]);
     }
 
     public function authorizeRestore(

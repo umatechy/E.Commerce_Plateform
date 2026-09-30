@@ -12,6 +12,8 @@ use Illuminate\Http\Resources\Json\JsonResource;
  * exact field list is what BOTH the customer-facing and staff-facing
  * endpoints return. Never includes carrier credentials or internal
  * IDs — always `public_id` for API addressing.
+ *
+ * @mixin \App\Domain\Shipping\Models\Shipment
  */
 final class ShipmentResource extends JsonResource
 {

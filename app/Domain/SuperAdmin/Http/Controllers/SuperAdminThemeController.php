@@ -33,7 +33,7 @@ final class SuperAdminThemeController
 
         $theme = Theme::query()->create($data);
 
-        Log::channel('audit')->info('super_admin.theme.created', [
+        app(\App\Domain\Compliance\Services\AuditLogger::class)->record('super_admin.theme.created', [
             'acting_super_admin_id' => $request->user()->id, 'theme_id' => $theme->id, 'key' => $theme->key,
         ]);
 
@@ -51,10 +51,10 @@ final class SuperAdminThemeController
         $before = $theme->only(['name', 'version', 'status']);
         $theme->update($data);
 
-        Log::channel('audit')->info('super_admin.theme.updated', [
+        app(\App\Domain\Compliance\Services\AuditLogger::class)->record('super_admin.theme.updated', [
             'acting_super_admin_id' => $request->user()->id, 'theme_id' => $theme->id,
             'before' => $before, 'after' => $theme->only(['name', 'version', 'status']),
-        ]);
+        ], $theme);
 
         return response()->json(['data' => $theme->fresh()]);
     }

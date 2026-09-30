@@ -22,6 +22,7 @@ final class ShippingMethod extends Model
         return ['type' => ShippingMethodType::class, 'is_active' => 'boolean'];
     }
 
+    /** @return HasMany<ShippingRate, $this> */
     public function rates(): HasMany
     {
         return $this->hasMany(ShippingRate::class);

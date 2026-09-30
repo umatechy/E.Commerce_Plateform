@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Domain\DataProtection\Models;
 
+use App\Support\HasPublicId;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
@@ -17,7 +19,18 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  */
 final class Backup extends Model
 {
+    use HasFactory, HasPublicId;
+
     protected $table = 'backups';
+
+    /**
+     * Mirrors the column defaults in the migration so a freshly created
+     * model exposes them without a refresh() — resources read ->value on
+     * these enum casts and threw on null (found on the first real run).
+     */
+    protected $attributes = [
+        'status' => 'created',
+    ];
 
     protected $fillable = [
         'public_id', 'scope', 'store_id', 'status', 'initiated_by', 'initiated_by_user_id',
@@ -38,6 +51,7 @@ final class Backup extends Model
         ];
     }
 
+    /** @return BelongsTo<\App\Domain\Tenancy\Models\Store, $this> */
     public function store(): BelongsTo
     {
         return $this->belongsTo(\App\Domain\Tenancy\Models\Store::class);

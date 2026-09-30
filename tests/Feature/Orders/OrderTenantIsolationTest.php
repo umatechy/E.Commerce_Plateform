@@ -31,7 +31,7 @@ final class OrderTenantIsolationTest extends TestCase
         $package = Package::factory()->create();
         $package->entitlements()->create(['key' => 'orders.basic', 'type' => EntitlementType::Feature, 'boolean_value' => true]);
         Subscription::factory()->for($store)->for($package)->create(['status' => SubscriptionStatus::Active]);
-        $role = Role::factory()->for($store)->create(['slug' => 'owner']);
+        $role = $this->systemRole($store, 'owner');
         $owner = User::factory()->create();
         $store->users()->attach($owner, ['role_id' => $role->id, 'status' => 'active']);
 

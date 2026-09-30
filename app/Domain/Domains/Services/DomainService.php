@@ -11,6 +11,7 @@ use App\Domain\Domains\Models\SslStatus;
 use App\Domain\Events\Support\RecordsOutboxEvents;
 use App\Domain\Tenancy\Models\Store;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 
 /**
  * The ONLY code path that creates a Domain or transitions its
@@ -49,22 +50,25 @@ final class DomainService
     {
         $normalized = $this->normalizer->normalize($rawHostname);
 
-        $domain = Domain::query()->create([
-            'store_id' => $store->id,
-            'hostname' => $rawHostname,
-            'normalized_hostname' => $normalized,
-            'domain_type' => DomainType::CustomDomain,
-            'status' => DomainStatus::Pending,
-            'is_primary' => false,
-        ]);
+        return DB::transaction(function () use ($store, $rawHostname, $normalized) {
+            $domain = Domain::query()->create([
+                'store_id' => $store->id,
+                'hostname' => $rawHostname,
+                'normalized_hostname' => $normalized,
+                'domain_type' => DomainType::CustomDomain,
+                'status' => DomainStatus::Pending,
+                'is_primary' => false,
+            ]);
 
-        $this->outbox->recordEvent(
-            eventType: 'domain.added',
-            payload: ['domain_id' => $domain->id],
-            idempotencyKey: "domain:{$domain->id}:added",
-        );
+            $this->outbox->recordEventFor(
+                $store->id,
+                eventType: 'domain.added',
+                payload: ['domain_id' => $domain->id],
+                idempotencyKey: "domain:{$domain->id}:added",
+            );
 
-        return $domain;
+            return $domain;
+        });
     }
 
     /** Module 19 §17 "Primary Domain" — only a Verified or Active domain is eligible for promotion. */
@@ -97,6 +101,7 @@ final class DomainService
      * counter atomic-UPDATE pattern used elsewhere in this codebase.
      *
      * @throws \App\Domain\Domains\Exceptions\DomainNotEligibleForPrimaryException
+     * @throws \App\Domain\Domains\Exceptions\InvalidDomainStateTransitionException
      */
     public function setPrimary(Domain $domain): Domain
     {
@@ -124,10 +129,11 @@ final class DomainService
 
             $domain->update(['is_primary' => true]);
 
-            $this->outbox->recordEvent(
+            $this->outbox->recordEventFor(
+                $domain->store_id,
                 eventType: 'domain.primary_changed',
                 payload: ['domain_id' => $domain->id, 'store_id' => $domain->store_id],
-                idempotencyKey: "domain:{$domain->id}:primary_changed:".now()->timestamp,
+                idempotencyKey: "domain:{$domain->id}:primary_changed:".Str::ulid(),
             );
 
             return $domain->fresh();
@@ -138,15 +144,19 @@ final class DomainService
     public function remove(Domain $domain): Domain
     {
         $this->stateMachine->assertCanTransition($domain->status, DomainStatus::Removed);
-        $domain->update(['status' => DomainStatus::Removed, 'is_primary' => false]);
 
-        $this->outbox->recordEvent(
-            eventType: 'domain.removed',
-            payload: ['domain_id' => $domain->id],
-            idempotencyKey: "domain:{$domain->id}:removed",
-        );
+        return DB::transaction(function () use ($domain) {
+            $domain->update(['status' => DomainStatus::Removed, 'is_primary' => false]);
 
-        return $domain->fresh();
+            $this->outbox->recordEventFor(
+                $domain->store_id,
+                eventType: 'domain.removed',
+                payload: ['domain_id' => $domain->id],
+                idempotencyKey: "domain:{$domain->id}:removed",
+            );
+
+            return $domain->fresh();
+        });
     }
 
     private function transitionTo(Domain $domain, DomainStatus $to): void

@@ -34,7 +34,7 @@ final class SuperAdminPackageController
 
         $package = Package::query()->create($request->validated());
 
-        \Illuminate\Support\Facades\Log::channel('audit')->info('super_admin.package.created', [
+        app(\App\Domain\Compliance\Services\AuditLogger::class)->record('super_admin.package.created', [
             'acting_super_admin_id' => $request->user()->id, 'package_id' => $package->id, 'code' => $package->code,
         ]);
 
@@ -48,10 +48,10 @@ final class SuperAdminPackageController
         $before = $package->only(array_keys($request->validated()));
         $package->update($request->validated());
 
-        \Illuminate\Support\Facades\Log::channel('audit')->info('super_admin.package.updated', [
+        app(\App\Domain\Compliance\Services\AuditLogger::class)->record('super_admin.package.updated', [
             'acting_super_admin_id' => $request->user()->id, 'package_id' => $package->id,
             'before' => $before, 'after' => $package->fresh()->only(array_keys($request->validated())),
-        ]);
+        ], $package);
 
         return new PackageResource($package->load('entitlements'));
     }

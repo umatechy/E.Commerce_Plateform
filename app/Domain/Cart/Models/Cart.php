@@ -7,6 +7,7 @@ namespace App\Domain\Cart\Models;
 use App\Domain\Orders\Models\Customer;
 use App\Domain\Orders\Models\Order;
 use App\Domain\Tenancy\Support\BelongsToTenant;
+use App\Support\HasPublicId;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -19,9 +20,18 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  */
 final class Cart extends Model
 {
-    use BelongsToTenant, HasFactory;
+    use BelongsToTenant, HasFactory, HasPublicId;
 
     protected $table = 'carts';
+
+    /**
+     * Mirrors the column defaults in the migration so a freshly created
+     * model exposes them without a refresh() — resources read ->value on
+     * these enum casts and threw on null (found on the first real run).
+     */
+    protected $attributes = [
+        'status' => 'active',
+    ];
 
     protected $fillable = [
         'store_id', 'customer_id', 'guest_token', 'status', 'currency', 'coupon_code',
@@ -41,16 +51,19 @@ final class Cart extends Model
         ];
     }
 
+    /** @return BelongsTo<Customer, $this> */
     public function customer(): BelongsTo
     {
         return $this->belongsTo(Customer::class);
     }
 
+    /** @return HasMany<CartItem, $this> */
     public function items(): HasMany
     {
         return $this->hasMany(CartItem::class);
     }
 
+    /** @return BelongsTo<Order, $this> */
     public function convertedOrder(): BelongsTo
     {
         return $this->belongsTo(Order::class, 'converted_order_id');

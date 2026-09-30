@@ -17,7 +17,10 @@ final class PromotionUsage extends Model
 
     protected $table = 'promotion_usages';
 
-    public $timestamps = false; // created_at only, see migration
+    // created_at only (see migration). UPDATED_AT = null keeps Eloquent
+    // filling created_at itself, so a just-created row exposes it
+    // without a refresh (resources call ->toIso8601String() on it).
+    public const UPDATED_AT = null;
 
     protected $fillable = ['store_id', 'promotion_id', 'coupon_id', 'customer_id', 'order_id', 'discount_amount_minor', 'currency'];
 
@@ -26,21 +29,25 @@ final class PromotionUsage extends Model
         return ['created_at' => 'datetime'];
     }
 
+    /** @return BelongsTo<Promotion, $this> */
     public function promotion(): BelongsTo
     {
         return $this->belongsTo(Promotion::class);
     }
 
+    /** @return BelongsTo<Coupon, $this> */
     public function coupon(): BelongsTo
     {
         return $this->belongsTo(Coupon::class);
     }
 
+    /** @return BelongsTo<Customer, $this> */
     public function customer(): BelongsTo
     {
         return $this->belongsTo(Customer::class);
     }
 
+    /** @return BelongsTo<Order, $this> */
     public function order(): BelongsTo
     {
         return $this->belongsTo(Order::class);

@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Domain\Packages\Services;
 
-use App\Domain\Events\Support\RecordsOutboxEvents;
 use App\Domain\Packages\Models\Package;
 use App\Domain\Packages\Models\Subscription;
 use App\Domain\Packages\Models\SubscriptionStatus;
@@ -32,8 +31,6 @@ use Illuminate\Support\Facades\Log;
  */
 final class SubscriptionLifecycleService
 {
-    public function __construct(private readonly RecordsOutboxEvents $outbox) {}
-
     /**
      * Module 04 §14 "Trial System". Called once, at store registration
      * (AuthController::register(), same transaction as Store creation —
@@ -58,7 +55,12 @@ final class SubscriptionLifecycleService
                 'package_id' => $package->id,
                 'status' => SubscriptionStatus::Trialing,
                 'trial_ends_at' => now()->addDays($trialDays),
+                'current_period_started_at' => now(),
                 'current_period_ends_at' => now()->addDays($trialDays),
+                // Module 29: the first paid period starts when the trial ends.
+                'billing_interval' => \App\Domain\Billing\Models\BillingInterval::Monthly,
+                'currency' => config('billing.currency'),
+                'billing_anchor_at' => now()->addDays($trialDays),
             ]);
 
             $this->auditAndInvalidate($store->id, null, $package, 'trial_started', 'registration');
@@ -118,35 +120,78 @@ final class SubscriptionLifecycleService
         $this->transitionStatus($store, SubscriptionStatus::Expired, 'subscription_expired', 'period_ended');
     }
 
-    /** Module 04 §38 "Reactivation" — historical data untouched by construction (see class docblock). */
+    /**
+     * Module 04 §38 "Reactivation" — historical data untouched by
+     * construction (see class docblock).
+     *
+     * Module 29 (Phase B23): a subscription that had lapsed (cancelled or
+     * expired) restarts billing from today — its first invoice is issued
+     * on the next billing run and is due at once. Reactivating any other
+     * status keeps the current period; it clears a billing suspension,
+     * but an invoice that is still overdue re-applies its dunning stage
+     * on the next billing run (see docs/architecture/b23-billing.md).
+     */
     public function reactivate(Store $store, string $reason): void
     {
-        $this->transitionStatus($store, SubscriptionStatus::Active, 'subscription_reactivated', $reason);
+        DB::transaction(function () use ($store, $reason) {
+            $subscription = $this->lockCurrent($store);
+            $attributes = ['grace_period_ends_at' => null, 'billing_suspended_at' => null];
+
+            if (in_array($subscription->status, [SubscriptionStatus::Cancelled, SubscriptionStatus::Expired], true)) {
+                $attributes += [
+                    'cancel_at_period_end' => false,
+                    'cancellation_requested_at' => null,
+                    'current_period_started_at' => now(),
+                    'current_period_ends_at' => now(),
+                    'billing_anchor_at' => now(),
+                ];
+            }
+
+            $this->transitionLocked($subscription, SubscriptionStatus::Active, 'subscription_reactivated', $reason, $attributes);
+        });
     }
 
-    private function transitionStatus(Store $store, SubscriptionStatus $newStatus, string $eventType, string $reason): void
+    /**
+     * Module 29 (Phase B23) — a status change on a subscription row the
+     * caller has already locked, inside the caller's transaction, so the
+     * new status, any billing columns, the invoice change and the outbox
+     * event all commit or roll back together. Every status transition —
+     * manual or decided by the billing engine — goes through here.
+     *
+     * @param array<string, mixed> $attributes other subscription columns to change in the same write
+     */
+    public function transitionLocked(Subscription $subscription, SubscriptionStatus $newStatus, string $eventType, string $reason, array $attributes = []): void
     {
-        $subscription = $store->currentSubscription()->withoutTenantScope()->firstOrFail();
         $previousStatus = $subscription->status;
-
-        DB::transaction(function () use ($subscription, $newStatus) {
-            $subscription->update(['status' => $newStatus]);
-        });
+        $subscription->update(['status' => $newStatus, ...$attributes]);
 
         // Entitlement cache is invalidated exhaustively (see
         // invalidateAllEntitlementCacheKeys() docblock — Cache::forget()
         // has no wildcard support, so every known key is forgotten
         // explicitly rather than relying on a wildcard that would not
         // actually work against Laravel's generic cache contract).
+        $store = Store::query()->find($subscription->store_id);
         $this->invalidateAllEntitlementCacheKeys($store);
 
-        Log::channel('audit')->info($eventType, [
-            'store_id' => $store->id,
+        app(\App\Domain\Compliance\Services\AuditLogger::class)->record($eventType, [
+            'store_id' => $subscription->store_id,
             'previous_status' => $previousStatus->value,
             'new_status' => $newStatus->value,
             'reason' => $reason,
             'timestamp' => now()->toIso8601String(),
-        ]);
+        ], storeId: $subscription->store_id);
+    }
+
+    private function lockCurrent(Store $store): Subscription
+    {
+        return $store->currentSubscription()->withoutTenantScope()->lockForUpdate()->firstOrFail();
+    }
+
+    private function transitionStatus(Store $store, SubscriptionStatus $newStatus, string $eventType, string $reason): void
+    {
+        DB::transaction(function () use ($store, $newStatus, $eventType, $reason) {
+            $this->transitionLocked($this->lockCurrent($store), $newStatus, $eventType, $reason);
+        });
     }
 
     private function auditAndInvalidate(
@@ -159,14 +204,14 @@ final class SubscriptionLifecycleService
     ): void {
         $this->invalidateAllEntitlementCacheKeys(Store::query()->find($storeId));
 
-        Log::channel('audit')->info($eventType, [
+        app(\App\Domain\Compliance\Services\AuditLogger::class)->record($eventType, [
             'store_id' => $storeId,
             'previous_package' => $previousPackage?->code,
             'new_package' => $newPackage->code,
             'actor' => $actorDescription,
             'source' => $source,
             'timestamp' => now()->toIso8601String(),
-        ]);
+        ], storeId: $storeId);
     }
 
     /**

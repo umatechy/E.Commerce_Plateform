@@ -6,6 +6,7 @@ namespace App\Domain\Tenancy\Models;
 
 use App\Domain\Identity\Models\User;
 use App\Domain\Packages\Models\Subscription;
+use App\Support\HasPublicId;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -23,9 +24,18 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  */
 final class Store extends Model
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory, HasPublicId, SoftDeletes;
 
     protected $table = 'stores';
+
+    /**
+     * Mirrors the column defaults in the migration so a freshly created
+     * model exposes them without a refresh() — resources read ->value on
+     * these enum casts and threw on null (found on the first real run).
+     */
+    protected $attributes = [
+        'status' => 'pending_setup',
+    ];
 
     /**
      * Phase B7: payment_webhook_secret must never leak through a raw
@@ -53,6 +63,7 @@ final class Store extends Model
         ];
     }
 
+    /** @return BelongsToMany<User, $this> */
     public function users(): BelongsToMany
     {
         return $this->belongsToMany(User::class, 'store_user')
@@ -70,6 +81,8 @@ final class Store extends Model
      * feature access. EntitlementService and SubscriptionLifecycleService
      * both use THIS relation, not activeSubscription(), so a trialing
      * store's entitlements resolve correctly.
+     *
+     * @return HasOne<Subscription, $this>
      */
     public function currentSubscription(): HasOne
     {
@@ -81,6 +94,8 @@ final class Store extends Model
      * status = 'active' subscription (e.g. a billing report that
      * intentionally excludes trials). Prefer currentSubscription() for
      * anything related to feature/entitlement access.
+     *
+     * @return HasOne<Subscription, $this>
      */
     public function activeSubscription(): HasOne
     {

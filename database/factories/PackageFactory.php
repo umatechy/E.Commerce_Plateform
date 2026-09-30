@@ -15,7 +15,7 @@ final class PackageFactory extends Factory
     public function definition(): array
     {
         return [
-            'code' => fake()->unique()->slug(2),
+            'code' => 'pkg-'.fake()->unique()->bothify('????####'), // packages.code is VARCHAR(32); slug(2) occasionally overflowed it
             'name' => fake()->words(2, true),
             'is_active' => true,
         ];

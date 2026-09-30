@@ -35,8 +35,8 @@ final class CouponController
 
         $coupon = Coupon::query()->create([
             'promotion_id' => $promotion->id,
-            'code' => $request->string('code'),
-            'code_normalized' => Coupon::normalize($request->string('code')),
+            'code' => $request->string('code')->toString(),
+            'code_normalized' => Coupon::normalize($request->string('code')->toString()),
             'is_active' => $request->boolean('is_active', true),
             'usage_limit' => $request->input('usage_limit'),
             'customer_usage_limit' => $request->input('customer_usage_limit'),

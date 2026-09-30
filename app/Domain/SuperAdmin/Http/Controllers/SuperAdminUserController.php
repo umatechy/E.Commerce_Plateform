@@ -40,9 +40,9 @@ final class SuperAdminUserController
     {
         $user->update(['is_active' => false]);
 
-        Log::channel('audit')->info('super_admin.user.deactivated', [
+        app(\App\Domain\Compliance\Services\AuditLogger::class)->record('super_admin.user.deactivated', [
             'acting_super_admin_id' => $request->user()->id, 'target_user_id' => $user->id, 'reason' => $request->input('reason'),
-        ]);
+        ], $user);
 
         return response()->json(status: 204);
     }
@@ -51,9 +51,9 @@ final class SuperAdminUserController
     {
         $user->update(['is_active' => true]);
 
-        Log::channel('audit')->info('super_admin.user.reactivated', [
+        app(\App\Domain\Compliance\Services\AuditLogger::class)->record('super_admin.user.reactivated', [
             'acting_super_admin_id' => $request->user()->id, 'target_user_id' => $user->id,
-        ]);
+        ], $user);
 
         return response()->json(status: 204);
     }

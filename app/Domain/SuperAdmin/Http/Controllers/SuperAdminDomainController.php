@@ -8,7 +8,9 @@ use App\Domain\Domains\Exceptions\InvalidDomainStateTransitionException;
 use App\Domain\Domains\Http\Resources\DomainResource;
 use App\Domain\Domains\Models\Domain;
 use App\Domain\Domains\Services\DomainService;
+use App\Domain\Tenancy\Models\Store;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
 /**
@@ -24,9 +26,12 @@ use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 final class SuperAdminDomainController
 {
     /** Module 19 §31/Module 30 §14 "Domain Oversight" — platform-wide, cross-store visibility. Sits under the 'super_admin.platform' group (no target store), distinct from suspend()/reactivate() below which are per-domain but still platform-global actions (a Domain's own store_id is read from the resolved model, never from an impersonated TenantContext). */
-    public function indexAll(): AnonymousResourceCollection
+    public function indexAll(Request $request): JsonResponse
     {
-        return DomainResource::collection(Domain::query()->withoutTenantScope()->paginate(50));
+        $domains = Domain::query()->withoutTenantScope()->paginate(50);
+
+        // Same list shape as every other Super Admin list (data.total, ...).
+        return response()->json(['data' => $domains->through(fn (Domain $domain) => (new DomainResource($domain))->resolve($request))]);
     }
 
     public function index(): AnonymousResourceCollection
@@ -34,7 +39,13 @@ final class SuperAdminDomainController
         return DomainResource::collection(Domain::query()->get());
     }
 
-    public function suspend(Domain $domain, DomainService $domains): JsonResponse
+    /**
+     * `$store` must be declared: the route is /stores/{store}/domains/
+     * {domain}/..., and without it Laravel passed the raw {store} value
+     * as `$domain` (TypeError, 500). The {domain} binding is already
+     * scoped to that store by EnsureSuperAdminImpersonation's context.
+     */
+    public function suspend(Store $store, Domain $domain, DomainService $domains): JsonResponse
     {
         try {
             $updated = $domains->suspend($domain);
@@ -45,7 +56,7 @@ final class SuperAdminDomainController
         return (new DomainResource($updated))->response();
     }
 
-    public function reactivate(Domain $domain, DomainService $domains): JsonResponse
+    public function reactivate(Store $store, Domain $domain, DomainService $domains): JsonResponse
     {
         try {
             $updated = $domains->activate($domain);

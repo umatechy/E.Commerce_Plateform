@@ -132,7 +132,7 @@ final class PaymentCreationTest extends TestCase
     {
         [$store, $order] = $this->entitledOrder();
         $payment = app(PaymentService::class)->createForOrder($order, PaymentMethod::CashOnDelivery, 'idem-view');
-        $role = Role::factory()->for($store)->create(['slug' => 'owner']);
+        $role = $this->systemRole($store, 'owner');
         $owner = User::factory()->create();
         $store->users()->attach($owner, ['role_id' => $role->id, 'status' => 'active']);
 

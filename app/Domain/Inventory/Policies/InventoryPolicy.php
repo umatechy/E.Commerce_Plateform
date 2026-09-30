@@ -21,6 +21,17 @@ final class InventoryPolicy extends BaseTenantPolicy
             && ($this->userHasPermission($user, 'inventory.view') || $this->isOwner($user));
     }
 
+    /**
+     * Creating an inventory record is a class-level check (there is no
+     * instance yet); it needs the same inventory.adjust permission. The
+     * controller used to call adjust() with the class name, which threw
+     * ArgumentCountError (500) on the first real run.
+     */
+    public function create(User $user): bool
+    {
+        return $this->userHasPermission($user, 'inventory.adjust') || $this->isOwner($user);
+    }
+
     public function adjust(User $user, Inventory $inventory): bool
     {
         return $this->belongsToUsersActiveStore($user, $inventory)

@@ -22,6 +22,7 @@ final class Coupon extends Model
         return ['is_active' => 'boolean'];
     }
 
+    /** @return BelongsTo<Promotion, $this> */
     public function promotion(): BelongsTo
     {
         return $this->belongsTo(Promotion::class);

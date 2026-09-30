@@ -18,8 +18,12 @@ return new class extends Migration
             $table->id();
             $table->foreignId('store_id')->constrained('stores')->restrictOnDelete();
             $table->string('metric_key', 64); // e.g. "max_products"
-            $table->timestamp('period_start');
-            $table->timestamp('period_end');
+            // DATETIME, not TIMESTAMP: UsagePeriod's Persistent/OneTime/
+            // Concurrent boundary is [1970-01-01 00:00:00, 2070-01-01),
+            // which MySQL TIMESTAMP (1970-01-01 00:00:01 .. 2038-01-19)
+            // rejects with error 1292 — found on the first real run.
+            $table->dateTime('period_start');
+            $table->dateTime('period_end');
             $table->unsignedInteger('count')->default(0);
             $table->timestamps();
 

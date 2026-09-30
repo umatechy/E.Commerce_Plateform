@@ -38,14 +38,14 @@ final class AuthController
         // BelongsToTenant's auto-fill; store_id values are set explicitly.
         $user = DB::transaction(function () use ($request, $subscriptions) {
             $user = User::query()->create([
-                'name' => $request->string('name'),
-                'email' => $request->string('email'),
-                'password' => $request->string('password'), // hashed via cast
+                'name' => $request->string('name')->toString(),
+                'email' => $request->string('email')->toString(),
+                'password' => $request->string('password')->toString(), // hashed via cast
             ]);
 
             $store = Store::query()->create([
-                'name' => $request->string('store_name'),
-                'slug' => Str::slug($request->string('store_name')).'-'.Str::lower(Str::random(6)),
+                'name' => $request->string('store_name')->toString(),
+                'slug' => Str::slug($request->string('store_name')->toString()).'-'.Str::lower(Str::random(6)),
                 'status' => StoreStatus::PendingSetup,
             ]);
 
@@ -66,8 +66,14 @@ final class AuthController
             return $user;
         });
 
-        Auth::login($user);
-        $request->session()->regenerate();
+        Auth::guard('web')->login($user);
+
+        // Session-fixation protection applies to the stateful SPA flow
+        // (ADR-002 Surface A). A non-stateful request carries no session
+        // at all, and calling ->session() on it threw a 500.
+        if ($request->hasSession()) {
+            $request->session()->regenerate();
+        }
 
         return (new UserResource($user))->response()->setStatusCode(201);
     }
@@ -75,16 +81,22 @@ final class AuthController
     public function login(LoginRequest $request): JsonResponse
     {
         $request->authenticate();
-        $request->session()->regenerate();
 
-        return (new UserResource(Auth::user()))->response();
+        if ($request->hasSession()) {
+            $request->session()->regenerate();
+        }
+
+        return (new UserResource(Auth::guard('web')->user()))->response();
     }
 
     public function logout(Request $request): JsonResponse
     {
         Auth::guard('web')->logout();
-        $request->session()->invalidate();
-        $request->session()->regenerateToken();
+
+        if ($request->hasSession()) {
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
+        }
 
         return response()->json(status: 204);
     }

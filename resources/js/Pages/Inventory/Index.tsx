@@ -3,6 +3,7 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import LoadingState from '@/Components/LoadingState';
 import EmptyState from '@/Components/EmptyState';
 import ErrorState from '@/Components/ErrorState';
+import { adminErrorMessage, adminFetch } from '@/lib/adminApi';
 
 /**
  * Module 08 "Inventory Frontend" — list + on-hand/reserved/available +
@@ -37,12 +38,10 @@ export default function Index() {
 
   function submitAdjustment(inventoryId: string, quantity: number, reason: string) {
     setAdjusting(inventoryId);
-    fetch(`/api/v1/inventory/${inventoryId}/adjust`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ quantity, reason }),
-    })
-      .then((r) => (r.ok ? load() : Promise.reject(r)))
+    // adminFetch sends the XSRF token a stateful write needs (a bare fetch was refused with 419).
+    adminFetch(`/inventory/${inventoryId}/adjust`, { method: 'POST', body: { quantity, reason } })
+      .then(load)
+      .catch((e) => setError(adminErrorMessage(e, 'Could not adjust this stock level.')))
       .finally(() => setAdjusting(null));
   }
 

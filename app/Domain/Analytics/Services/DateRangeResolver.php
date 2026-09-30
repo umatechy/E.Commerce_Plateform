@@ -67,7 +67,9 @@ final class DateRangeResolver
      */
     public function previousPeriod(Carbon $start, Carbon $end): array
     {
-        $lengthInSeconds = $end->diffInSeconds($start) + 1;
+        // Carbon 3 diffs are signed floats: $end->diffInSeconds($start)
+        // is NEGATIVE, which pushed the "previous" period into the future.
+        $lengthInSeconds = (int) $start->diffInSeconds($end, true) + 1;
 
         return [$start->copy()->subSeconds($lengthInSeconds), $start->copy()->subSecond()];
     }
@@ -92,7 +94,7 @@ final class DateRangeResolver
             throw new InvalidDateRangeException('The start date must be before the end date.');
         }
 
-        if ($start->diffInDays($end) > self::MAXIMUM_CUSTOM_RANGE_DAYS) {
+        if ((int) $start->diffInDays($end, true) > self::MAXIMUM_CUSTOM_RANGE_DAYS) {
             throw new InvalidDateRangeException('The custom date range cannot exceed '.self::MAXIMUM_CUSTOM_RANGE_DAYS.' days.');
         }
 

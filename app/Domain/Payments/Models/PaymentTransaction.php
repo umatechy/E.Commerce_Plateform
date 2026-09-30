@@ -15,7 +15,10 @@ final class PaymentTransaction extends Model
 
     protected $table = 'payment_transactions';
 
-    public $timestamps = false; // created_at only, see migration
+    // created_at only (see migration). UPDATED_AT = null keeps Eloquent
+    // filling created_at itself, so a just-created row exposes it
+    // without a refresh (resources call ->toIso8601String() on it).
+    public const UPDATED_AT = null;
 
     protected $fillable = [
         'store_id', 'payment_id', 'type', 'status', 'amount_minor', 'currency',
@@ -34,6 +37,7 @@ final class PaymentTransaction extends Model
         ];
     }
 
+    /** @return BelongsTo<Payment, $this> */
     public function payment(): BelongsTo
     {
         return $this->belongsTo(Payment::class);

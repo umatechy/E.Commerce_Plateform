@@ -55,7 +55,7 @@ final class PaymentController
         $transaction = $payments->recordManualConfirmation(
             $payment,
             amountMinor: (int) $request->input('amount_minor'),
-            reference: $request->string('reference'),
+            reference: $request->string('reference')->toString(),
             notes: $request->input('notes'),
             actorId: $request->user()->id,
         );
@@ -73,7 +73,7 @@ final class PaymentController
                 amountMinor: (int) $request->input('amount_minor'),
                 reason: $request->input('reason'),
                 actorId: $request->user()->id,
-                idempotencyKey: $request->string('idempotency_key'),
+                idempotencyKey: $request->string('idempotency_key')->toString(),
             );
         } catch (RefundExceedsRefundableBalanceException $e) {
             return response()->json([

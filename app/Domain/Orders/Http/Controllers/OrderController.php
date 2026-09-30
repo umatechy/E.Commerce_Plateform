@@ -59,7 +59,7 @@ final class OrderController
                     'customer_id', 'guest_name', 'guest_email', 'guest_phone',
                     'billing_address', 'shipping_address', 'notes', 'source',
                 ]),
-                idempotencyKey: $request->string('idempotency_key'),
+                idempotencyKey: $request->string('idempotency_key')->toString(),
             );
         } catch (EmptyOrderException $e) {
             return response()->json(['message' => $e->getMessage()], 422);

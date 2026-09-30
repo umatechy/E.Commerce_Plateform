@@ -15,6 +15,7 @@ use App\Domain\DataProtection\Services\Storage\BackupStorageAdapter;
 use App\Domain\Events\Support\RecordsOutboxEvents;
 use App\Domain\Settings\Services\ConfigService;
 use App\Domain\Tenancy\Models\Store;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
@@ -37,25 +38,34 @@ final class BackupService
     {
         $retentionDays = $this->config->get('backup.retention_days');
 
-        $backup = Backup::query()->create([
-            'public_id' => (string) Str::ulid(),
-            'scope' => $scope,
-            'store_id' => $store?->id,
-            'status' => BackupStatus::Created,
-            'initiated_by' => $initiator,
-            'initiated_by_user_id' => $userId,
-            'expires_at' => now()->addDays($retentionDays),
-        ]);
+        // ADR-004: the row, its first transition and the outbox event
+        // commit together. The job is dispatched only after the commit so
+        // a real (non-sync) worker can never pick it up before the row
+        // exists.
+        $backup = DB::transaction(function () use ($scope, $store, $initiator, $userId, $retentionDays) {
+            $backup = Backup::query()->create([
+                'public_id' => (string) Str::ulid(),
+                'scope' => $scope,
+                'store_id' => $store?->id,
+                'status' => BackupStatus::Created,
+                'initiated_by' => $initiator,
+                'initiated_by_user_id' => $userId,
+                'expires_at' => now()->addDays($retentionDays),
+            ]);
 
-        $this->stateMachine->transition($backup, BackupStatus::Queued);
+            $this->stateMachine->transition($backup, BackupStatus::Queued);
+
+            $this->outbox->recordEventFor(
+                $backup->store_id,
+                eventType: 'backup.requested',
+                payload: ['backup_id' => $backup->id, 'scope' => $scope->value, 'store_id' => $store?->id],
+                idempotencyKey: "backup:{$backup->id}:requested",
+            );
+
+            return $backup;
+        });
 
         RunBackupJob::dispatch($backup->id);
-
-        $this->outbox->recordEvent(
-            eventType: 'backup.requested',
-            payload: ['backup_id' => $backup->id, 'scope' => $scope->value, 'store_id' => $store?->id],
-            idempotencyKey: "backup:{$backup->id}:requested",
-        );
 
         return $backup;
     }
@@ -93,16 +103,21 @@ final class BackupService
             $this->stateMachine->transition($backup, BackupStatus::Verifying);
             $this->verify($backup, $storage);
         } catch (\Throwable $e) {
-            $backup->update(['failure_reason' => $e->getMessage()]);
-            $this->stateMachine->transition($backup, BackupStatus::Failed);
+            // Runs in a queued job, where no tenant context exists — the
+            // event is attributed to the backup's own store explicitly.
+            DB::transaction(function () use ($backup, $e) {
+                $backup->update(['failure_reason' => $e->getMessage()]);
+                $this->stateMachine->transition($backup, BackupStatus::Failed);
 
-            Log::channel('audit')->info('backup.failed', ['backup_id' => $backup->id, 'reason' => $e->getMessage()]);
+                $this->outbox->recordEventFor(
+                    $backup->store_id,
+                    eventType: 'backup.failed',
+                    payload: ['backup_id' => $backup->id, 'store_id' => $backup->store_id],
+                    idempotencyKey: "backup:{$backup->id}:failed",
+                );
+            });
 
-            $this->outbox->recordEvent(
-                eventType: 'backup.failed',
-                payload: ['backup_id' => $backup->id, 'store_id' => $backup->store_id],
-                idempotencyKey: "backup:{$backup->id}:failed",
-            );
+            app(\App\Domain\Compliance\Services\AuditLogger::class)->record('backup.failed', ['backup_id' => $backup->id, 'reason' => $e->getMessage()], $backup, $backup->store_id);
 
             throw $e; // lets the queue's own retry/backoff handle it
         }
@@ -125,16 +140,19 @@ final class BackupService
             throw new BackupIntegrityException('Stored artifact size does not match the recorded size.');
         }
 
-        $this->stateMachine->transition($backup, BackupStatus::Verified);
-        $backup->update(['verified_at' => now()]);
+        DB::transaction(function () use ($backup) {
+            $this->stateMachine->transition($backup, BackupStatus::Verified);
+            $backup->update(['verified_at' => now()]);
 
-        Log::channel('audit')->info('backup.verified', ['backup_id' => $backup->id, 'store_id' => $backup->store_id]);
+            $this->outbox->recordEventFor(
+                $backup->store_id,
+                eventType: 'backup.verified',
+                payload: ['backup_id' => $backup->id, 'store_id' => $backup->store_id],
+                idempotencyKey: "backup:{$backup->id}:verified",
+            );
+        });
 
-        $this->outbox->recordEvent(
-            eventType: 'backup.verified',
-            payload: ['backup_id' => $backup->id, 'store_id' => $backup->store_id],
-            idempotencyKey: "backup:{$backup->id}:verified",
-        );
+        app(\App\Domain\Compliance\Services\AuditLogger::class)->record('backup.verified', ['backup_id' => $backup->id, 'store_id' => $backup->store_id], $backup, $backup->store_id);
     }
 
     private function generateStoragePath(Backup $backup): string

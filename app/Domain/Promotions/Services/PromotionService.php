@@ -9,7 +9,6 @@ use App\Domain\Orders\Models\Order;
 use App\Domain\Promotions\Exceptions\PromotionUsageLimitExceededException;
 use App\Domain\Promotions\Models\OrderPromotion;
 use App\Domain\Promotions\Models\PromotionUsage;
-use App\Domain\Tenancy\Support\TenantContext;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -26,8 +25,6 @@ use Illuminate\Support\Facades\DB;
  */
 final class PromotionService
 {
-    public function __construct(private readonly TenantContext $context) {}
-
     /**
      * Called by CheckoutService ONLY when the Order was genuinely just
      * created (never on an idempotent replay — see that class) and

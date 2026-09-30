@@ -33,7 +33,10 @@ final class CartController
     {
         [$cart, $newGuestToken] = $this->resolveCart($request, $carts);
 
-        $response = (new CartResource($cart))->response();
+        // Explicit 200: a GET that lazily creates the guest cart would
+        // otherwise be answered 201 (JsonResource infers it from the
+        // model's wasRecentlyCreated flag).
+        $response = (new CartResource($cart))->response()->setStatusCode(200);
 
         if ($newGuestToken !== null) {
             $response->headers->set(self::GUEST_TOKEN_HEADER, $newGuestToken);
@@ -48,8 +51,12 @@ final class CartController
 
         $carts->addItem(
             $cart,
-            productId: $request->input('product_id'),
-            productVariantId: $request->input('product_variant_id'),
+            productId: $request->filled('product')
+                ? $this->idFor(\App\Domain\Catalog\Models\Product::class, $request->string('product')->toString(), 'product')
+                : $request->input('product_id'),
+            productVariantId: $request->filled('variant')
+                ? $this->idFor(\App\Domain\Catalog\Models\ProductVariant::class, $request->string('variant')->toString(), 'variant')
+                : $request->input('product_variant_id'),
             quantity: (int) $request->input('quantity'),
         );
 
@@ -89,7 +96,7 @@ final class CartController
         $request->validate(['code' => ['required', 'string', 'max:64']]);
 
         try {
-            $carts->applyCoupon($cart, $request->string('code'));
+            $carts->applyCoupon($cart, $request->string('code')->toString());
         } catch (\App\Domain\Promotions\Exceptions\CouponNotEligibleException $e) {
             return response()->json(['message' => $e->getMessage(), 'code' => 'coupon_not_eligible'], 422);
         }
@@ -125,5 +132,22 @@ final class CartController
     private function assertOwnsCartItem(Cart $cart, CartItem $item): void
     {
         abort_unless($item->cart_id === $cart->id, 404);
+    }
+
+    /**
+     * A public id → internal id, looked up under the tenant scope, so
+     * another store's product is simply "not found".
+     *
+     * @param class-string<\Illuminate\Database\Eloquent\Model> $model
+     */
+    private function idFor(string $model, string $publicId, string $field): int
+    {
+        $id = $model::query()->where('public_id', $publicId)->value('id');
+
+        if ($id === null) {
+            throw \Illuminate\Validation\ValidationException::withMessages([$field => "This {$field} does not exist in this store."]);
+        }
+
+        return (int) $id;
     }
 }

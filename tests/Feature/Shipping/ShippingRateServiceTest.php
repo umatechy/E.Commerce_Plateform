@@ -42,7 +42,9 @@ final class ShippingRateServiceTest extends TestCase
         app(TenantContext::class)->resolveToStore($store->id);
 
         ShippingZone::factory()->for($store)->create(['name' => 'Pakistan', 'country' => 'PK']);
-        $default = ShippingZone::factory()->for($store)->create(['name' => 'Rest of World', 'is_default' => true]);
+        // StoreObserver already gives every store its catch-all default
+        // zone; a store has exactly one.
+        $default = ShippingZone::query()->where('is_default', true)->sole();
 
         $resolved = app(ShippingRateService::class)->resolveZone(['country' => 'US']);
 

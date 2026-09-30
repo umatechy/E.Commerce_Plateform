@@ -8,6 +8,7 @@ use App\Domain\Domains\Exceptions\DomainVerificationFailedException;
 use App\Domain\Domains\Models\Domain;
 use App\Domain\Domains\Models\DomainStatus;
 use App\Domain\Events\Support\RecordsOutboxEvents;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
 /**
@@ -31,19 +32,22 @@ final class DomainVerificationService
      */
     public function initiate(Domain $domain): Domain
     {
-        $domain->update([
-            'verification_token' => Str::random(48),
-            'verification_token_expires_at' => now()->addDays(self::TOKEN_TTL_DAYS),
-            'status' => DomainStatus::VerificationRequired,
-        ]);
+        return DB::transaction(function () use ($domain) {
+            $domain->update([
+                'verification_token' => Str::random(48),
+                'verification_token_expires_at' => now()->addDays(self::TOKEN_TTL_DAYS),
+                'status' => DomainStatus::VerificationRequired,
+            ]);
 
-        $this->outbox->recordEvent(
-            eventType: 'domain.verification_requested',
-            payload: ['domain_id' => $domain->id],
-            idempotencyKey: "domain:{$domain->id}:verification_requested:{$domain->verification_token}",
-        );
+            $this->outbox->recordEventFor(
+                $domain->store_id,
+                eventType: 'domain.verification_requested',
+                payload: ['domain_id' => $domain->id],
+                idempotencyKey: "domain:{$domain->id}:verification_requested:{$domain->verification_token}",
+            );
 
-        return $domain->fresh();
+            return $domain->fresh();
+        });
     }
 
     /** The exact TXT record name/value a store owner must publish — shown to staff, never guessed by them. */
@@ -76,14 +80,17 @@ final class DomainVerificationService
             throw new DomainVerificationFailedException('The required TXT record was not found. DNS changes can take time to propagate — try again shortly.');
         }
 
-        $domain->update(['status' => DomainStatus::Verified, 'verified_at' => now()]);
+        return DB::transaction(function () use ($domain) {
+            $domain->update(['status' => DomainStatus::Verified, 'verified_at' => now()]);
 
-        $this->outbox->recordEvent(
-            eventType: 'domain.verified',
-            payload: ['domain_id' => $domain->id],
-            idempotencyKey: "domain:{$domain->id}:verified",
-        );
+            $this->outbox->recordEventFor(
+                $domain->store_id,
+                eventType: 'domain.verified',
+                payload: ['domain_id' => $domain->id],
+                idempotencyKey: "domain:{$domain->id}:verified",
+            );
 
-        return $domain->fresh();
+            return $domain->fresh();
+        });
     }
 }

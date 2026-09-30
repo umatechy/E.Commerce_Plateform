@@ -7,6 +7,7 @@ namespace App\Domain\Marketing\Http\Resources;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
+/** @mixin \App\Domain\Marketing\Models\CampaignRecipient */
 final class CampaignRecipientResource extends JsonResource
 {
     public function toArray(Request $request): array

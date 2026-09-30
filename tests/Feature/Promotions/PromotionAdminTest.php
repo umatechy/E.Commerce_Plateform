@@ -22,7 +22,7 @@ final class PromotionAdminTest extends TestCase
 
     private function ownerOf(Store $store): User
     {
-        $role = Role::factory()->for($store)->create(['slug' => 'owner']);
+        $role = $this->systemRole($store, 'owner');
         $user = User::factory()->create();
         $store->users()->attach($user, ['role_id' => $role->id, 'status' => 'active']);
 
@@ -98,7 +98,7 @@ final class PromotionAdminTest extends TestCase
             'name' => 'Renamed Promotion', 'type' => 'percentage', 'target_scope' => 'order', 'percentage_value' => 50,
         ])->assertOk();
 
-        $snapshot = \App\Domain\Promotions\Models\OrderPromotion::query()->where('order_id', $order->id)->firstOrFail();
+        $snapshot = \App\Domain\Promotions\Models\OrderPromotion::query()->withoutTenantScope()->where('order_id', $order->id)->firstOrFail();
         $this->assertSame('Original Name', $snapshot->promotion_name_snapshot); // untouched by the later edit
     }
 }

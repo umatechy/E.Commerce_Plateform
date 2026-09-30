@@ -4,6 +4,7 @@ use App\Domain\DeveloperPlatform\Http\Controllers\DevCustomerController;
 use App\Domain\DeveloperPlatform\Http\Controllers\DevInventoryController;
 use App\Domain\DeveloperPlatform\Http\Controllers\DevOrderController;
 use App\Domain\DeveloperPlatform\Http\Controllers\DevProductController;
+use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Support\Facades\Route;
 
 // ADR-005 / ADR-002: /api/dev/v1/... — Developer API (Module 31, Phase
@@ -14,7 +15,13 @@ use Illuminate\Support\Facades\Route;
 // api_key.log (metadata-only request log), and a specific
 // api_key.scope:<scope> per endpoint. Deliberately READ-ONLY this
 // milestone — see inspection findings "Architectural Decision — Scope."
-Route::middleware(['api_key.authenticate', 'throttle:developer_api', 'api_key.log'])->group(function () {
+// SubstituteBindings is listed explicitly: this prefix is registered
+// outside the 'api' group, so without it {product}/{order}/{customer}
+// were never bound and show() received an empty, unsaved model (200
+// with null fields) instead of the tenant-scoped row or a 404. Laravel's
+// middleware priority keeps it after api_key.authenticate, which is what
+// resolves the tenant the binding query is scoped to.
+Route::middleware(['api_key.authenticate', 'throttle:developer_api', 'api_key.log', SubstituteBindings::class])->group(function () {
     Route::middleware('api_key.scope:products:read')->group(function () {
         Route::get('/products', [DevProductController::class, 'index']);
         Route::get('/products/{product}', [DevProductController::class, 'show']);

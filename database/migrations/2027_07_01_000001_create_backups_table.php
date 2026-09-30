@@ -25,7 +25,7 @@ return new class extends Migration
             $table->string('scope', 16); // BackupScope
             $table->foreignId('store_id')->nullable()->constrained('stores')->cascadeOnDelete();
             $table->string('status', 20)->default('created'); // BackupStatus
-            $table->string('initiated_by', 16); // BackupInitiator
+            $table->string('initiated_by', 32); // BackupInitiator — 32, not 16: 'pre_restore_safety' is 18 chars (error 1406 on first real run)
             $table->foreignId('initiated_by_user_id')->nullable()->constrained('users')->nullOnDelete();
             $table->string('storage_disk', 32)->nullable();
             $table->string('storage_path')->nullable(); // opaque, server-generated — never client input

@@ -29,7 +29,7 @@ final class ReportExportController
             ReportType::from($request->string('report_type')->toString()),
             $request->only(['date_filter', 'start', 'end']),
             $request->user()->id,
-            $request->string('idempotency_key'),
+            $request->string('idempotency_key')->toString(),
         );
 
         return (new ReportExportResource($export))->response()->setStatusCode($export->wasRecentlyCreated ? 201 : 200);

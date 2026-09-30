@@ -7,7 +7,11 @@ namespace App\Domain\DataProtection\Http\Resources;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
-/** Module 23 "Important Security Principle" — Non-Negotiable: NEVER exposes storage_path/storage_disk (internal, opaque) or manifest contents that could reveal infrastructure details. */
+/**
+ * Module 23 "Important Security Principle" — Non-Negotiable: NEVER exposes storage_path/storage_disk (internal, opaque) or manifest contents that could reveal infrastructure details.
+ *
+ * @mixin \App\Domain\DataProtection\Models\Backup
+ */
 final class BackupResource extends JsonResource
 {
     public function toArray(Request $request): array

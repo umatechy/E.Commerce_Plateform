@@ -36,6 +36,7 @@ final class ReportService
             ->selectRaw('DATE(created_at) as date, COUNT(*) as order_count, SUM(grand_total_minor) as revenue_minor, SUM(discount_total_minor) as discounts_minor')
             ->groupBy('date')
             ->orderBy('date')
+            ->toBase() // aggregate rows, not models: aliases like order_count are not model attributes
             ->get();
 
         return $rows->map(fn ($row) => [
@@ -76,6 +77,7 @@ final class ReportService
             ->whereNotNull('customer_id')
             ->selectRaw('customer_id, COUNT(*) as order_count')
             ->groupBy('customer_id')
+            ->toBase() // aggregate rows, not models: aliases like order_count are not model attributes
             ->get();
 
         $customersWithOrders = $orderCounts->count();
@@ -97,6 +99,7 @@ final class ReportService
             ->whereBetween('created_at', [$start, $end])
             ->selectRaw('status, method, COUNT(*) as count, SUM(amount_minor) as amount_minor')
             ->groupBy('status', 'method')
+            ->toBase() // aggregate rows, not models: aliases like order_count are not model attributes
             ->get();
 
         return $rows->map(fn ($row) => [
@@ -114,6 +117,7 @@ final class ReportService
             ->whereBetween('created_at', [$start, $end])
             ->selectRaw('status, carrier, COUNT(*) as count')
             ->groupBy('status', 'carrier')
+            ->toBase() // aggregate rows, not models: aliases like order_count are not model attributes
             ->get();
 
         return $rows->map(fn ($row) => [
@@ -132,6 +136,7 @@ final class ReportService
             ->selectRaw('promotions.id as promotion_id, promotions.name, COUNT(*) as usage_count, SUM(promotion_usages.discount_amount_minor) as total_discount_minor')
             ->groupBy('promotions.id', 'promotions.name')
             ->orderByDesc('usage_count')
+            ->toBase() // aggregate rows, not models: aliases like order_count are not model attributes
             ->get();
 
         return $rows->map(fn ($row) => [
@@ -148,6 +153,7 @@ final class ReportService
             ->whereBetween('campaign_recipients.created_at', [$start, $end])
             ->selectRaw('campaigns.id as campaign_id, campaigns.name, campaign_recipients.status, COUNT(*) as count')
             ->groupBy('campaigns.id', 'campaigns.name', 'campaign_recipients.status')
+            ->toBase() // aggregate rows, not models: aliases like order_count are not model attributes
             ->get();
 
         return $rows->map(fn ($row) => [
@@ -164,6 +170,7 @@ final class ReportService
             ->whereBetween('created_at', [$start, $end])
             ->selectRaw('channel, status, COUNT(*) as count')
             ->groupBy('channel', 'status')
+            ->toBase() // aggregate rows, not models: aliases like order_count are not model attributes
             ->get();
 
         return $rows->map(fn ($row) => [
@@ -176,7 +183,7 @@ final class ReportService
     /** Module 22 §28 "Inventory Analytics" — read-only, reuses B4's exact isLowStock() formula (see DashboardService's identical fix). */
     public function inventoryReport(): array
     {
-        $totals = Inventory::query()->selectRaw('SUM(on_hand) as total_on_hand, SUM(reserved) as total_reserved')->first();
+        $totals = Inventory::query()->selectRaw('SUM(on_hand) as total_on_hand, SUM(reserved) as total_reserved')->toBase()->first();
         $lowStockCount = Inventory::query()->whereNotNull('reorder_point')->whereRaw('(on_hand - reserved) <= reorder_point')->count();
         $outOfStockCount = Inventory::query()->whereRaw('(on_hand - reserved) <= 0')->count();
 

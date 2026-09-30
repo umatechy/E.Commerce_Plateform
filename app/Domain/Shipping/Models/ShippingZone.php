@@ -22,6 +22,7 @@ final class ShippingZone extends Model
         return ['is_default' => 'boolean', 'is_active' => 'boolean'];
     }
 
+    /** @return HasMany<ShippingRate, $this> */
     public function rates(): HasMany
     {
         return $this->hasMany(ShippingRate::class);

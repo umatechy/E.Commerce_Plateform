@@ -13,6 +13,7 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 /**
@@ -46,25 +47,33 @@ final class RunRestoreJob implements ShouldQueue
             $restorer->restore($localPath);
             @unlink($localPath); // the local copy of a full database dump must never linger on disk after use
 
-            $restoreJob->update(['status' => 'completed', 'completed_at' => now()]);
+            // Queued job: no tenant context — the event is attributed to
+            // the backup's own store explicitly (ADR-004 transaction).
+            DB::transaction(function () use ($restoreJob, $outbox) {
+                $restoreJob->update(['status' => 'completed', 'completed_at' => now()]);
 
-            Log::channel('audit')->info('restore.completed', ['restore_job_id' => $restoreJob->id, 'backup_id' => $restoreJob->backup_id]);
+                $outbox->recordEventFor(
+                    $restoreJob->backup->store_id,
+                    eventType: 'restore.completed',
+                    payload: ['restore_job_id' => $restoreJob->id, 'backup_id' => $restoreJob->backup_id],
+                    idempotencyKey: "restore_job:{$restoreJob->id}:completed",
+                );
+            });
 
-            $outbox->recordEvent(
-                eventType: 'restore.completed',
-                payload: ['restore_job_id' => $restoreJob->id, 'backup_id' => $restoreJob->backup_id],
-                idempotencyKey: "restore_job:{$restoreJob->id}:completed",
-            );
+            app(\App\Domain\Compliance\Services\AuditLogger::class)->record('restore.completed', ['restore_job_id' => $restoreJob->id, 'backup_id' => $restoreJob->backup_id], $restoreJob, $restoreJob->backup->store_id);
         } catch (\Throwable $e) {
-            $restoreJob->update(['status' => 'failed', 'failure_reason' => $e->getMessage()]);
+            DB::transaction(function () use ($restoreJob, $outbox, $e) {
+                $restoreJob->update(['status' => 'failed', 'failure_reason' => $e->getMessage()]);
 
-            Log::channel('audit')->info('restore.failed', ['restore_job_id' => $restoreJob->id, 'reason' => $e->getMessage()]);
+                $outbox->recordEventFor(
+                    $restoreJob->backup->store_id,
+                    eventType: 'restore.failed',
+                    payload: ['restore_job_id' => $restoreJob->id, 'backup_id' => $restoreJob->backup_id],
+                    idempotencyKey: "restore_job:{$restoreJob->id}:failed",
+                );
+            });
 
-            $outbox->recordEvent(
-                eventType: 'restore.failed',
-                payload: ['restore_job_id' => $restoreJob->id, 'backup_id' => $restoreJob->backup_id],
-                idempotencyKey: "restore_job:{$restoreJob->id}:failed",
-            );
+            app(\App\Domain\Compliance\Services\AuditLogger::class)->record('restore.failed', ['restore_job_id' => $restoreJob->id, 'reason' => $e->getMessage()], $restoreJob, $restoreJob->backup->store_id);
 
             // Deliberately NOT re-thrown — Module 23 Phase 21 "never
             // silently leave the system in a falsely healthy state" is

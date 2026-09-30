@@ -16,6 +16,8 @@ use Illuminate\Http\Resources\Json\JsonResource;
  * credentials, sensitive gateway metadata (Module 12 §67's explicit
  * "never expose" list) — `metadata` itself is never serialized here at
  * all, only the specific safe fields below.
+ *
+ * @mixin \App\Domain\Payments\Models\Payment
  */
 final class PaymentResource extends JsonResource
 {

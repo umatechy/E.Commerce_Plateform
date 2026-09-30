@@ -16,6 +16,8 @@ use Illuminate\Support\Facades\Gate;
  * conditionally built via Gate::forUser()->allows(), so a caller
  * without the products.view_cost permission (or Owner) never receives
  * the field in the JSON payload at all, not just a null-masked one.
+ *
+ * @mixin \App\Domain\Catalog\Models\Product
  */
 final class ProductResource extends JsonResource
 {

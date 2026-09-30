@@ -35,7 +35,10 @@ final class LoginRequest extends FormRequest
     {
         $this->ensureIsNotRateLimited();
 
-        if (! Auth::attempt($this->only('email', 'password'), true)) {
+        // Explicitly the staff session guard (ADR-002 Surface A): the
+        // default guard can have been switched to a token guard, which has
+        // no attempt() at all.
+        if (! Auth::guard('web')->attempt($this->only('email', 'password'), true)) {
             RateLimiter::hit($this->throttleKey());
 
             throw ValidationException::withMessages([
@@ -50,7 +53,7 @@ final class LoginRequest extends FormRequest
         // deactivated — same generic failure message either way) and
         // the session is torn down immediately if the account is
         // inactive, never left half-authenticated.
-        if (! Auth::user()->is_active) {
+        if (! Auth::guard('web')->user()->is_active) {
             Auth::guard('web')->logout();
             RateLimiter::hit($this->throttleKey());
 

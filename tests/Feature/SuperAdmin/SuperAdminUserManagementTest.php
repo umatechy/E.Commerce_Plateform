@@ -37,7 +37,7 @@ final class SuperAdminUserManagementTest extends TestCase
 
         $this->actingAs($superAdmin)->postJson("/api/v1/super-admin/users/{$user->id}/deactivate")->assertStatus(204);
 
-        $response = $this->postJson('/api/v1/login', ['email' => 'locked@example.com', 'password' => 'secret123']);
+        $response = $this->postJson('/api/v1/auth/login', ['email' => 'locked@example.com', 'password' => 'secret123']);
 
         $response->assertStatus(422);
     }
@@ -49,7 +49,7 @@ final class SuperAdminUserManagementTest extends TestCase
 
         $this->actingAs($superAdmin)->postJson("/api/v1/super-admin/users/{$user->id}/reactivate")->assertStatus(204);
 
-        $response = $this->postJson('/api/v1/login', ['email' => 'restored@example.com', 'password' => 'secret123']);
+        $response = $this->postJson('/api/v1/auth/login', ['email' => 'restored@example.com', 'password' => 'secret123']);
 
         $response->assertOk();
     }
@@ -71,6 +71,11 @@ final class SuperAdminUserManagementTest extends TestCase
         // controller since Phase B6) remains fully functional —
         // deactivating an unrelated User row has no bearing on it.
         $token = $customer->createToken('t')->plainTextToken;
+
+        // A new client: drop the Super Admin's session-guard user, which
+        // Sanctum would otherwise pick up before the bearer token.
+        $this->app['auth']->forgetGuards();
+
         $response = $this->withHeader('Authorization', "Bearer {$token}")->getJson('/api/v1/customer/notifications');
         $response->assertOk();
     }

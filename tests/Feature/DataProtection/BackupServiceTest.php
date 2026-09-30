@@ -35,6 +35,11 @@ final class BackupServiceTest extends TestCase
     {
         parent::setUp();
         Storage::fake('local');
+
+        // Every test drives execute() itself with a fake dump strategy; the
+        // RunBackupJob that requestBackup() dispatches would otherwise run
+        // synchronously first — with the real mysqldump strategy.
+        \Illuminate\Support\Facades\Queue::fake();
     }
 
     public function test_requesting_a_backup_creates_a_queued_record_and_dispatches_a_job(): void

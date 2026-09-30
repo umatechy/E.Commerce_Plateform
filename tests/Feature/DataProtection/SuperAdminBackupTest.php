@@ -70,7 +70,7 @@ final class SuperAdminBackupTest extends TestCase
     public function test_a_store_owner_cannot_reach_the_super_admin_restore_authorization_route(): void
     {
         $store = Store::factory()->create();
-        $role = \App\Domain\Identity\Models\Role::factory()->for($store)->create(['slug' => 'owner']);
+        $role = $this->systemRole($store, 'owner');
         $owner = User::factory()->create();
         $store->users()->attach($owner, ['role_id' => $role->id, 'status' => 'active']);
         $backup = Backup::factory()->create(['store_id' => $store->id, 'status' => BackupStatus::Verified]);

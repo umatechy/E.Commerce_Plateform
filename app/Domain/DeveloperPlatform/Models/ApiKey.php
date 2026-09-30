@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Domain\DeveloperPlatform\Models;
 
 use App\Domain\Tenancy\Support\BelongsToTenant;
+use App\Support\HasPublicId;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -12,9 +13,18 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 /** `key_hash` is $hidden — never returned via any Resource. ApiKeyService is the only writer of `status`/`last_used_at`. */
 final class ApiKey extends Model
 {
-    use BelongsToTenant, HasFactory;
+    use BelongsToTenant, HasFactory, HasPublicId;
 
     protected $table = 'api_keys';
+
+    /**
+     * Mirrors the column defaults in the migration so a freshly created
+     * model exposes them without a refresh() — resources read ->value on
+     * these enum casts and threw on null (found on the first real run).
+     */
+    protected $attributes = [
+        'status' => 'active',
+    ];
 
     protected $fillable = [
         'developer_application_id', 'store_id', 'key_prefix', 'key_hash',
@@ -34,6 +44,7 @@ final class ApiKey extends Model
         ];
     }
 
+    /** @return BelongsTo<DeveloperApplication, $this> */
     public function application(): BelongsTo
     {
         return $this->belongsTo(DeveloperApplication::class, 'developer_application_id');

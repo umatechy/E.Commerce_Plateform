@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Domain\Notifications\Models;
 
 use App\Domain\Tenancy\Support\BelongsToTenant;
+use App\Support\HasPublicId;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -18,9 +19,18 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  */
 final class NotificationMessage extends Model
 {
-    use BelongsToTenant, HasFactory;
+    use BelongsToTenant, HasFactory, HasPublicId;
 
     protected $table = 'notification_messages';
+
+    /**
+     * Mirrors the column defaults in the migration so a freshly created
+     * model exposes them without a refresh() — resources read ->value on
+     * these enum casts and threw on null (found on the first real run).
+     */
+    protected $attributes = [
+        'status' => 'created',
+    ];
 
     protected $fillable = [
         'store_id', 'message_type', 'channel', 'recipient_type', 'recipient_id',
@@ -40,11 +50,13 @@ final class NotificationMessage extends Model
         ];
     }
 
+    /** @return HasMany<NotificationDeliveryAttempt, $this> */
     public function attempts(): HasMany
     {
         return $this->hasMany(NotificationDeliveryAttempt::class);
     }
 
+    /** @return BelongsTo<NotificationTemplate, $this> */
     public function template(): BelongsTo
     {
         return $this->belongsTo(NotificationTemplate::class, 'notification_template_id');

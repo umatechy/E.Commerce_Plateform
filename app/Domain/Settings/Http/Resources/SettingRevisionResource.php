@@ -7,6 +7,7 @@ namespace App\Domain\Settings\Http\Resources;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
+/** @mixin \App\Domain\Settings\Models\SettingRevision */
 final class SettingRevisionResource extends JsonResource
 {
     public function toArray(Request $request): array

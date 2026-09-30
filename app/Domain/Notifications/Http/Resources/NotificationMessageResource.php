@@ -14,6 +14,8 @@ use Illuminate\Http\Resources\Json\JsonResource;
  * §24 "Sensitive PII Leakage" — so `destination` is included only for
  * staff via a separate allow-list decision, kept out here entirely to
  * keep one Resource safe for both audiences).
+ *
+ * @mixin \App\Domain\Notifications\Models\NotificationMessage
  */
 final class NotificationMessageResource extends JsonResource
 {

@@ -27,7 +27,7 @@ final class SuperAdminSubscriptionController
         Store $store,
         SubscriptionLifecycleService $subscriptions,
     ): JsonResponse {
-        $newPackage = Package::query()->where('code', $request->string('package_code'))->firstOrFail();
+        $newPackage = Package::query()->where('code', $request->string('package_code')->toString())->firstOrFail();
         $previousPackageCode = \App\Domain\Packages\Models\Subscription::query()->withoutTenantScope()->where('store_id', $store->id)->latest()->first()?->package?->code;
 
         $overLimit = $subscriptions->changePackage(
@@ -42,10 +42,10 @@ final class SuperAdminSubscriptionController
         // state), in ADDITION to (never replacing) the existing generic
         // 'super_admin.impersonation.started' log the route's own
         // middleware already writes.
-        \Illuminate\Support\Facades\Log::channel('audit')->info('super_admin.subscription.package_changed', [
+        app(\App\Domain\Compliance\Services\AuditLogger::class)->record('super_admin.subscription.package_changed', [
             'acting_super_admin_id' => $request->user()->id, 'store_id' => $store->id,
             'from_package_code' => $previousPackageCode, 'to_package_code' => $newPackage->code, 'over_limit' => $overLimit,
-        ]);
+        ], $store);
 
         return response()->json([
             'data' => [
@@ -61,9 +61,9 @@ final class SuperAdminSubscriptionController
         $reason = $request->input('reason', 'manual_super_admin_action');
         $subscriptions->suspend($store, $reason);
 
-        \Illuminate\Support\Facades\Log::channel('audit')->info('super_admin.subscription.suspended', [
+        app(\App\Domain\Compliance\Services\AuditLogger::class)->record('super_admin.subscription.suspended', [
             'acting_super_admin_id' => $request->user()->id, 'store_id' => $store->id, 'reason' => $reason,
-        ]);
+        ], $store);
 
         return response()->json(status: 204);
     }
@@ -73,9 +73,9 @@ final class SuperAdminSubscriptionController
         $reason = $request->input('reason', 'manual_super_admin_action');
         $subscriptions->reactivate($store, $reason);
 
-        \Illuminate\Support\Facades\Log::channel('audit')->info('super_admin.subscription.reactivated', [
+        app(\App\Domain\Compliance\Services\AuditLogger::class)->record('super_admin.subscription.reactivated', [
             'acting_super_admin_id' => $request->user()->id, 'store_id' => $store->id, 'reason' => $reason,
-        ]);
+        ], $store);
 
         return response()->json(status: 204);
     }

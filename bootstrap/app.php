@@ -6,9 +6,11 @@ use App\Http\Middleware\EnsureStaffPrincipal;
 use App\Http\Middleware\EnsureSuperAdminImpersonation;
 use App\Http\Middleware\HandleInertiaRequests;
 use App\Http\Middleware\ResolveTenantContext;
+use Illuminate\Contracts\Auth\Middleware\AuthenticatesRequests;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
+use Illuminate\Routing\Middleware\SubstituteBindings;
 use Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful;
 
 // Laravel 12 bootstrap-file style middleware/route registration.
@@ -26,6 +28,10 @@ return Application::configure(basePath: dirname(__DIR__))
         app_path('Domain/Marketing/Console'),
         app_path('Domain/DataProtection/Console'),
         app_path('Domain/Infrastructure/Console'),
+        app_path('Domain/Monitoring/Console'),
+        app_path('Domain/Compliance/Console'),
+        app_path('Domain/Billing/Console'),
+        app_path('Domain/Support/Console'),
     ])
     ->withRouting(
         web: __DIR__.'/../routes/web.php',
@@ -70,12 +76,48 @@ return Application::configure(basePath: dirname(__DIR__))
         // docs/security/b1-security-review.md — flagged, then fixed).
         $middleware->prependToGroup('api', EnsureFrontendRequestsAreStateful::class);
 
+        // Module 32 (Phase B22): baseline security headers on every response.
+        $middleware->append(\App\Http\Middleware\AddSecurityHeaders::class);
+
         // ADR-001: tenant resolution runs on every web + api request,
         // AFTER auth (so it can read the authenticated user's store
         // membership) and BEFORE any controller/policy/model code runs.
         $middleware->appendToGroup('web', ResolveTenantContext::class);
         $middleware->appendToGroup('web', HandleInertiaRequests::class);
         $middleware->appendToGroup('api', ResolveTenantContext::class);
+        // Phase B25: the web storefront's HttpOnly session cookie becomes a
+        // bearer token before any auth middleware runs. After Sanctum's
+        // stateful pipeline in the group (which decrypts cookies).
+        $middleware->appendToGroup('api', \App\Domain\CustomerAccount\Http\Middleware\UseStorefrontCustomerSession::class);
+        $middleware->prependToPriorityList(AuthenticatesRequests::class, \App\Domain\CustomerAccount\Http\Middleware\UseStorefrontCustomerSession::class);
+
+        // Laravel sorts route middleware by a priority list that puts
+        // auth before SubstituteBindings; ResolveTenantContext (a group
+        // middleware outside that list) therefore ran AFTER route-model
+        // binding, so every binding of a tenant-owned model threw
+        // TenantContextMissingException (500) — and it ran BEFORE the
+        // route's own auth:* middleware had identified the principal.
+        // Pinning it into the priority list fixes both: the principal is
+        // authenticated first (including the optional customer token),
+        // then the tenant is resolved, then bindings run under it.
+        $middleware->appendToPriorityList(AuthenticatesRequests::class, AttemptCustomerAuthentication::class);
+        $middleware->appendToPriorityList(AttemptCustomerAuthentication::class, ResolveTenantContext::class);
+
+        // Principal-type checks and the Super Admin context switches must
+        // also run before route-model binding: a {domain}/{application}
+        // bound on a Super Admin route is a tenant-owned model that can
+        // only resolve once the impersonated store (or the platform
+        // context) is set. Both Super Admin middlewares re-check
+        // isPlatformStaff() themselves, so running them ahead of the
+        // route's `can:` gate never skips an authorization check.
+        $middleware->appendToPriorityList(ResolveTenantContext::class, EnsureStaffPrincipal::class);
+        $middleware->appendToPriorityList(EnsureStaffPrincipal::class, EnsureCustomerPrincipal::class);
+        $middleware->appendToPriorityList(EnsureCustomerPrincipal::class, \App\Http\Middleware\EnsureSuperAdminPlatformAction::class);
+        $middleware->appendToPriorityList(\App\Http\Middleware\EnsureSuperAdminPlatformAction::class, EnsureSuperAdminImpersonation::class);
+
+        // Developer API: an API key lacking the endpoint's scope is refused
+        // (403) before any {model} binding is attempted.
+        $middleware->prependToPriorityList(SubstituteBindings::class, \App\Http\Middleware\EnsureApiScope::class);
 
         $middleware->alias([
             'super_admin.impersonate' => EnsureSuperAdminImpersonation::class,
@@ -86,11 +128,20 @@ return Application::configure(basePath: dirname(__DIR__))
             'staff.principal' => EnsureStaffPrincipal::class,
             'customer.principal' => EnsureCustomerPrincipal::class,
             'customer.optional' => AttemptCustomerAuthentication::class,
+            'storefront.store' => \App\Domain\Storefront\Http\Middleware\ResolveStorefrontStore::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
         // Module 31 §2.23-consistent standard error envelope for API
         // responses is added when the first real API endpoints ship
         // (Phase B3+) — Phase B0 establishes the registration point only.
+
+        // Safety net for package-entitlement refusals (Module 04): most
+        // controllers catch these and answer 403 themselves, but one that
+        // forgets (DomainController did) must still refuse cleanly instead
+        // of surfacing a 500. Same body shape as StoreThemeController.
+        $exceptions->render(function (\App\Domain\Packages\Exceptions\FeatureNotEntitledException|\App\Domain\Packages\Exceptions\SubscriptionInactiveException $e) {
+            return response()->json(['message' => $e->getMessage(), 'code' => 'feature_not_entitled'], 403);
+        });
     })
     ->create();

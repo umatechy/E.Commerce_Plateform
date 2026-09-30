@@ -14,6 +14,7 @@ use App\Domain\DataProtection\Models\BackupStatus;
 use App\Domain\DataProtection\Services\DumpStrategies\DatabaseDumpStrategy;
 use App\Domain\DataProtection\Services\Storage\BackupStorageAdapter;
 use App\Domain\Events\Support\RecordsOutboxEvents;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 /**
@@ -50,16 +51,22 @@ final class RestoreService
         } catch (BackupNotRestoreEligibleException $e) {
             $restoreJob->update(['status' => 'preflight_failed', 'failure_reason' => $e->getMessage()]);
 
-            Log::channel('audit')->info('restore.preflight_failed', ['restore_job_id' => $restoreJob->id, 'backup_id' => $backup->id, 'reason' => $e->getMessage()]);
+            app(\App\Domain\Compliance\Services\AuditLogger::class)->record('restore.preflight_failed', ['restore_job_id' => $restoreJob->id, 'backup_id' => $backup->id, 'reason' => $e->getMessage()], $restoreJob, $backup->store_id);
 
             return $restoreJob->fresh();
         }
 
-        $this->outbox->recordEvent(
+        // The restore job row itself is already committed (a failed
+        // preflight above must stay recorded); the event gets its own
+        // transaction, as ADR-004's guard requires. Attributed to the
+        // backup's store explicitly: a Super Admin may call this from
+        // platform context.
+        DB::transaction(fn () => $this->outbox->recordEventFor(
+            $backup->store_id,
             eventType: 'restore.requested',
             payload: ['restore_job_id' => $restoreJob->id, 'backup_id' => $backup->id, 'target_store_id' => $targetStoreId],
             idempotencyKey: "restore_job:{$restoreJob->id}:requested",
-        );
+        ));
 
         return $restoreJob;
     }
@@ -111,7 +118,7 @@ final class RestoreService
             'started_at' => now(),
         ]);
 
-        Log::channel('audit')->info('restore.authorized', ['restore_job_id' => $restoreJob->id, 'authorized_by_user_id' => $authorizedByUserId, 'pre_restore_backup_id' => $preRestoreBackup->id]);
+        app(\App\Domain\Compliance\Services\AuditLogger::class)->record('restore.authorized', ['restore_job_id' => $restoreJob->id, 'authorized_by_user_id' => $authorizedByUserId, 'pre_restore_backup_id' => $preRestoreBackup->id], $restoreJob, $restoreJob->backup->store_id);
 
         RunRestoreJob::dispatch($restoreJob->id);
     }

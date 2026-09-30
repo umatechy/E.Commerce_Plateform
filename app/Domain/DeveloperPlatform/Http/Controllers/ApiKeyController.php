@@ -44,7 +44,7 @@ final class ApiKeyController
             return response()->json(['message' => $e->getMessage(), 'code' => 'invalid_request'], 422);
         }
 
-        Log::channel('audit')->info('developer.api_key.issued', [
+        app(\App\Domain\Compliance\Services\AuditLogger::class)->record('developer.api_key.issued', [
             'actor_user_id' => $request->user()->id, 'application_id' => $application->id, 'api_key_id' => $issued['key']->id,
         ]);
 
@@ -61,9 +61,9 @@ final class ApiKeyController
 
         $apiKeys->revoke($apiKey);
 
-        Log::channel('audit')->info('developer.api_key.revoked', [
+        app(\App\Domain\Compliance\Services\AuditLogger::class)->record('developer.api_key.revoked', [
             'actor_user_id' => $request->user()->id, 'api_key_id' => $apiKey->id,
-        ]);
+        ], $apiKey);
 
         return response()->json(status: 204);
     }
@@ -75,9 +75,9 @@ final class ApiKeyController
 
         $issued = $apiKeys->rotate($apiKey);
 
-        Log::channel('audit')->info('developer.api_key.rotated', [
+        app(\App\Domain\Compliance\Services\AuditLogger::class)->record('developer.api_key.rotated', [
             'actor_user_id' => $request->user()->id, 'old_api_key_id' => $apiKey->id, 'new_api_key_id' => $issued['key']->id,
-        ]);
+        ], $apiKey);
 
         return (new ApiKeyResource($issued['key']))->additional(['secret' => $issued['plaintext']])->response()->setStatusCode(201);
     }

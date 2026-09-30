@@ -9,6 +9,7 @@ use App\Domain\Catalog\Http\Resources\CategoryResource;
 use App\Domain\Catalog\Models\Category;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
@@ -35,7 +36,7 @@ final class CategoryController
 
         $category = Category::query()->create([
             ...$request->validated(),
-            'slug' => Str::slug($request->string('name')).'-'.Str::lower(Str::random(6)),
+            'slug' => Str::slug($request->string('name')->toString()).'-'.Str::lower(Str::random(6)),
         ]);
 
         return new CategoryResource($category);
@@ -60,7 +61,13 @@ final class CategoryController
     {
         Gate::forUser($request->user())->authorize('manage', $category);
 
-        $category->delete(); // soft delete — children's parent_id is nulled by FK (nullOnDelete), never cascaded destructively
+        // Soft delete: the row stays, so the FK's nullOnDelete never fires.
+        // Children are detached explicitly (they become root categories,
+        // never cascaded destructively) in the same transaction.
+        DB::transaction(function () use ($category) {
+            Category::query()->where('parent_id', $category->id)->update(['parent_id' => null]);
+            $category->delete();
+        });
 
         return response()->noContent();
     }

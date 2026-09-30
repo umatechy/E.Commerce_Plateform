@@ -39,7 +39,7 @@ final class RestoreServiceTest extends TestCase
         $store = Store::factory()->create();
         $backup = Backup::factory()->create(['store_id' => $store->id, 'status' => BackupStatus::Verified]);
 
-        $restoreJob = app(RestoreService::class)->requestRestore($backup, $store->id, 1);
+        $restoreJob = app(RestoreService::class)->requestRestore($backup, $store->id, $this->actorId());
 
         $this->assertSame('requested', $restoreJob->status->value);
     }
@@ -49,7 +49,7 @@ final class RestoreServiceTest extends TestCase
         $store = Store::factory()->create();
         $backup = Backup::factory()->create(['store_id' => $store->id, 'status' => BackupStatus::Failed]);
 
-        $restoreJob = app(RestoreService::class)->requestRestore($backup, $store->id, 1);
+        $restoreJob = app(RestoreService::class)->requestRestore($backup, $store->id, $this->actorId());
 
         $this->assertSame('preflight_failed', $restoreJob->status->value);
         $this->assertNotNull($restoreJob->failure_reason);
@@ -60,7 +60,7 @@ final class RestoreServiceTest extends TestCase
         $store = Store::factory()->create();
         $backup = Backup::factory()->create(['store_id' => $store->id, 'status' => BackupStatus::Verified, 'expires_at' => now()->subDay()]);
 
-        $restoreJob = app(RestoreService::class)->requestRestore($backup, $store->id, 1);
+        $restoreJob = app(RestoreService::class)->requestRestore($backup, $store->id, $this->actorId());
 
         $this->assertSame('preflight_failed', $restoreJob->status->value);
     }
@@ -70,10 +70,10 @@ final class RestoreServiceTest extends TestCase
         Queue::fake();
         $store = Store::factory()->create();
         $backup = Backup::factory()->create(['store_id' => $store->id, 'status' => BackupStatus::Verified]);
-        $restoreJob = app(RestoreService::class)->requestRestore($backup, $store->id, 1);
+        $restoreJob = app(RestoreService::class)->requestRestore($backup, $store->id, $this->actorId());
 
         app(RestoreService::class)->authorizeAndExecute(
-            $restoreJob, 99, app(BackupService::class), new FakeDatabaseDumpStrategy(), app(BackupStorageAdapter::class),
+            $restoreJob, $this->actorId(), app(BackupService::class), new FakeDatabaseDumpStrategy(), app(BackupStorageAdapter::class),
         );
 
         $this->assertNotNull($restoreJob->fresh()->pre_restore_backup_id);
@@ -87,10 +87,10 @@ final class RestoreServiceTest extends TestCase
         Queue::fake();
         $store = Store::factory()->create();
         $backup = Backup::factory()->create(['store_id' => $store->id, 'status' => BackupStatus::Verified]);
-        $restoreJob = app(RestoreService::class)->requestRestore($backup, $store->id, 1);
+        $restoreJob = app(RestoreService::class)->requestRestore($backup, $store->id, $this->actorId());
 
         app(RestoreService::class)->authorizeAndExecute(
-            $restoreJob, 99, app(BackupService::class), new FakeDatabaseDumpStrategy(), app(BackupStorageAdapter::class),
+            $restoreJob, $this->actorId(), app(BackupService::class), new FakeDatabaseDumpStrategy(), app(BackupStorageAdapter::class),
         );
 
         Queue::assertPushed(\App\Domain\DataProtection\Jobs\RunRestoreJob::class);
@@ -107,7 +107,7 @@ final class RestoreServiceTest extends TestCase
 
         $this->expectException(BackupNotRestoreEligibleException::class);
         app(RestoreService::class)->authorizeAndExecute(
-            $restoreJob, 99, app(BackupService::class), new FakeDatabaseDumpStrategy(), app(BackupStorageAdapter::class),
+            $restoreJob, $this->actorId(), app(BackupService::class), new FakeDatabaseDumpStrategy(), app(BackupStorageAdapter::class),
         );
     }
 }

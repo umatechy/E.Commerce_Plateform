@@ -31,7 +31,7 @@ final class DeveloperApplicationController
         abort_unless(app(DeveloperPlatformPolicy::class)->manage($request->user()), 403);
 
         $store = \App\Domain\Tenancy\Models\Store::query()->findOrFail(app(TenantContext::class)->storeId());
-        $application = $applications->create($store, $request->string('name'), $request->user()->id);
+        $application = $applications->create($store, $request->string('name')->toString(), $request->user()->id);
 
         return new DeveloperApplicationResource($application);
     }

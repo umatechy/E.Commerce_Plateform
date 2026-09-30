@@ -44,10 +44,17 @@ use App\Domain\Settings\Http\Controllers\StoreSettingController;
 use App\Domain\DeveloperPlatform\Http\Controllers\DeveloperApplicationController;
 use App\Domain\DeveloperPlatform\Http\Controllers\ApiKeyController;
 use App\Domain\DeveloperPlatform\Http\Controllers\WebhookSubscriptionController;
+use App\Domain\SuperAdmin\Http\Controllers\SuperAdminAuditController;
+use App\Domain\SuperAdmin\Http\Controllers\SuperAdminMonitoringController;
 use App\Domain\SuperAdmin\Http\Controllers\SuperAdminPackageController;
 use App\Domain\SuperAdmin\Http\Controllers\SuperAdminStoreController;
 use App\Domain\SuperAdmin\Http\Controllers\SuperAdminSubscriptionController;
 use App\Domain\Tenancy\Http\Controllers\StoreSwitchController;
+use App\Domain\Compliance\Http\Controllers\AuditLogController;
+use App\Domain\Compliance\Http\Controllers\CustomerPrivacyController;
+use App\Domain\Billing\Http\Controllers\BillingController;
+use App\Domain\SuperAdmin\Http\Controllers\SuperAdminBillingController;
+use App\Domain\Monitoring\Http\Controllers\StoreHealthController;
 use Illuminate\Support\Facades\Route;
 
 // ADR-005: first-party API, /api/v1/... . Registered under the 'api'
@@ -71,8 +78,41 @@ Route::middleware(['auth:sanctum', 'staff.principal'])->group(function () {
     Route::get('/subscription', [SubscriptionController::class, 'show']);
     Route::get('/subscription/usage', [SubscriptionController::class, 'usage']);
 
+    // --- Support (Module 34, Phase B26) ---
+    // The store's inbox for its shoppers' requests...
+    Route::get('/support/tickets', [\App\Domain\Support\Http\Controllers\StoreSupportController::class, 'index']);
+    Route::get('/support/summary', [\App\Domain\Support\Http\Controllers\StoreSupportController::class, 'summary']);
+    Route::get('/support/agents', [\App\Domain\Support\Http\Controllers\StoreSupportController::class, 'agentsList']);
+    Route::get('/support/tickets/{ticket}', [\App\Domain\Support\Http\Controllers\StoreSupportController::class, 'show']);
+    Route::patch('/support/tickets/{ticket}', [\App\Domain\Support\Http\Controllers\StoreSupportController::class, 'update']);
+    Route::post('/support/tickets/{ticket}/messages', [\App\Domain\Support\Http\Controllers\StoreSupportController::class, 'reply']);
+    // ...and the store's own requests to the platform's support team.
+    Route::get('/platform-support/tickets', [\App\Domain\Support\Http\Controllers\MerchantPlatformSupportController::class, 'index']);
+    Route::post('/platform-support/tickets', [\App\Domain\Support\Http\Controllers\MerchantPlatformSupportController::class, 'store'])->middleware('throttle:10,1,platform-support-open');
+    Route::get('/platform-support/tickets/{ticket}', [\App\Domain\Support\Http\Controllers\MerchantPlatformSupportController::class, 'show']);
+    Route::post('/platform-support/tickets/{ticket}/messages', [\App\Domain\Support\Http\Controllers\MerchantPlatformSupportController::class, 'reply']);
+    Route::post('/platform-support/tickets/{ticket}/resolve', [\App\Domain\Support\Http\Controllers\MerchantPlatformSupportController::class, 'resolve']);
+    Route::post('/platform-support/tickets/{ticket}/rating', [\App\Domain\Support\Http\Controllers\MerchantPlatformSupportController::class, 'rate']);
+
+    // --- Storefront setup & launch (Module 05, Phase B24) ---
+    Route::get('/storefront/setup', [\App\Domain\Storefront\Http\Controllers\StorefrontSetupController::class, 'show']);
+    Route::post('/storefront/launch', [\App\Domain\Storefront\Http\Controllers\StorefrontSetupController::class, 'launch']);
+
+    // --- Billing, Invoices & Renewals (Module 29, Phase B23) — the store's own only ---
+    Route::get('/billing', [BillingController::class, 'show']);
+    Route::get('/billing/invoices', [BillingController::class, 'invoices']);
+    Route::get('/billing/invoices/{invoice}', [BillingController::class, 'invoice']);
+    Route::post('/billing/cancel', [BillingController::class, 'cancel']);
+    Route::post('/billing/resume', [BillingController::class, 'resume']);
+    Route::put('/billing/interval', [BillingController::class, 'changeInterval']);
+
     // --- Catalog (Modules 06-07, Phase B3) ---
     Route::apiResource('products', ProductController::class);
+    // Phase B24: storefront images of a product.
+    Route::get('/products/{product}/images', [\App\Domain\Catalog\Http\Controllers\ProductImageController::class, 'index']);
+    Route::post('/products/{product}/images', [\App\Domain\Catalog\Http\Controllers\ProductImageController::class, 'store']);
+    Route::put('/products/{product}/images/order', [\App\Domain\Catalog\Http\Controllers\ProductImageController::class, 'reorder']);
+    Route::delete('/products/{product}/images/{image}', [\App\Domain\Catalog\Http\Controllers\ProductImageController::class, 'destroy']);
     Route::apiResource('products.variants', ProductVariantController::class)
         ->except(['show']);
     Route::apiResource('categories', CategoryController::class)->except(['show']);
@@ -177,6 +217,18 @@ Route::middleware(['auth:sanctum', 'staff.principal'])->group(function () {
     Route::delete('/domains/{domain}', [DomainController::class, 'destroy']);
 
     // --- Theme, Branding & Design System (Module 17, Phase B15) ---
+    // Module 24 "Store Health, Monitoring & Resource Usage" (Phase B21)
+    // — always the current tenant's own store (ADR-001).
+    // Module 32 "Security, Audit & Compliance" (Phase B22) — the store's
+    // own tamper-evident audit trail and data-subject requests.
+    Route::get('/audit-logs', [AuditLogController::class, 'index']);
+    Route::get('/audit-logs/integrity', [AuditLogController::class, 'integrity']);
+    Route::get('/customers/{customer}/personal-data', [CustomerPrivacyController::class, 'export']);
+    Route::post('/customers/{customer}/erase', [CustomerPrivacyController::class, 'erase']);
+
+    Route::get('/store/health', [StoreHealthController::class, 'show']);
+    Route::get('/store/health/history', [StoreHealthController::class, 'history']);
+
     Route::get('/store/theme', [StoreThemeController::class, 'show']);
     Route::put('/store/theme/draft', [StoreThemeController::class, 'updateDraft']);
     Route::post('/store/theme/publish', [StoreThemeController::class, 'publish']);
@@ -247,6 +299,35 @@ Route::middleware(['auth:sanctum', 'staff.principal'])->group(function () {
             Route::post('/restore-jobs/{backupRestoreJob}/authorize', [SuperAdminBackupController::class, 'authorizeRestore']);
 
             Route::get('/infrastructure/health', [SuperAdminInfrastructureController::class, 'health']);
+
+            // Module 24 (Phase B21): platform-wide store health and the
+            // ADR-004 §17 / ADR-005 §17 operational signals.
+            Route::get('/store-health', [SuperAdminMonitoringController::class, 'storeHealthOverview']);
+
+            // Module 32 (Phase B22): the platform-wide audit trail.
+            Route::get('/audit-logs', [SuperAdminAuditController::class, 'index']);
+            Route::get('/audit-logs/integrity', [SuperAdminAuditController::class, 'integrity']);
+            Route::get('/monitoring/outbox', [SuperAdminMonitoringController::class, 'outbox']);
+
+            // Module 34 (Phase B26): the platform's support inbox.
+            Route::get('/support/tickets', [\App\Domain\SuperAdmin\Http\Controllers\SuperAdminSupportController::class, 'index']);
+            Route::get('/support/summary', [\App\Domain\SuperAdmin\Http\Controllers\SuperAdminSupportController::class, 'summary']);
+            Route::get('/support/agents', [\App\Domain\SuperAdmin\Http\Controllers\SuperAdminSupportController::class, 'agentsList']);
+            Route::get('/support/tickets/{ticket}', [\App\Domain\SuperAdmin\Http\Controllers\SuperAdminSupportController::class, 'show']);
+            Route::patch('/support/tickets/{ticket}', [\App\Domain\SuperAdmin\Http\Controllers\SuperAdminSupportController::class, 'update']);
+            Route::post('/support/tickets/{ticket}/messages', [\App\Domain\SuperAdmin\Http\Controllers\SuperAdminSupportController::class, 'reply']);
+
+            // Module 29 (Phase B23): platform billing.
+            Route::get('/billing/summary', [SuperAdminBillingController::class, 'summary']);
+            Route::get('/billing/prices', [SuperAdminBillingController::class, 'prices']);
+            Route::post('/billing/prices', [SuperAdminBillingController::class, 'upsertPrice']);
+            Route::patch('/billing/prices/{price}', [SuperAdminBillingController::class, 'updatePrice']);
+            Route::get('/billing/invoices', [SuperAdminBillingController::class, 'invoices']);
+            Route::get('/billing/invoices/{invoice}', [SuperAdminBillingController::class, 'invoice']);
+            Route::post('/billing/invoices/{invoice}/payments', [SuperAdminBillingController::class, 'recordPayment']);
+            Route::post('/billing/invoices/{invoice}/void', [SuperAdminBillingController::class, 'void']);
+            Route::post('/billing/invoices/{invoice}/extend-due-date', [SuperAdminBillingController::class, 'extendDueDate']);
+            Route::get('/monitoring/api-usage', [SuperAdminMonitoringController::class, 'apiUsage']);
         });
 
     // --- Super Admin cross-tenant (ADR-001 Layer 7) ---
@@ -255,6 +336,7 @@ Route::middleware(['auth:sanctum', 'staff.principal'])->group(function () {
         ->group(function () {
             Route::get('/stores/{store}/impersonate', [SuperAdminStoreController::class, 'impersonate']);
             Route::get('/stores/{store}', [SuperAdminStoreController::class, 'show']);
+            Route::get('/stores/{store}/health', [SuperAdminMonitoringController::class, 'storeHealth']);
 
             // Package/subscription platform administration (Module 04
             // "Package Administration" / "Subscription Administration").

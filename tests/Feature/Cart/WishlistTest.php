@@ -28,6 +28,7 @@ final class WishlistTest extends TestCase
     public function test_authenticated_customer_can_add_a_wishlist_item(): void
     {
         $store = Store::factory()->create();
+        $this->entitle($store, ['wishlist.basic']);
         $customer = Customer::factory()->for($store)->create(['password' => Hash::make('x')]);
         $product = Product::factory()->for($store)->create();
 
@@ -46,6 +47,7 @@ final class WishlistTest extends TestCase
     public function test_duplicate_wishlist_item_is_not_created_twice(): void
     {
         $store = Store::factory()->create();
+        $this->entitle($store, ['wishlist.basic']);
         $customer = Customer::factory()->for($store)->create(['password' => Hash::make('x')]);
         $product = Product::factory()->for($store)->create();
         $header = ['Authorization' => 'Bearer '.$this->tokenFor($customer)];
@@ -53,7 +55,7 @@ final class WishlistTest extends TestCase
         $this->withHeaders($header)->postJson('/api/v1/wishlist', ['product_id' => $product->id])->assertCreated();
         $this->withHeaders($header)->postJson('/api/v1/wishlist', ['product_id' => $product->id])->assertCreated();
 
-        $this->assertSame(1, \App\Domain\Cart\Models\WishlistItem::query()->where('customer_id', $customer->id)->count());
+        $this->assertSame(1, \App\Domain\Cart\Models\WishlistItem::query()->withoutTenantScope()->where('customer_id', $customer->id)->count());
     }
 
     public function test_customer_cannot_delete_another_customers_wishlist_item(): void

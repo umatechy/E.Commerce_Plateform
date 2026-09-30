@@ -25,6 +25,7 @@ use App\Domain\Payments\Models\TransactionType;
 use App\Domain\Payments\Models\WebhookEventStatus;
 use App\Domain\Tenancy\Support\TenantContext;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 
 /**
  * The ONLY code path that creates/mutates a Payment or
@@ -46,7 +47,6 @@ final class PaymentService
         private readonly GatewayResolver $gateways,
         private readonly PaymentStateMachine $stateMachine,
         private readonly OrderService $orders,
-        private readonly InventoryService $inventory,
         private readonly RecordsOutboxEvents $outbox,
     ) {}
 
@@ -132,7 +132,10 @@ final class PaymentService
             $transaction = $this->recordTransaction(
                 $payment, TransactionType::Sale, TransactionStatus::Succeeded, $amountMinor,
                 $reference, null, null, actorId: $actorId,
-                idempotencyKey: "payment:{$payment->id}:manual:".now()->timestamp,
+                idempotencyKey: "payment:{$payment->id}:manual:".Str::ulid(),
+                // Staff notes are part of the audit trail (Module 12 §63);
+                // they were accepted by the request but never stored.
+                metadata: $notes !== null ? ['notes' => $notes] : null,
             );
 
             $this->transitionTo($payment, PaymentStatus::Paid);
@@ -183,7 +186,7 @@ final class PaymentService
         }
 
         $gateway = $this->gateways->resolveByProviderName($provider);
-        $storeSecret = \App\Domain\Tenancy\Models\Store::query()->find($payment->store_id)?->payment_webhook_secret ?? '';
+        $storeSecret = \App\Domain\Tenancy\Models\Store::query()->find($payment->store_id)->payment_webhook_secret ?? '';
 
         if (! $gateway->verifyWebhookSignature($rawPayload, $signatureHeader, $storeSecret)) {
             $event->update(['status' => WebhookEventStatus::Failed, 'failure_reason' => 'Signature verification failed.', 'processed_at' => now()]);
@@ -226,13 +229,17 @@ final class PaymentService
             return $existing;
         }
 
-        $refundable = $payment->refundableAmountMinor();
+        return DB::transaction(function () use ($payment, $amountMinor, $reason, $actorId, $idempotencyKey) {
+            // The refundable balance is read under a row lock: checked
+            // outside the transaction, two concurrent partial refunds could
+            // both pass the check and together exceed the captured amount.
+            $payment = Payment::query()->lockForUpdate()->findOrFail($payment->id);
+            $refundable = $payment->refundableAmountMinor();
 
-        if ($amountMinor > $refundable) {
-            throw new RefundExceedsRefundableBalanceException($amountMinor, $refundable);
-        }
+            if ($amountMinor > $refundable) {
+                throw new RefundExceedsRefundableBalanceException($amountMinor, $refundable);
+            }
 
-        return DB::transaction(function () use ($payment, $amountMinor, $reason, $actorId, $idempotencyKey, $refundable) {
             $isFullRefund = $amountMinor === $refundable;
 
             $transaction = $this->recordTransaction(
@@ -242,7 +249,14 @@ final class PaymentService
                 actorId: $actorId, idempotencyKey: $idempotencyKey,
             );
 
-            $this->transitionTo($payment, $isFullRefund ? PaymentStatus::Refunded : PaymentStatus::PartiallyRefunded);
+            $newStatus = $isFullRefund ? PaymentStatus::Refunded : PaymentStatus::PartiallyRefunded;
+
+            // A second partial refund leaves the status unchanged; asking the
+            // state machine for partially_refunded -> partially_refunded
+            // made every second partial refund fail.
+            if ($payment->status !== $newStatus) {
+                $this->transitionTo($payment, $newStatus);
+            }
 
             $this->outbox->recordEvent(
                 eventType: 'payment.refunded',
@@ -319,6 +333,7 @@ final class PaymentService
         ?string $failureReason,
         ?int $actorId,
         string $idempotencyKey,
+        ?array $metadata = null,
     ): PaymentTransaction {
         return PaymentTransaction::query()->create([
             'payment_id' => $payment->id,
@@ -331,6 +346,7 @@ final class PaymentService
             'failure_reason' => $failureReason,
             'actor_id' => $actorId,
             'idempotency_key' => $idempotencyKey,
+            'metadata' => $metadata,
         ]);
     }
 }

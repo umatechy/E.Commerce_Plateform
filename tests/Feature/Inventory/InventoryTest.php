@@ -23,7 +23,7 @@ final class InventoryTest extends TestCase
 
     private function ownerOf(Store $store): User
     {
-        $role = Role::factory()->for($store)->create(['slug' => 'owner']);
+        $role = $this->systemRole($store, 'owner');
         $user = User::factory()->create();
         $store->users()->attach($user, ['role_id' => $role->id, 'status' => 'active']);
 
@@ -64,7 +64,7 @@ final class InventoryTest extends TestCase
         ])->json('data.id');
 
         $this->assertSame($first, $second);
-        $this->assertSame(1, Inventory::query()->where('warehouse_id', $warehouse->id)->count());
+        $this->assertSame(1, Inventory::query()->withoutTenantScope()->where('warehouse_id', $warehouse->id)->count());
     }
 
     public function test_available_equals_on_hand_minus_reserved(): void

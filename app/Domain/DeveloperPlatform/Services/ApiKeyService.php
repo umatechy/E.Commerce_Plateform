@@ -12,6 +12,7 @@ use App\Domain\DeveloperPlatform\Models\ApiScope;
 use App\Domain\DeveloperPlatform\Models\ApplicationStatus;
 use App\Domain\DeveloperPlatform\Models\DeveloperApplication;
 use App\Domain\Events\Support\RecordsOutboxEvents;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
 /**
@@ -46,37 +47,45 @@ final class ApiKeyService
 
         [$prefix, $secret, $hash] = $this->generateCredential();
 
-        $key = ApiKey::query()->create([
-            'public_id' => (string) Str::ulid(),
-            'developer_application_id' => $application->id,
-            'store_id' => $application->store_id,
-            'key_prefix' => $prefix,
-            'key_hash' => $hash,
-            'scopes' => $validatedScopes,
-            'status' => ApiKeyStatus::Active,
-            'expires_at' => $expiresAt,
-        ]);
+        $key = DB::transaction(function () use ($application, $prefix, $hash, $validatedScopes, $expiresAt) {
+            $key = ApiKey::query()->create([
+                'public_id' => (string) Str::ulid(),
+                'developer_application_id' => $application->id,
+                'store_id' => $application->store_id,
+                'key_prefix' => $prefix,
+                'key_hash' => $hash,
+                'scopes' => $validatedScopes,
+                'status' => ApiKeyStatus::Active,
+                'expires_at' => $expiresAt,
+            ]);
 
-        $this->outbox->recordEvent(
-            eventType: 'developer.api_key.created',
-            payload: ['api_key_id' => $key->id, 'application_id' => $application->id, 'store_id' => $application->store_id, 'scopes' => $validatedScopes],
-            idempotencyKey: "api_key:{$key->id}:created",
-        );
+            $this->outbox->recordEventFor(
+                $application->store_id,
+                eventType: 'developer.api_key.created',
+                payload: ['api_key_id' => $key->id, 'application_id' => $application->id, 'store_id' => $application->store_id, 'scopes' => $validatedScopes],
+                idempotencyKey: "api_key:{$key->id}:created",
+            );
+
+            return $key;
+        });
 
         return ['key' => $key, 'plaintext' => "{$prefix}.{$secret}"];
     }
 
     public function revoke(ApiKey $key): ApiKey
     {
-        $key->update(['status' => ApiKeyStatus::Revoked, 'revoked_at' => now()]);
+        return DB::transaction(function () use ($key) {
+            $key->update(['status' => ApiKeyStatus::Revoked, 'revoked_at' => now()]);
 
-        $this->outbox->recordEvent(
-            eventType: 'developer.api_key.revoked',
-            payload: ['api_key_id' => $key->id, 'store_id' => $key->store_id],
-            idempotencyKey: "api_key:{$key->id}:revoked:".now()->timestamp,
-        );
+            $this->outbox->recordEventFor(
+                $key->store_id,
+                eventType: 'developer.api_key.revoked',
+                payload: ['api_key_id' => $key->id, 'store_id' => $key->store_id],
+                idempotencyKey: "api_key:{$key->id}:revoked:".Str::ulid(),
+            );
 
-        return $key->fresh();
+            return $key->fresh();
+        });
     }
 
     /**
@@ -88,10 +97,14 @@ final class ApiKeyService
      */
     public function rotate(ApiKey $oldKey): array
     {
-        $issued = $this->issue($oldKey->application, $oldKey->scopes, $oldKey->expires_at);
-        $this->revoke($oldKey);
+        // One transaction: the replacement and the revocation succeed or
+        // fail together (the nested transactions become savepoints).
+        return DB::transaction(function () use ($oldKey) {
+            $issued = $this->issue($oldKey->application, $oldKey->scopes, $oldKey->expires_at);
+            $this->revoke($oldKey);
 
-        return $issued;
+            return $issued;
+        });
     }
 
     /**

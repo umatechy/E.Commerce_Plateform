@@ -24,6 +24,8 @@ final class SuperAdminAuditHardeningTest extends TestCase
     public function test_subscription_suspension_writes_an_action_specific_audit_entry(): void
     {
         $store = Store::factory()->create();
+        // Suspension acts on the store's current subscription.
+        \App\Domain\Packages\Models\Subscription::factory()->for($store)->for(Package::factory())->create();
         $superAdmin = User::factory()->create(['platform_role' => 'support_agent']);
 
         \Illuminate\Support\Facades\Log::shouldReceive('channel')->with('audit')->andReturnSelf();
@@ -31,6 +33,9 @@ final class SuperAdminAuditHardeningTest extends TestCase
         \Illuminate\Support\Facades\Log::shouldReceive('info')
             ->once()
             ->with('super_admin.subscription.suspended', \Mockery::on(fn (array $c) => $c['store_id'] === $store->id && $c['reason'] === 'fraud_review'));
+        // Other audit lines this request legitimately writes (e.g. the
+        // lifecycle service's own subscription_suspended entry).
+        \Illuminate\Support\Facades\Log::shouldReceive('info')->withAnyArgs()->zeroOrMoreTimes();
 
         $this->actingAs($superAdmin)->postJson("/api/v1/super-admin/stores/{$store->id}/subscription/suspend", ['reason' => 'fraud_review']);
     }
@@ -46,6 +51,8 @@ final class SuperAdminAuditHardeningTest extends TestCase
             ->with('super_admin.package.updated', \Mockery::on(function (array $c) {
                 return $c['before']['name'] === 'Old Name' && $c['after']['name'] === 'New Name';
             }));
+        // e.g. the platform route group's own super_admin.platform_action entry.
+        \Illuminate\Support\Facades\Log::shouldReceive('info')->withAnyArgs()->zeroOrMoreTimes();
 
         $this->actingAs($superAdmin)->putJson("/api/v1/super-admin/packages/{$package->id}", ['name' => 'New Name']);
     }

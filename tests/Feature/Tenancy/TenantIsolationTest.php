@@ -86,6 +86,9 @@ final class TenantIsolationTest extends TestCase
     /** Manipulating a request payload's store_id must never change which tenant a write affects. */
     public function test_tenant_a_cannot_override_tenant_via_request_payload(): void
     {
+        // userA needs permission to create roles at all, otherwise the
+        // request is rejected (403) before the spoofed store_id matters.
+        $this->storeA->users()->updateExistingPivot($this->userA->id, ['role_id' => $this->systemRole($this->storeA, 'owner')->id]);
         $this->actingAs($this->userA);
 
         $response = $this->postJson('/api/v1/roles', [
@@ -106,8 +109,9 @@ final class TenantIsolationTest extends TestCase
         $roleBelongingToB = Role::factory()->for($this->storeB)->create();
 
         $this->assertNull(
-            Role::query()->withoutTenantScope()->find($roleBelongingToB->id)
-                ?->where('store_id', $this->storeA->id)
+            Role::query()->withoutTenantScope()
+                ->whereKey($roleBelongingToB->id)
+                ->where('store_id', $this->storeA->id)
                 ->first()
         );
     }
@@ -130,11 +134,23 @@ final class TenantIsolationTest extends TestCase
     /** A queued job re-applies tenant scope from its OWN stored store_id, not ambient state. */
     public function test_queued_job_reapplies_stored_tenant_context(): void
     {
-        $this->markTestIncomplete(
-            'Requires a concrete queued job under test (e.g. a Phase B2+ module job). '.
-            'The contract is established in App\Domain\Events\Jobs\ConsumeOutboxEventJob; '.
-            'a module-specific job test is added once that module is implemented.'
+        $context = app(\App\Domain\Tenancy\Support\TenantContext::class);
+
+        // An event owned by Store B, while the ambient context is Store A.
+        \Illuminate\Support\Facades\DB::transaction(fn () => app(\App\Domain\Events\Support\RecordsOutboxEvents::class)
+            ->recordEventFor($this->storeB->id, 'test.event', [], 'tenant-isolation-job-test'));
+        $eventId = \App\Domain\Events\Models\OutboxEvent::query()->withoutTenantScope()
+            ->where('idempotency_key', 'tenant-isolation-job-test')->value('id');
+        $context->resolveToStore($this->storeA->id);
+
+        (new \App\Domain\Events\Jobs\ConsumeOutboxEventJob($eventId))->handle(
+            $context,
+            app(\App\Domain\Notifications\Services\NotificationEventRouter::class),
+            app(\App\Domain\DeveloperPlatform\Services\WebhookEventRouter::class),
         );
+
+        $this->assertSame($this->storeB->id, $context->storeId());
+        $this->assertSame('published', \App\Domain\Events\Models\OutboxEvent::query()->withoutTenantScope()->find($eventId)->status->value);
     }
 
     /**

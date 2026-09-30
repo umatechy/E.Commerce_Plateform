@@ -14,6 +14,16 @@ final class SeoSetting extends Model
 
     protected $table = 'seo_settings';
 
+    /**
+     * Mirrors the column defaults in the migration so a freshly created
+     * model exposes them without a refresh() — resources read ->value on
+     * these enum casts and threw on null (found on the first real run).
+     */
+    protected $attributes = [
+        'robots_index' => 'index',
+        'robots_follow' => 'follow',
+    ];
+
     protected $fillable = [
         'store_id', 'seoable_type', 'seoable_id', 'title', 'meta_description',
         'canonical_override', 'og_title', 'og_description', 'og_image_url',

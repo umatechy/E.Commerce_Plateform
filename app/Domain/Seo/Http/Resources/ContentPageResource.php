@@ -7,6 +7,7 @@ namespace App\Domain\Seo\Http\Resources;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
+/** @mixin \App\Domain\Seo\Models\ContentPage */
 final class ContentPageResource extends JsonResource
 {
     public function toArray(Request $request): array

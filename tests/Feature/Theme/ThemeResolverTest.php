@@ -37,15 +37,14 @@ final class ThemeResolverTest extends TestCase
         $store = Store::factory()->create();
         app(TenantContext::class)->resolveToStore($store->id);
         $storeTheme = StoreTheme::query()->where('store_id', $store->id)->firstOrFail();
-        app(ThemeService::class)->updateDraft($storeTheme, ['tokens' => ['primary' => '#SECRETDRAFT']], null);
+        // A valid, distinctive draft value that was never published.
+        app(ThemeService::class)->updateDraft($storeTheme, ['tokens' => ['primary' => '#5EC4E7']], null);
 
         $resolved = app(ThemeResolver::class)->resolvePublished($store->fresh());
 
-        // The draft update above used an invalid hex value on purpose
-        // to prove it would fail validation before even reaching
-        // storage — this assertion instead directly confirms the
-        // RESOLVED value is the last PUBLISHED one, never draft_config.
-        $this->assertNotSame('#SECRETDRAFT', $resolved['config']['tokens']['primary'] ?? null);
+        // The RESOLVED value is the last PUBLISHED one, never draft_config.
+        $this->assertSame('#5EC4E7', $storeTheme->fresh()->draft_config['tokens']['primary']);
+        $this->assertNotSame('#5EC4E7', $resolved['config']['tokens']['primary'] ?? null);
     }
 
     public function test_resolve_draft_returns_the_stores_own_draft(): void

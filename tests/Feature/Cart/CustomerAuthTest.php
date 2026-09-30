@@ -125,7 +125,7 @@ final class CustomerAuthTest extends TestCase
     public function test_staff_token_cannot_access_customer_only_routes(): void
     {
         $store = Store::factory()->create();
-        $role = Role::factory()->for($store)->create(['slug' => 'owner']);
+        $role = $this->systemRole($store, 'owner');
         $user = User::factory()->create();
         $store->users()->attach($user, ['role_id' => $role->id, 'status' => 'active']);
         $token = $user->createToken('t')->plainTextToken;
@@ -142,6 +142,11 @@ final class CustomerAuthTest extends TestCase
         $token = $customer->createToken('t')->plainTextToken;
 
         $this->withHeader('Authorization', "Bearer {$token}")->postJson('/api/v1/customer/logout')->assertNoContent();
+
+        // The test app instance persists across requests, and so does the
+        // guard's cached user; a real second request starts fresh.
+        $this->app['auth']->forgetGuards();
+
         $this->withHeader('Authorization', "Bearer {$token}")->getJson('/api/v1/customer/me')->assertStatus(401);
     }
 }

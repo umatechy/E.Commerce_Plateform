@@ -12,6 +12,15 @@ final class BackupRestoreJob extends Model
 {
     protected $table = 'backup_restore_jobs';
 
+    /**
+     * Mirrors the column defaults in the migration so a freshly created
+     * model exposes them without a refresh() — resources read ->value on
+     * these enum casts and threw on null (found on the first real run).
+     */
+    protected $attributes = [
+        'status' => 'requested',
+    ];
+
     protected $fillable = [
         'backup_id', 'target_store_id', 'pre_restore_backup_id', 'status',
         'requested_by_user_id', 'authorized_by_user_id', 'failure_reason', 'started_at', 'completed_at',
@@ -22,11 +31,13 @@ final class BackupRestoreJob extends Model
         return ['status' => RestoreStatus::class, 'started_at' => 'datetime', 'completed_at' => 'datetime'];
     }
 
+    /** @return BelongsTo<Backup, $this> */
     public function backup(): BelongsTo
     {
         return $this->belongsTo(Backup::class);
     }
 
+    /** @return BelongsTo<Backup, $this> */
     public function preRestoreBackup(): BelongsTo
     {
         return $this->belongsTo(Backup::class, 'pre_restore_backup_id');

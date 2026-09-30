@@ -31,7 +31,7 @@ final class ReservationController
             $reservation = $service->reserve(
                 $inventory,
                 quantity: (int) $request->input('quantity'),
-                idempotencyKey: $request->string('idempotency_key'),
+                idempotencyKey: $request->string('idempotency_key')->toString(),
                 ttlMinutes: (int) $request->input('ttl_minutes', 15),
             );
         } catch (InsufficientStockException $e) {

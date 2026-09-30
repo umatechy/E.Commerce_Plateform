@@ -7,7 +7,11 @@ namespace App\Domain\DeveloperPlatform\Http\Resources;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
-/** Module 31 §27/§65 — deliberately minimal, allowlisted fields only; never the full internal Product model. */
+/**
+ * Module 31 §27/§65 — deliberately minimal, allowlisted fields only; never the full internal Product model.
+ *
+ * @mixin \App\Domain\Catalog\Models\Product
+ */
 final class DevProductResource extends JsonResource
 {
     public function toArray(Request $request): array

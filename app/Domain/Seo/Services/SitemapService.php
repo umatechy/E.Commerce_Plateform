@@ -93,6 +93,6 @@ final class SitemapService
     {
         $setting = SeoSetting::query()->where('seoable_type', $type)->where('seoable_id', $id)->first();
 
-        return ($setting?->robots_index ?? RobotsDirective::Index) !== RobotsDirective::Noindex;
+        return ($setting->robots_index ?? RobotsDirective::Index) !== RobotsDirective::Noindex;
     }
 }

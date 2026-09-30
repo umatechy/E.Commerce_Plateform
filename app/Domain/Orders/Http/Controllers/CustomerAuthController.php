@@ -5,13 +5,12 @@ declare(strict_types=1);
 namespace App\Domain\Orders\Http\Controllers;
 
 use App\Domain\Cart\Services\CartService;
+use App\Domain\CustomerAccount\Services\CustomerRegistration;
 use App\Domain\Orders\Http\Requests\LoginCustomerRequest;
 use App\Domain\Orders\Http\Requests\RegisterCustomerRequest;
 use App\Domain\Orders\Http\Resources\CustomerResource;
-use App\Domain\Orders\Models\Customer;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Validation\ValidationException;
 
 /**
  * Module 10 §10-11 "Customer Registration / Customer Login". Uses the
@@ -22,27 +21,12 @@ use Illuminate\Validation\ValidationException;
  */
 final class CustomerAuthController
 {
-    public function register(RegisterCustomerRequest $request): JsonResponse
+    public function register(RegisterCustomerRequest $request, CustomerRegistration $registration): JsonResponse
     {
-        // Module 10 §12-style uniqueness: only among REGISTERED
-        // accounts (password IS NOT NULL) — a guest Customer row from a
-        // past order (Phase B5) never blocks a new registration with
-        // the same email, per Module 09 §8's "guest orders should not
-        // require a permanent account" and the migration's documented
-        // decision.
-        $exists = Customer::query()
-            ->where('email', $request->string('email'))
-            ->whereNotNull('password')
-            ->exists();
-
-        if ($exists) {
-            throw ValidationException::withMessages(['email' => 'An account with this email already exists.']);
-        }
-
-        $customer = Customer::query()->create([
-            'name' => $request->string('name'),
-            'email' => $request->string('email'),
-            'password' => $request->string('password'),
+        $customer = $registration->register([
+            'name' => $request->string('name')->toString(),
+            'email' => $request->string('email')->toString(),
+            'password' => $request->string('password')->toString(),
             'phone' => $request->input('phone'),
         ]);
 
@@ -58,6 +42,7 @@ final class CustomerAuthController
     {
         $customer = $request->authenticateCustomer();
         $token = $customer->createToken('customer-api')->plainTextToken;
+        app(\App\Domain\Compliance\Services\AuditLogger::class)->record('auth.login.succeeded', ['guard' => 'customer'], $customer, $customer->store_id, $customer);
 
         // Module 11 §22 "Cart Merge" — if the client presents a guest
         // cart token from the pre-login session, merge it now.
@@ -74,6 +59,7 @@ final class CustomerAuthController
     public function logout(Request $request): JsonResponse
     {
         $request->user()->currentAccessToken()->delete();
+        app(\App\Domain\Compliance\Services\AuditLogger::class)->record('auth.logout', ['guard' => 'customer'], $request->user());
 
         return response()->json(status: 204);
     }

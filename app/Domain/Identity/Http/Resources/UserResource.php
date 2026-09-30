@@ -13,6 +13,8 @@ use Illuminate\Http\Resources\Json\JsonResource;
  * Resource Safety" section: never return raw models blindly). Password
  * hash, remember_token, and internal platform_role are never included
  * here by construction, not by hoping $hidden is remembered everywhere.
+ *
+ * @mixin \App\Domain\Identity\Models\User
  */
 final class UserResource extends JsonResource
 {

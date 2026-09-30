@@ -24,7 +24,19 @@ final class OutboxEvent extends Model
 
     protected $table = 'outbox_events';
 
-    public $timestamps = false; // created_at only; see migration.
+    /**
+     * Mirrors the column defaults in the migration so a freshly created
+     * model exposes them without a refresh() — resources read ->value on
+     * these enum casts and threw on null (found on the first real run).
+     */
+    protected $attributes = [
+        'status' => 'pending',
+    ];
+
+    // created_at only (see migration). UPDATED_AT = null keeps Eloquent
+    // filling created_at itself, so a just-created row exposes it
+    // without a refresh (resources call ->toIso8601String() on it).
+    public const UPDATED_AT = null;
 
     protected $fillable = [
         'store_id',

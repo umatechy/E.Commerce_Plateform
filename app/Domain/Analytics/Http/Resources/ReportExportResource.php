@@ -7,6 +7,7 @@ namespace App\Domain\Analytics\Http\Resources;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
+/** @mixin \App\Domain\Analytics\Models\ReportExport */
 final class ReportExportResource extends JsonResource
 {
     public function toArray(Request $request): array

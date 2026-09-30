@@ -15,7 +15,10 @@ final class ShipmentTrackingEvent extends Model
 
     protected $table = 'shipment_tracking_events';
 
-    public $timestamps = false; // created_at only, see migration
+    // created_at only (see migration). UPDATED_AT = null keeps Eloquent
+    // filling created_at itself, so a just-created row exposes it
+    // without a refresh (resources call ->toIso8601String() on it).
+    public const UPDATED_AT = null;
 
     protected $fillable = [
         'store_id', 'shipment_id', 'status', 'carrier_event_code',
@@ -27,6 +30,7 @@ final class ShipmentTrackingEvent extends Model
         return ['status' => ShipmentStatus::class, 'occurred_at' => 'datetime', 'created_at' => 'datetime'];
     }
 
+    /** @return BelongsTo<Shipment, $this> */
     public function shipment(): BelongsTo
     {
         return $this->belongsTo(Shipment::class);

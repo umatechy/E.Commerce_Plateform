@@ -7,7 +7,11 @@ namespace App\Domain\DeveloperPlatform\Http\Resources;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
-/** Module 31 §66 "Customer Data API" — Non-Negotiable: NEVER password/security metadata; only documented, minimal fields. */
+/**
+ * Module 31 §66 "Customer Data API" — Non-Negotiable: NEVER password/security metadata; only documented, minimal fields.
+ *
+ * @mixin \App\Domain\Orders\Models\Customer
+ */
 final class DevCustomerResource extends JsonResource
 {
     public function toArray(Request $request): array

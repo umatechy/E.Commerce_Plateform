@@ -15,6 +15,8 @@ use Illuminate\Http\Resources\Json\JsonResource;
  * explicitly separates "exact commercial prices ... defined separately
  * from the technical entitlement model" — this resource reflects that
  * separation rather than inventing a price field).
+ *
+ * @mixin \App\Domain\Packages\Models\Package
  */
 final class PackageResource extends JsonResource
 {

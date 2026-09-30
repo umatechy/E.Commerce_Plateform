@@ -33,7 +33,7 @@ final class ThemeServiceTest extends TestCase
 
         $store = Store::factory()->create();
 
-        $storeTheme = StoreTheme::query()->where('store_id', $store->id)->first();
+        $storeTheme = StoreTheme::query()->withoutTenantScope()->where('store_id', $store->id)->first();
         $this->assertNotNull($storeTheme);
         $this->assertNotNull($storeTheme->published_config); // auto-published, not left as draft-only
         $this->assertTrue($storeTheme->isPublished());
@@ -58,11 +58,12 @@ final class ThemeServiceTest extends TestCase
         app(TenantContext::class)->resolveToStore($store->id);
         $storeTheme = StoreTheme::query()->where('store_id', $store->id)->firstOrFail();
         app(ThemeService::class)->updateDraft($storeTheme, ['tokens' => ['primary' => '#ABCDEF']], null);
+        $ledgerBefore = $storeTheme->publications()->count(); // includes the store's auto-published default
 
         $published = app(ThemeService::class)->publish($storeTheme->fresh(), null);
 
         $this->assertSame('#ABCDEF', $published->published_config['tokens']['primary']);
-        $this->assertSame(1, $storeTheme->publications()->count());
+        $this->assertSame($ledgerBefore + 1, $storeTheme->publications()->count());
     }
 
     public function test_rollback_restores_an_earlier_published_snapshot(): void

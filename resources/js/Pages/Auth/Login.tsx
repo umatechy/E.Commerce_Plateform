@@ -1,5 +1,5 @@
 import { FormEvent } from 'react';
-import { useForm } from '@inertiajs/react';
+import { useApiForm } from '@/lib/useApiForm';
 
 /**
  * ADR-002 Surface A: submits to the Sanctum SPA session-login endpoint.
@@ -9,15 +9,18 @@ import { useForm } from '@inertiajs/react';
  * component never invents its own validation rules as a security
  * control (this milestone: "frontend checks are UI helpers only").
  */
-export default function Login() {
-  const { data, setData, post, processing, errors } = useForm({
+export default function Login({ intended }: { intended?: string | null }) {
+  const { data, setData, post, processing, errors } = useApiForm({
     email: '',
     password: '',
   });
 
   function submit(e: FormEvent) {
     e.preventDefault();
-    post('/api/v1/auth/login');
+    // Back to the page that asked for a sign-in (a same-site path the
+    // server checked), else the home page. A full load picks up the new
+    // session in the shared Inertia props.
+    post('/auth/login', () => window.location.assign(intended ?? '/'));
   }
 
   return (
@@ -54,6 +57,8 @@ export default function Login() {
           />
           {errors.password && <p className="mt-1 text-sm text-red-600">{errors.password}</p>}
         </div>
+
+        {errors.form && <p className="text-sm text-red-600">{errors.form}</p>}
 
         <button
           type="submit"

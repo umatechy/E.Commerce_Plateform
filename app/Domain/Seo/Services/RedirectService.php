@@ -25,6 +25,12 @@ final class RedirectService
      */
     public function create(string $sourcePath, string $destinationPath, int $statusCode = 301, ?string $reason = null): Redirect
     {
+        // Checked on the RAW destination: normalize() turns
+        // "https://evil.example" and "//evil.example" into innocent-looking
+        // "/https:/..." and "/evil.example" paths, so checking afterwards
+        // accepted exactly the input this guard exists to reject.
+        $this->assertInternalPath($destinationPath);
+
         $source = $this->normalize($sourcePath);
         $destination = $this->normalize($destinationPath);
 
@@ -36,7 +42,6 @@ final class RedirectService
             throw new InvalidRedirectException('A redirect cannot point to itself.');
         }
 
-        $this->assertInternalPath($destination);
         $this->assertNoLoop($source, $destination);
 
         return Redirect::query()->updateOrCreate(
@@ -72,7 +77,15 @@ final class RedirectService
      */
     private function assertInternalPath(string $path): void
     {
-        if (preg_match('#^[a-z][a-z0-9+.\-]*://#i', $path) || str_starts_with($path, '//')) {
+        // Browsers treat a backslash like a slash, so "/\\evil.example" is
+        // the protocol-relative "//evil.example" in disguise; control
+        // characters are stripped by browsers before parsing too.
+        $trimmed = ltrim($path);
+
+        if (preg_match('#^[a-z][a-z0-9+.\-]*:#i', $trimmed)
+            || str_starts_with($trimmed, '//')
+            || str_contains($trimmed, '\\')
+            || preg_match('/[\x00-\x1F\x7F]/', $trimmed)) {
             throw new InvalidRedirectException('Redirect destinations must be internal, relative paths — external URLs are not allowed.');
         }
     }

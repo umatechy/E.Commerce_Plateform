@@ -75,7 +75,7 @@ final class MarketingSegmentService
         return Customer::query()->get()->filter(fn (Customer $customer) => $this->matches($customer, $segment->rules))->values();
     }
 
-    /** @return array{total_orders_count: int, total_spent_minor: int, last_order_at: ?Carbon, registered_at: Carbon} */
+    /** @return array{total_orders_count: int, total_spent_minor: int, last_order_at: ?\Carbon\CarbonInterface, registered_at: ?\Carbon\CarbonInterface} */
     private function customerMetrics(Customer $customer): array
     {
         $orders = Order::query()->where('customer_id', $customer->id)->where('status', '!=', OrderStatus::Cancelled->value)->get();
@@ -83,7 +83,7 @@ final class MarketingSegmentService
         return [
             'total_orders_count' => $orders->count(),
             'total_spent_minor' => (int) $orders->sum('grand_total_minor'),
-            'last_order_at' => $orders->max('created_at'),
+            'last_order_at' => $orders->sortByDesc('created_at')->first()?->created_at,
             'registered_at' => $customer->created_at,
         ];
     }

@@ -45,8 +45,8 @@ final class RoleController
         $role = Role::query()->create([
             // store_id intentionally NOT read from $request — BelongsToTenant
             // auto-fills it from TenantContext on creation (ADR-001 Layer 3).
-            'name' => $request->string('name'),
-            'slug' => \Illuminate\Support\Str::slug($request->string('name')),
+            'name' => $request->string('name')->toString(),
+            'slug' => \Illuminate\Support\Str::slug($request->string('name')->toString()),
             'is_system' => false,
         ]);
 
@@ -62,7 +62,7 @@ final class RoleController
     {
         $this->authorizeAbility($request, 'update', $role);
 
-        $role->update(['name' => $request->string('name')]);
+        $role->update(['name' => $request->string('name')->toString()]);
 
         if ($request->has('permission_keys')) {
             $permissionIds = Permission::query()

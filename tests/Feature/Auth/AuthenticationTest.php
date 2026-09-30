@@ -22,6 +22,10 @@ final class AuthenticationTest extends TestCase
 
     public function test_registration_creates_user_store_and_owner_membership(): void
     {
+        // Registration starts a trial on the configured default package
+        // (Phase B2); RefreshDatabase does not seed it.
+        \App\Domain\Packages\Models\Package::query()->create(['code' => 'basic', 'name' => 'Basic']);
+
         $response = $this->postJson('/api/v1/auth/register', [
             'name' => 'Amina Khan',
             'email' => 'amina@example.com',
@@ -112,7 +116,9 @@ final class AuthenticationTest extends TestCase
         $user = User::factory()->create();
 
         $this->actingAs($user)->postJson('/api/v1/auth/logout')->assertNoContent();
-        $this->assertGuest();
+        // Logout ends the SPA session guard (ADR-002 Surface A); the
+        // default guard was switched to 'sanctum' by the auth middleware.
+        $this->assertGuest('web');
     }
 
     public function test_me_endpoint_requires_authentication(): void

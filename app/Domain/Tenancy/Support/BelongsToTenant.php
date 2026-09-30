@@ -56,8 +56,8 @@ trait BelongsToTenant
             /** @var TenantContext $context */
             $context = app(TenantContext::class);
 
-            if (! $context->isPlatform() && empty($model->store_id)) {
-                $model->store_id = $context->storeId();
+            if (! $context->isPlatform() && empty($model->getAttribute('store_id'))) {
+                $model->setAttribute('store_id', $context->storeId());
             }
         });
     }
@@ -96,6 +96,8 @@ trait BelongsToTenant
      * Defining it ONCE here, in the shared trait, fixes every
      * tenant-owned model retroactively in a single change, rather than
      * adding an identical method to a dozen individual model classes.
+     *
+     * @return BelongsTo<\App\Domain\Tenancy\Models\Store, $this>
      */
     public function store(): BelongsTo
     {

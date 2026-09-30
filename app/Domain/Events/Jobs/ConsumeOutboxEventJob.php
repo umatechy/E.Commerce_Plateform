@@ -48,7 +48,13 @@ final class ConsumeOutboxEventJob implements ShouldQueue
 
         // Re-resolve tenant context from the ROW's own store_id, not from
         // any ambient request/worker state (ADR-001 Layer 6).
-        $context->resolveToStore($row->store_id);
+        // A null store_id is a platform-scope event (e.g. a platform
+        // setting change) and is consumed in platform context.
+        if ($row->store_id === null) {
+            $context->resolveToPlatform();
+        } else {
+            $context->resolveToStore($row->store_id);
+        }
 
         // Idempotency guard (ADR-004 §8): each concrete handler is
         // responsible for checking/recording $row->idempotency_key in its
@@ -68,7 +74,11 @@ final class ConsumeOutboxEventJob implements ShouldQueue
         // docs/development/b18-inspection-findings.md. Its own
         // idempotency guarantee lives in DispatchWebhookJob (checks
         // webhook_delivery_attempts before sending).
-        $webhooks->route($row->event_type, $row->store_id, $row->payload, $row->idempotency_key);
+        // Webhook subscriptions belong to a store, so a platform-scope
+        // event (null store_id) has no subscriber to route to.
+        if ($row->store_id !== null) {
+            $webhooks->route($row->event_type, $row->store_id, $row->payload, $row->idempotency_key);
+        }
 
         $row->update(['status' => OutboxEventStatus::Published]);
     }

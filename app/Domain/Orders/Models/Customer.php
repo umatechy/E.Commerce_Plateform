@@ -6,6 +6,7 @@ namespace App\Domain\Orders\Models;
 
 use App\Domain\Identity\Models\User;
 use App\Domain\Tenancy\Support\BelongsToTenant;
+use App\Support\HasPublicId;
 use Illuminate\Auth\Authenticatable;
 use Illuminate\Contracts\Auth\Authenticatable as AuthenticatableContract;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -34,7 +35,7 @@ use Laravel\Sanctum\HasApiTokens;
  */
 final class Customer extends Model implements AuthenticatableContract
 {
-    use Authenticatable, BelongsToTenant, HasApiTokens, HasFactory, SoftDeletes;
+    use Authenticatable, BelongsToTenant, HasApiTokens, HasFactory, HasPublicId, SoftDeletes;
 
     protected $table = 'customers';
 
@@ -48,6 +49,7 @@ final class Customer extends Model implements AuthenticatableContract
             'marketing_email_opt_in' => 'boolean',
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'erased_at' => 'datetime', // Module 32 — personal data erased on request
         ];
     }
 
@@ -56,22 +58,27 @@ final class Customer extends Model implements AuthenticatableContract
      * "one human, multiple stores" identity federation) — NOT the
      * authentication mechanism. A Customer never authenticates by
      * being a User; see class docblock.
+     *
+     * @return BelongsTo<User, $this>
      */
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
     }
 
+    /** @return HasMany<Order, $this> */
     public function orders(): HasMany
     {
         return $this->hasMany(Order::class);
     }
 
+    /** @return HasMany<\App\Domain\Cart\Models\Cart, $this> */
     public function carts(): HasMany
     {
         return $this->hasMany(\App\Domain\Cart\Models\Cart::class);
     }
 
+    /** @return HasMany<\App\Domain\Cart\Models\WishlistItem, $this> */
     public function wishlistItems(): HasMany
     {
         return $this->hasMany(\App\Domain\Cart\Models\WishlistItem::class);

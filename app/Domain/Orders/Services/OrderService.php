@@ -19,7 +19,6 @@ use App\Domain\Orders\Models\OrderStatus;
 use App\Domain\Orders\Models\OrderTimelineEvent;
 use App\Domain\Orders\Models\PaymentStatus as OrderPaymentStatus;
 use App\Domain\Packages\Services\EntitlementService;
-use App\Domain\Tenancy\Support\TenantContext;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
@@ -45,7 +44,6 @@ final class OrderService
     private const USAGE_KEY = 'max_monthly_orders';
 
     public function __construct(
-        private readonly TenantContext $context,
         private readonly InventoryService $inventory,
         private readonly EntitlementService $entitlements,
         private readonly OrderNumberGenerator $numberGenerator,

@@ -65,9 +65,9 @@ final class SuperAdminStoreController
         // TenantContext is already resolved to $store (impersonation
         // mode) by EnsureSuperAdminImpersonation — this line exists only
         // to make that reliance explicit and reviewable, not to redo it.
-        Log::channel('audit')->info('super_admin.store.impersonated', [
-            'acting_super_admin_id' => $request->user()->id, 'target_store_id' => $store->id, 'reason' => $request->string('reason'),
-        ]);
+        app(\App\Domain\Compliance\Services\AuditLogger::class)->record('super_admin.store.impersonated', [
+            'acting_super_admin_id' => $request->user()->id, 'target_store_id' => $store->id, 'reason' => $request->string('reason')->toString(),
+        ], $store);
 
         return new StoreResource($store);
     }

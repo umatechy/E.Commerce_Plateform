@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Domain\Inventory\Services;
 
+use App\Domain\Events\Models\OutboxEvent;
 use App\Domain\Events\Support\RecordsOutboxEvents;
 use App\Domain\Inventory\Exceptions\DuplicateOpeningStockException;
 use App\Domain\Inventory\Exceptions\InsufficientStockException;
@@ -198,7 +199,7 @@ final class InventoryService
             throw new \InvalidArgumentException('Reservation quantity must be positive.');
         }
 
-        $allowOverselling = Store::query()->find($this->context->storeId())?->allow_overselling ?? false;
+        $allowOverselling = Store::query()->find($this->context->storeId())->allow_overselling ?? false;
 
         return DB::transaction(function () use ($inventory, $quantity, $idempotencyKey, $ttlMinutes, $referenceType, $referenceId, $allowOverselling) {
             $query = DB::table('inventories')->where('id', $inventory->id);
@@ -415,6 +416,18 @@ final class InventoryService
             return;
         }
 
+        // At most one alert per hour per inventory record: the hour is part
+        // of the unique idempotency key, so a second low-stock adjustment
+        // within the hour used to hit the unique index and roll back the
+        // whole stock adjustment. The caller's UPDATE of this inventory row
+        // holds its row lock until commit, so this check cannot race with
+        // another adjustment of the same record.
+        $idempotencyKey = "inventory:{$inventory->id}:low_stock:".now()->format('Y-m-d-H');
+
+        if (OutboxEvent::query()->withoutTenantScope()->where('idempotency_key', $idempotencyKey)->exists()) {
+            return;
+        }
+
         $this->outbox->recordEvent(
             eventType: 'inventory.low_stock_detected',
             payload: [
@@ -424,7 +437,7 @@ final class InventoryService
                 'available' => $inventory->available(),
                 'reorder_point' => $inventory->reorder_point,
             ],
-            idempotencyKey: "inventory:{$inventory->id}:low_stock:".now()->format('Y-m-d-H'), // at most one alert per hour per inventory record
+            idempotencyKey: $idempotencyKey,
         );
     }
 }

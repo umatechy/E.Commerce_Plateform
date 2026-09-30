@@ -7,6 +7,7 @@ namespace App\Domain\Catalog\Http\Resources;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
+/** @mixin \App\Domain\Catalog\Models\Category */
 final class CategoryResource extends JsonResource
 {
     public function toArray(Request $request): array

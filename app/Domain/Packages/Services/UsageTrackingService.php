@@ -46,10 +46,14 @@ final class UsageTrackingService
     {
         [$periodStart, $periodEnd] = $period->currentBoundary(CarbonImmutable::now());
 
-        return (int) \App\Domain\Packages\Models\UsageCounter::query()
+        // Filtered by this service's own injected context — the same one
+        // applyDelta() writes with — rather than relying on the global
+        // scope, which reads whatever TenantContext the container holds.
+        return (int) \App\Domain\Packages\Models\UsageCounter::query()->withoutTenantScope()
+            ->where('store_id', $this->context->storeId())
             ->where('metric_key', $metricKey)
             ->where('period_start', $periodStart)
-            ->value('count') ?? 0;
+            ->value('count');
     }
 
     private function applyDelta(string $metricKey, UsagePeriod $period, int $delta): void

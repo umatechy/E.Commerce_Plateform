@@ -23,6 +23,15 @@ final class OrderItem extends Model
 
     protected $table = 'order_items';
 
+    /**
+     * Mirrors the column defaults in the migration so a freshly created
+     * model exposes them without a refresh() — resources read ->value on
+     * these enum casts and threw on null (found on the first real run).
+     */
+    protected $attributes = [
+        'fulfillment_status' => 'unfulfilled',
+    ];
+
     protected $fillable = [
         'store_id', 'order_id', 'product_id', 'product_variant_id',
         'product_name_snapshot', 'sku_snapshot', 'variant_snapshot',
@@ -43,16 +52,19 @@ final class OrderItem extends Model
         ];
     }
 
+    /** @return BelongsTo<Order, $this> */
     public function order(): BelongsTo
     {
         return $this->belongsTo(Order::class);
     }
 
+    /** @return BelongsTo<Product, $this> */
     public function product(): BelongsTo
     {
         return $this->belongsTo(Product::class);
     }
 
+    /** @return BelongsTo<ProductVariant, $this> */
     public function variant(): BelongsTo
     {
         return $this->belongsTo(ProductVariant::class, 'product_variant_id');

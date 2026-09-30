@@ -38,9 +38,11 @@ return new class extends Migration
             $table->unsignedInteger('reorder_quantity')->nullable();
             $table->timestamps();
 
+            // Shortened from the ADR-003 full-column form: MySQL caps
+            // identifier names at 64 chars (error 1059 on first real run).
             $table->unique(
                 ['store_id', 'warehouse_id', 'product_id', 'product_variant_id'],
-                'uniq_inventories_store_id_warehouse_id_product_id_product_variant_id'
+                'uniq_inventories_store_warehouse_product_variant'
             );
             $table->index(['store_id', 'product_id'], 'idx_inventories_store_id_product_id');
             $table->index(['store_id', 'product_variant_id'], 'idx_inventories_store_id_product_variant_id');

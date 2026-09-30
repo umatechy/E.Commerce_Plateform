@@ -22,12 +22,15 @@ final class RoleAuthorizationTest extends TestCase
 
     private function memberWithRole(Store $store, string $slug, array $permissionKeys = []): User
     {
-        $role = Role::factory()->for($store)->create(['slug' => $slug, 'name' => ucfirst($slug)]);
+        // owner/manager/staff already exist (StoreObserver seeds them);
+        // any other slug is a custom role.
+        $role = Role::query()->withoutTenantScope()->where('store_id', $store->id)->where('slug', $slug)->first()
+            ?? Role::factory()->for($store)->create(['slug' => $slug, 'name' => ucfirst($slug)]);
 
         if ($permissionKeys !== []) {
             foreach ($permissionKeys as $key) {
                 $permission = Permission::query()->firstOrCreate(['key' => $key], ['group' => explode('.', $key)[0]]);
-                $role->permissions()->attach($permission);
+                $role->permissions()->syncWithoutDetaching([$permission->id]);
             }
         }
 
@@ -82,7 +85,7 @@ final class RoleAuthorizationTest extends TestCase
     {
         $store = Store::factory()->create();
         $owner = $this->memberWithRole($store, 'owner');
-        $systemRole = Role::factory()->for($store)->create(['is_system' => true, 'slug' => 'manager']);
+        $systemRole = $this->systemRole($store, 'manager');
 
         $response = $this->actingAs($owner)->deleteJson("/api/v1/roles/{$systemRole->id}");
 

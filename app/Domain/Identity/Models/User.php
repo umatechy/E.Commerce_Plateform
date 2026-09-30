@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Domain\Identity\Models;
 
 use App\Domain\Tenancy\Models\Store;
+use App\Support\HasPublicId;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -25,7 +26,7 @@ use Laravel\Sanctum\HasApiTokens;
  */
 final class User extends Authenticatable
 {
-    use HasApiTokens, HasFactory, Notifiable, SoftDeletes;
+    use HasApiTokens, HasFactory, HasPublicId, Notifiable, SoftDeletes;
 
     protected $table = 'users';
 
@@ -51,6 +52,7 @@ final class User extends Authenticatable
         ];
     }
 
+    /** @return BelongsToMany<Store, $this> */
     public function stores(): BelongsToMany
     {
         return $this->belongsToMany(Store::class, 'store_user')

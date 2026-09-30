@@ -56,7 +56,7 @@ final class CartMergeTest extends TestCase
             'email' => 'jane@example.com', 'password' => 'correct-horse-battery-staple',
         ], ['X-Store-Slug' => $store->slug, 'X-Guest-Cart-Token' => $guestToken]);
 
-        $guestCart = \App\Domain\Cart\Models\Cart::query()->where('public_id', $guestCartId)->firstOrFail();
+        $guestCart = \App\Domain\Cart\Models\Cart::query()->withoutTenantScope()->where('public_id', $guestCartId)->firstOrFail();
         $this->assertSame('merged', $guestCart->status->value);
     }
 

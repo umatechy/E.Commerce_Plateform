@@ -7,6 +7,7 @@ namespace App\Domain\DataProtection\Http\Resources;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
+/** @mixin \App\Domain\DataProtection\Models\BackupRestoreJob */
 final class BackupRestoreJobResource extends JsonResource
 {
     public function toArray(Request $request): array

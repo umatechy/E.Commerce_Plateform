@@ -20,3 +20,19 @@ Schedule::command('marketing:detect-abandoned-carts')->everyFifteenMinutes();
 // scheduler, never a custom one. NOT EXECUTED — ENVIRONMENT LIMITATION
 // in this Claude App sandbox (no real cron/queue worker runs here).
 Schedule::command('backups:expire')->daily();
+
+// Module 24 (Phase B21): hourly store-health history for the Super Admin
+// overview; also prunes snapshots past their retention.
+Schedule::command('store-health:snapshot')->hourly()->withoutOverlapping();
+
+// Module 32 (Phase B22): audit retention; chains stay verifiable.
+Schedule::command('audit:prune')->dailyAt('03:10')->withoutOverlapping();
+
+// Module 29 (Phase B23): renewal invoices, period roll-over and dunning.
+// Hourly so a payment recorded late still renews within the hour; each
+// run is idempotent.
+Schedule::command('billing:run')->hourly()->withoutOverlapping();
+
+// Module 34 (Phase B26): flag support tickets that missed their service
+// level; close resolved tickets once the reopen window has passed.
+Schedule::command('support:maintain')->hourly()->withoutOverlapping();

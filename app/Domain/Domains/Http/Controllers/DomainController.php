@@ -42,7 +42,7 @@ final class DomainController
 
         try {
             $store = \App\Domain\Tenancy\Models\Store::query()->findOrFail(app(TenantContext::class)->storeId());
-            $domain = $domains->addCustomDomain($store, $request->string('hostname'));
+            $domain = $domains->addCustomDomain($store, $request->string('hostname')->toString());
         } catch (InvalidHostnameException $e) {
             return response()->json(['message' => $e->getMessage(), 'code' => 'invalid_hostname'], 422);
         }

@@ -42,10 +42,10 @@ final class CheckoutConcurrencyTest extends TestCase
         $package->entitlements()->create(['key' => 'shipping.basic', 'type' => EntitlementType::Feature, 'boolean_value' => true]); // Phase B8: checkout now requires a shipping entitlement too
         Subscription::factory()->for($store)->for($package)->create(['status' => SubscriptionStatus::Active]);
         $product = Product::factory()->for($store)->create(['status' => 'active', 'visibility' => 'public', 'price_minor' => 1000, 'currency' => 'USD']);
-        $warehouse = Warehouse::query()->where('store_id', $store->id)->where('is_default', true)->firstOrFail();
+        $warehouse = Warehouse::query()->withoutTenantScope()->where('store_id', $store->id)->where('is_default', true)->firstOrFail();
         $inventory = Inventory::factory()->for($store)->for($warehouse)->create(['product_id' => $product->id]);
         app(TenantContext::class)->resolveToStore($store->id);
-        app(InventoryService::class)->setOpeningStock($inventory, 1, 'Last unit', actorId: 1, idempotencyKey: 'last-unit-b6');
+        app(InventoryService::class)->setOpeningStock($inventory, 1, 'Last unit', actorId: $this->actorId(), idempotencyKey: 'last-unit-b6');
         $shippingMethodId = \App\Domain\Shipping\Models\ShippingMethod::query()->where('store_id', $store->id)->where('type', 'store_pickup')->value('id');
 
         $cartA = $this->postJson('/api/v1/cart/items', ['product_id' => $product->id, 'quantity' => 1], ['X-Store-Slug' => $store->slug]);

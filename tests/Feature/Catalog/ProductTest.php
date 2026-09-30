@@ -36,7 +36,7 @@ final class ProductTest extends TestCase
         }
         Subscription::factory()->for($store)->for($package)->create(['status' => SubscriptionStatus::Active]);
 
-        $role = Role::factory()->for($store)->create(['slug' => 'owner']);
+        $role = $this->systemRole($store, 'owner');
         $owner = User::factory()->create();
         $store->users()->attach($owner, ['role_id' => $role->id, 'status' => 'active']);
 
@@ -64,7 +64,7 @@ final class ProductTest extends TestCase
         $store = Store::factory()->create();
         $package = Package::factory()->create(); // no products.basic entitlement at all
         Subscription::factory()->for($store)->for($package)->create(['status' => SubscriptionStatus::Active]);
-        $role = Role::factory()->for($store)->create(['slug' => 'owner']);
+        $role = $this->systemRole($store, 'owner');
         $owner = User::factory()->create();
         $store->users()->attach($owner, ['role_id' => $role->id, 'status' => 'active']);
 
@@ -93,7 +93,7 @@ final class ProductTest extends TestCase
         $first = $this->actingAs($owner)->postJson('/api/v1/products', ['type' => 'simple', 'name' => 'First'])
             ->json('data.id');
 
-        $product = \App\Domain\Catalog\Models\Product::query()->where('public_id', $first)->firstOrFail();
+        $product = \App\Domain\Catalog\Models\Product::query()->withoutTenantScope()->where('public_id', $first)->firstOrFail();
 
         $this->actingAs($owner)->putJson("/api/v1/products/{$product->id}", ['status' => 'archived'])->assertOk();
 
@@ -104,7 +104,7 @@ final class ProductTest extends TestCase
     public function test_cost_price_is_hidden_from_user_without_permission(): void
     {
         [$store, ] = $this->storeWithOwner();
-        $role = Role::factory()->for($store)->create(['slug' => 'staff']);
+        $role = $this->systemRole($store, 'staff');
         $staff = User::factory()->create();
         $store->users()->attach($staff, ['role_id' => $role->id, 'status' => 'active']);
         \App\Domain\Identity\Models\Permission::query()->firstOrCreate(['key' => 'products.view'], ['group' => 'products']);

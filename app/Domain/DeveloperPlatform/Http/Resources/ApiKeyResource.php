@@ -7,7 +7,11 @@ namespace App\Domain\DeveloperPlatform\Http\Resources;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
-/** Module 31 §9 "API Key Response" — NEVER the secret; key_hash is also model-$hidden as defense-in-depth. */
+/**
+ * Module 31 §9 "API Key Response" — NEVER the secret; key_hash is also model-$hidden as defense-in-depth.
+ *
+ * @mixin \App\Domain\DeveloperPlatform\Models\ApiKey
+ */
 final class ApiKeyResource extends JsonResource
 {
     public function toArray(Request $request): array

@@ -6,6 +6,7 @@ namespace App\Domain\Orders\Models;
 
 use App\Domain\Identity\Models\User;
 use App\Domain\Tenancy\Support\BelongsToTenant;
+use App\Support\HasPublicId;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -20,9 +21,21 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  */
 final class Order extends Model
 {
-    use BelongsToTenant, HasFactory;
+    use BelongsToTenant, HasFactory, HasPublicId;
 
     protected $table = 'orders';
+
+    /**
+     * Mirrors the column defaults in the migration so a freshly created
+     * model exposes them without a refresh() — resources read ->value on
+     * these enum casts and threw on null (found on the first real run).
+     */
+    protected $attributes = [
+        'status' => 'pending_confirmation',
+        'payment_status' => 'unpaid',
+        'fulfillment_status' => 'unfulfilled',
+        'source' => 'storefront',
+    ];
 
     protected $fillable = [
         'store_id', 'order_number', 'customer_id',
@@ -51,27 +64,35 @@ final class Order extends Model
         ];
     }
 
+    /** @return BelongsTo<Customer, $this> */
     public function customer(): BelongsTo
     {
         return $this->belongsTo(Customer::class);
     }
 
+    /** @return HasMany<OrderItem, $this> */
     public function items(): HasMany
     {
         return $this->hasMany(OrderItem::class);
     }
 
+    /** @return HasMany<OrderTimelineEvent, $this> */
     public function timelineEvents(): HasMany
     {
         return $this->hasMany(OrderTimelineEvent::class);
     }
 
-    /** Phase B8 addition — Module 13 §48: "One Order may contain ... Multiple Shipments." */
+    /**
+     * Phase B8 addition — Module 13 §48: "One Order may contain ... Multiple Shipments."
+     *
+     * @return HasMany<\App\Domain\Shipping\Models\Shipment, $this>
+     */
     public function shipments(): HasMany
     {
         return $this->hasMany(\App\Domain\Shipping\Models\Shipment::class);
     }
 
+    /** @return BelongsTo<User, $this> */
     public function cancelledBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'cancelled_by');

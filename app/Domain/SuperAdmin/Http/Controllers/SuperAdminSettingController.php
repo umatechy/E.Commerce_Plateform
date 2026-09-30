@@ -47,7 +47,7 @@ final class SuperAdminSettingController
             return response()->json(['message' => $e->getMessage(), 'code' => 'invalid_setting'], 422);
         }
 
-        Log::channel('audit')->info('super_admin.setting.updated', [
+        app(\App\Domain\Compliance\Services\AuditLogger::class)->record('super_admin.setting.updated', [
             'acting_super_admin_id' => $request->user()->id, 'key' => $key,
         ]);
 

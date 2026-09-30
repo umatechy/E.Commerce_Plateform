@@ -40,9 +40,9 @@ final class RefundTest extends TestCase
 
         app(TenantContext::class)->resolveToStore($store->id);
         $payment = app(PaymentService::class)->createForOrder($order, PaymentMethod::CashOnDelivery, 'idem-refund-'.$store->id);
-        app(PaymentService::class)->recordManualConfirmation($payment, $amount, 'CASH-1', null, actorId: 1);
+        app(PaymentService::class)->recordManualConfirmation($payment, $amount, 'CASH-1', null, actorId: $this->actorId());
 
-        $role = Role::factory()->for($store)->create(['slug' => 'owner']);
+        $role = $this->systemRole($store, 'owner');
         $owner = User::factory()->create();
         $store->users()->attach($owner, ['role_id' => $role->id, 'status' => 'active']);
 

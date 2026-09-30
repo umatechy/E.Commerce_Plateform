@@ -1,0 +1,15 @@
+includes:
+    - vendor/larastan/larastan/extension.neon
+
+parameters:
+    paths:
+        - app/
+        - bootstrap/app.php
+        - config/
+        - database/
+        - routes/
+    level: 5
+    # Every model declares its casts in a casts() method (Laravel 11+
+    # style); without this Larastan types every enum/datetime column as
+    # the raw database string.
+    parseModelCastsMethod: true

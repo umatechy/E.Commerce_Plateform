@@ -42,17 +42,17 @@ final class ShipmentWebhookTest extends TestCase
         $package->entitlements()->create(['key' => 'orders.basic', 'type' => EntitlementType::Feature, 'boolean_value' => true]);
         Subscription::factory()->for($store)->for($package)->create(['status' => SubscriptionStatus::Active]);
         $product = Product::factory()->for($store)->create();
-        $warehouse = Warehouse::query()->where('store_id', $store->id)->where('is_default', true)->firstOrFail();
+        $warehouse = Warehouse::query()->withoutTenantScope()->where('store_id', $store->id)->where('is_default', true)->firstOrFail();
         $inventory = Inventory::factory()->for($store)->for($warehouse)->create(['product_id' => $product->id]);
         app(TenantContext::class)->resolveToStore($store->id);
-        app(InventoryService::class)->setOpeningStock($inventory, 10, 'Init', actorId: 1, idempotencyKey: 'open-'.$store->id);
+        app(InventoryService::class)->setOpeningStock($inventory, 10, 'Init', actorId: $this->actorId(), idempotencyKey: 'open-'.$store->id);
         app(InventoryService::class)->reserve($inventory, 2, idempotencyKey: 'res-wh', referenceType: 'order', referenceId: 999);
 
         $order = Order::factory()->for($store)->create(['payment_status' => OrderPaymentStatus::Paid]);
         \App\Domain\Inventory\Models\StockReservation::query()->where('idempotency_key', 'res-wh')->update(['reference_id' => $order->id]);
         $orderItem = OrderItem::factory()->for($order)->create(['store_id' => $store->id, 'product_id' => $product->id, 'quantity' => 2]);
 
-        $role = Role::factory()->for($store)->create(['slug' => 'owner']);
+        $role = $this->systemRole($store, 'owner');
         $owner = User::factory()->create();
         $store->users()->attach($owner, ['role_id' => $role->id, 'status' => 'active']);
 

@@ -24,11 +24,13 @@ final class StoreTheme extends Model
         return ['draft_config' => 'array', 'published_config' => 'array', 'published_at' => 'datetime'];
     }
 
+    /** @return BelongsTo<Theme, $this> */
     public function theme(): BelongsTo
     {
         return $this->belongsTo(Theme::class);
     }
 
+    /** @return HasMany<StoreThemePublication, $this> */
     public function publications(): HasMany
     {
         return $this->hasMany(StoreThemePublication::class);

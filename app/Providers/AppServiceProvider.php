@@ -12,6 +12,7 @@ use App\Domain\Catalog\Policies\AttributePolicy;
 use App\Domain\Catalog\Policies\BrandPolicy;
 use App\Domain\Catalog\Policies\CategoryPolicy;
 use App\Domain\Catalog\Policies\ProductPolicy;
+use App\Domain\Identity\Models\PersonalAccessToken;
 use App\Domain\Identity\Models\Role;
 use App\Domain\Identity\Policies\RolePolicy;
 use App\Domain\Inventory\Models\Inventory;
@@ -34,8 +35,12 @@ use App\Domain\SuperAdmin\Policies\SuperAdminAccessPolicy;
 use App\Domain\Tenancy\Models\Store;
 use App\Domain\Tenancy\Observers\StoreObserver;
 use App\Domain\Tenancy\Support\TenantContext;
+use Illuminate\Database\Eloquent\Factories\Factory;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Validation\Rules\Password;
 use Illuminate\Support\ServiceProvider;
+use Laravel\Sanctum\Sanctum;
 
 final class AppServiceProvider extends ServiceProvider
 {
@@ -73,6 +78,30 @@ final class AppServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
+        // App\Domain\* models live outside App\Models, so Laravel's default
+        // factory guess (Database\Factories\Domain\...\StoreFactory) never
+        // matches the flat database/factories/ layout. Every Model::factory()
+        // call failed with "class not found" until this resolver was added
+        // (found on the first real test run).
+        // Module 32 (Phase B22): staff authentication outcomes are audited.
+        Event::subscribe(\App\Domain\Compliance\Listeners\RecordAuthenticationEvents::class);
+
+        // Module 32 password policy for staff and customer accounts
+        // (Password::defaults() is what both registration requests use).
+        // The breached-password check calls an external API, so it runs in
+        // production only.
+        Password::defaults(fn () => $this->app->isProduction()
+            ? Password::min(10)->letters()->uncompromised()
+            : Password::min(10)->letters());
+
+        Factory::guessFactoryNamesUsing(
+            static fn (string $modelName): string => 'Database\\Factories\\'.class_basename($modelName).'Factory'
+        );
+
+        // See PersonalAccessToken's docblock: token -> owner resolution
+        // must not depend on a TenantContext that cannot exist yet.
+        Sanctum::usePersonalAccessTokenModel(PersonalAccessToken::class);
+
         // App\Domain\* models/policies do not follow Laravel's default
         // App\Models / App\Policies convention, so auto-discovery does not apply
         // to them — every Policy MUST be registered here explicitly. A Policy
@@ -94,6 +123,20 @@ final class AppServiceProvider extends ServiceProvider
         Gate::policy(Payment::class, PaymentPolicy::class);
         Gate::policy(Shipment::class, ShipmentPolicy::class);
         Gate::policy(Promotion::class, PromotionPolicy::class);
+
+        // Module 05 (Phase B24): any change shoppers can see invalidates
+        // that store's storefront cache (see StorefrontCache).
+        foreach ([
+            \App\Domain\Catalog\Models\Product::class, \App\Domain\Catalog\Models\ProductVariant::class,
+            \App\Domain\Catalog\Models\ProductImage::class, \App\Domain\Catalog\Models\Category::class,
+            \App\Domain\Catalog\Models\Brand::class, \App\Domain\Inventory\Models\Inventory::class,
+            \App\Domain\Inventory\Models\Warehouse::class, \App\Domain\Seo\Models\ContentPage::class,
+            \App\Domain\Seo\Models\SeoSetting::class, \App\Domain\Theme\Models\StoreTheme::class,
+            \App\Domain\Settings\Models\StoreSetting::class, \App\Domain\Domains\Models\Domain::class,
+            Store::class,
+        ] as $model) {
+            $model::observe(\App\Domain\Storefront\Observers\StorefrontCacheObserver::class);
+        }
 
         // Seeds the default Owner/Manager/Staff roles for every new store —
         // see App\Domain\Tenancy\Observers\StoreObserver docblock.

@@ -37,7 +37,7 @@ final class UnsubscribeController
             'signature' => ['required', 'string'],
         ]);
 
-        $store = Store::query()->where('slug', $request->string('store'))->first();
+        $store = Store::query()->where('slug', $request->string('store')->toString())->first();
 
         if ($store === null || ! $this->verifySignature($request, $store)) {
             // Deliberately generic — never confirm/deny whether a

@@ -12,7 +12,10 @@ return new class extends Migration
     {
         Schema::create('outbox_events', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('store_id')->constrained('stores')->restrictOnDelete();
+            // Nullable: platform-scope changes (a platform setting, a
+            // platform backup) have no owning store. Every tenant event
+            // still carries its store_id (RecordsOutboxEvents).
+            $table->foreignId('store_id')->nullable()->constrained('stores')->restrictOnDelete();
             $table->string('event_type', 128);
             $table->json('payload');
             $table->string('idempotency_key')->unique('uniq_outbox_events_idempotency_key');
