@@ -6,12 +6,18 @@ import path from 'path';
 // Approved Stack: React + TypeScript + Inertia.js + Tailwind + shadcn/ui.
 // laravel-vite-plugin supplies the entry points (there is no index.html)
 // and writes public/build/manifest.json for the @vite Blade directive.
+// It is skipped under Vitest: tests need no entry points, and the plugin
+// refuses to start a dev server when CI=true, which aborted the CI run.
 export default defineConfig({
   plugins: [
-    laravel({
-      input: ['resources/css/app.css', 'resources/js/app.tsx'],
-      refresh: true,
-    }),
+    ...(process.env.VITEST
+      ? []
+      : [
+          laravel({
+            input: ['resources/css/app.css', 'resources/js/app.tsx'],
+            refresh: true,
+          }),
+        ]),
     react(),
   ],
   resolve: {

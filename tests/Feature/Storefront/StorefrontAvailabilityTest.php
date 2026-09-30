@@ -123,7 +123,7 @@ final class StorefrontAvailabilityTest extends TestCase
         $store = $this->openStore(['status' => 'pending_setup']);
         $owner = $this->owner($store);
 
-        $this->get("/shop/{$store->slug}")->assertStatus(503)
+        $this->withoutVite()->get("/shop/{$store->slug}")->assertStatus(503)
             ->assertInertia(fn ($page) => $page->component('Storefront/Unavailable')->where('code', 'storefront_not_launched'));
 
         $this->actingAs($owner)->get("/shop/{$store->slug}")->assertOk()
