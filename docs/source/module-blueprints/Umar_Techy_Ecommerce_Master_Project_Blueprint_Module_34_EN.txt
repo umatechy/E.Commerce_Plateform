@@ -1,0 +1,1896 @@
+============================================================
+UMAR TECHY
+E-COMMERCE PLATFORM
+MASTER PROJECT BLUEPRINT
+MODULE 34 — HELP, SUPPORT & DOCUMENTATION
+VERSION 1.0
+============================================================
+
+DOCUMENT PURPOSE
+------------------------------------------------------------
+This module defines the complete Help, Support, Knowledge Base,
+Documentation, Onboarding, Troubleshooting, Developer Support,
+Tenant Support, and Operational Assistance framework for the Umar
+Techy Core Multi-Tenant E-Commerce SaaS.
+
+The objective is to make the platform understandable, supportable,
+maintainable, and usable by:
+
+- Store owners
+- Store administrators
+- Store staff
+- Customers
+- Developers
+- Integration partners
+- Marketplace app developers
+- Affiliate/reseller users
+- Umar Techy support staff
+- Umar Techy Super Admins
+- Internal engineering and operations teams
+
+Documentation is a product capability, not merely a collection
+of static pages.
+
+This module MUST provide contextual, version-aware, permission-aware,
+tenant-aware, searchable, maintainable, and secure documentation
+without exposing restricted information.
+
+This module does not replace business logic, authorization, or
+security controls defined in Modules 01–33.
+
+DOCUMENT LANGUAGE
+------------------------------------------------------------
+All technical specifications in this module are intentionally
+written in English.
+
+============================================================
+1. MODULE OBJECTIVES
+============================================================
+
+1.1 Provide a complete documentation architecture.
+1.2 Provide a centralized knowledge base.
+1.3 Provide role-aware and context-aware help.
+1.4 Provide tenant/store onboarding.
+1.5 Provide customer-facing help content where appropriate.
+1.6 Provide developer documentation for Module 31.
+1.7 Provide administrator documentation for platform modules.
+1.8 Provide troubleshooting and diagnostic guidance.
+1.9 Provide support ticket workflows.
+1.10 Provide support escalation workflows.
+1.11 Provide incident communication templates.
+1.12 Provide release notes and changelogs.
+1.13 Provide migration and upgrade guides.
+1.14 Provide searchable documentation.
+1.15 Provide documentation versioning.
+1.16 Provide documentation lifecycle management.
+1.17 Prevent documentation from exposing secrets or restricted data.
+1.18 Provide support analytics and knowledge-base analytics.
+1.19 Provide in-product contextual assistance.
+1.20 Establish a foundation for AI-assisted support.
+1.21 Support multilingual documentation in the future.
+1.22 Support future partner and marketplace documentation.
+
+============================================================
+2. CORE PRINCIPLES
+============================================================
+
+2.1 Documentation must be accurate.
+2.2 Documentation must be version-aware.
+2.3 Documentation must be role-aware.
+2.4 Documentation must be permission-aware.
+2.5 Documentation must be tenant-aware where applicable.
+2.6 Documentation must be searchable.
+2.7 Documentation must be maintainable.
+2.8 Documentation must have ownership.
+2.9 Documentation must have review status.
+2.10 Documentation must have a lifecycle.
+2.11 Documentation must never expose secrets.
+2.12 Documentation must never expose private tenant data.
+2.13 Documentation must never disclose internal security controls
+     beyond what is appropriate.
+2.14 Support must not bypass authorization.
+2.15 Support must not bypass tenant isolation.
+2.16 Troubleshooting must prefer safe diagnostics.
+2.17 Destructive instructions require explicit warnings.
+2.18 Production changes must be carefully documented.
+2.19 Developer documentation must match actual API contracts.
+2.20 Documentation must remain synchronized with product changes.
+
+============================================================
+3. DOCUMENTATION AUDIENCES
+============================================================
+
+3.1 Customer/Shopper
+Needs:
+- Account help
+- Checkout help
+- Orders
+- Payments
+- Shipping
+- Returns
+- Refunds
+- Notifications
+- Privacy
+
+3.2 Store Owner
+Needs:
+- Store setup
+- Products
+- Inventory
+- Orders
+- Customers
+- Payments
+- Shipping
+- Marketing
+- Themes
+- Domains
+- Billing
+- Analytics
+
+3.3 Store Staff
+Needs:
+- Daily operational workflows
+- Inventory
+- Orders
+- Customers
+- Notifications
+- Reports
+- Role-specific tasks
+
+3.4 Developer
+Needs:
+- API
+- Authentication
+- OAuth
+- Webhooks
+- SDKs
+- Sandbox
+- Rate limits
+- Errors
+- Versioning
+- App development
+
+3.5 Partner/Reseller
+Needs:
+- Provisioning
+- Tenant management
+- Packages
+- Referral
+- Commission
+- API access
+- Support
+
+3.6 Umar Techy Support
+Needs:
+- Diagnostics
+- Troubleshooting
+- Tenant support
+- Incident handling
+- Escalation
+- Account verification
+- Support policies
+
+3.7 Super Admin
+Needs:
+- Platform operations
+- Security
+- Billing
+- Infrastructure
+- Tenant lifecycle
+- Marketplace
+- API governance
+- Incident management
+
+============================================================
+4. DOCUMENTATION TYPES
+============================================================
+
+The platform SHOULD support:
+
+4.1 Getting Started Guides
+4.2 User Guides
+4.3 Admin Guides
+4.4 Feature Guides
+4.5 Tutorials
+4.6 How-To Articles
+4.7 Troubleshooting Articles
+4.8 FAQ
+4.9 API Reference
+4.10 SDK Documentation
+4.11 Webhook Documentation
+4.12 Integration Guides
+4.13 Configuration Guides
+4.14 Security Guides
+4.15 Privacy Guides
+4.16 Billing Guides
+4.17 Migration Guides
+4.18 Release Notes
+4.19 Changelog
+4.20 Known Issues
+4.21 Status/Incident Guides
+4.22 Internal Runbooks
+4.23 Support Playbooks
+4.24 Developer Guides
+4.25 Marketplace App Guides
+4.26 Partner Guides
+
+============================================================
+5. DOCUMENTATION INFORMATION ARCHITECTURE
+============================================================
+
+Recommended top-level categories:
+
+A. Getting Started
+B. Store Setup
+C. Products & Catalog
+D. Inventory
+E. Orders
+F. Customers
+G. Cart & Checkout
+H. Payments
+I. Shipping
+J. Discounts & Promotions
+K. Marketing
+L. SEO & Content
+M. Themes & Branding
+N. Domains
+O. Hosting
+P. Notifications
+Q. Reports & Analytics
+R. Backup & Recovery
+S. Store Health
+T. PWA/Mobile
+U. AI
+V. Marketplace & Integrations
+W. Affiliate/Reseller
+X. Billing
+Y. API & Developers
+Z. Security & Privacy
+AA. Troubleshooting
+AB. Release Notes
+AC. Support
+
+============================================================
+6. KNOWLEDGE BASE
+============================================================
+
+6.1 Knowledge Base MUST support:
+- Articles
+- Categories
+- Tags
+- Search
+- Related articles
+- Version
+- Audience
+- Product/module association
+- Status
+- Owner
+- Review date
+
+6.2 Article states:
+- Draft
+- In Review
+- Published
+- Deprecated
+- Archived
+
+6.3 Only approved content may be public.
+6.4 Draft content must never leak to unauthorized users.
+
+============================================================
+7. ARTICLE METADATA
+============================================================
+
+Each article SHOULD include:
+
+- Article ID
+- Title
+- Summary
+- Content
+- Category
+- Tags
+- Audience
+- Language
+- Product/module
+- Version
+- Author
+- Owner
+- Reviewer
+- Status
+- Created date
+- Updated date
+- Review date
+- Deprecation date
+- Related articles
+- Search keywords
+- SEO metadata where public
+- Security classification
+
+============================================================
+8. DOCUMENTATION VERSIONING
+============================================================
+
+8.1 Documentation MUST support product versions.
+8.2 API documentation MUST map to API versions.
+8.3 Major product changes SHOULD produce documentation updates.
+8.4 Deprecated documentation MUST identify replacement content.
+8.5 Historical documentation may remain available where required.
+8.6 Users should be directed to documentation matching their active
+    product/API version.
+
+============================================================
+9. DOCUMENTATION LIFECYCLE
+============================================================
+
+Workflow:
+
+Draft
+  ↓
+Review
+  ↓
+Approved
+  ↓
+Published
+  ↓
+Reviewed
+  ↓
+Updated / Deprecated
+  ↓
+Archived
+
+9.1 Published documentation must have an owner.
+9.2 Critical documentation should have a review schedule.
+9.3 Security documentation should be reviewed after relevant changes.
+
+============================================================
+10. DOCUMENTATION OWNERSHIP
+============================================================
+
+Each module SHOULD own its documentation domain:
+
+Module 01 — Platform Structure
+Module 02 — Authentication
+Module 03 — Store Management
+Module 04 — Subscriptions
+Module 05 — Storefront
+Module 06 — Products
+Module 07 — Categories/Brands/Attributes
+Module 08 — Inventory
+Module 09 — Orders
+Module 10 — Customers
+Module 11 — Cart/Checkout
+Module 12 — Payments
+Module 13 — Shipping
+Module 14 — Promotions
+Module 15 — Marketing
+Module 16 — SEO/Content
+Module 17 — Themes
+Module 18 — Animation
+Module 19 — Domains
+Module 20 — Hosting
+Module 21 — Notifications
+Module 22 — Analytics
+Module 23 — Backup
+Module 24 — Health
+Module 25 — PWA/Mobile
+Module 26 — AI
+Module 27 — Marketplace
+Module 28 — Affiliate/Reseller
+Module 29 — Billing
+Module 30 — Super Admin
+Module 31 — API/Developer
+Module 32 — Security
+Module 33 — Configuration
+
+Module 34 governs the documentation framework itself.
+
+============================================================
+11. SEARCH
+============================================================
+
+11.1 Search MUST support:
+- Title
+- Content
+- Tags
+- Module
+- Feature
+- Error code
+- Version
+- Audience
+
+11.2 Search results SHOULD prioritize:
+- Exact matches
+- Current documentation
+- Relevant audience
+- Active version
+- Frequently useful articles
+
+11.3 Deprecated content should be lower priority.
+11.4 Private content must not appear in unauthorized search results.
+11.5 Tenant-specific help may be filtered by tenant context.
+
+============================================================
+12. CONTEXTUAL HELP
+============================================================
+
+12.1 Admin screens SHOULD provide contextual help.
+12.2 Contextual help may include:
+- Help icon
+- Tooltip
+- Inline explanation
+- "Learn more"
+- Short tutorial
+- Related documentation
+
+12.3 Contextual help MUST match the active feature/version.
+12.4 Sensitive configuration pages SHOULD include safety guidance.
+12.5 High-risk actions SHOULD include warnings and relevant help.
+
+============================================================
+13. ONBOARDING
+============================================================
+
+Store onboarding SHOULD cover:
+
+13.1 Create store
+13.2 Store identity
+13.3 Business information
+13.4 Domain
+13.5 Theme
+13.6 Branding
+13.7 Categories
+13.8 Products
+13.9 Inventory
+13.10 Payment
+13.11 Shipping
+13.12 Tax
+13.13 Notifications
+13.14 Customer settings
+13.15 SEO
+13.16 PWA
+13.17 Marketing
+13.18 Analytics
+13.19 Test order
+13.20 Production launch checklist
+
+============================================================
+14. ONBOARDING EXPERIENCE
+============================================================
+
+14.1 Show progress.
+14.2 Save progress.
+14.3 Allow completion in multiple sessions.
+14.4 Explain required vs optional steps.
+14.5 Respect package entitlements.
+14.6 Prevent onboarding from creating invalid production state.
+14.7 Provide test/sandbox guidance where appropriate.
+14.8 Provide a launch-readiness summary.
+
+============================================================
+15. ROLE-AWARE HELP
+============================================================
+
+15.1 Owner documentation differs from staff documentation.
+15.2 Staff users should not see restricted Super Admin documentation.
+15.3 Developers should see developer documentation.
+15.4 Customers should see customer-facing help.
+15.5 Support users may see internal support content.
+15.6 Super Admin may see operational runbooks.
+
+Documentation visibility MUST follow authorization rules.
+
+============================================================
+16. SUPPORT TICKET SYSTEM
+============================================================
+
+The platform SHOULD provide support tickets with:
+
+- Ticket ID
+- User
+- Tenant
+- Store
+- Category
+- Priority
+- Subject
+- Description
+- Attachments
+- Status
+- Assigned agent
+- Created date
+- Updated date
+- SLA target
+- Escalation level
+- Resolution
+- Satisfaction score
+
+============================================================
+17. TICKET STATES
+============================================================
+
+Recommended states:
+
+- New
+- Open
+- Awaiting Customer
+- In Progress
+- Escalated
+- Resolved
+- Closed
+- Reopened
+
+17.1 State transitions MUST be controlled.
+17.2 Closed tickets may be reopened according to policy.
+17.3 Ticket history MUST be preserved.
+
+============================================================
+18. SUPPORT CATEGORIES
+============================================================
+
+Examples:
+- Account
+- Store Setup
+- Products
+- Inventory
+- Orders
+- Payment
+- Shipping
+- Domain
+- Hosting
+- Billing
+- API
+- Integration
+- Security
+- Privacy
+- Technical Issue
+- Feature Request
+- Bug Report
+- Abuse Report
+
+============================================================
+19. SUPPORT PRIORITIES
+============================================================
+
+Suggested priorities:
+
+Low:
+General question or non-urgent issue.
+
+Normal:
+Business workflow issue without major outage.
+
+High:
+Important functionality significantly affected.
+
+Critical:
+Major outage, security issue, payment disruption, or severe
+business-impacting incident.
+
+Priority definitions MUST be operationally documented and must not
+promise response times unless a real support policy/SLA exists.
+
+============================================================
+20. SUPPORT SLA FOUNDATION
+============================================================
+
+If SLAs are commercially offered, support:
+
+- SLA plan
+- Priority
+- Response target
+- Resolution target where contractually defined
+- Business hours
+- Escalation policy
+- Exceptions
+
+SLA timers MUST be based on authoritative server time and documented
+business calendars.
+
+============================================================
+21. SUPPORT ESCALATION
+============================================================
+
+Escalation levels may include:
+
+Level 1:
+General support.
+
+Level 2:
+Technical/product specialist.
+
+Level 3:
+Engineering.
+
+Security:
+Security team.
+
+Infrastructure:
+Operations/infrastructure team.
+
+Billing:
+Billing/finance team.
+
+21.1 Escalation MUST preserve ticket history.
+21.2 Escalation MUST preserve tenant context.
+21.3 Sensitive information MUST be minimized.
+
+============================================================
+22. SUPPORT ACCESS SECURITY
+============================================================
+
+22.1 Support staff MUST use least privilege.
+22.2 Support staff MUST not receive passwords.
+22.3 Support staff MUST not receive private API secrets.
+22.4 Support staff access to tenant data MUST be controlled.
+22.5 Impersonation, if implemented, MUST be:
+- Explicit
+- Time-limited
+- Audited
+- Restricted
+- Reason-based
+
+22.6 Support tools MUST mask sensitive data.
+
+============================================================
+23. CUSTOMER IDENTITY VERIFICATION
+============================================================
+
+Before sensitive account assistance, support SHOULD verify ownership
+using approved verification mechanisms.
+
+Support MUST NOT rely only on:
+- Name
+- Email address
+- Order number
+- Public information
+
+High-risk actions may require stronger verification.
+
+============================================================
+24. TROUBLESHOOTING FRAMEWORK
+============================================================
+
+Troubleshooting articles SHOULD follow:
+
+1. Problem
+2. Symptoms
+3. Likely causes
+4. Safe checks
+5. Resolution steps
+6. Verification
+7. Prevention
+8. Escalation criteria
+
+============================================================
+25. ERROR-CODE DOCUMENTATION
+============================================================
+
+Every important user-facing error SHOULD have:
+- Error code
+- Meaning
+- Cause
+- Safe resolution
+- Support action
+- Related documentation
+
+Internal errors must not expose sensitive infrastructure details.
+
+============================================================
+26. DIAGNOSTIC TOOLS
+============================================================
+
+Support/admin diagnostic tools MAY include:
+- Request ID lookup
+- Job status
+- Webhook delivery status
+- Payment event status
+- Order event history
+- Inventory event history
+- Notification delivery status
+- Domain verification status
+- API usage
+- Health status
+
+Diagnostic tools MUST:
+- Respect permissions
+- Respect tenant isolation
+- Redact secrets
+- Avoid destructive actions by default
+
+============================================================
+27. SAFE SUPPORT ACTIONS
+============================================================
+
+Support tools may provide:
+- Resend notification
+- Retry safe webhook
+- Re-run safe background job
+- Refresh non-sensitive integration status
+- Provide troubleshooting information
+
+High-risk actions such as:
+- Refund
+- Restore
+- Delete
+- Credential reset
+- Domain ownership changes
+
+require elevated authorization and audit.
+
+============================================================
+28. DOCUMENTATION FEEDBACK
+============================================================
+
+Articles SHOULD support:
+- Helpful / Not helpful
+- Feedback text
+- Missing information
+- Report outdated content
+
+Feedback MUST be associated with article/version where possible.
+
+============================================================
+29. KNOWLEDGE BASE ANALYTICS
+============================================================
+
+Track:
+- Search queries
+- Zero-result searches
+- Article views
+- Article usefulness
+- Support deflection
+- Repeated support topics
+- Documentation failures
+- Outdated content reports
+
+Do not collect unnecessary personal data.
+
+============================================================
+30. SUPPORT ANALYTICS
+============================================================
+
+Track:
+- Ticket volume
+- Category
+- Priority
+- Response time
+- Resolution time
+- Reopen rate
+- Escalation rate
+- SLA performance where applicable
+- Customer satisfaction
+- Recurring issues
+
+Analytics MUST be permission-controlled.
+
+============================================================
+31. RELEASE NOTES
+============================================================
+
+Every significant release SHOULD provide:
+- Release date
+- Version
+- New features
+- Improvements
+- Bug fixes
+- Security changes where safe to disclose
+- Breaking changes
+- Migration requirements
+- Deprecations
+- Known issues
+
+Security-sensitive details MUST not be disclosed in a way that
+facilitates exploitation.
+
+============================================================
+32. CHANGELOG
+============================================================
+
+Maintain a structured changelog for:
+- API
+- Platform
+- Storefront
+- Admin
+- SDKs
+- Marketplace
+- Infrastructure where appropriate
+
+Changes SHOULD be classified:
+- Added
+- Changed
+- Fixed
+- Deprecated
+- Removed
+- Security
+
+============================================================
+33. MIGRATION GUIDES
+============================================================
+
+Migration documentation MUST explain:
+- Current version
+- Target version
+- Breaking changes
+- Required actions
+- Data migrations
+- Configuration changes
+- API changes
+- Rollback considerations
+- Validation steps
+
+============================================================
+34. DEPRECATION DOCUMENTATION
+============================================================
+
+For deprecated features document:
+- What is deprecated
+- Why, where appropriate
+- Deprecation date
+- Replacement
+- Migration path
+- Sunset date where applicable
+- Impact
+- Required customer/developer action
+
+============================================================
+35. API DEVELOPER DOCUMENTATION
+============================================================
+
+Module 31 documentation SHOULD include:
+
+- Getting Started
+- Authentication
+- OAuth
+- API Keys
+- Scopes
+- Tenant model
+- API versions
+- Resources
+- Pagination
+- Filtering
+- Sorting
+- Errors
+- Idempotency
+- Rate limits
+- Webhooks
+- SDKs
+- Sandbox
+- Usage
+- App review
+- Marketplace integration
+- Security
+- Changelog
+- Migration guides
+
+Documentation MUST match actual OpenAPI contracts.
+
+============================================================
+36. DEVELOPER SUPPORT
+============================================================
+
+Developer support SHOULD include:
+- API support category
+- Request ID troubleshooting
+- Sandbox support
+- Webhook debugging
+- Credential troubleshooting
+- App review status
+- Integration guidance
+- Migration support
+
+Developers MUST never be asked to send private secrets in tickets.
+
+============================================================
+37. WEBHOOK DEBUGGING
+============================================================
+
+Provide safe webhook diagnostics:
+- Event ID
+- Event type
+- Delivery status
+- Attempt count
+- Response status
+- Latency
+- Retry state
+
+Do not expose:
+- Signing secrets
+- Private credentials
+- Unnecessary PII
+
+============================================================
+38. INTEGRATION TROUBLESHOOTING
+============================================================
+
+For each integration provide:
+- Setup prerequisites
+- Credentials
+- Permissions
+- Configuration
+- Test procedure
+- Common failures
+- Logs/request IDs
+- Retry behavior
+- Provider-specific limitations
+- Escalation process
+
+============================================================
+39. BILLING HELP
+============================================================
+
+Provide documentation for:
+- Packages
+- Entitlements
+- Subscription
+- Upgrade
+- Downgrade
+- Renewal
+- Invoices
+- Failed payments
+- Refunds
+- Usage billing
+- Cancellation
+
+Billing documentation MUST clearly distinguish platform policy
+from legally binding contractual terms.
+
+============================================================
+40. DOMAIN HELP
+============================================================
+
+Provide:
+- Domain connection guide
+- DNS requirements
+- Verification
+- SSL
+- Primary domain
+- Redirects
+- Common DNS issues
+- Troubleshooting
+
+Never ask users to publish secrets in public support channels.
+
+============================================================
+41. SECURITY AND PRIVACY HELP
+============================================================
+
+Provide user-facing documentation for:
+- Password security
+- MFA
+- Account recovery
+- API credential safety
+- Privacy controls
+- Data export
+- Data deletion
+- Consent
+- Suspicious activity reporting
+
+Do not disclose sensitive internal security mechanisms.
+
+============================================================
+42. BACKUP AND RECOVERY HELP
+============================================================
+
+Document:
+- Backup availability
+- Backup schedules where applicable
+- Retention
+- Restore process
+- Restore limitations
+- Recovery expectations
+- Emergency support
+
+Do not expose backup credentials or internal storage details.
+
+============================================================
+43. CUSTOMER-FACING HELP CENTER
+============================================================
+
+The public help center SHOULD support:
+- Search
+- FAQ
+- Account help
+- Orders
+- Payments
+- Shipping
+- Returns/refunds
+- Contact support
+- Privacy
+- Terms references
+- Status information
+
+Public help content must not expose internal admin or developer-only
+information.
+
+============================================================
+44. IN-APP SUPPORT
+============================================================
+
+The application SHOULD provide:
+- Help button
+- Search help
+- Contextual article
+- Support ticket creation
+- Ticket history
+- Status
+- Related documentation
+
+Tenant users should see tenant-relevant support options.
+
+============================================================
+45. AI-ASSISTED SUPPORT FOUNDATION
+============================================================
+
+Future AI support MAY:
+- Search knowledge base
+- Summarize documentation
+- Explain errors
+- Guide onboarding
+- Suggest troubleshooting
+- Summarize support tickets
+- Recommend relevant articles
+
+AI support MUST:
+- Respect user permissions
+- Respect tenant isolation
+- Avoid exposing restricted information
+- Not invent product behavior
+- Cite authoritative documentation internally where practical
+- Escalate uncertain/high-risk issues
+- Never perform sensitive actions without authorization
+
+============================================================
+46. SUPPORT BOT SAFETY
+============================================================
+
+AI support MUST NOT:
+- Reveal secrets
+- Reveal another tenant's information
+- Reveal internal credentials
+- Override billing
+- Override payment status
+- Reset privileged security controls without authorization
+- Execute destructive operations without approved workflow
+
+============================================================
+47. DOCUMENTATION CONTENT SECURITY
+============================================================
+
+47.1 Documentation editor access MUST be restricted.
+47.2 Draft content must be private.
+47.3 Sensitive internal documents must be access-controlled.
+47.4 Secrets must never be included.
+47.5 Real customer data must not be used in examples.
+47.6 Production credentials must never appear in examples.
+47.7 Screenshots must be reviewed for sensitive information.
+47.8 Sample API keys must be fake and clearly non-production.
+
+============================================================
+48. DOCUMENTATION EXAMPLES
+============================================================
+
+48.1 Code examples MUST be safe.
+48.2 Commands MUST clearly identify environment assumptions.
+48.3 Destructive commands require warnings.
+48.4 Production commands require explicit context.
+48.5 Examples MUST not contain real secrets.
+48.6 API examples SHOULD use placeholders.
+48.7 Database examples MUST avoid destructive operations unless
+     specifically required and clearly labeled.
+
+============================================================
+49. SUPPORT ATTACHMENTS
+============================================================
+
+49.1 Support attachments MUST be validated.
+49.2 File size limits MUST apply.
+49.3 Dangerous file types SHOULD be blocked.
+49.4 Malware scanning SHOULD be used.
+49.5 Attachments must be access-controlled.
+49.6 Attachments must be tenant/ticket scoped.
+49.7 Attachment URLs must expire.
+49.8 Sensitive attachments require controlled access.
+
+============================================================
+50. SUPPORT TICKET PRIVACY
+============================================================
+
+50.1 Tickets may contain sensitive information.
+50.2 Access MUST be role-based.
+50.3 Tenant users can see only their authorized tickets.
+50.4 Support staff receive only necessary information.
+50.5 Security incidents require restricted visibility.
+50.6 Ticket retention MUST be defined.
+50.7 Ticket exports MUST be authorized and audited.
+
+============================================================
+51. STATUS AND INCIDENT COMMUNICATION
+============================================================
+
+The platform SHOULD support:
+- Incident status
+- Maintenance notices
+- Service degradation notices
+- Resolution updates
+- Post-incident summaries where appropriate
+
+Do not disclose exploitable security details during active incidents.
+
+============================================================
+52. KNOWN ISSUES
+============================================================
+
+Maintain a known-issues catalog:
+- Issue ID
+- Description
+- Affected versions
+- Affected features
+- Workaround
+- Status
+- Expected resolution
+- Related release
+
+============================================================
+53. SUPPORT RUNBOOKS
+============================================================
+
+Internal runbooks SHOULD exist for:
+- Account recovery
+- Tenant access issues
+- Payment failures
+- Order failures
+- Inventory inconsistencies
+- Notification failures
+- Webhook failures
+- Domain issues
+- API issues
+- Integration failures
+- Backup/restore
+- Security incidents
+- Billing issues
+- Platform outages
+
+Runbooks must be access-controlled.
+
+============================================================
+54. SUPPORT PLAYBOOKS
+============================================================
+
+Playbooks should define:
+- Intake
+- Verification
+- Diagnosis
+- Communication
+- Escalation
+- Resolution
+- Validation
+- Closure
+- Documentation update
+
+============================================================
+55. SUPPORT QUALITY
+============================================================
+
+Measure:
+- Accuracy
+- Resolution quality
+- Customer satisfaction
+- Repeat contacts
+- Escalations
+- Documentation usefulness
+- Time to resolution
+
+Quality metrics must not encourage unsafe shortcuts.
+
+============================================================
+56. DOCUMENTATION QUALITY
+============================================================
+
+Every published article SHOULD pass:
+
+- Accuracy
+- Completeness
+- Clarity
+- Version validation
+- Security review where required
+- Link validation
+- Screenshot review
+- Example validation
+- Owner assignment
+- Review date
+
+============================================================
+57. DOCUMENTATION CI/CD
+============================================================
+
+Documentation CI SHOULD validate:
+- Broken links
+- Invalid code examples where testable
+- OpenAPI synchronization
+- Version references
+- Required metadata
+- Secret scanning
+- Sensitive data scanning
+- Formatting
+- Search indexing
+
+============================================================
+58. DOCUMENTATION AS CODE
+============================================================
+
+Where practical:
+- Store technical docs in version control.
+- Review changes through pull requests.
+- Generate API reference from OpenAPI.
+- Generate changelogs from controlled release metadata.
+- Keep examples synchronized with current APIs.
+
+============================================================
+59. DOCUMENTATION DEPLOYMENT
+============================================================
+
+59.1 Documentation deployment must be versioned.
+59.2 Documentation rollback should be supported.
+59.3 Draft and production documentation environments should be separate.
+59.4 Sensitive internal documentation must never be deployed publicly.
+59.5 Search indexes must update safely.
+
+============================================================
+60. TRANSLATION AND LOCALIZATION
+============================================================
+
+Future multilingual support SHOULD include:
+- English
+- Urdu
+- Additional languages as required
+
+60.1 Source technical documentation SHOULD have a canonical language.
+60.2 Translations must identify source version.
+60.3 Outdated translations must be marked.
+60.4 Security-critical instructions require translation review.
+60.5 Translation must not alter technical meaning.
+
+============================================================
+61. DOCUMENTATION SEO
+============================================================
+
+Public help content SHOULD support:
+- Search-friendly titles
+- Descriptions
+- Structured headings
+- Canonical URLs
+- Sitemap integration
+- Internal linking
+- FAQ structured data where appropriate
+
+SEO must not expose private content.
+
+============================================================
+62. SUPPORT SEARCH SECURITY
+============================================================
+
+62.1 Search must enforce access controls before returning results.
+62.2 Private tickets must not appear in public search.
+62.3 Internal runbooks must not appear to tenants.
+62.4 Tenant-specific documentation must remain tenant-scoped.
+62.5 Search suggestions must not leak restricted titles.
+
+============================================================
+63. SUPPORT NOTIFICATIONS
+============================================================
+
+Support notifications may include:
+- Ticket created
+- Ticket updated
+- Agent reply
+- Awaiting customer
+- Resolved
+- Closed
+- Escalated
+- Incident update
+
+Notifications MUST respect user preferences and privacy.
+
+============================================================
+64. SUPPORT INTEGRATION WITH NOTIFICATION MODULE
+============================================================
+
+Module 34 MUST integrate with Module 21 for:
+- Email
+- SMS
+- WhatsApp
+- Push
+- In-app notifications
+
+Provider credentials remain governed by Module 21 and Module 32.
+
+============================================================
+65. SUPPORT INTEGRATION WITH ANALYTICS
+============================================================
+
+Module 22 should receive:
+- Ticket volume
+- Resolution metrics
+- Documentation search metrics
+- Article feedback
+- Support trends
+
+Analytics MUST remain tenant-aware.
+
+============================================================
+66. SUPPORT INTEGRATION WITH SECURITY
+============================================================
+
+Module 32 governs:
+- Support authentication
+- Support authorization
+- Sensitive ticket access
+- Security incident handling
+- Audit
+- Privacy
+- Secret handling
+
+============================================================
+67. SUPPORT INTEGRATION WITH API
+============================================================
+
+Module 31 governs:
+- Developer APIs
+- API credentials
+- API request diagnostics
+- Webhooks
+- SDKs
+- Developer applications
+
+Module 34 provides the documentation and support experience.
+
+============================================================
+68. SUPPORT INTEGRATION WITH SUPER ADMIN
+============================================================
+
+Module 30 governs:
+- Super Admin support administration
+- Global support configuration
+- Support staff roles
+- Escalation management
+- Platform incident management
+
+============================================================
+69. SUPPORT INTEGRATION WITH BILLING
+============================================================
+
+Module 29 governs:
+- Billing records
+- Subscription state
+- Invoice state
+- Payment records
+
+Support users may view appropriate information but MUST NOT bypass
+billing authorization.
+
+============================================================
+70. SUPPORT INTEGRATION WITH BACKUP
+============================================================
+
+Module 23 governs backup/restore.
+Module 34 documents:
+- Backup behavior
+- Recovery procedures
+- Customer guidance
+- Support escalation
+
+Support staff must not receive unrestricted restore authority.
+
+============================================================
+71. SUPPORT DATA MODEL FOUNDATION
+============================================================
+
+Suggested entities:
+
+KnowledgeBaseArticle
+KnowledgeBaseCategory
+KnowledgeBaseTag
+KnowledgeBaseArticleTag
+KnowledgeBaseArticleVersion
+KnowledgeBaseArticleFeedback
+DocumentationOwner
+DocumentationReview
+DocumentationSearchQuery
+DocumentationTranslation
+SupportTicket
+SupportTicketMessage
+SupportTicketAttachment
+SupportTicketEvent
+SupportAssignment
+SupportSlaPolicy
+SupportEscalation
+SupportCannedResponse
+SupportKnowledgeLink
+SupportDiagnosticRecord
+KnownIssue
+ReleaseNote
+ChangelogEntry
+MigrationGuide
+IncidentCommunication
+SupportNotification
+SupportAgent
+SupportTeam
+
+Tenant-specific entities MUST include tenant ownership.
+
+============================================================
+72. DATA MODEL RULES
+============================================================
+
+72.1 Article IDs must be stable.
+72.2 Ticket IDs must be globally unique.
+72.3 Ticket messages must preserve ordering.
+72.4 Article versions must be traceable.
+72.5 Documentation ownership must be explicit.
+72.6 Support assignments must be auditable.
+72.7 Ticket state transitions must be auditable.
+72.8 Attachments must be access-controlled.
+72.9 Sensitive ticket fields must be protected.
+72.10 Retention policies must be defined.
+
+============================================================
+73. REQUIRED CLAUDE DEVELOPMENT BEHAVIOR
+============================================================
+
+Claude MUST:
+
+73.1 Read Modules 01–33 before implementing Module 34.
+73.2 Treat Modules 01–33 as authoritative.
+73.3 Never create a second authorization model.
+73.4 Never bypass tenant isolation.
+73.5 Never expose secrets in documentation.
+73.6 Never use real production credentials in examples.
+73.7 Never use real customer data in public examples.
+73.8 Add documentation metadata.
+73.9 Add documentation versioning.
+73.10 Add access-control tests.
+73.11 Add tenant-isolation tests.
+73.12 Add support-ticket authorization tests.
+73.13 Add attachment security tests.
+73.14 Add secret scanning for documentation.
+73.15 Add broken-link validation.
+73.16 Add API documentation synchronization checks.
+73.17 Add release-note/version checks.
+73.18 Add search access-control tests.
+73.19 Add AI-support safety tests if AI support is implemented.
+73.20 Preserve audit logging.
+73.21 Preserve existing module behavior.
+73.22 Avoid unrelated changes.
+73.23 Do not perform destructive production operations.
+73.24 Report documentation/support defects honestly.
+73.25 Maintain a concise implementation checkpoint after each session.
+
+============================================================
+74. IMPLEMENTATION ORDER
+============================================================
+
+Phase 1:
+- Documentation architecture
+- Knowledge base
+- Article model
+- Categories/tags
+- Versioning
+- Search
+
+Phase 2:
+- Admin documentation management
+- Review workflow
+- Publishing
+- Documentation ownership
+- Audit
+
+Phase 3:
+- Store onboarding
+- Contextual help
+- Role-aware help
+- Customer help center
+
+Phase 4:
+- Support tickets
+- Ticket states
+- Assignment
+- Escalation
+- Attachments
+- Notifications
+
+Phase 5:
+- Troubleshooting
+- Diagnostic tools
+- Known issues
+- Support runbooks
+
+Phase 6:
+- Developer documentation
+- API reference
+- Webhook docs
+- SDK docs
+- Sandbox documentation
+
+Phase 7:
+- Release notes
+- Changelog
+- Migration guides
+- Deprecation documentation
+
+Phase 8:
+- Analytics
+- Feedback
+- Search analytics
+- Support quality metrics
+
+Phase 9:
+- AI-assisted support foundation
+- Safety controls
+- Knowledge retrieval
+
+Phase 10:
+- Security hardening
+- Testing
+- Production readiness
+
+============================================================
+75. REQUIRED DEVELOPMENT ARTIFACTS
+============================================================
+
+1. Documentation Architecture
+2. Knowledge Base Specification
+3. Documentation Metadata Schema
+4. Documentation Versioning Policy
+5. Documentation Lifecycle Policy
+6. Documentation Ownership Matrix
+7. Search Specification
+8. Contextual Help Specification
+9. Onboarding Specification
+10. Support Ticket Specification
+11. Support SLA Specification
+12. Support Escalation Policy
+13. Support Security Policy
+14. Troubleshooting Framework
+15. Diagnostic Tool Specification
+16. Developer Documentation Specification
+17. API Documentation Synchronization Plan
+18. Release Notes Policy
+19. Changelog Policy
+20. Migration Guide Template
+21. Known Issues Specification
+22. Incident Communication Templates
+23. Support Runbooks
+24. Support Playbooks
+25. Documentation CI/CD Specification
+26. AI Support Safety Specification
+27. Documentation Test Plan
+28. Production Support Runbook
+
+============================================================
+76. ACCEPTANCE CRITERIA
+============================================================
+
+Module 34 is accepted only when:
+
+76.1 Knowledge base exists.
+76.2 Documentation categories exist.
+76.3 Article versioning works.
+76.4 Article lifecycle works.
+76.5 Documentation ownership is defined.
+76.6 Search works.
+76.7 Search respects authorization.
+76.8 Contextual help works.
+76.9 Store onboarding works.
+76.10 Role-aware documentation works.
+76.11 Customer help center works.
+76.12 Support ticket system works.
+76.13 Ticket authorization works.
+76.14 Tenant isolation works.
+76.15 Support attachments are secure.
+76.16 Escalation works.
+76.17 Notifications integrate correctly.
+76.18 Troubleshooting content is structured.
+76.19 Diagnostic tools are permission-controlled.
+76.20 Developer documentation matches API contracts.
+76.21 Release notes work.
+76.22 Changelog works.
+76.23 Migration documentation exists.
+76.24 Known issues exist.
+76.25 Support analytics work.
+76.26 Documentation feedback works.
+76.27 Secret scanning covers documentation.
+76.28 Security tests pass.
+76.29 Tenant isolation tests pass.
+76.30 Production support runbooks exist.
+
+============================================================
+77. PRODUCTION READINESS CHECKLIST
+============================================================
+
+[ ] Knowledge base configured
+[ ] Documentation categories configured
+[ ] Article workflow configured
+[ ] Documentation ownership configured
+[ ] Versioning enabled
+[ ] Search enabled
+[ ] Search access controls verified
+[ ] Contextual help verified
+[ ] Onboarding verified
+[ ] Role-aware help verified
+[ ] Customer help center verified
+[ ] Support tickets enabled
+[ ] Ticket authorization verified
+[ ] Tenant isolation verified
+[ ] Attachment security verified
+[ ] Malware scanning configured where applicable
+[ ] Support notifications verified
+[ ] Escalation configured
+[ ] SLA rules documented where offered
+[ ] Troubleshooting guides published
+[ ] Diagnostic tools secured
+[ ] Developer documentation synchronized
+[ ] API docs synchronized with OpenAPI
+[ ] Webhook docs verified
+[ ] SDK docs verified
+[ ] Release notes published
+[ ] Changelog configured
+[ ] Migration guides available
+[ ] Known issues configured
+[ ] Incident communication templates ready
+[ ] Support runbooks ready
+[ ] Support playbooks ready
+[ ] Documentation CI/CD enabled
+[ ] Secret scanning enabled
+[ ] Sensitive-data scanning enabled
+[ ] Backup/recovery documentation verified
+[ ] Security documentation reviewed
+[ ] Privacy documentation reviewed
+[ ] Analytics enabled
+[ ] Documentation feedback enabled
+[ ] AI support disabled until safety controls pass
+[ ] Production support owner assigned
+
+============================================================
+78. FUTURE EXPANSION
+============================================================
+
+The Help, Support & Documentation framework MUST support:
+
+78.1 Multilingual knowledge bases.
+78.2 AI-powered documentation search.
+78.3 AI support assistant.
+78.4 Personalized onboarding.
+78.5 Interactive tutorials.
+78.6 Guided product tours.
+78.7 Video tutorials.
+78.8 Interactive API playground.
+78.9 Automated troubleshooting.
+78.10 AI ticket summarization.
+78.11 AI ticket classification.
+78.12 AI suggested responses.
+78.13 Customer health-based proactive support.
+78.14 Developer community/forum.
+78.15 Marketplace developer portal.
+78.16 Partner knowledge base.
+78.17 Enterprise support portals.
+78.18 SLA dashboards.
+78.19 Status page integration.
+78.20 Incident communication automation.
+78.21 Automated documentation generation from schemas.
+78.22 Product-change-to-documentation workflows.
+78.23 Documentation quality scoring.
+78.24 Knowledge-gap detection.
+78.25 Localization automation with human review.
+
+============================================================
+79. FINAL ARCHITECTURAL RULES
+============================================================
+
+1. Documentation is a product capability.
+2. Documentation must be accurate.
+3. Documentation must be version-aware.
+4. Documentation must be role-aware.
+5. Documentation must be permission-aware.
+6. Documentation must be tenant-aware where required.
+7. Documentation must be searchable.
+8. Documentation must have ownership.
+9. Documentation must have a lifecycle.
+10. Documentation must have review metadata.
+11. Draft documentation must not leak publicly.
+12. Private documentation must remain access-controlled.
+13. Documentation must never contain production secrets.
+14. Documentation must never contain real private credentials.
+15. Documentation must never expose unnecessary customer data.
+16. Documentation examples must use synthetic data.
+17. API documentation must match actual contracts.
+18. OpenAPI must remain authoritative for REST reference documentation.
+19. Documentation must reflect active API versions.
+20. Deprecated documentation must identify replacements.
+21. Breaking changes require migration documentation.
+22. Release notes must identify important changes.
+23. Changelogs must remain structured.
+24. Known issues must be documented.
+25. Troubleshooting must follow a consistent framework.
+26. Troubleshooting must prefer safe diagnostics.
+27. Destructive instructions require warnings.
+28. Production commands require explicit context.
+29. Support must not bypass authorization.
+30. Support must not bypass tenant isolation.
+31. Support staff must use least privilege.
+32. Support staff must not receive passwords.
+33. Support staff must not receive private API secrets.
+34. Support access to tenant data must be controlled.
+35. Impersonation must be restricted if implemented.
+36. Impersonation must be time-limited if implemented.
+37. Impersonation must be audited if implemented.
+38. Sensitive support actions require stronger authorization.
+39. Support identity verification must be appropriate to risk.
+40. Public information is not sufficient for high-risk account recovery.
+41. Support tickets must be access-controlled.
+42. Ticket history must be preserved.
+43. Ticket state changes must be controlled.
+44. Ticket attachments must be protected.
+45. Ticket attachments must be tenant/ticket scoped.
+46. Attachment URLs must expire.
+47. Dangerous attachments should be blocked.
+48. Malware scanning should be used where practical.
+49. Security incidents require restricted support visibility.
+50. Support exports must be authorized.
+51. Support exports must be audited.
+52. Ticket retention must be documented.
+53. Support notifications must respect preferences.
+54. Support notifications must respect privacy.
+55. Support analytics must be permission-controlled.
+56. Documentation analytics must minimize personal data.
+57. Search must enforce access control.
+58. Search must not leak restricted titles.
+59. Search must not expose private tickets.
+60. Search must not expose internal runbooks to tenants.
+61. Contextual help must match feature/version context.
+62. High-risk screens should provide safety guidance.
+63. Onboarding must distinguish required and optional steps.
+64. Onboarding must respect package entitlements.
+65. Onboarding must not create invalid production state.
+66. Onboarding progress should be resumable.
+67. Onboarding should support launch readiness.
+68. Customer help must remain separate from internal documentation.
+69. Developer documentation must remain separate from customer help.
+70. Super Admin documentation must remain restricted.
+71. Internal runbooks must remain restricted.
+72. Security documentation must be carefully controlled.
+73. AI support must respect authorization.
+74. AI support must respect tenant isolation.
+75. AI support must not invent undocumented behavior.
+76. AI support should use authoritative documentation.
+77. AI support must escalate uncertain high-risk cases.
+78. AI support must not reveal secrets.
+79. AI support must not reveal other tenants.
+80. AI support must not override billing.
+81. AI support must not override payment state.
+82. AI support must not execute destructive actions without approval.
+83. AI support actions must be auditable.
+84. Documentation content must be security-scanned.
+85. Documentation must be secret-scanned.
+86. Code examples must be reviewed.
+87. Commands must identify environment assumptions.
+88. Destructive commands must be clearly labeled.
+89. Documentation deployment must be versioned.
+90. Documentation rollback should be possible.
+91. Draft and production documentation should be separated.
+92. Documentation search indexes must update safely.
+93. Documentation changes should use review workflows.
+94. Technical documentation should use version control.
+95. API reference should be generated from OpenAPI where practical.
+96. Documentation CI should validate links.
+97. Documentation CI should validate metadata.
+98. Documentation CI should validate secrets.
+99. Documentation CI should validate sensitive data.
+100. Documentation CI should validate API synchronization.
+101. Documentation ownership must map to product modules.
+102. Module 34 governs the documentation framework.
+103. Other modules remain authoritative for their business behavior.
+104. Documentation cannot redefine business rules.
+105. Documentation cannot override security rules.
+106. Documentation cannot override package entitlements.
+107. Documentation cannot override billing rules.
+108. Documentation cannot override payment rules.
+109. Documentation cannot override inventory rules.
+110. Documentation cannot override order rules.
+111. Documentation cannot override domain rules.
+112. Documentation cannot override API authorization.
+113. Documentation cannot override privacy controls.
+114. Documentation must be updated after significant product changes.
+115. Security-sensitive documentation must be reviewed after security
+     changes.
+116. API documentation must be reviewed after API contract changes.
+117. Migration documentation must accompany breaking changes.
+118. Release notes must be reviewed before publication.
+119. Incident communications must avoid exploit-enabling detail.
+120. Support runbooks must be tested.
+121. Support playbooks must be maintained.
+122. Support escalation must preserve context.
+123. Escalation must not expose unnecessary sensitive data.
+124. Support quality metrics must not reward unsafe shortcuts.
+125. Documentation quality metrics must not reward misleading content.
+126. Knowledge gaps should be measurable.
+127. Zero-result searches should be measurable.
+128. Repeated support topics should inform documentation improvements.
+129. Documentation feedback should be actionable.
+130. Documentation should support future localization.
+131. Translations must preserve technical meaning.
+132. Translation versions must be traceable.
+133. Public documentation should support SEO.
+134. SEO must not expose private documentation.
+135. Status/incident documentation must remain timely.
+136. Known issues must identify affected versions.
+137. Workarounds must be safe.
+138. Support diagnostics must be read-only by default.
+139. Destructive support actions must be separately authorized.
+140. Diagnostic output must redact secrets.
+141. Request IDs should be used for technical troubleshooting.
+142. Webhook diagnostics must not expose signing secrets.
+143. Payment diagnostics must not expose payment credentials.
+144. Billing diagnostics must not expose unnecessary financial data.
+145. Domain diagnostics must not expose private credentials.
+146. Backup diagnostics must not expose storage credentials.
+147. API diagnostics must not expose tokens.
+148. Customer diagnostics must respect privacy.
+149. Support tools must remain tenant-aware.
+150. Documentation must remain scalable as the platform grows.
+151. Documentation must support all platform modules.
+152. Documentation must support tenant-specific guidance where needed.
+153. Documentation must support developer growth.
+154. Documentation must support partner growth.
+155. Documentation must support marketplace growth.
+156. Documentation must support enterprise support.
+157. Documentation must support future AI assistance.
+158. Documentation must support future automation.
+159. Documentation must support future multilingual delivery.
+160. Documentation must support future interactive learning.
+161. Documentation must support future API playgrounds.
+162. Documentation must support future community capabilities.
+163. Documentation must support future status-page integration.
+164. Documentation must support future proactive support.
+165. Documentation must support future knowledge analytics.
+166. Documentation must remain modular.
+167. Documentation must remain maintainable.
+168. Documentation must remain auditable.
+169. Documentation must remain secure.
+170. Documentation must remain permission-aware.
+171. Documentation must remain tenant-aware.
+172. Documentation must remain version-aware.
+173. Documentation must remain searchable.
+174. Documentation must remain recoverable.
+175. Documentation must remain observable.
+176. Documentation must preserve customer privacy.
+177. Documentation must preserve developer security.
+178. Documentation must preserve platform security.
+179. Documentation must preserve business integrity.
+180. Documentation must preserve API correctness.
+181. Documentation must preserve operational correctness.
+182. Documentation must preserve migration safety.
+183. Documentation must preserve support quality.
+184. Documentation must preserve incident communication safety.
+185. Documentation must preserve localization quality.
+186. Documentation must preserve knowledge ownership.
+187. Documentation must preserve change history.
+188. Documentation must preserve auditability of support actions.
+189. Documentation must preserve tenant isolation in support.
+190. Documentation must preserve access-control boundaries.
+191. Documentation must never become a backdoor to restricted systems.
+192. Support must never become a backdoor to tenant data.
+193. AI support must never become a backdoor to restricted data.
+194. Diagnostic tooling must never become a backdoor to privileged actions.
+195. Public help must never expose internal runbooks.
+196. Developer docs must never expose production secrets.
+197. Support content must never contain hidden credentials.
+198. Every critical workflow should have authoritative documentation.
+199. Module 34 is complete only when help, support, documentation,
+     onboarding, troubleshooting, developer assistance, and
+     operational support are secure, accurate, versioned, searchable,
+     auditable, maintainable, and production-ready.
+200. Module 34 must provide the operational knowledge foundation
+     required to run and scale the Umar Techy E-Commerce Platform.
+
+============================================================
+END OF MODULE 34
+============================================================

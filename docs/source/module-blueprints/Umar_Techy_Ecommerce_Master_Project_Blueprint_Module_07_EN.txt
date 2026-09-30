@@ -1,0 +1,2284 @@
+UMAR TECHY
+E-COMMERCE PLATFORM
+MASTER PROJECT BLUEPRINT
+
+MODULE 07 — CATEGORY, BRAND & ATTRIBUTE MANAGEMENT
+Version: 1.0
+Status: Planning / Blueprint
+
+============================================================
+1. MODULE PURPOSE
+============================================================
+
+This module defines the reusable architecture for organizing
+products through:
+
+- Categories
+- Subcategories
+- Brands
+- Attributes
+- Attribute Groups
+- Attribute Values
+- Variant Options
+- Product Filters
+- Collections integration
+- Merchandising structure
+- Navigation structure
+- SEO structure
+- Tenant-specific catalog taxonomy
+
+The module must work as part of the ONE Core E-Commerce
+Platform and support thousands of independent stores without
+creating separate codebases.
+
+============================================================
+2. CORE PRINCIPLE
+============================================================
+
+ONE CORE TAXONOMY ENGINE
++
+TENANT-SCOPED CATALOG STRUCTURE
++
+CONFIGURABLE ATTRIBUTES
++
+REUSABLE FILTERING
++
+PACKAGE ENTITLEMENTS
+
+must serve every store.
+
+Basic, Business, and Premium stores use the same underlying
+taxonomy engine.
+
+Commercial differences are enforced through Module 04.
+
+============================================================
+3. TENANT ISOLATION
+============================================================
+
+Every tenant-owned category, brand, attribute, value, and
+taxonomy configuration must belong to exactly one Store/Tenant.
+
+Store A must never be able to:
+
+- Read Store B categories
+- Modify Store B categories
+- Delete Store B brands
+- Read Store B attributes
+- Read Store B attribute values
+- Search Store B taxonomy
+- Use Store B private taxonomy configuration
+
+Public/global platform records must be explicitly distinguished
+from tenant-owned records.
+
+============================================================
+4. GLOBAL VS TENANT TAXONOMY
+============================================================
+
+The architecture should support:
+
+GLOBAL PLATFORM DEFINITIONS:
+
+- System attribute types
+- Approved measurement types
+- Global system defaults
+- Platform taxonomy templates
+- Future marketplace taxonomy definitions
+
+TENANT DATA:
+
+- Categories
+- Category hierarchy
+- Brands
+- Attributes
+- Attribute Groups
+- Attribute Values
+- Filter configuration
+- Navigation assignment
+- Store-specific taxonomy settings
+
+A future store may optionally import a platform-approved
+template into its own tenant data.
+
+============================================================
+5. CATEGORY DEFINITION
+============================================================
+
+A Category represents a logical group of products.
+
+Example:
+
+Fashion
+  ├── Men
+  │    ├── Shirts
+  │    └── Shoes
+  └── Women
+       ├── Dresses
+       └── Bags
+
+Core category fields may include:
+
+- Category ID
+- Store/Tenant ID
+- Parent Category ID
+- Name
+- Slug
+- Description
+- Image
+- Banner
+- Status
+- Visibility
+- Sort Order
+- SEO Metadata
+- Created At
+- Updated At
+- Archived At
+
+============================================================
+6. CATEGORY HIERARCHY
+============================================================
+
+Categories should support multiple levels.
+
+Example:
+
+Electronics
+  └── Mobile Phones
+       └── Android Phones
+            └── Samsung
+
+The platform should not unnecessarily hard-code only two or
+three levels.
+
+A configurable maximum depth may be enforced for performance
+and usability.
+
+============================================================
+7. CATEGORY TREE
+============================================================
+
+The system must efficiently represent and retrieve category
+trees.
+
+Required operations:
+
+- Create Child
+- Move Category
+- Rename
+- Reorder
+- Hide
+- Publish
+- Archive
+- Restore
+- Retrieve Ancestors
+- Retrieve Descendants
+- Retrieve Breadcrumbs
+
+Category tree operations must preserve tenant boundaries.
+
+============================================================
+8. CATEGORY PARENTING RULES
+============================================================
+
+A category:
+
+- May have zero or one parent
+- Must not become its own parent
+- Must not create circular hierarchy
+- Must belong to the same tenant as its parent
+- Must not be moved across tenants
+
+The system must validate hierarchy changes before saving.
+
+============================================================
+9. CATEGORY ROOT
+============================================================
+
+Each store may have multiple root categories.
+
+Example:
+
+Men
+Women
+Kids
+Accessories
+
+A virtual root may be used internally to simplify hierarchy
+management.
+
+============================================================
+10. CATEGORY STATUS
+============================================================
+
+Categories should support:
+
+- DRAFT
+- ACTIVE
+- HIDDEN
+- SCHEDULED
+- ARCHIVED
+
+Only appropriate active categories should appear publicly.
+
+============================================================
+11. CATEGORY VISIBILITY
+============================================================
+
+Possible visibility modes:
+
+- Public
+- Navigation Only
+- Search Only
+- Hidden
+- Private
+- Scheduled
+
+Visibility must affect:
+
+- Storefront
+- Navigation
+- Search
+- Sitemap
+- Breadcrumbs
+- Category landing pages
+
+============================================================
+12. CATEGORY SLUG
+============================================================
+
+Category URLs should use safe slugs.
+
+Example:
+
+/category/electronics
+/category/mobile-phones
+/category/android-phones
+
+Slug requirements:
+
+- Tenant-scoped uniqueness
+- URL-safe
+- Normalized
+- Reserved-word protection
+- Stable where possible
+
+Slug changes should support redirect handling where applicable.
+
+============================================================
+13. CATEGORY SEO
+============================================================
+
+Categories should support:
+
+- SEO Title
+- Meta Description
+- Canonical URL
+- Social Image
+- Indexing control
+- Structured data where applicable
+
+If custom SEO is absent, safe defaults may be generated.
+
+============================================================
+14. CATEGORY MEDIA
+============================================================
+
+Categories may support:
+
+- Thumbnail
+- Banner
+- Hero Image
+- Mobile Banner
+- Icon
+
+Media must be tenant-isolated and follow platform media rules.
+
+============================================================
+15. CATEGORY DESCRIPTION
+============================================================
+
+Categories may have descriptive content for:
+
+- Customer guidance
+- SEO
+- Merchandising
+- Category introductions
+
+Rich content must be sanitized.
+
+============================================================
+16. CATEGORY PRODUCT ASSIGNMENT
+============================================================
+
+A product may belong to:
+
+- One primary category
+- Multiple categories
+
+The architecture should distinguish:
+
+Primary Category
+from
+Additional Category Assignments
+
+This prevents ambiguity in merchandising and SEO.
+
+============================================================
+17. CATEGORY PRODUCT ORDERING
+============================================================
+
+Products within a category may support:
+
+- Manual ordering
+- Featured-first
+- Newest
+- Best-selling
+- Price
+- Relevance
+
+Category-specific manual ordering must be tenant-scoped.
+
+============================================================
+18. CATEGORY FILTER CONFIGURATION
+============================================================
+
+Each category may define which attributes are exposed as
+customer filters.
+
+Example:
+
+Mobile Phones
+
+Filters:
+- Brand
+- RAM
+- Storage
+- Screen Size
+- Price
+- Availability
+
+The filtering engine must dynamically use the category's
+configuration.
+
+============================================================
+19. CATEGORY-SPECIFIC ATTRIBUTES
+============================================================
+
+A category may have assigned attributes.
+
+Example:
+
+Shoes:
+- Size
+- Color
+- Material
+- Gender
+
+Laptops:
+- RAM
+- Storage
+- Processor
+- Screen Size
+
+This prevents irrelevant filters from appearing.
+
+============================================================
+20. CATEGORY TEMPLATES
+============================================================
+
+The platform should support optional category templates.
+
+A template may define:
+
+- Default attributes
+- Default filters
+- Product fields
+- Suggested brands
+- SEO defaults
+- Display layout
+
+Templates should speed up store setup without forcing
+identical catalog structures.
+
+============================================================
+21. BRAND DEFINITION
+============================================================
+
+A Brand represents a product manufacturer, label, or merchant
+brand.
+
+Core fields may include:
+
+- Brand ID
+- Store/Tenant ID
+- Name
+- Slug
+- Logo
+- Description
+- Website
+- Status
+- Visibility
+- SEO Metadata
+- Sort Order
+- Created At
+- Updated At
+
+============================================================
+22. BRAND SCOPE
+============================================================
+
+Brands are normally tenant-scoped.
+
+Example:
+
+Store A:
+Nike
+Adidas
+
+Store B:
+Nike
+Adidas
+
+These are separate tenant records even if they represent the
+same real-world brand.
+
+A future platform-wide brand directory may be introduced
+without weakening tenant isolation.
+
+============================================================
+23. BRAND SLUG
+============================================================
+
+Brand URLs should use safe slugs.
+
+Example:
+
+/brand/nike
+/brand/adidas
+
+Uniqueness should be enforced within the tenant.
+
+============================================================
+24. BRAND PAGE
+============================================================
+
+Where enabled, a brand may have a public storefront page.
+
+Possible content:
+
+- Brand Logo
+- Name
+- Description
+- Banner
+- Brand Story
+- Product Listing
+- Filters
+- Sorting
+- SEO Metadata
+
+============================================================
+25. BRAND PRODUCT ASSIGNMENT
+============================================================
+
+A product may optionally reference one primary brand.
+
+A store may allow products without a brand.
+
+Brand deletion must consider products already assigned to it.
+
+Possible behavior:
+
+- Block deletion
+- Reassign products
+- Archive brand
+- Remove brand association
+
+Hard deletion must not break historical order data.
+
+============================================================
+26. BRAND FILTERING
+============================================================
+
+Brand may be exposed as a storefront filter.
+
+Filtering must:
+
+- Be tenant-scoped
+- Respect product visibility
+- Respect category scope
+- Respect package capabilities
+- Use indexed queries where appropriate
+
+============================================================
+27. ATTRIBUTE DEFINITION
+============================================================
+
+An Attribute represents a reusable product property.
+
+Examples:
+
+- Color
+- Size
+- Material
+- RAM
+- Storage
+- Weight
+- Screen Size
+
+Attributes should be reusable across products.
+
+============================================================
+28. ATTRIBUTE GROUP
+============================================================
+
+Attributes may be grouped for easier administration.
+
+Example:
+
+Technical Specifications
+- RAM
+- Storage
+- Processor
+
+Physical Details
+- Weight
+- Dimensions
+- Material
+
+Variant Options
+- Color
+- Size
+
+Groups improve organization without changing the underlying
+product data model.
+
+============================================================
+29. ATTRIBUTE TYPES
+============================================================
+
+The system should support multiple attribute types.
+
+Initial types:
+
+- Text
+- Number
+- Boolean
+- Single Select
+- Multi Select
+- Color
+- Date
+- Measurement
+
+Future types may include:
+
+- Currency
+- Range
+- Reference
+- Formula
+- Location
+
+============================================================
+30. SELECT ATTRIBUTES
+============================================================
+
+Select attributes contain predefined values.
+
+Example:
+
+Color:
+- Black
+- White
+- Blue
+
+Size:
+- S
+- M
+- L
+- XL
+
+Values should be reusable within the attribute definition.
+
+============================================================
+31. MULTI-SELECT ATTRIBUTES
+============================================================
+
+Some attributes may allow multiple values.
+
+Example:
+
+Features:
+- Waterproof
+- Lightweight
+- Rechargeable
+
+Multi-select behavior must be explicitly configured.
+
+============================================================
+32. BOOLEAN ATTRIBUTES
+============================================================
+
+Boolean attributes support yes/no values.
+
+Examples:
+
+- Waterproof
+- Wireless
+- Organic
+- Rechargeable
+
+The storefront may render them as:
+
+Yes / No
+or
+Feature badges.
+
+============================================================
+33. NUMERIC ATTRIBUTES
+============================================================
+
+Numeric attributes should support:
+
+- Integer
+- Decimal
+- Minimum
+- Maximum
+- Unit
+- Precision
+
+Examples:
+
+- Weight: 1.5 kg
+- Screen Size: 6.7 inch
+- Capacity: 5000 mAh
+
+============================================================
+34. MEASUREMENT ATTRIBUTES
+============================================================
+
+Measurement attributes should support a defined unit system.
+
+Examples:
+
+Weight:
+- g
+- kg
+
+Length:
+- mm
+- cm
+- m
+
+Capacity:
+- ml
+- L
+
+The architecture should reserve unit conversion.
+
+============================================================
+35. COLOR ATTRIBUTES
+============================================================
+
+Color attributes may contain:
+
+- Display Name
+- Color Code
+- Optional Image/Pattern
+- Sort Order
+
+Example:
+
+Black → #000000
+White → #FFFFFF
+
+The storefront can render a color swatch instead of plain text.
+
+============================================================
+36. ATTRIBUTE VALUES
+============================================================
+
+Attribute values should support:
+
+- Value ID
+- Attribute ID
+- Display Name
+- Internal Value
+- Slug
+- Sort Order
+- Color Code where applicable
+- Image where applicable
+- Status
+
+Values must remain scoped to their attribute.
+
+============================================================
+37. ATTRIBUTE VALUE NORMALIZATION
+============================================================
+
+The system should distinguish:
+
+Display Value:
+"Black"
+
+Internal Value:
+"black"
+
+This allows future localization without breaking internal
+matching.
+
+============================================================
+38. ATTRIBUTE LOCALIZATION
+============================================================
+
+Attributes and values should be architecture-ready for
+multilingual stores.
+
+Example:
+
+English:
+Color → Black
+
+Urdu:
+رنگ → کالا
+
+The internal attribute/value identifier should remain stable.
+
+============================================================
+39. VARIANT OPTIONS
+============================================================
+
+Some attributes become customer-selectable variant options.
+
+Example:
+
+Product:
+T-Shirt
+
+Variant Options:
+- Color
+- Size
+
+Not every product attribute must create a variant.
+
+============================================================
+40. ATTRIBUTE VS VARIANT OPTION
+============================================================
+
+This distinction is mandatory.
+
+ATTRIBUTE:
+Describes a product.
+
+Example:
+Material = Cotton
+
+VARIANT OPTION:
+Changes the sellable configuration.
+
+Example:
+Color = Black
+Size = Large
+
+The architecture must not treat every attribute as a variant.
+
+============================================================
+41. PRODUCT ATTRIBUTE ASSIGNMENT
+============================================================
+
+Products may assign attributes such as:
+
+Material = Cotton
+Weight = 500g
+Waterproof = Yes
+
+Assignments should support appropriate type validation.
+
+============================================================
+42. PRODUCT VARIANT OPTION ASSIGNMENT
+============================================================
+
+Variants may reference option values.
+
+Example:
+
+Product:
+Shirt
+
+Variant:
+Black / Large
+
+References:
+Color = Black
+Size = Large
+
+The combination must be valid for the parent product.
+
+============================================================
+43. OPTION COMBINATION UNIQUENESS
+============================================================
+
+A product must not contain duplicate variant combinations.
+
+Example:
+
+Black + Large
+
+must not exist twice under the same product.
+
+The database and application layer should both help enforce
+this rule.
+
+============================================================
+44. ATTRIBUTE SETS
+============================================================
+
+The architecture should support reusable Attribute Sets.
+
+Example:
+
+Laptops Attribute Set:
+
+- Processor
+- RAM
+- Storage
+- Screen Size
+- Operating System
+
+A store can apply the set to a category or product.
+
+Attribute Sets reduce repetitive administration.
+
+============================================================
+45. CATEGORY ATTRIBUTE ASSIGNMENT
+============================================================
+
+A category may define:
+
+- Required Attributes
+- Optional Attributes
+- Variant Attributes
+- Filter Attributes
+- Display Attributes
+
+Example:
+
+Laptop Category
+
+Required:
+Processor
+RAM
+Storage
+
+Optional:
+Color
+
+Filter:
+RAM
+Storage
+Processor
+Brand
+
+============================================================
+46. ATTRIBUTE DISPLAY MODES
+============================================================
+
+Storefront attributes may display as:
+
+- Text
+- Table
+- Badge
+- Swatch
+- Icon
+- Specification list
+- Filter control
+
+Display mode should be configurable.
+
+============================================================
+47. FILTER ENGINE FOUNDATION
+============================================================
+
+The taxonomy module provides metadata to the storefront filter
+engine.
+
+Filter types may include:
+
+- Checkbox
+- Radio
+- Color Swatch
+- Range Slider
+- Numeric Range
+- Dropdown
+- Searchable Select
+
+The filter engine must operate within the current tenant and
+catalog scope.
+
+============================================================
+48. FILTER FACETING
+============================================================
+
+The architecture should support faceted filtering.
+
+Example:
+
+Category:
+Laptops
+
+Brand:
+5 results
+
+RAM:
+8 GB → 12
+16 GB → 18
+32 GB → 4
+
+Price:
+Ranges
+
+Facet counts should update according to active filters where
+supported.
+
+============================================================
+49. FILTER URL STATE
+============================================================
+
+Filter state may be represented in URLs.
+
+Example:
+
+/category/laptops?brand=dell&ram=16gb
+
+Requirements:
+
+- Safe parsing
+- Canonicalization
+- Tenant scope
+- No arbitrary database field access
+- SEO rules for indexed filter combinations
+
+============================================================
+50. FILTER PERFORMANCE
+============================================================
+
+Filtering must be optimized for large catalogs.
+
+Possible strategies:
+
+- Database indexes
+- Search engine facets
+- Precomputed counts
+- Caching
+- Denormalized search fields
+
+The final approach will be selected in the architecture
+blueprint.
+
+============================================================
+51. FILTER PACKAGE ENTITLEMENTS
+============================================================
+
+Advanced filtering may be package dependent.
+
+Example:
+
+Basic:
+Core category filtering
+
+Business:
+More attributes and advanced filters
+
+Premium:
+Advanced faceting / AI-assisted discovery
+
+Exact limits must be finalized with Module 04.
+
+============================================================
+52. TAXONOMY LIMITS
+============================================================
+
+Package limits may apply to:
+
+- Category Count
+- Category Depth
+- Brand Count
+- Attribute Count
+- Attribute Values
+- Attribute Sets
+- Filters
+- Collections
+- Product Assignments
+
+Limits must be configurable.
+
+============================================================
+53. CATEGORY BULK OPERATIONS
+============================================================
+
+Bulk category operations may include:
+
+- Publish
+- Hide
+- Archive
+- Move
+- Reorder
+- Assign SEO defaults
+
+Hierarchy-changing operations must be validated carefully.
+
+============================================================
+54. BRAND BULK OPERATIONS
+============================================================
+
+Bulk brand operations may include:
+
+- Publish
+- Hide
+- Archive
+- Reorder
+- Assign products where supported
+
+All operations must be permission-controlled.
+
+============================================================
+55. ATTRIBUTE BULK OPERATIONS
+============================================================
+
+Bulk attribute operations may include:
+
+- Activate
+- Deactivate
+- Reorder
+- Assign to categories
+- Add values
+
+Changes must not invalidate existing variants without explicit
+migration handling.
+
+============================================================
+56. TAXONOMY IMPORT
+============================================================
+
+The platform should reserve import support for:
+
+- Categories
+- Brands
+- Attributes
+- Attribute Values
+
+Import workflow:
+
+Upload
+  ↓
+Parse
+  ↓
+Validate
+  ↓
+Preview
+  ↓
+Confirm
+  ↓
+Process
+  ↓
+Report
+
+============================================================
+57. TAXONOMY EXPORT
+============================================================
+
+Stores may export:
+
+- Categories
+- Category hierarchy
+- Brands
+- Attributes
+- Values
+- Filter configuration
+
+Exports must remain tenant-scoped.
+
+============================================================
+58. CATEGORY MOVE
+============================================================
+
+Moving a category must validate:
+
+- New parent exists
+- Same tenant
+- No circular hierarchy
+- Depth limit
+- Slug conflicts
+- Product relationship impact
+- SEO URL impact
+
+The operation should be transactional where possible.
+
+============================================================
+59. CATEGORY MERGE
+============================================================
+
+The architecture should reserve category merge functionality.
+
+Possible process:
+
+Source Category
++
+Target Category
+↓
+Move Product Assignments
+↓
+Move Child Categories
+↓
+Handle SEO Redirects
+↓
+Archive Source
+
+Merge should require explicit confirmation and audit logging.
+
+============================================================
+60. BRAND MERGE
+============================================================
+
+Brand merge may follow:
+
+Source Brand
++
+Target Brand
+↓
+Reassign Products
+↓
+Handle SEO
+↓
+Archive Source
+
+Historical order references must remain intact.
+
+============================================================
+61. ATTRIBUTE MERGE
+============================================================
+
+Attribute merging is more complex and should require explicit
+mapping.
+
+Example:
+
+Source:
+Colour
+
+Target:
+Color
+
+Values must be mapped:
+
+Grey → Gray
+Black → Black
+
+No automatic destructive merge should occur without
+confirmation.
+
+============================================================
+62. TAXONOMY VERSIONING
+============================================================
+
+Important taxonomy changes may support versioning.
+
+Potentially version:
+
+- Category hierarchy
+- Attribute definitions
+- Filter configuration
+- Navigation assignment
+
+Versioning can support rollback and auditing.
+
+============================================================
+63. CATEGORY SEO REDIRECTS
+============================================================
+
+When category slugs or hierarchy changes, the system should
+support redirects where appropriate.
+
+Example:
+
+/category/mobile
+→
+/category/mobile-phones
+
+Redirects must be tenant-scoped.
+
+============================================================
+64. BRAND SEO REDIRECTS
+============================================================
+
+Brand slug changes should preserve historical URLs where
+possible through tenant-scoped redirects.
+
+============================================================
+65. TAXONOMY NAVIGATION INTEGRATION
+============================================================
+
+Categories may feed the storefront navigation system.
+
+Example:
+
+Main Menu
+  Electronics
+    Mobiles
+    Laptops
+  Fashion
+    Men
+    Women
+
+Navigation should reference taxonomy IDs rather than relying
+only on copied text.
+
+============================================================
+66. CATEGORY BREADCRUMBS
+============================================================
+
+Category hierarchy should generate breadcrumbs.
+
+Example:
+
+Home
+>
+Electronics
+>
+Mobile Phones
+>
+Android Phones
+
+Breadcrumbs should use current published hierarchy.
+
+============================================================
+67. PRODUCT BREADCRUMBS
+============================================================
+
+Product breadcrumbs may use:
+
+- Primary Category
+- Parent Categories
+- Product
+
+The selected breadcrumb path must remain deterministic.
+
+============================================================
+68. CATEGORY LANDING CONTENT
+============================================================
+
+Category pages may contain:
+
+- Banner
+- Introductory content
+- Featured products
+- Subcategory cards
+- Filter controls
+- Product grid
+- Promotional content
+
+The exact page-builder architecture belongs to storefront/content
+modules.
+
+============================================================
+69. CATEGORY ICONS
+============================================================
+
+Categories may optionally support icons.
+
+Icons should be:
+
+- Safe
+- Tenant-scoped
+- Theme-compatible
+- Responsive
+- Accessible
+
+============================================================
+70. TAXONOMY SEARCH
+============================================================
+
+Admin taxonomy search should support:
+
+- Category Name
+- Slug
+- Brand Name
+- Attribute Name
+- Attribute Value
+
+Search results must remain tenant-scoped.
+
+============================================================
+71. TAXONOMY SORTING
+============================================================
+
+Admin lists should support:
+
+- Name
+- Created Date
+- Updated Date
+- Sort Order
+- Status
+- Product Count
+
+Storefront taxonomy may use configured merchandising order.
+
+============================================================
+72. PRODUCT COUNT
+============================================================
+
+Categories and brands may display product counts.
+
+Counts should consider:
+
+- Published products
+- Visibility
+- Current tenant
+- Current channel
+- Relevant filters
+
+Counts must not leak private products.
+
+============================================================
+73. EMPTY TAXONOMY STATES
+============================================================
+
+The storefront should handle:
+
+- Empty Category
+- Empty Brand
+- Empty Collection
+- No Filter Results
+
+Customer-friendly alternatives may include:
+
+- Clear Filters
+- Browse Parent Category
+- Recommended Products
+
+============================================================
+74. TAXONOMY DELETION
+============================================================
+
+Deletion must consider dependencies.
+
+Category:
+- Child categories
+- Product assignments
+- Navigation
+- SEO URLs
+
+Brand:
+- Product assignments
+- Brand page
+- SEO
+
+Attribute:
+- Product values
+- Variant options
+- Filters
+
+Where dependencies exist, archive or reassignment should be
+preferred over unsafe hard deletion.
+
+============================================================
+75. ATTRIBUTE DEACTIVATION
+============================================================
+
+An attribute may be deactivated without immediately deleting
+historical values.
+
+Deactivated attributes should not normally appear in new product
+forms or storefront filters.
+
+Existing historical data must remain intact.
+
+============================================================
+76. ATTRIBUTE VALUE DEACTIVATION
+============================================================
+
+A value may be deactivated.
+
+Example:
+
+Color:
+Black
+White
+Old Blue → inactive
+
+Existing products may retain historical Old Blue assignments,
+while new assignments are prevented.
+
+============================================================
+77. FILTER VISIBILITY RULES
+============================================================
+
+A filter should appear only when:
+
+- Attribute is active
+- Category allows it
+- Product data exists
+- Storefront feature is enabled
+- Package permits it
+- Current product set makes it meaningful
+
+============================================================
+78. FILTER ORDER
+============================================================
+
+Stores should be able to configure filter order.
+
+Example:
+
+1. Brand
+2. Price
+3. Color
+4. Size
+5. Material
+
+This is tenant-specific presentation configuration.
+
+============================================================
+79. ATTRIBUTE VALUE ORDER
+============================================================
+
+Values should support explicit sort order.
+
+Example:
+
+Size:
+XS
+S
+M
+L
+XL
+XXL
+
+Alphabetical sorting should not be forced where business
+ordering is more meaningful.
+
+============================================================
+80. CATEGORY ORDER
+============================================================
+
+Categories should support manual ordering at each hierarchy
+level.
+
+The ordering system should be efficient for frequent changes.
+
+============================================================
+81. BRAND ORDER
+============================================================
+
+Brands may support:
+
+- Alphabetical
+- Manual
+- Popularity
+- Featured
+
+Store configuration determines default behavior.
+
+============================================================
+82. TAXONOMY DATA QUALITY
+============================================================
+
+Admin should be able to identify:
+
+- Empty categories
+- Duplicate category names
+- Missing category SEO
+- Categories with no products
+- Brands with no products
+- Unused attributes
+- Unused values
+- Duplicate values
+- Invalid variant options
+
+These should generally be warnings rather than destructive
+automatic actions.
+
+============================================================
+83. DUPLICATE DETECTION
+============================================================
+
+The platform may detect likely duplicates using:
+
+- Exact name
+- Normalized name
+- Slug
+- External ID
+- Optional similarity matching
+
+Detection should warn administrators rather than silently merge.
+
+============================================================
+84. EXTERNAL IDENTIFIERS
+============================================================
+
+Taxonomy records should support future external references.
+
+Examples:
+
+- External System
+- External Category ID
+- External Brand ID
+- External Attribute ID
+- External Value ID
+
+This enables integrations without replacing internal IDs.
+
+============================================================
+85. API FOUNDATION
+============================================================
+
+Secure APIs should support:
+
+CATEGORY:
+- Create
+- Read
+- Update
+- Move
+- Reorder
+- Publish
+- Archive
+- Restore
+- Delete where safe
+
+BRAND:
+- Create
+- Read
+- Update
+- Publish
+- Archive
+- Restore
+
+ATTRIBUTE:
+- Create
+- Read
+- Update
+- Assign
+- Manage Values
+- Activate/Deactivate
+
+FILTER:
+- Read
+- Configure
+- Reorder
+
+============================================================
+86. API AUTHORIZATION
+============================================================
+
+All taxonomy APIs must enforce:
+
+- Authentication
+- Store membership
+- Permission
+- Tenant scope
+- Package entitlement
+- Usage limit
+- Validation
+- Rate limit
+- Audit logging
+
+============================================================
+87. PUBLIC TAXONOMY API
+============================================================
+
+Public APIs may expose only:
+
+- Published categories
+- Published brands
+- Public attributes
+- Public filter metadata
+- Public counts
+
+Never expose:
+
+- Draft taxonomy
+- Internal notes
+- Audit data
+- Private configuration
+- Other tenant data
+
+============================================================
+88. CACHE STRATEGY
+============================================================
+
+Taxonomy data is highly cacheable.
+
+Potential cache objects:
+
+- Category tree
+- Category details
+- Breadcrumbs
+- Brand list
+- Brand details
+- Attribute definitions
+- Filter configuration
+
+Cache keys must include:
+
+- Tenant ID
+- Locale
+- Channel
+- Relevant configuration version
+
+============================================================
+89. CACHE INVALIDATION
+============================================================
+
+Changes to taxonomy should invalidate affected cache.
+
+Examples:
+
+Category renamed
+→ Category cache
+→ Breadcrumb cache
+→ Navigation cache
+→ SEO cache
+
+Attribute changed
+→ Product filter cache
+→ Category filter cache
+
+Brand changed
+→ Brand cache
+→ Product listing cache
+
+============================================================
+90. SEARCH INDEX INTEGRATION
+============================================================
+
+Taxonomy metadata may be indexed with products.
+
+Search documents may include:
+
+- Category IDs
+- Category names
+- Brand ID
+- Brand name
+- Attribute IDs
+- Attribute values
+- Tags
+
+Every index document must contain tenant scope.
+
+============================================================
+91. EVENT MODEL
+============================================================
+
+The module should emit events such as:
+
+- CategoryCreated
+- CategoryUpdated
+- CategoryMoved
+- CategoryPublished
+- CategoryArchived
+- BrandCreated
+- BrandUpdated
+- BrandArchived
+- AttributeCreated
+- AttributeUpdated
+- AttributeValueCreated
+- AttributeValueUpdated
+- FilterConfigurationChanged
+
+Events may trigger:
+
+- Search indexing
+- Cache invalidation
+- Analytics
+- Audit
+- Integrations
+
+============================================================
+92. AUDIT LOGGING
+============================================================
+
+Audit important changes:
+
+- Category creation
+- Category move
+- Category merge
+- Brand changes
+- Attribute changes
+- Value changes
+- Filter changes
+- Bulk operations
+- Imports
+- Exports
+
+Include:
+
+- Actor
+- Tenant
+- Entity
+- Action
+- Timestamp
+- Relevant metadata
+
+============================================================
+93. CONCURRENCY
+============================================================
+
+Taxonomy changes may occur simultaneously by multiple staff
+members.
+
+Use appropriate concurrency controls such as:
+
+- Optimistic concurrency
+- Version numbers
+- Updated-at validation
+
+Silent overwriting should be avoided.
+
+============================================================
+94. BULK JOB PROCESSING
+============================================================
+
+Large taxonomy operations should use background jobs.
+
+Example:
+
+Request
+↓
+Permission Check
+↓
+Validation
+↓
+Job Creation
+↓
+Queue
+↓
+Processing
+↓
+Progress
+↓
+Completion
+↓
+Audit
+
+============================================================
+95. IMPORT SECURITY
+============================================================
+
+Imported taxonomy files are untrusted input.
+
+Protect against:
+
+- Malicious files
+- Oversized files
+- Formula injection
+- Duplicate records
+- Cross-tenant references
+- Invalid hierarchy
+- Unsafe content
+
+============================================================
+96. CATEGORY HIERARCHY PERFORMANCE
+============================================================
+
+The category model should support efficient:
+
+- Parent lookup
+- Child lookup
+- Ancestor lookup
+- Descendant lookup
+- Breadcrumb generation
+- Tree rendering
+
+The final database strategy may use:
+
+- Adjacency List
+- Materialized Path
+- Closure Table
+- Nested Set
+- Hybrid approach
+
+The final choice should be based on scale and mutation patterns.
+
+============================================================
+97. ATTRIBUTE PERFORMANCE
+============================================================
+
+Attribute queries should remain efficient for:
+
+- Product editor
+- Category filters
+- Search
+- Product listing
+- Variant generation
+
+Indexes should reflect actual query patterns.
+
+============================================================
+98. FILTER PERFORMANCE AT SCALE
+============================================================
+
+The architecture must remain usable for large stores.
+
+Potential optimization:
+
+Database filtering for smaller datasets.
+
+Search/faceted infrastructure for larger datasets.
+
+The final strategy should be configurable at infrastructure
+level without changing the public API.
+
+============================================================
+99. MULTILINGUAL TAXONOMY
+============================================================
+
+Architecture-ready support should include translations for:
+
+- Category Name
+- Category Description
+- Brand Name
+- Brand Description
+- Attribute Name
+- Attribute Values
+
+Internal identifiers remain language-neutral.
+
+============================================================
+100. RTL TAXONOMY
+============================================================
+
+Taxonomy UI and storefront presentation must support RTL.
+
+Examples:
+
+- Urdu category names
+- Arabic category names
+- RTL breadcrumb
+- RTL filter drawer
+
+Logical layout properties should be preferred over fixed
+left/right positioning.
+
+============================================================
+101. CATEGORY TEMPLATE MARKETPLACE FOUNDATION
+============================================================
+
+The architecture should reserve future marketplace support for
+ready-made category/taxonomy templates.
+
+Example:
+
+Fashion Store Template:
+- Men
+- Women
+- Kids
+- Accessories
+- Size
+- Color
+- Material
+
+Importing a template must create tenant-owned copies.
+
+============================================================
+102. AI TAXONOMY FOUNDATION
+============================================================
+
+Future AI capabilities may include:
+
+- Suggest Categories
+- Generate Category Descriptions
+- Suggest Attributes
+- Normalize Attribute Values
+- Detect Duplicate Categories
+- Map imported taxonomy
+- Suggest Filters
+- Generate SEO Metadata
+
+AI suggestions must require review before destructive changes.
+
+============================================================
+103. AI TAXONOMY SAFETY
+============================================================
+
+AI must not automatically:
+
+- Delete categories
+- Merge brands
+- Remove attributes
+- Change variant structure
+- Reassign large numbers of products
+
+without explicit authorized confirmation.
+
+============================================================
+104. ANALYTICS FOUNDATION
+============================================================
+
+Taxonomy events should support analytics such as:
+
+- Category Views
+- Brand Views
+- Filter Usage
+- Filter Combination
+- Search-to-category behavior
+- Category conversion
+- Brand conversion
+
+Analytics remain tenant-scoped.
+
+============================================================
+105. STORE SETUP EXPERIENCE
+============================================================
+
+New store onboarding should provide options:
+
+1. Start Empty
+2. Select Industry Template
+3. Import Existing Catalog
+4. Connect External Catalog
+
+The selected template may automatically create:
+
+- Categories
+- Attributes
+- Filters
+- Suggested brands
+- Storefront navigation
+
+============================================================
+106. INDUSTRY TAXONOMY TEMPLATES
+============================================================
+
+Future ready-made templates may include:
+
+- Fashion
+- Electronics
+- Grocery
+- Cosmetics
+- Jewelry
+- Furniture
+- Restaurant
+- Sports
+- Books
+- General Store
+
+Templates should be platform-managed but copied into the
+tenant's own data.
+
+============================================================
+107. TAXONOMY MIGRATION
+============================================================
+
+Schema changes must preserve:
+
+- Category IDs
+- Brand IDs
+- Attribute IDs
+- Value IDs
+- Product assignments
+- Historical references
+- SEO mappings
+
+No unsafe destructive migration should be introduced.
+
+============================================================
+108. DATA RETENTION
+============================================================
+
+Deleted/archived taxonomy data may need retention for:
+
+- Historical orders
+- Audit logs
+- SEO redirects
+- Product history
+- Integrations
+
+Retention policy should be platform-controlled.
+
+============================================================
+109. SECURITY TESTING
+============================================================
+
+Mandatory tests:
+
+- Cross-tenant category read
+- Cross-tenant category update
+- Cross-tenant category move
+- Cross-tenant brand access
+- Cross-tenant attribute access
+- Cross-tenant value access
+- Cross-tenant filter access
+- Cross-tenant import
+- Cross-tenant export
+- IDOR
+- Unauthorized bulk operations
+- Unsafe hierarchy changes
+- XSS through taxonomy content
+- Cache leakage
+- Search index leakage
+
+============================================================
+110. FUNCTIONAL TESTING
+============================================================
+
+Test:
+
+- Category creation
+- Nested categories
+- Category move
+- Reordering
+- Publishing
+- Scheduling
+- Archiving
+- Restoring
+- Brand creation
+- Brand assignment
+- Attribute creation
+- Attribute values
+- Attribute sets
+- Variant options
+- Filter configuration
+- Product assignments
+- Import
+- Export
+- Merge workflows
+- SEO redirects
+
+============================================================
+111. PACKAGE TESTING
+============================================================
+
+Test:
+
+- Category limits
+- Category depth
+- Brand limits
+- Attribute limits
+- Attribute value limits
+- Filter limits
+- Template access
+- Advanced filter access
+- Trial
+- Upgrade
+- Downgrade
+- Expired subscription
+
+UI-only enforcement is insufficient.
+
+============================================================
+112. PERFORMANCE TESTING
+============================================================
+
+Test with:
+
+- Large category trees
+- Large brand catalogs
+- Large attribute sets
+- Large value sets
+- Thousands of products
+- Heavy filtering
+- Concurrent admin users
+- High storefront traffic
+
+============================================================
+113. HIGH-LEVEL DATA ENTITIES
+============================================================
+
+Potential entities:
+
+- Category
+- CategoryTranslation
+- CategoryMedia
+- CategoryProduct
+- CategoryTemplate
+- Brand
+- BrandTranslation
+- BrandMedia
+- Attribute
+- AttributeTranslation
+- AttributeGroup
+- AttributeValue
+- AttributeValueTranslation
+- AttributeSet
+- AttributeSetItem
+- CategoryAttribute
+- ProductAttributeValue
+- VariantOption
+- VariantOptionValue
+- CategoryFilterConfiguration
+- FilterConfigurationItem
+- TaxonomyRedirect
+- TaxonomyExternalReference
+- TaxonomyVersion
+- TaxonomyImportJob
+- TaxonomyExportJob
+
+Exact schema will be finalized in the Database Blueprint.
+
+============================================================
+114. ADMIN CAPABILITIES
+============================================================
+
+Store administrators should be able to:
+
+CATEGORIES:
+- Create
+- Edit
+- Move
+- Reorder
+- Publish
+- Hide
+- Archive
+- Restore
+- Manage SEO
+- Manage Media
+
+BRANDS:
+- Create
+- Edit
+- Publish
+- Hide
+- Archive
+- Manage SEO
+
+ATTRIBUTES:
+- Create
+- Edit
+- Assign
+- Manage Values
+- Manage Groups
+- Manage Sets
+- Configure Display
+
+FILTERS:
+- Enable
+- Disable
+- Reorder
+- Configure
+
+All capabilities must respect Module 02 permissions.
+
+============================================================
+115. SUPER ADMIN CAPABILITIES
+============================================================
+
+Umar Techy Super Admin should be able to manage:
+
+- Global taxonomy templates
+- Global attribute types
+- Global measurement definitions
+- Platform validation rules
+- Package taxonomy limits
+- Platform defaults
+- Monitoring
+- Operational troubleshooting
+
+Super Admin access to tenant data must remain controlled and
+audited.
+
+============================================================
+116. MODULE DEPENDENCIES
+============================================================
+
+Module 07 depends on:
+
+- Module 01 — Complete Platform Structure
+- Module 02 — Authentication, Users, Roles & Permissions
+- Module 03 — Multi-Tenant & Store Management
+- Module 04 — Subscription, Packages & Feature Entitlements
+- Module 05 — Storefront / Customer-Facing Website
+- Module 06 — Product & Catalog Management
+
+Strong integration with:
+
+- Module 08 — Inventory & Stock Management
+- Module 09 — Order Management
+- Module 11 — Cart, Wishlist & Checkout
+- Module 14 — Discounts, Coupons & Promotions
+- Module 16 — SEO & Content
+- Module 17 — Theme, Branding & Design System
+- Module 22 — Reports & Analytics
+- Module 26 — AI Features
+- Module 27 — App / Plugin Marketplace
+- Module 31 — API & Developer Platform
+- Module 32 — Security
+
+============================================================
+117. REQUIRED FOLLOW-UP ARTIFACTS
+============================================================
+
+1. Category Database Blueprint
+2. Category Hierarchy Strategy
+3. Category State Machine
+4. Brand Database Blueprint
+5. Attribute Database Blueprint
+6. Attribute Type Specification
+7. Attribute Value Blueprint
+8. Attribute Set Blueprint
+9. Variant Option Blueprint
+10. Category-Attribute Mapping
+11. Product-Attribute Mapping
+12. Filter Engine Blueprint
+13. Faceted Search Blueprint
+14. Taxonomy Import Blueprint
+15. Taxonomy Export Blueprint
+16. Taxonomy API Contract
+17. Taxonomy Cache Strategy
+18. Taxonomy Event Model
+19. Taxonomy Security Test Matrix
+20. Taxonomy Performance Test Plan
+
+============================================================
+118. FINAL ARCHITECTURAL RULES
+============================================================
+
+1. One Core Taxonomy Engine.
+2. All tenant taxonomy data must have explicit tenant ownership.
+3. Categories must support hierarchical structure.
+4. Circular category relationships are prohibited.
+5. Category moves must be validated transactionally where possible.
+6. Category slugs must be tenant-scoped.
+7. Brands must be tenant-scoped.
+8. Attributes must be reusable.
+9. Attributes and variant options are not the same concept.
+10. Variant combinations must be unique per product.
+11. Attribute values must belong to their attribute.
+12. Category-specific attributes must be supported.
+13. Filter configuration must be tenant-specific.
+14. Public taxonomy APIs must expose only public data.
+15. Cache keys must include tenant context.
+16. Search indexes must include tenant context.
+17. Deletion must preserve historical integrity.
+18. Bulk operations require authorization.
+19. Imports must validate before committing.
+20. Exports must be tenant-scoped.
+21. Taxonomy content must be sanitized.
+22. AI suggestions must not perform destructive actions silently.
+23. Taxonomy templates must create tenant-owned copies.
+24. Package limits must be entitlement-driven.
+25. Architecture must remain extensible for future marketplace,
+    POS, mobile, API, and AI channels.
+
+============================================================
+119. STATUS
+============================================================
+
+Module 07 Status:
+CATEGORY, BRAND & ATTRIBUTE MANAGEMENT — INITIALIZED
+
+Version:
+1.0
+
+This module establishes the reusable taxonomy foundation for
+categories, hierarchical navigation, brands, attributes,
+attribute values, variant options, filters, templates,
+multilingual support, SEO, search, caching, imports, exports,
+AI extension points, security, and scale.
+
+The next modules will build inventory, orders, cart/checkout,
+payments, shipping, marketing, SEO/content, themes, billing,
+monitoring, AI, integrations, and the remaining platform
+capabilities.
+
+============================================================
+END OF MODULE 07
+============================================================

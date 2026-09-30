@@ -1,0 +1,1813 @@
+UMAR TECHY
+E-COMMERCE PLATFORM
+MASTER PROJECT BLUEPRINT
+
+MODULE 10 — CUSTOMER MANAGEMENT
+Version: 1.0
+Status: Planning / Blueprint
+
+============================================================
+1. MODULE PURPOSE
+============================================================
+
+This module defines the centralized Customer Management
+architecture for the Umar Techy multi-tenant E-Commerce Platform.
+
+The customer system manages the customer identity and
+store-specific relationship required for:
+
+- Customer Accounts
+- Guest Customers
+- Profiles
+- Contact Information
+- Addresses
+- Order History
+- Customer Groups
+- Customer Segmentation
+- Customer Notes
+- Customer Tags
+- Preferences
+- Communication Preferences
+- Marketing Consent
+- Customer Status
+- Customer History
+- Loyalty foundation
+- Customer analytics foundation
+- Privacy controls
+- Account security
+- Import / Export
+- API
+- Integrations
+- Multi-store identity readiness
+
+The system must preserve a strict distinction between platform
+identity and store-level customer data.
+
+============================================================
+2. CORE CUSTOMER PRINCIPLE
+============================================================
+
+ONE CORE CUSTOMER ENGINE
++
+PLATFORM IDENTITY WHERE NEEDED
++
+STORE-SCOPED CUSTOMER RELATIONSHIP
++
+STRICT TENANT ISOLATION
++
+PRIVACY BY DESIGN
+
+must serve all stores.
+
+Basic, Business, and Premium stores use the same Customer Engine.
+
+Package differences are enforced through Module 04.
+
+============================================================
+3. CUSTOMER VS USER
+============================================================
+
+A CUSTOMER is a shopper who purchases from a store.
+
+A USER is an authenticated platform/store administration
+identity defined in Module 02.
+
+Customers must not automatically receive administrative
+permissions.
+
+Customer authentication and staff authentication should remain
+logically separated even if they share infrastructure.
+
+============================================================
+4. PLATFORM IDENTITY VS STORE CUSTOMER
+============================================================
+
+The architecture should support a future model where one human
+may interact with multiple stores.
+
+Conceptually:
+
+Platform Identity
+    ↓
+Store Customer A
+Store Customer B
+Store Customer C
+
+However, Store A must never receive Store B's private customer
+data without explicit and authorized platform-level functionality.
+
+The first release may use store-scoped customer accounts while
+remaining architecture-ready for broader identity federation.
+
+============================================================
+5. TENANT ISOLATION
+============================================================
+
+Every store customer relationship must be tenant-scoped.
+
+Store A must never access:
+
+- Store B customers
+- Store B addresses
+- Store B orders through customer APIs
+- Store B customer notes
+- Store B tags
+- Store B segments
+- Store B marketing consent
+- Store B loyalty balance
+- Store B private customer metadata
+
+All APIs, queries, caches, exports, events, jobs, analytics, and
+integrations must enforce tenant scope.
+
+============================================================
+6. CUSTOMER ENTITY
+============================================================
+
+Potential customer fields:
+
+- Customer ID
+- Store/Tenant ID
+- Platform Identity Reference where applicable
+- First Name
+- Last Name
+- Display Name
+- Email
+- Phone
+- Status
+- Customer Type
+- Preferred Language
+- Preferred Currency where supported
+- Marketing Consent
+- Communication Preferences
+- Last Login
+- Last Order At
+- Created At
+- Updated At
+- Archived At
+
+Exact schema will be finalized in the Database Blueprint.
+
+============================================================
+7. CUSTOMER TYPES
+============================================================
+
+Initial customer types may include:
+
+- Guest
+- Registered
+- Business
+- Wholesale
+- VIP
+- Staff-created Customer
+
+Future types may include:
+
+- Corporate
+- Reseller
+- Affiliate Customer
+- Marketplace Customer
+
+Customer type must not itself grant administrative access.
+
+============================================================
+8. GUEST CUSTOMER
+============================================================
+
+A guest customer may place an order without creating an account.
+
+The system may create a temporary or store-scoped customer
+record associated with the order.
+
+Guest data should be retained only as required for:
+
+- Order processing
+- Customer communication
+- Returns
+- Refunds
+- Business records
+- Legal requirements
+
+============================================================
+9. GUEST TO REGISTERED CONVERSION
+============================================================
+
+A guest customer may later create an account.
+
+The conversion process must safely associate eligible historical
+orders with the new customer identity.
+
+The system must avoid accidentally linking another person's
+orders based only on weak matching such as name.
+
+Verification should be required.
+
+============================================================
+10. CUSTOMER REGISTRATION
+============================================================
+
+Registration may support:
+
+- Email
+- Phone
+- Password
+- Verification
+
+Future methods may include:
+
+- OTP
+- Social Login
+- Passkeys
+
+Store package and configuration may determine available methods.
+
+============================================================
+11. CUSTOMER LOGIN
+============================================================
+
+Customer login should support:
+
+- Secure authentication
+- Session management
+- Logout
+- Password reset
+- Email verification
+- Optional 2FA in future
+- Suspicious login protection
+
+Customer login must remain tenant-aware.
+
+============================================================
+12. CUSTOMER ACCOUNT SECURITY
+============================================================
+
+Protect customer accounts against:
+
+- Credential stuffing
+- Brute force
+- Session theft
+- Account enumeration
+- Password reset abuse
+- OTP abuse
+- Unauthorized address changes
+- Unauthorized order access
+
+Use:
+
+- Rate limiting
+- Secure sessions/tokens
+- Password hashing
+- Verification
+- Security logging
+
+============================================================
+13. CUSTOMER EMAIL
+============================================================
+
+Email may be used for:
+
+- Login
+- Verification
+- Password reset
+- Order communication
+- Marketing where consent exists
+- Account recovery
+
+Email uniqueness may be enforced per store or according to the
+final identity architecture.
+
+============================================================
+14. CUSTOMER PHONE
+============================================================
+
+Phone numbers are important for Pakistan-focused commerce.
+
+The platform should support:
+
+- Country code
+- Normalized phone number
+- Verification where enabled
+- Multiple contact numbers in future
+
+Phone numbers must be stored securely and used only for
+authorized purposes.
+
+============================================================
+15. PHONE NORMALIZATION
+============================================================
+
+Phone values should be normalized into a consistent format.
+
+Example:
+
++92XXXXXXXXXX
+
+Different input formats should map to the same normalized
+identity where appropriate.
+
+The system must not use unsafe phone matching as sole identity
+proof.
+
+============================================================
+16. CUSTOMER PROFILE
+============================================================
+
+Customer profile may include:
+
+- Name
+- Email
+- Phone
+- Profile Image where supported
+- Preferred Language
+- Communication Preferences
+- Date-related profile fields where appropriate
+- Optional business information
+
+Sensitive fields should be minimized.
+
+============================================================
+17. CUSTOMER ADDRESS BOOK
+============================================================
+
+Customers may save addresses.
+
+Address types:
+
+- Shipping
+- Billing
+- Other
+
+Each address may include:
+
+- Recipient Name
+- Phone
+- Address Line
+- City
+- Area
+- Postal Code
+- Province/State
+- Country
+- Delivery Instructions
+
+============================================================
+18. ADDRESS OWNERSHIP
+============================================================
+
+Every customer address must belong to the correct customer and
+store.
+
+A customer must never access another customer's saved address.
+
+Address IDs must not be sufficient authorization.
+
+============================================================
+19. ADDRESS VALIDATION
+============================================================
+
+Address validation may include:
+
+- Required fields
+- Country
+- Province
+- City
+- Postal code
+- Phone
+- Supported shipping area
+
+Shipping availability will be determined by Module 13.
+
+============================================================
+20. ADDRESS SNAPSHOT
+============================================================
+
+Orders must store a historical address snapshot.
+
+If a customer later changes their address, old orders must retain
+the original delivery address used for that order.
+
+============================================================
+21. DEFAULT ADDRESS
+============================================================
+
+A customer may designate:
+
+- Default Shipping Address
+- Default Billing Address
+
+The system should prevent invalid defaults after address
+deletion.
+
+============================================================
+22. CUSTOMER ORDER HISTORY
+============================================================
+
+Customer account may display:
+
+- Order Number
+- Date
+- Total
+- Status
+- Payment Status
+- Fulfillment Status
+- Items
+- Shipment
+- Return
+- Refund
+
+The customer must see only their own store-scoped order history.
+
+============================================================
+23. CUSTOMER PROFILE VS ORDER SNAPSHOT
+============================================================
+
+Customer profile is mutable.
+
+Order snapshot is historical.
+
+Changing:
+
+Customer Name
+Phone
+Email
+Address
+
+must not rewrite historical order snapshots.
+
+============================================================
+24. CUSTOMER TAGS
+============================================================
+
+Stores may tag customers.
+
+Examples:
+
+- VIP
+- Wholesale
+- Repeat Buyer
+- High Value
+- Local
+- Newsletter
+
+Tags must be tenant-scoped.
+
+============================================================
+25. CUSTOMER GROUPS
+============================================================
+
+Customer groups may define commercial segmentation.
+
+Examples:
+
+- Retail
+- Wholesale
+- VIP
+- Staff
+- Reseller
+- Corporate
+
+Groups may later influence:
+
+- Pricing
+- Discounts
+- Shipping
+- Payment options
+- Product access
+
+Group membership must not bypass security permissions.
+
+============================================================
+26. CUSTOMER SEGMENTS
+============================================================
+
+Segments may be dynamic or manual.
+
+Examples:
+
+- Purchased in last 30 days
+- No order in 90 days
+- High lifetime value
+- Frequent buyers
+- Abandoned cart customers
+- Location-based customers
+
+Dynamic segments should use defined rules.
+
+============================================================
+27. SEGMENT RULE ENGINE
+============================================================
+
+Future segment conditions may include:
+
+- Order Count
+- Total Spend
+- Average Order Value
+- Last Order Date
+- Product Purchased
+- Category Purchased
+- Customer Group
+- Location
+- Registration Date
+- Marketing Consent
+
+The engine must be tenant-scoped.
+
+============================================================
+28. CUSTOMER LIFETIME VALUE FOUNDATION
+============================================================
+
+The architecture should support customer metrics such as:
+
+- Total Orders
+- Total Revenue
+- Average Order Value
+- Refund Total
+- Return Total
+- Last Order Date
+- First Order Date
+- Lifetime Value
+
+Financial metrics must be derived from authoritative order data.
+
+============================================================
+29. CUSTOMER STATUS
+============================================================
+
+Potential states:
+
+- ACTIVE
+- INACTIVE
+- BLOCKED
+- ARCHIVED
+- PENDING_VERIFICATION
+
+Status must have clear business meaning.
+
+============================================================
+30. CUSTOMER BLOCKING
+============================================================
+
+Authorized staff may block a customer where business policy
+permits.
+
+Possible reasons:
+
+- Abuse
+- Fraud concern
+- Repeated failed deliveries
+- Policy violation
+- Support decision
+
+Blocking should not silently delete historical data.
+
+============================================================
+31. CUSTOMER BLOCK EFFECTS
+============================================================
+
+Depending on configuration, a blocked customer may be prevented
+from:
+
+- Login
+- New checkout
+- New orders
+- Reviews
+- Promotions
+
+Historical orders remain accessible to authorized staff.
+
+============================================================
+32. CUSTOMER NOTES
+============================================================
+
+Store staff may add internal customer notes.
+
+Examples:
+
+- Preferred delivery time
+- Customer service history
+- Wholesale information
+- Support follow-up
+
+Internal notes must never appear in customer-facing APIs.
+
+============================================================
+33. CUSTOMER ACTIVITY TIMELINE
+============================================================
+
+The platform may provide a customer timeline.
+
+Events:
+
+- Account Created
+- Email Verified
+- Login
+- Order Created
+- Order Delivered
+- Return Requested
+- Refund Completed
+- Address Changed
+- Marketing Consent Changed
+
+Sensitive events should be permission-controlled.
+
+============================================================
+34. CUSTOMER COMMUNICATION PREFERENCES
+============================================================
+
+Customers may control preferences such as:
+
+- Email
+- SMS
+- WhatsApp
+- Push
+- Marketing
+- Transactional notifications
+
+Transactional communication may be treated separately from
+marketing communication.
+
+============================================================
+35. MARKETING CONSENT
+============================================================
+
+Marketing consent should be explicitly tracked.
+
+Potential fields:
+
+- Channel
+- Consent Status
+- Consent Timestamp
+- Source
+- Version of Consent Text
+- Revoked Timestamp
+
+The system must respect applicable legal requirements.
+
+============================================================
+36. CONSENT VS TRANSACTIONAL MESSAGES
+============================================================
+
+Order confirmation and necessary service communications should
+be distinguished from promotional marketing.
+
+Marketing consent should not automatically be assumed from
+placing an order unless legally and operationally permitted.
+
+============================================================
+37. CONSENT AUDIT
+============================================================
+
+Consent changes should be auditable.
+
+Record:
+
+- Previous State
+- New State
+- Timestamp
+- Source
+- Actor where applicable
+- Consent Version
+
+============================================================
+38. CUSTOMER PREFERENCES
+============================================================
+
+Possible preferences:
+
+- Language
+- Currency
+- Preferred Contact Channel
+- Saved Search
+- Product Interests
+- Notification Settings
+
+Preferences must be tenant-scoped unless explicitly global.
+
+============================================================
+39. CUSTOMER WISHLIST INTEGRATION
+============================================================
+
+Customer management should integrate with Module 11 for:
+
+- Wishlist ownership
+- Saved products
+- Recently viewed products
+- Wishlist notifications
+
+Wishlist data must remain tenant-scoped.
+
+============================================================
+40. CART INTEGRATION
+============================================================
+
+Customer identity may link to:
+
+- Active Cart
+- Abandoned Cart
+- Saved Cart
+
+Cart data must remain store-specific.
+
+============================================================
+41. ORDER INTEGRATION
+============================================================
+
+Customer records must integrate with Module 09.
+
+Required relationships:
+
+Customer
+→ Orders
+→ Order Items
+→ Returns
+→ Refunds
+→ Shipments
+
+Historical order snapshots remain independent of mutable
+customer profile data.
+
+============================================================
+42. INVENTORY RELATIONSHIP
+============================================================
+
+Customer data should not directly manipulate inventory.
+
+Customer purchasing affects inventory only through authorized
+Order/Checkout workflows.
+
+============================================================
+43. CUSTOMER GROUP PRICING FOUNDATION
+============================================================
+
+Future customer groups may support differentiated pricing.
+
+Example:
+
+Retail:
+Normal Price
+
+Wholesale:
+Wholesale Price
+
+VIP:
+Special Price
+
+Pricing must still be calculated server-side.
+
+============================================================
+44. CUSTOMER-SPECIFIC DISCOUNTS
+============================================================
+
+Future support may allow:
+
+- Customer coupon
+- Group coupon
+- Segment promotion
+- Loyalty discount
+
+Discount eligibility must be enforced by the promotion engine.
+
+============================================================
+45. LOYALTY FOUNDATION
+============================================================
+
+The customer architecture should reserve support for:
+
+- Points
+- Tiers
+- Rewards
+- Store Credit
+- Referral Rewards
+
+Loyalty balances must be tenant-scoped and auditable.
+
+Detailed loyalty design may be expanded in the Marketing module.
+
+============================================================
+46. CUSTOMER REFERRALS FOUNDATION
+============================================================
+
+Customer referral programs may support:
+
+- Referral Code
+- Referrer
+- Referred Customer
+- Reward
+- Status
+
+Referral relationships must be tenant-scoped.
+
+============================================================
+47. CUSTOMER IMPORT
+============================================================
+
+Stores may import customer records.
+
+Potential formats:
+
+- CSV
+- Spreadsheet-compatible file
+- API
+
+Import fields may include:
+
+- Name
+- Email
+- Phone
+- Group
+- Tags
+- Addresses
+
+============================================================
+48. CUSTOMER IMPORT VALIDATION
+============================================================
+
+Import workflow:
+
+Upload
+↓
+Parse
+↓
+Validate
+↓
+Preview
+↓
+Confirm
+↓
+Process
+↓
+Report
+
+Validation should detect:
+
+- Duplicate email
+- Duplicate phone
+- Invalid address
+- Invalid group
+- Invalid tag
+- Invalid data format
+
+============================================================
+49. CUSTOMER IMPORT PRIVACY
+============================================================
+
+Customer import files contain personal data.
+
+Protection must include:
+
+- Restricted access
+- Secure storage
+- Limited retention
+- Tenant isolation
+- Audit logging
+- Controlled downloads
+
+============================================================
+50. CUSTOMER EXPORT
+============================================================
+
+Authorized staff may export customer data.
+
+Potential fields:
+
+- Customer profile
+- Contact details
+- Groups
+- Tags
+- Consent status
+- Order summary
+
+Exports must be:
+
+- Permission-controlled
+- Tenant-scoped
+- Audited
+- Data-minimized
+
+============================================================
+51. CUSTOMER SEARCH
+============================================================
+
+Admin search may support:
+
+- Name
+- Email
+- Phone
+- Customer ID
+- Order Number
+- Tags
+- Group
+
+Search must not expose customers from other stores.
+
+============================================================
+52. CUSTOMER FILTERING
+============================================================
+
+Admin filters may include:
+
+- Status
+- Group
+- Tag
+- Registration Date
+- Last Order Date
+- Order Count
+- Spend Range
+- Location
+- Consent Status
+
+============================================================
+53. CUSTOMER SEGMENTATION
+============================================================
+
+Stores may create saved segments.
+
+Examples:
+
+Segment:
+"Customers with no purchase in 90 days"
+
+Segment:
+"Customers who spent over configured amount"
+
+Segments should be evaluated from tenant-scoped data.
+
+============================================================
+54. CUSTOMER DASHBOARD
+============================================================
+
+Store Admin dashboard may show:
+
+- Total Customers
+- New Customers
+- Active Customers
+- Repeat Customers
+- Guest Orders
+- Registered Customers
+- Top Customer Segments
+- Customer Growth
+- Customer Revenue
+
+Exact analytics belongs to Module 22.
+
+============================================================
+55. CUSTOMER DETAIL VIEW
+============================================================
+
+Authorized staff may view:
+
+- Profile
+- Contact Information
+- Addresses
+- Orders
+- Returns
+- Refunds
+- Tags
+- Groups
+- Notes
+- Consent
+- Activity
+
+Sensitive data should require appropriate permission.
+
+============================================================
+56. CUSTOMER MERGE
+============================================================
+
+The architecture should reserve customer merge.
+
+Potential process:
+
+Source Customer
++
+Target Customer
+↓
+Validate Ownership
+↓
+Resolve Orders
+↓
+Resolve Addresses
+↓
+Resolve Tags/Groups
+↓
+Resolve Wishlist
+↓
+Archive Source
+
+Merge must never combine customers across tenants.
+
+The final workflow should require explicit confirmation.
+
+============================================================
+57. CUSTOMER DUPLICATE DETECTION
+============================================================
+
+Potential matching signals:
+
+- Verified Email
+- Verified Phone
+- External Customer ID
+
+Weak signals such as name alone should only generate warnings.
+
+The system must not automatically merge customers based on
+uncertain similarity.
+
+============================================================
+58. CUSTOMER ARCHIVAL
+============================================================
+
+Archived customers should:
+
+- Stop normal login where appropriate
+- Stop normal marketing
+- Remain associated with historical orders
+- Remain recoverable where permitted
+
+============================================================
+59. CUSTOMER DELETION
+============================================================
+
+Customer deletion must consider:
+
+- Historical orders
+- Financial records
+- Returns
+- Refunds
+- Legal retention
+- Audit
+
+Where complete deletion is not appropriate, use controlled
+anonymization or archival.
+
+============================================================
+60. PRIVACY / ANONYMIZATION
+============================================================
+
+The architecture should support privacy requests.
+
+Possible workflow:
+
+Request
+↓
+Verify Identity
+↓
+Check Legal Retention
+↓
+Anonymize Eligible Data
+↓
+Preserve Required Records
+↓
+Audit
+
+Do not destroy information required for financial/business
+integrity.
+
+============================================================
+61. CUSTOMER DATA MINIMIZATION
+============================================================
+
+Only collect data required for:
+
+- Account
+- Checkout
+- Fulfillment
+- Customer service
+- Legal/business requirements
+- Explicit optional features
+
+Avoid unnecessary personal data.
+
+============================================================
+62. CUSTOMER DATA ACCESS
+============================================================
+
+Customers may request access to eligible personal data according
+to applicable requirements.
+
+The architecture should support controlled data export.
+
+============================================================
+63. CUSTOMER ACCOUNT RECOVERY
+============================================================
+
+Recovery may use:
+
+- Verified email
+- Verified phone
+- OTP
+- Secure reset token
+
+Recovery must not reveal whether arbitrary accounts exist
+through overly specific error messages.
+
+============================================================
+64. PASSWORD RESET
+============================================================
+
+Password reset should use:
+
+- Short-lived tokens
+- One-time use
+- Rate limits
+- Secure transport
+- Audit events
+
+Passwords must never be stored in plain text.
+
+============================================================
+65. SESSION MANAGEMENT
+============================================================
+
+Customer sessions should support:
+
+- Expiration
+- Revocation
+- Logout
+- Device/session tracking where appropriate
+- Suspicious session invalidation
+
+============================================================
+66. ACCOUNT SECURITY EVENTS
+============================================================
+
+Potential events:
+
+- Login
+- Failed Login
+- Password Changed
+- Password Reset
+- Email Changed
+- Phone Changed
+- New Device
+- Account Blocked
+- Account Unblocked
+
+Security events should be auditable.
+
+============================================================
+67. EMAIL / PHONE CHANGE
+============================================================
+
+Changing critical identity fields should require verification.
+
+Example:
+
+Old Email
+→ New Email
+→ Verification
+→ Update
+
+This prevents account takeover through unauthorized changes.
+
+============================================================
+68. CUSTOMER SUPPORT ACCESS
+============================================================
+
+Support staff may need temporary access to customer information.
+
+Support access should be:
+
+- Permission-controlled
+- Tenant-scoped
+- Time-limited where possible
+- Audited
+
+Support should not automatically receive financial or security
+privileges.
+
+============================================================
+69. IMPERSONATION FOUNDATION
+============================================================
+
+Future controlled customer impersonation may help support.
+
+Requirements:
+
+- Explicit authorization
+- Strong audit logging
+- Visible impersonation state
+- Limited duration
+- No password exposure
+- Sensitive actions restricted where appropriate
+
+============================================================
+70. CUSTOMER COMMUNICATION HISTORY
+============================================================
+
+The architecture should reserve a communication history.
+
+Potential records:
+
+- Channel
+- Message Type
+- Sent At
+- Delivery Status
+- Template
+- Campaign Reference
+
+Marketing and notification modules will define detailed behavior.
+
+============================================================
+71. WHATSAPP INTEGRATION
+============================================================
+
+For Pakistan-focused stores, customer records may integrate with
+WhatsApp communication.
+
+Potential uses:
+
+- Order updates
+- Support
+- Verification where enabled
+- Marketing where consent exists
+
+Phone number ownership and consent must be handled carefully.
+
+============================================================
+72. CUSTOMER LOCALIZATION
+============================================================
+
+Customer preferences may support:
+
+- Urdu
+- English
+- Arabic
+- Other supported languages
+
+Storefront should use the customer's preference where enabled.
+
+============================================================
+73. CUSTOMER TIMEZONE
+============================================================
+
+Future customer timezone support may improve:
+
+- Notifications
+- Campaign scheduling
+- Communication timing
+
+The store timezone remains authoritative for store business
+operations unless explicitly configured otherwise.
+
+============================================================
+74. CUSTOMER LOCATION
+============================================================
+
+Customer addresses may support geographic segmentation.
+
+Location data must be treated as personal data and protected.
+
+Use only what is necessary for:
+
+- Shipping
+- Serviceability
+- Store operations
+- Optional analytics
+
+============================================================
+75. CUSTOMER ANALYTICS FOUNDATION
+============================================================
+
+Customer events may support:
+
+- Acquisition
+- Repeat purchase
+- Retention
+- Lifetime value
+- Churn
+- Segment performance
+- Order frequency
+
+Analytics must remain tenant-scoped.
+
+============================================================
+76. CUSTOMER DATA QUALITY
+============================================================
+
+The system should identify:
+
+- Duplicate customers
+- Missing contact data
+- Invalid phone
+- Invalid email
+- Unverified contact
+- Missing address
+- Conflicting data
+- Stale segments
+
+These should produce actionable warnings.
+
+============================================================
+77. CUSTOMER EXTERNAL REFERENCES
+============================================================
+
+Support future integrations with:
+
+- CRM
+- Accounting
+- ERP
+- POS
+- Marketing platforms
+- Marketplace
+
+Potential fields:
+
+- External System
+- External Customer ID
+- Sync Status
+- Last Synced At
+
+============================================================
+78. CUSTOMER SYNC
+============================================================
+
+Customer synchronization should support:
+
+- Create
+- Update
+- Archive
+- Conflict detection
+- Idempotency
+- Retry
+- Audit
+
+External systems must not bypass tenant isolation.
+
+============================================================
+79. CUSTOMER EVENTS
+============================================================
+
+Potential events:
+
+- CustomerCreated
+- CustomerRegistered
+- CustomerVerified
+- CustomerUpdated
+- CustomerAddressAdded
+- CustomerAddressUpdated
+- CustomerAddressDeleted
+- CustomerBlocked
+- CustomerUnblocked
+- CustomerArchived
+- CustomerConsentChanged
+- CustomerGroupChanged
+- CustomerTagChanged
+
+These events may feed:
+
+- Notifications
+- Marketing
+- Analytics
+- CRM
+- AI
+- Audit
+- Integrations
+
+============================================================
+80. EVENT / OUTBOX
+============================================================
+
+Important customer events should use reliable event delivery.
+
+Conceptual:
+
+Customer Transaction
+→ Outbox Event
+→ Commit
+→ Publish
+→ Consumers
+
+============================================================
+81. CACHE ISOLATION
+============================================================
+
+Customer private data must be cached cautiously.
+
+If cached, keys must include:
+
+- Tenant
+- Customer
+- User/session context
+
+Public CDN caching of private customer data is prohibited.
+
+============================================================
+82. SEARCH INDEX SECURITY
+============================================================
+
+If customer search uses an index:
+
+Every record must contain tenant context.
+
+Admin search must enforce:
+
+- Tenant
+- Permission
+- Store
+- User scope where applicable
+
+============================================================
+83. API DESIGN
+============================================================
+
+Secure APIs should support:
+
+- Customer Registration
+- Customer Login
+- Customer Profile
+- Address Management
+- Order History
+- Customer Preferences
+- Wishlist Integration
+- Customer Groups
+- Tags
+- Segments
+- Import
+- Export
+- Archive
+- Restore
+- Privacy Requests
+
+============================================================
+84. CUSTOMER API SECURITY
+============================================================
+
+Customer-facing APIs must enforce:
+
+- Authentication
+- Customer ownership
+- Tenant
+- Authorization
+- Rate limits
+- Input validation
+
+A customer must never be able to change customer ID in a
+request to access another customer.
+
+============================================================
+85. ADMIN API SECURITY
+============================================================
+
+Admin customer APIs must enforce:
+
+- Store membership
+- Role
+- Permission
+- Tenant
+- Package entitlement
+- Rate limit
+- Audit
+
+============================================================
+86. RATE LIMITING
+============================================================
+
+Sensitive endpoints should be rate limited:
+
+- Login
+- Registration
+- Password reset
+- OTP
+- Customer search
+- Export
+- Import
+- Profile changes
+- Address changes
+
+============================================================
+87. PACKAGE ENTITLEMENTS
+============================================================
+
+Potential package capabilities:
+
+Basic:
+- Customer accounts
+- Basic profiles
+- Address book
+- Order history
+- Basic customer search
+
+Business:
+- Customer groups
+- Tags
+- Segmentation
+- Advanced customer reports
+- Bulk customer operations
+
+Premium:
+- Advanced segmentation
+- Loyalty
+- AI customer insights
+- Advanced automation
+- CRM integrations
+
+Exact package mapping must be finalized in Module 04.
+
+============================================================
+88. CUSTOMER LIMITS
+============================================================
+
+Potential usage limits:
+
+- Total Customers
+- Customer Import Size
+- Export Frequency
+- Segments
+- Customer Groups
+- Tags
+- Marketing Contacts
+- Communication volume
+
+Limits must be configurable.
+
+============================================================
+89. CUSTOMER SECURITY TESTING
+============================================================
+
+Mandatory tests:
+
+- Cross-tenant customer access
+- Cross-customer access
+- IDOR
+- Unauthorized address access
+- Unauthorized order access
+- Customer ID manipulation
+- Account enumeration
+- Password reset abuse
+- Session theft scenarios
+- Unauthorized exports
+- Unauthorized notes
+- Consent manipulation
+- Cache leakage
+- Search index leakage
+
+============================================================
+90. PRIVACY TESTING
+============================================================
+
+Test:
+
+- Data export
+- Data deletion request
+- Anonymization
+- Consent withdrawal
+- Marketing suppression
+- Historical order retention
+- Address removal
+- Account archival
+
+============================================================
+91. FUNCTIONAL TESTING
+============================================================
+
+Test:
+
+- Registration
+- Verification
+- Login
+- Logout
+- Password reset
+- Profile update
+- Address creation
+- Address editing
+- Default address
+- Guest checkout
+- Guest conversion
+- Order history
+- Customer groups
+- Tags
+- Segments
+- Blocking
+- Import
+- Export
+- Merge
+- Archive
+- Restore
+
+============================================================
+92. CONCURRENCY TESTING
+============================================================
+
+Test:
+
+- Simultaneous profile update
+- Simultaneous address update
+- Duplicate registration
+- Duplicate guest conversion
+- Concurrent customer merge
+- Concurrent import
+
+Use appropriate concurrency controls.
+
+============================================================
+93. IMPORT / EXPORT TESTING
+============================================================
+
+Test:
+
+- Large import
+- Invalid rows
+- Duplicate records
+- Retry
+- Partial failure
+- Export permissions
+- Sensitive field filtering
+- Tenant isolation
+
+============================================================
+94. PERFORMANCE TESTING
+============================================================
+
+Test:
+
+- Small customer database
+- Large customer database
+- Large order history
+- Heavy customer search
+- Large segments
+- Bulk operations
+- Concurrent account access
+
+============================================================
+95. HIGH-LEVEL DATA ENTITIES
+============================================================
+
+Potential entities:
+
+- Customer
+- CustomerIdentity
+- CustomerProfile
+- CustomerAddress
+- CustomerGroup
+- CustomerGroupMember
+- CustomerTag
+- CustomerTagAssignment
+- CustomerSegment
+- CustomerSegmentRule
+- CustomerPreference
+- CustomerConsent
+- CustomerConsentHistory
+- CustomerNote
+- CustomerActivity
+- CustomerExternalReference
+- CustomerMergeRecord
+- CustomerPrivacyRequest
+- CustomerAnonymizationRecord
+- CustomerImportJob
+- CustomerExportJob
+- CustomerCommunicationPreference
+- CustomerSecurityEvent
+- CustomerOutboxEvent
+
+Exact schema will be finalized in the Database Blueprint.
+
+============================================================
+96. ADMIN CAPABILITIES
+============================================================
+
+Authorized store users should be able to:
+
+- View Customers
+- Search Customers
+- Filter Customers
+- View Customer Details
+- Manage Addresses where permitted
+- Add Notes
+- Manage Tags
+- Manage Groups
+- Create Segments
+- Block/Unblock
+- Archive/Restore
+- Import
+- Export
+- Manage Consent where authorized
+- Resolve Duplicate Warnings
+
+Permissions must come from Module 02.
+
+============================================================
+97. SUPER ADMIN CAPABILITIES
+============================================================
+
+Umar Techy Super Admin should manage platform-level:
+
+- Customer feature definitions
+- Package limits
+- Global privacy controls
+- Communication infrastructure
+- Integration diagnostics
+- Monitoring
+- Security controls
+
+Direct access to tenant customer data must be explicitly
+authorized and audited.
+
+============================================================
+98. MODULE DEPENDENCIES
+============================================================
+
+Module 10 depends on:
+
+- Module 01 — Complete Platform Structure
+- Module 02 — Authentication, Users, Roles & Permissions
+- Module 03 — Multi-Tenant & Store Management
+- Module 04 — Subscription, Packages & Feature Entitlements
+- Module 05 — Storefront / Customer-Facing Website
+- Module 09 — Order Management
+
+Strong integration with:
+
+- Module 11 — Cart, Wishlist & Checkout
+- Module 12 — Payment Management & Gateways
+- Module 13 — Shipping & Delivery
+- Module 14 — Discounts, Coupons & Promotions
+- Module 15 — Marketing & Customer Engagement
+- Module 21 — Notifications & Communication
+- Module 22 — Reports & Analytics
+- Module 26 — AI Features
+- Module 27 — App / Plugin Marketplace
+- Module 29 — Billing / Financial Integration
+- Module 31 — API & Developer Platform
+- Module 32 — Security & Compliance
+
+============================================================
+99. REQUIRED FOLLOW-UP ARTIFACTS
+============================================================
+
+1. Customer Database Blueprint
+2. Customer Identity Blueprint
+3. Customer Authentication Blueprint
+4. Customer Address Blueprint
+5. Customer Group Blueprint
+6. Customer Segmentation Blueprint
+7. Customer Consent Blueprint
+8. Customer Privacy Blueprint
+9. Customer Merge Blueprint
+10. Customer Import Blueprint
+11. Customer Export Blueprint
+12. Customer API Contract
+13. Customer Event / Outbox Blueprint
+14. Customer Security Blueprint
+15. Customer Analytics Blueprint
+16. Customer Communication Preference Blueprint
+17. Customer Loyalty Foundation Blueprint
+18. Customer Integration/Sync Blueprint
+19. Customer Security Test Matrix
+20. Customer Privacy & Compliance Test Plan
+
+============================================================
+100. FINAL ARCHITECTURAL RULES
+============================================================
+
+1. One Core Customer Engine.
+2. Customer data must be tenant-scoped.
+3. Customer and staff identity must remain logically distinct.
+4. Guest customers must be supported.
+5. Guest-to-account conversion must require secure verification.
+6. Customer profiles are mutable.
+7. Order customer snapshots are historical and immutable.
+8. Customer addresses must be customer-owned and tenant-scoped.
+9. Address IDs alone must never authorize access.
+10. Customer groups must not grant administrative permissions.
+11. Customer segmentation must be tenant-scoped.
+12. Marketing consent must be explicitly tracked.
+13. Consent history must be auditable.
+14. Transactional and marketing communication must be distinct.
+15. Customer private data must not be publicly cached.
+16. Customer search indexes must be tenant-aware.
+17. Customer exports must be permission-controlled and audited.
+18. Customer imports must validate before committing.
+19. Sensitive customer changes require appropriate verification.
+20. Customer merge must be explicit and tenant-safe.
+21. Historical orders must survive customer changes.
+22. Deletion must respect business/legal retention requirements.
+23. Privacy workflows must support controlled anonymization.
+24. External integrations must use stable external references.
+25. Customer architecture must remain extensible for loyalty,
+    CRM, AI, POS, marketplace, and future identity features.
+
+============================================================
+101. STATUS
+============================================================
+
+Module 10 Status:
+CUSTOMER MANAGEMENT — INITIALIZED
+
+Version:
+1.0
+
+This module establishes the reusable multi-tenant customer
+foundation for registered and guest customers, profiles,
+addresses, groups, tags, segmentation, consent, privacy,
+security, customer history, loyalty readiness, integrations,
+analytics, and future identity expansion.
+
+The next modules will define Cart/Wishlist/Checkout, Payments,
+Shipping, Promotions, Marketing, SEO/Content, Theme, Animation,
+Notifications, Analytics, Backup, Monitoring, PWA, AI,
+Integrations, Billing, Super Admin, API, Security, and the
+remaining platform capabilities.
+
+============================================================
+END OF MODULE 10
+============================================================

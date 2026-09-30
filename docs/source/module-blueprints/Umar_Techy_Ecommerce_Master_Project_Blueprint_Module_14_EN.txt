@@ -1,0 +1,1637 @@
+UMAR TECHY
+E-COMMERCE PLATFORM
+MASTER PROJECT BLUEPRINT
+
+MODULE 14 — DISCOUNTS, COUPONS & PROMOTIONS
+Version: 1.0
+Status: Planning / Blueprint
+
+============================================================
+1. MODULE PURPOSE
+============================================================
+
+This module defines the Core Discounts, Coupons, Promotions,
+Campaign Rules, and Pricing Incentive Engine for the Umar Techy
+multi-tenant E-Commerce Platform.
+
+The system must allow every store to create controlled commercial
+offers without modifying the core platform code.
+
+The module manages:
+
+- Discount Rules
+- Coupon Codes
+- Automatic Discounts
+- Product Discounts
+- Category Discounts
+- Collection Discounts
+- Brand Discounts
+- Customer Discounts
+- Customer Group Discounts
+- Segment-Based Discounts
+- Order-Level Discounts
+- Quantity Discounts
+- Buy X Get Y
+- Free Shipping Promotions
+- Payment Method Promotions
+- First Order Discounts
+- Repeat Customer Promotions
+- Scheduled Promotions
+- Usage Limits
+- Customer Usage Limits
+- Global Usage Limits
+- Minimum Spend
+- Maximum Discount
+- Eligibility Rules
+- Exclusion Rules
+- Stacking Rules
+- Priority Rules
+- Conflict Resolution
+- Promotion Analytics
+- Audit
+- Tenant Isolation
+- API
+- Events / Outbox
+- Future Loyalty Integration
+- Future AI-Powered Promotions
+
+============================================================
+2. CORE ARCHITECTURAL PRINCIPLE
+============================================================
+
+ONE CORE PROMOTION ENGINE
++
+STORE-SCOPED CONFIGURATION
++
+DETERMINISTIC RULE EVALUATION
++
+SERVER-AUTHORITATIVE PRICE CALCULATION
++
+AUDITABLE DISCOUNT APPLICATION
++
+STRICT TENANT ISOLATION
+
+must serve all stores.
+
+Basic, Business, and Premium packages use the same engine.
+
+Package differences are enforced through Module 04.
+
+============================================================
+3. DISCOUNT VS COUPON VS PROMOTION
+============================================================
+
+DISCOUNT:
+A reduction in price.
+
+COUPON:
+A customer-entered or system-applied code that activates an
+eligible offer.
+
+PROMOTION:
+A commercial rule or campaign that determines eligibility and
+discount behavior.
+
+A promotion may exist without a coupon.
+
+A coupon may reference a promotion.
+
+============================================================
+4. PROMOTION TYPES
+============================================================
+
+Initial architecture should support:
+
+- Percentage Discount
+- Fixed Amount Discount
+- Product Discount
+- Category Discount
+- Collection Discount
+- Brand Discount
+- Order Discount
+- Quantity Discount
+- Buy X Get Y
+- Free Shipping
+- Payment Method Discount
+- Customer Group Discount
+- Customer Segment Discount
+- First Order Discount
+- Minimum Spend Discount
+
+Future:
+
+- Tiered Discounts
+- Bundle Discounts
+- Loyalty Discounts
+- Referral Discounts
+- Flash Sales
+- Personalized Promotions
+- AI-Generated Offers
+
+============================================================
+5. PERCENTAGE DISCOUNT
+============================================================
+
+Example:
+
+10% off
+
+The system must calculate the discount from the eligible
+amount only.
+
+============================================================
+6. FIXED AMOUNT DISCOUNT
+============================================================
+
+Example:
+
+PKR 500 off
+
+The system must prevent the discount from reducing the eligible
+amount below the configured minimum/zero unless negative totals
+are explicitly supported, which is not recommended.
+
+============================================================
+7. PRODUCT-LEVEL DISCOUNT
+============================================================
+
+Promotion may target:
+
+- Product
+- Variant
+- SKU
+
+Only eligible items receive the discount.
+
+============================================================
+8. CATEGORY-LEVEL DISCOUNT
+============================================================
+
+Promotion may target one or more categories.
+
+Example:
+
+20% off all products in "Shoes"
+
+Category eligibility must respect the current tenant's taxonomy.
+
+============================================================
+9. COLLECTION DISCOUNT
+============================================================
+
+Promotions may target store collections.
+
+Example:
+
+Summer Collection → 15% off
+
+============================================================
+10. BRAND DISCOUNT
+============================================================
+
+Promotion may target selected brands.
+
+Example:
+
+Brand A → 10% off
+
+============================================================
+11. ORDER-LEVEL DISCOUNT
+============================================================
+
+Discount applies to the eligible order subtotal.
+
+Example:
+
+PKR 1,000 off orders above PKR 10,000.
+
+============================================================
+12. QUANTITY DISCOUNT
+============================================================
+
+Examples:
+
+Buy 2 → 5% off
+Buy 5 → 10% off
+
+Quantity calculation must use validated quantities.
+
+============================================================
+13. BUY X GET Y
+============================================================
+
+Example:
+
+Buy 2 shirts
+Get 1 shirt free
+
+The engine must define:
+
+- Trigger Products
+- Required Quantity
+- Reward Products
+- Reward Quantity
+- Reward Discount
+- Maximum Applications
+
+============================================================
+14. BUY X GET Y VARIANTS
+============================================================
+
+The architecture should support:
+
+Buy any 2 from Category A
+Get any 1 from Category A
+
+Eligibility and reward selection must be deterministic.
+
+============================================================
+15. FREE SHIPPING PROMOTION
+============================================================
+
+Promotion may provide:
+
+- Full free shipping
+- Free shipping for selected zones
+- Free shipping above minimum order value
+- Free shipping for customer group
+
+Module 13 calculates shipping.
+Module 14 determines promotion eligibility.
+
+============================================================
+16. PAYMENT METHOD DISCOUNT
+============================================================
+
+Examples:
+
+- 5% off for Bank Transfer
+- Fixed discount for selected payment method
+
+Payment method must be validated server-side.
+
+============================================================
+17. CUSTOMER GROUP DISCOUNT
+============================================================
+
+Examples:
+
+Wholesale → 10%
+VIP → 15%
+
+Customer group comes from Module 10.
+
+============================================================
+18. CUSTOMER SEGMENT DISCOUNT
+============================================================
+
+Promotion may target a dynamic segment.
+
+Example:
+
+Customers with no order in 90 days → 15% off
+
+Segment membership must be evaluated according to the
+configured segment rules.
+
+============================================================
+19. FIRST ORDER DISCOUNT
+============================================================
+
+Promotion may apply to a customer's first eligible order.
+
+The engine must define whether:
+
+- Cancelled orders
+- Failed payments
+- Refunded orders
+
+count toward first-order eligibility.
+
+This rule must be explicit.
+
+============================================================
+20. REPEAT CUSTOMER PROMOTION
+============================================================
+
+Promotions may target:
+
+- Returning Customers
+- Minimum Order Count
+- Minimum Spend
+- Previous Product Purchase
+
+============================================================
+21. PROMOTION STATUS
+============================================================
+
+Suggested states:
+
+- DRAFT
+- SCHEDULED
+- ACTIVE
+- PAUSED
+- EXPIRED
+- DISABLED
+- ARCHIVED
+
+============================================================
+22. PROMOTION DATE RANGE
+============================================================
+
+Promotion may define:
+
+- Start Date/Time
+- End Date/Time
+- Store Timezone
+- Optional Daily Schedule
+
+Server must evaluate dates using the store's configured
+timezone.
+
+============================================================
+23. COUPON CODE
+============================================================
+
+Coupon may contain:
+
+- Code
+- Promotion ID
+- Store ID
+- Status
+- Start
+- End
+- Usage Limit
+- Customer Usage Limit
+
+Codes should be normalized according to store configuration.
+
+============================================================
+24. COUPON CODE FORMAT
+============================================================
+
+Support:
+
+- Manual codes
+- Generated codes
+- Prefixes
+- Random codes
+- Case-insensitive codes where configured
+
+Example:
+
+WELCOME10
+SUMMER500
+UTVIP15
+
+============================================================
+25. COUPON UNIQUENESS
+============================================================
+
+Coupon code uniqueness must be enforced within the appropriate
+store scope.
+
+Store A may use:
+
+WELCOME10
+
+Store B may independently use:
+
+WELCOME10
+
+============================================================
+26. COUPON VALIDATION
+============================================================
+
+At checkout validate:
+
+- Store
+- Code
+- Status
+- Start/End
+- Customer
+- Customer Group
+- Segment
+- Minimum Spend
+- Maximum Spend
+- Products
+- Categories
+- Brands
+- Quantity
+- Usage Limits
+- Exclusions
+- Stacking Rules
+- Payment Method
+- Shipping Method where applicable
+
+============================================================
+27. COUPON REMOVAL
+============================================================
+
+Customer may remove a coupon.
+
+The cart must be recalculated immediately.
+
+============================================================
+28. AUTOMATIC PROMOTIONS
+============================================================
+
+Some promotions require no code.
+
+Example:
+
+Orders above PKR 5,000 automatically receive free shipping.
+
+The engine should evaluate automatic promotions during cart and
+checkout recalculation.
+
+============================================================
+29. COUPON + AUTOMATIC PROMOTION
+============================================================
+
+The platform must define whether both may apply.
+
+Possible modes:
+
+- Allow Both
+- Coupon Wins
+- Automatic Promotion Wins
+- Highest Benefit
+- Explicit Priority
+
+Default behavior should be deterministic.
+
+============================================================
+30. STACKING
+============================================================
+
+Promotions may define:
+
+- Stackable
+- Non-Stackable
+- Stack With Specific Promotions
+- Stack With Shipping Promotion
+- Stack With Coupon
+- Stack With Loyalty Reward
+
+Stacking rules must prevent unintended excessive discounts.
+
+============================================================
+31. PROMOTION PRIORITY
+============================================================
+
+Every promotion may have a priority.
+
+Example:
+
+Priority 100 → Higher precedence
+Priority 50 → Lower precedence
+
+Exact ordering must be deterministic.
+
+============================================================
+32. CONFLICT RESOLUTION
+============================================================
+
+When multiple promotions target the same item, the engine must
+apply defined rules.
+
+Possible strategies:
+
+- Highest Priority
+- Highest Discount
+- First Match
+- Exclusive Promotion
+- Explicit Combination
+
+The strategy must be configured and testable.
+
+============================================================
+33. EXCLUSIONS
+============================================================
+
+Promotion may exclude:
+
+- Product
+- Variant
+- Category
+- Brand
+- Collection
+- Customer Group
+- Customer Segment
+- Payment Method
+- Shipping Method
+
+Exclusions must override eligible targeting where configured.
+
+============================================================
+34. SALE PRICE + PROMOTION
+============================================================
+
+The engine must explicitly define whether promotions can apply
+to sale-priced products.
+
+Possible policies:
+
+- Allow
+- Disallow
+- Only Selected Promotions
+- Minimum Price Basis
+
+No ambiguous behavior is permitted.
+
+============================================================
+35. DISCOUNT BASIS
+============================================================
+
+Every promotion must define its calculation basis.
+
+Possible bases:
+
+- Regular Price
+- Current Sale Price
+- Eligible Line Subtotal
+- Eligible Order Subtotal
+- Shipping Charge
+
+============================================================
+36. TAX INTERACTION
+============================================================
+
+The system must define whether discount is applied:
+
+Before Tax
+or
+After Tax
+
+The platform should use a consistent tax calculation policy.
+
+Tax authority remains with the applicable tax engine.
+
+============================================================
+37. SHIPPING INTERACTION
+============================================================
+
+Order discount and shipping discount must remain separate.
+
+Example:
+
+Product Discount = PKR 500
+Shipping Discount = PKR 200
+
+These must be traceable independently.
+
+============================================================
+38. PAYMENT FEE INTERACTION
+============================================================
+
+Payment-method promotions may affect:
+
+- Discount
+- Payment fee
+
+The final financial calculation must be server-authoritative.
+
+============================================================
+39. MINIMUM ORDER VALUE
+============================================================
+
+Promotion may require:
+
+Subtotal >= configured minimum
+
+The system must clearly define whether the threshold is:
+
+- Before discount
+- After product discounts
+- Before shipping
+- Before tax
+
+Default rules must be explicit.
+
+============================================================
+40. MAXIMUM DISCOUNT
+============================================================
+
+Percentage promotions may define:
+
+Maximum Discount = PKR 2,000
+
+This prevents unlimited discount exposure.
+
+============================================================
+41. MINIMUM DISCOUNT
+============================================================
+
+The engine may support a minimum eligible discount threshold.
+
+This can prevent applying promotions where the calculated
+benefit is negligible.
+
+============================================================
+42. USAGE LIMIT
+============================================================
+
+Promotion may define:
+
+- Total usage limit
+- Daily limit
+- Monthly limit
+- Customer limit
+- Per-order limit
+
+============================================================
+43. CUSTOMER USAGE LIMIT
+============================================================
+
+Example:
+
+WELCOME10
+→ Maximum 1 use per customer
+
+The system must use authoritative customer identity.
+
+Guest usage may use carefully controlled identifiers and should
+not rely only on easily spoofed signals.
+
+============================================================
+44. GLOBAL USAGE LIMIT
+============================================================
+
+Example:
+
+SUMMER50
+→ Maximum 5,000 redemptions
+
+Concurrent redemption must be safely controlled.
+
+============================================================
+45. USAGE COUNTING
+============================================================
+
+The system must define when usage is counted.
+
+Possible events:
+
+- Coupon Applied
+- Order Created
+- Payment Confirmed
+- Order Completed
+
+Recommended architecture should avoid permanently consuming
+usage from abandoned carts.
+
+============================================================
+46. RESERVED PROMOTION USAGE
+============================================================
+
+For high-demand campaigns, the system may temporarily reserve
+promotion capacity.
+
+Reservation must expire safely.
+
+============================================================
+47. PROMOTION ABUSE PREVENTION
+============================================================
+
+Protect against:
+
+- Coupon brute force
+- Code enumeration
+- Unlimited guest redemption
+- Automated checkout abuse
+- Multiple-account abuse
+- Replay
+- Race conditions
+
+============================================================
+48. COUPON ENUMERATION PROTECTION
+============================================================
+
+Do not expose excessive detail such as:
+
+"Coupon exists but you are not eligible"
+
+where that could reveal private campaign information.
+
+Customer-facing messages should remain safe and useful.
+
+============================================================
+49. COUPON GENERATION
+============================================================
+
+System may generate unique codes.
+
+Requirements:
+
+- High entropy
+- Collision prevention
+- Store scope
+- Configurable prefix
+- Optional batch generation
+
+============================================================
+50. BULK COUPON GENERATION
+============================================================
+
+Store may generate:
+
+1,000 unique codes
+
+The system should process this asynchronously where appropriate.
+
+============================================================
+51. UNIQUE COUPON CAMPAIGNS
+============================================================
+
+Future campaigns may issue one unique coupon per customer.
+
+Example:
+
+CUSTOMER-UNIQUE-CODE
+
+Codes must remain linked to the intended campaign/customer
+without exposing unnecessary personal data.
+
+============================================================
+52. SCHEDULED PROMOTIONS
+============================================================
+
+Promotion can be scheduled:
+
+- Start at specific time
+- End at specific time
+- Repeat schedule where supported
+
+Use store timezone.
+
+============================================================
+53. FLASH SALES
+============================================================
+
+Future flash sales may require:
+
+- Start/end
+- Product selection
+- Quantity limits
+- Purchase limits
+- Priority
+- High-concurrency protection
+
+============================================================
+54. PRODUCT PURCHASE LIMITS
+============================================================
+
+Promotions may define:
+
+Maximum promotional quantity per order.
+
+Example:
+
+Maximum 3 discounted units.
+
+============================================================
+55. CUSTOMER PURCHASE LIMITS
+============================================================
+
+Example:
+
+VIP promotion:
+Maximum 5 discounted units per customer.
+
+The system must evaluate historical eligible purchases where
+required.
+
+============================================================
+56. PROMOTION ELIGIBILITY ENGINE
+============================================================
+
+Conceptual:
+
+Cart
+↓
+Store
+↓
+Customer
+↓
+Products
+↓
+Quantity
+↓
+Order Value
+↓
+Date/Time
+↓
+Coupon
+↓
+Customer Group
+↓
+Segment
+↓
+Payment
+↓
+Shipping
+↓
+Exclusions
+↓
+Stacking
+↓
+Priority
+↓
+Final Promotion Set
+
+============================================================
+57. DETERMINISTIC CALCULATION
+============================================================
+
+The same input state must produce the same result.
+
+Promotion evaluation must not depend on:
+
+- Random execution order
+- Database row order
+- Unstable external calls
+- Client-calculated values
+
+============================================================
+58. PROMOTION SNAPSHOT
+============================================================
+
+When an order is created, store the applied promotion details.
+
+Snapshot may include:
+
+- Promotion ID
+- Promotion Name
+- Coupon Code
+- Rule Version
+- Discount Type
+- Calculation Basis
+- Discount Amount
+- Eligible Items
+- Usage Reference
+
+Historical orders must not depend on a later-edited promotion.
+
+============================================================
+59. PROMOTION VERSIONING
+============================================================
+
+If a live promotion is edited, historical orders must preserve
+the previous rules.
+
+Use:
+
+- Version
+- Effective Date
+- Immutable Order Snapshot
+
+============================================================
+60. DISCOUNT ADJUSTMENTS
+============================================================
+
+Each discount should be represented as an auditable adjustment.
+
+Potential fields:
+
+- Adjustment ID
+- Order ID
+- Promotion ID
+- Coupon
+- Scope
+- Amount
+- Currency
+- Reason
+- Rule Version
+
+============================================================
+61. LINE-LEVEL DISCOUNTS
+============================================================
+
+Line-level discount may be assigned to eligible items.
+
+This supports:
+
+- Product discounts
+- Category discounts
+- Buy X Get Y
+- Quantity discounts
+
+============================================================
+62. ORDER-LEVEL DISCOUNTS
+============================================================
+
+Order-level discount applies after eligible line calculations
+according to the configured financial policy.
+
+The exact ordering must be finalized in the Financial Blueprint.
+
+============================================================
+63. SHIPPING DISCOUNTS
+============================================================
+
+Shipping promotions may create a dedicated shipping discount
+adjustment.
+
+Do not hide shipping discounts inside product discount totals.
+
+============================================================
+64. PAYMENT METHOD DISCOUNTS
+============================================================
+
+Payment discounts must be calculated after the payment method
+is selected and validated.
+
+Changing payment method must trigger recalculation.
+
+============================================================
+65. PROMOTION PREVIEW
+============================================================
+
+Admin should be able to test a promotion before publishing.
+
+Preview inputs may include:
+
+- Customer
+- Cart
+- Coupon
+- Date
+- Shipping Area
+- Payment Method
+
+Preview must not consume usage.
+
+============================================================
+66. PROMOTION SIMULATION
+============================================================
+
+Admin may simulate:
+
+- Best applicable promotion set
+- Expected discount
+- Eligibility
+- Conflicts
+- Exclusions
+
+Simulation must be clearly separate from live redemption.
+
+============================================================
+67. PROMOTION DRAFT / PUBLISH
+============================================================
+
+Promotion lifecycle should support:
+
+Draft
+→ Review
+→ Schedule
+→ Active
+→ Pause
+→ Expire
+→ Archive
+
+Publishing should validate configuration.
+
+============================================================
+68. PROMOTION VALIDATION
+============================================================
+
+Before activation validate:
+
+- Valid date range
+- Valid target
+- Valid discount
+- Valid currency
+- Valid usage limit
+- Valid priority
+- Valid stacking rules
+- Valid coupon
+- Valid package entitlement
+
+============================================================
+69. PROMOTION AUDIT
+============================================================
+
+Audit:
+
+- Created
+- Edited
+- Activated
+- Paused
+- Resumed
+- Published
+- Disabled
+- Deleted/Archived
+- Coupon generated
+- Usage override
+- Manual adjustment
+
+============================================================
+70. MANUAL DISCOUNT
+============================================================
+
+Authorized staff may apply a manual discount where permitted.
+
+Manual discount must require:
+
+- Permission
+- Amount/reason
+- Actor
+- Timestamp
+- Audit trail
+
+It must not bypass financial controls.
+
+============================================================
+71. MANUAL COUPON USAGE ADJUSTMENT
+============================================================
+
+Super Admin/store admin may correct a coupon usage record where
+authorized.
+
+Such correction must be:
+
+- Explicit
+- Audited
+- Reasoned
+- Tenant-scoped
+
+============================================================
+72. CUSTOMER-FACING COUPON DISPLAY
+============================================================
+
+Storefront may show:
+
+- Coupon code
+- Discount
+- Minimum spend
+- Expiry
+- Eligible products
+- Terms
+
+Do not expose internal rules or sensitive campaign information.
+
+============================================================
+73. PROMOTION TERMS
+============================================================
+
+Each promotion may contain customer-facing terms such as:
+
+- Minimum Order
+- Maximum Discount
+- Eligible Products
+- Expiry
+- Usage Limit
+- Customer Eligibility
+
+============================================================
+74. PROMOTION CONTENT
+============================================================
+
+Marketing module may connect promotions to:
+
+- Banner
+- Landing page
+- Campaign
+- Email
+- SMS
+- WhatsApp
+- Push notification
+
+Module 14 owns commercial eligibility.
+
+Module 15 owns campaign execution.
+
+============================================================
+75. ABANDONED CART PROMOTIONS
+============================================================
+
+Module 15 may issue targeted coupons to abandoned-cart customers.
+
+The coupon must still be validated through Module 14.
+
+============================================================
+76. LOYALTY INTEGRATION
+============================================================
+
+Future loyalty points may behave as:
+
+- Discount
+- Store Credit
+- Reward
+
+The loyalty engine must remain separate from promotion rules
+while integrating through a controlled adjustment interface.
+
+============================================================
+77. REFERRAL INTEGRATION
+============================================================
+
+Referral rewards may generate:
+
+- Coupon
+- Discount
+- Store Credit
+
+Eligibility must remain auditable.
+
+============================================================
+78. B2B / WHOLESALE PROMOTIONS
+============================================================
+
+Customer groups may support:
+
+- Wholesale Pricing
+- Volume Discounts
+- Tiered Discounts
+- Minimum Order
+- Customer-specific terms
+
+The architecture should support B2B without changing the core
+promotion engine.
+
+============================================================
+79. MULTI-CURRENCY PROMOTIONS
+============================================================
+
+Future multi-currency support may require:
+
+- Fixed discount per currency
+- Percentage discount
+- Currency-specific thresholds
+
+Never convert financial values using client-side calculations.
+
+============================================================
+80. PROMOTION API
+============================================================
+
+Potential endpoints:
+
+POST   /promotions
+GET    /promotions
+GET    /promotions/{id}
+PATCH  /promotions/{id}
+POST   /promotions/{id}/publish
+POST   /promotions/{id}/pause
+POST   /promotions/{id}/preview
+POST   /coupons/validate
+POST   /coupons/apply
+DELETE /coupons/{code}
+
+Exact routes will be defined in the API Blueprint.
+
+============================================================
+81. CUSTOMER CHECKOUT API
+============================================================
+
+Checkout may request:
+
+- Eligible Promotions
+- Coupon Validation
+- Discount Calculation
+- Free Shipping Eligibility
+
+The final result must always be recalculated by the server.
+
+============================================================
+82. PROMOTION EVENTS
+============================================================
+
+Potential events:
+
+- PromotionCreated
+- PromotionPublished
+- PromotionActivated
+- PromotionPaused
+- PromotionExpired
+- CouponCreated
+- CouponRedeemed
+- CouponRejected
+- PromotionApplied
+- PromotionRemoved
+- PromotionUsageAdjusted
+
+============================================================
+83. PROMOTION OUTBOX
+============================================================
+
+Important promotion events should use reliable Outbox processing.
+
+Events may feed:
+
+- Analytics
+- Marketing
+- Notifications
+- Audit
+- CRM
+- AI
+
+============================================================
+84. PROMOTION CACHE
+============================================================
+
+Safe cache candidates:
+
+- Public promotion content
+- Public campaign metadata
+
+Do not rely on stale cache for:
+
+- Usage limits
+- Customer eligibility
+- Final discount
+- Coupon redemption
+
+These require authoritative validation.
+
+============================================================
+85. PROMOTION DATABASE INDEXING
+============================================================
+
+Potential indexes:
+
+- Store + Promotion ID
+- Store + Status
+- Store + Start/End
+- Store + Coupon Code
+- Store + Customer Usage
+- Store + Product Target
+- Store + Category Target
+- Store + Priority
+
+Unique constraints must prevent coupon collisions.
+
+============================================================
+86. TENANT ISOLATION
+============================================================
+
+Mandatory isolation across:
+
+- Promotions
+- Coupons
+- Usage counters
+- Customer eligibility
+- Campaigns
+- Discount adjustments
+- Analytics
+- Exports
+- Events
+- Caches
+
+============================================================
+87. PACKAGE ENTITLEMENTS
+============================================================
+
+Potential package model:
+
+Basic:
+- Basic Coupons
+- Percentage/Fixed Discounts
+- Basic usage limits
+
+Business:
+- Advanced promotions
+- Customer groups
+- Scheduled promotions
+- Free shipping promotions
+- Advanced targeting
+
+Premium:
+- Advanced segmentation
+- Complex promotion rules
+- Personalized promotions
+- Loyalty integration
+- AI promotion foundation
+
+Exact mapping must be finalized in Module 04.
+
+============================================================
+88. PROMOTION LIMITS
+============================================================
+
+Potential limits:
+
+- Active Promotions
+- Coupons
+- Bulk Coupon Generation
+- Promotion Rules
+- Segments
+- Campaigns
+- Scheduled Promotions
+- Unique Customer Codes
+
+============================================================
+89. SECURITY
+============================================================
+
+Protect against:
+
+- Coupon brute force
+- Coupon enumeration
+- Discount manipulation
+- Price manipulation
+- Usage counter race conditions
+- Tenant crossing
+- Promotion IDOR
+- Unauthorized manual discount
+- Replay
+- Duplicate redemption
+
+============================================================
+90. CONCURRENCY
+============================================================
+
+Test:
+
+- Last coupon redemption
+- Limited stock promotion
+- Limited usage promotion
+- Simultaneous checkout
+- Multiple devices
+- Multiple users
+- Duplicate coupon application
+
+Usage counters and promotional capacity must be concurrency-safe.
+
+============================================================
+91. PROMOTION FRAUD
+============================================================
+
+Potential signals:
+
+- Excessive coupon usage
+- Multiple accounts
+- Repeated failed checkout
+- Abnormal discount patterns
+- Rapid code attempts
+
+Fraud detection should remain separate from deterministic
+promotion eligibility.
+
+============================================================
+92. FUNCTIONAL TESTING
+============================================================
+
+Test:
+
+- Percentage discount
+- Fixed discount
+- Product discount
+- Category discount
+- Brand discount
+- Collection discount
+- Order discount
+- Quantity discount
+- Buy X Get Y
+- Free shipping
+- Payment method discount
+- Customer group discount
+- Segment discount
+- First order
+- Repeat customer
+- Scheduled promotion
+
+============================================================
+93. COUPON TESTING
+============================================================
+
+Test:
+
+- Valid code
+- Invalid code
+- Expired code
+- Not-started code
+- Usage limit
+- Customer limit
+- Minimum spend
+- Excluded product
+- Excluded category
+- Wrong customer group
+- Wrong payment method
+- Stacking conflict
+
+============================================================
+94. STACKING TESTING
+============================================================
+
+Test:
+
+- Two stackable promotions
+- Two non-stackable promotions
+- Coupon + automatic promotion
+- Product + order promotion
+- Shipping + product promotion
+- Payment + order promotion
+- Priority conflicts
+
+============================================================
+95. CONCURRENCY TESTING
+============================================================
+
+Test:
+
+- Final available coupon
+- Multiple simultaneous redemptions
+- Promotion capacity exhaustion
+- Duplicate checkout requests
+- Multiple devices
+- Usage counter race
+
+============================================================
+96. FINANCIAL TESTING
+============================================================
+
+Verify:
+
+- No negative order totals
+- Correct discount basis
+- Correct tax interaction
+- Correct shipping discount
+- Correct payment discount
+- Correct refund adjustment
+- Correct historical snapshot
+
+============================================================
+97. SECURITY TESTING
+============================================================
+
+Mandatory:
+
+- Cross-tenant promotion access
+- Cross-tenant coupon use
+- Coupon IDOR
+- Promotion IDOR
+- Price tampering
+- Discount tampering
+- Usage bypass
+- Manual discount privilege escalation
+- Replay attack
+- Coupon brute force
+
+============================================================
+98. PERFORMANCE TESTING
+============================================================
+
+Test:
+
+- Large product targeting
+- Large category targeting
+- Large coupon batches
+- Large customer segments
+- High checkout promotion evaluation
+- High concurrent redemption
+- Large promotion catalog
+
+============================================================
+99. HIGH-LEVEL DATA ENTITIES
+============================================================
+
+Potential entities:
+
+- Promotion
+- PromotionVersion
+- PromotionRule
+- PromotionCondition
+- PromotionTarget
+- PromotionExclusion
+- PromotionAction
+- PromotionPriority
+- PromotionStackRule
+- Coupon
+- CouponBatch
+- CouponRedemption
+- PromotionUsageCounter
+- PromotionCustomerUsage
+- PromotionAdjustment
+- PromotionPreview
+- PromotionSchedule
+- PromotionAudit
+- PromotionOutboxEvent
+
+Exact schema will be finalized in the Database Blueprint.
+
+============================================================
+100. MODULE DEPENDENCIES
+============================================================
+
+Required:
+
+- Module 01 — Complete Platform Structure
+- Module 02 — Authentication, Users, Roles & Permissions
+- Module 03 — Multi-Tenant & Store Management
+- Module 04 — Subscription, Packages & Feature Entitlements
+- Module 05 — Storefront
+- Module 06 — Product & Catalog
+- Module 07 — Category, Brand & Attribute
+- Module 09 — Order Management
+- Module 10 — Customer Management
+- Module 11 — Cart, Wishlist & Checkout
+- Module 12 — Payment Management & Gateways
+- Module 13 — Shipping & Delivery
+
+Strong integration with:
+
+- Module 15 — Marketing & Customer Engagement
+- Module 21 — Notifications & Communication
+- Module 22 — Reports & Analytics
+- Module 26 — AI Features
+- Module 27 — App / Plugin Marketplace
+- Module 31 — API & Developer Platform
+- Module 32 — Security, Audit & Compliance
+
+============================================================
+101. REQUIRED FOLLOW-UP ARTIFACTS
+============================================================
+
+1. Promotion Database Blueprint
+2. Promotion Rule Engine Blueprint
+3. Promotion State Machine
+4. Coupon Blueprint
+5. Coupon Generation Blueprint
+6. Coupon Redemption Blueprint
+7. Discount Calculation Blueprint
+8. Promotion Priority Blueprint
+9. Promotion Stacking Blueprint
+10. Promotion Eligibility Blueprint
+11. Promotion Exclusion Blueprint
+12. Buy X Get Y Blueprint
+13. Free Shipping Promotion Blueprint
+14. Payment Method Promotion Blueprint
+15. Customer Segment Promotion Blueprint
+16. Promotion Versioning Blueprint
+17. Promotion Usage Counter Blueprint
+18. Promotion Concurrency Blueprint
+19. Promotion Preview/Simulation Blueprint
+20. Promotion API Contract
+21. Promotion Event / Outbox Blueprint
+22. Promotion Security Blueprint
+23. Promotion Analytics Blueprint
+24. Promotion Test Matrix
+
+============================================================
+102. FINAL ARCHITECTURAL RULES
+============================================================
+
+1. One Core Promotion Engine.
+2. All promotions and coupons are tenant-scoped.
+3. Final discounts are calculated server-side.
+4. Client-submitted discount values must never be trusted.
+5. Coupon codes are unique within the appropriate store scope.
+6. Promotion rules must be deterministic.
+7. Promotion priority must be deterministic.
+8. Stacking behavior must be explicit.
+9. Exclusions must be explicitly evaluated.
+10. Usage limits must be concurrency-safe.
+11. Abandoned carts must not permanently consume coupon usage
+    unless configured.
+12. Promotion application must be auditable.
+13. Orders must store immutable promotion snapshots.
+14. Later promotion edits must not rewrite historical orders.
+15. Product, category, brand, collection, customer, payment, and
+    shipping targeting must remain extensible.
+16. Promotion and payment state must remain separate.
+17. Promotion and inventory state must remain separate.
+18. Free shipping must integrate with Module 13.
+19. Payment discounts must integrate with Module 12.
+20. Customer targeting must integrate with Module 10.
+21. Checkout evaluation must integrate with Module 11.
+22. Order adjustments must integrate with Module 09.
+23. Marketing execution belongs to Module 15.
+24. Loyalty and referral systems may integrate through controlled
+    adjustment interfaces.
+25. Promotion analytics must remain tenant-scoped.
+26. Private promotion rules must not leak through validation APIs.
+27. Manual discounts require explicit permissions and audit.
+28. Promotion configuration must support draft, preview, publish,
+    pause, expiry, and archive.
+29. New promotion types must be addable without rewriting
+    Checkout.
+30. The architecture must remain ready for flash sales, B2B,
+    loyalty, referral, AI personalization, and future advanced
+    pricing strategies.
+
+============================================================
+103. STATUS
+============================================================
+
+Module 14 Status:
+DISCOUNTS, COUPONS & PROMOTIONS — INITIALIZED
+
+Version:
+1.0
+
+This module establishes the multi-tenant commercial promotion
+foundation for coupons, automatic discounts, product/category/
+brand/collection targeting, customer groups and segments,
+quantity offers, Buy X Get Y, free shipping, payment-method
+promotions, scheduling, usage limits, stacking, priority,
+versioning, analytics, security, and future loyalty/AI
+promotion capabilities.
+
+The next module will define:
+
+MODULE 15 — MARKETING & CUSTOMER ENGAGEMENT
+
+============================================================
+END OF MODULE 14
+============================================================

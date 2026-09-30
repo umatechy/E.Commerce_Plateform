@@ -1,0 +1,1637 @@
+====================================================================
+UMAR TECHY E-COMMERCE PLATFORM
+MASTER PROJECT BLUEPRINT — MODULE 23
+BACKUP, RESTORE & DATA PROTECTION
+Technical Specification — English Only
+Version 1.0
+====================================================================
+
+1. MODULE PURPOSE
+--------------------------------------------------------------------
+Module 23 provides the Core Backup, Restore, Data Protection,
+Recovery, Retention, Disaster Recovery, and Data Lifecycle
+foundation for the Umar Techy Multi-Tenant E-Commerce Platform.
+
+The module protects platform and tenant data against:
+
+- Accidental deletion.
+- Application failures.
+- Database corruption.
+- Infrastructure failures.
+- Deployment failures.
+- Human error.
+- Security incidents.
+- Tenant-level data loss.
+- Provider-level failures.
+- Regional failures.
+- Disaster scenarios.
+
+Core principle:
+
+AUTHORITATIVE DATA
+        +
+BACKUP POLICY
+        +
+ENCRYPTED BACKUP
+        +
+RETENTION
+        +
+INTEGRITY VERIFICATION
+        +
+RESTORE WORKFLOW
+        +
+DISASTER RECOVERY
+        +
+AUDITABILITY
+
+A backup is not considered valid merely because a file was created.
+The system must verify that backups are complete, identifiable,
+recoverable, and protected.
+
+
+2. PRIMARY OBJECTIVES
+--------------------------------------------------------------------
+The module shall:
+
+1. Provide centralized backup architecture.
+2. Support platform-level backups.
+3. Support tenant-level backup foundations.
+4. Support database backups.
+5. Support object/media backups.
+6. Support configuration backups.
+7. Support report/dashboard configuration backups.
+8. Support application metadata backups.
+9. Support backup encryption.
+10. Support backup retention policies.
+11. Support backup integrity verification.
+12. Support automated backup scheduling.
+13. Support manual backups.
+14. Support restore workflows.
+15. Support point-in-time recovery foundations.
+16. Support tenant-level recovery where architecturally possible.
+17. Support disaster recovery.
+18. Support recovery testing.
+19. Support backup monitoring.
+20. Support backup failure alerts.
+21. Prevent cross-tenant restoration.
+22. Preserve auditability.
+23. Support data lifecycle management.
+24. Minimize data-loss risk.
+25. Provide measurable recovery objectives.
+
+
+3. ARCHITECTURAL POSITION
+--------------------------------------------------------------------
+Module 23 owns:
+
+- Backup policies.
+- Backup schedules.
+- Backup jobs.
+- Backup artifacts.
+- Backup metadata.
+- Retention policies.
+- Integrity verification.
+- Restore workflows.
+- Recovery workflows.
+- Recovery points.
+- Disaster recovery configuration.
+- Backup monitoring.
+- Restore audit records.
+- Recovery testing metadata.
+- Data lifecycle policies.
+
+Module 23 does NOT own:
+
+- Infrastructure execution — Module 20.
+- Security policy — Module 32.
+- Tenant lifecycle — Module 03.
+- Subscription entitlement — Module 04.
+- Orders — Module 09.
+- Payments — Module 12.
+- Inventory — Module 08.
+- Customers — Module 10.
+- Analytics — Module 22.
+
+Source modules remain authoritative.
+
+
+4. DATA PROTECTION SCOPE
+--------------------------------------------------------------------
+Potential protected data:
+
+- Tenant/store records.
+- Users and memberships.
+- Roles and permissions.
+- Products.
+- Categories.
+- Brands.
+- Attributes.
+- Inventory.
+- Orders.
+- Customers.
+- Carts where retention permits.
+- Wishlists where retention permits.
+- Payments metadata.
+- Shipping data.
+- Promotions.
+- Marketing configuration.
+- SEO/content.
+- Themes.
+- Animation configuration.
+- Domains metadata.
+- Hosting configuration metadata.
+- Notifications/templates.
+- Analytics configuration and aggregates.
+- Subscription metadata.
+- Billing records.
+- API/integration configuration.
+- Affiliate configuration.
+- Audit records where policy requires.
+- System configuration.
+
+
+5. BACKUP CLASSIFICATION
+--------------------------------------------------------------------
+Backups may be classified as:
+
+FULL
+INCREMENTAL
+DIFFERENTIAL
+SNAPSHOT
+POINT_IN_TIME
+CONFIGURATION
+MEDIA
+DATABASE
+TENANT_EXPORT
+DISASTER_RECOVERY
+
+The implementation should select the appropriate strategy based on
+data type, recovery requirements, infrastructure capabilities, and
+cost.
+
+
+6. BACKUP LEVELS
+--------------------------------------------------------------------
+Support conceptual levels:
+
+PLATFORM BACKUP
+Entire platform recovery.
+
+TENANT BACKUP
+Single-store recovery foundation.
+
+DATABASE BACKUP
+Database-specific recovery.
+
+OBJECT STORAGE BACKUP
+Media and file recovery.
+
+CONFIGURATION BACKUP
+Themes, settings, policies, and metadata.
+
+ANALYTICS BACKUP
+Analytics definitions/aggregates according to retention strategy.
+
+APPLICATION ARTIFACT BACKUP
+Versioned deployment artifacts where required.
+
+
+7. AUTHORITATIVE SOURCE PRINCIPLE
+--------------------------------------------------------------------
+Backups must preserve authoritative source data.
+
+Analytics aggregates must not replace transactional data.
+
+Cached data generally does not require independent backup when it
+can be safely rebuilt.
+
+Search indexes may be rebuilt from authoritative data.
+
+Temporary files should normally be excluded.
+
+Ephemeral infrastructure state must not be treated as the primary
+backup.
+
+
+8. BACKUP POLICY
+--------------------------------------------------------------------
+Each backup policy should define:
+
+- Policy ID.
+- Scope.
+- Data classes.
+- Frequency.
+- Backup type.
+- Retention.
+- Storage target.
+- Encryption policy.
+- Verification policy.
+- Recovery priority.
+- RPO.
+- RTO.
+- Allowed restore scope.
+- Schedule.
+- Owner.
+- Status.
+
+
+9. BACKUP FREQUENCY
+--------------------------------------------------------------------
+Possible schedules:
+
+- Continuous/PITR.
+- Every few minutes.
+- Hourly.
+- Daily.
+- Weekly.
+- Monthly.
+- On demand.
+
+Actual frequency must depend on:
+
+- Business criticality.
+- Transaction volume.
+- Infrastructure capability.
+- Recovery objectives.
+- Cost.
+
+
+10. RECOVERY POINT OBJECTIVE
+--------------------------------------------------------------------
+RPO defines the maximum acceptable amount of data that may be lost
+after a failure.
+
+Examples:
+
+Critical transactional data:
+Low RPO.
+
+Configuration:
+Moderate RPO.
+
+Analytics:
+Potentially higher RPO if rebuildable.
+
+RPO must be explicitly documented rather than implied.
+
+
+11. RECOVERY TIME OBJECTIVE
+--------------------------------------------------------------------
+RTO defines the target time to restore service.
+
+Critical systems should have documented RTO targets.
+
+Different components may have different RTOs:
+
+- Database.
+- Object storage.
+- API.
+- Storefront.
+- Queue.
+- Search.
+- Analytics.
+
+
+12. BACKUP STORAGE ARCHITECTURE
+--------------------------------------------------------------------
+Backups should support:
+
+- Primary backup storage.
+- Secondary backup storage.
+- Off-site backup.
+- Cross-region backup foundation.
+
+Backups must not depend entirely on the same failure domain as the
+primary production system.
+
+
+13. BACKUP STORAGE ISOLATION
+--------------------------------------------------------------------
+Backup storage must be isolated from normal application access.
+
+Production application credentials should not automatically have
+permission to delete all backups.
+
+Where supported, use:
+
+- Separate credentials.
+- Separate storage accounts.
+- Immutable storage.
+- Object lock/WORM foundation.
+- Restricted administrative access.
+
+
+14. ENCRYPTION
+--------------------------------------------------------------------
+Backups containing protected data must be encrypted:
+
+- In transit.
+- At rest.
+
+Encryption keys must be managed separately from backup contents.
+
+Do not store encryption keys inside backup archives.
+
+Key rotation must not make older recoverable backups unusable.
+
+
+15. BACKUP INTEGRITY
+--------------------------------------------------------------------
+Every backup should support verification through:
+
+- Checksum/hash.
+- Size validation.
+- Metadata validation.
+- Manifest.
+- Encryption validation.
+- Archive readability.
+- Optional restore test.
+
+A successful upload does not equal a verified backup.
+
+
+16. BACKUP MANIFEST
+--------------------------------------------------------------------
+Each backup artifact should have a manifest containing:
+
+- Backup ID.
+- Backup type.
+- Tenant scope.
+- Data scope.
+- Created timestamp.
+- Source environment.
+- Source version.
+- Database/schema version.
+- Object count where available.
+- File count where available.
+- Size.
+- Compression.
+- Encryption state.
+- Hash/checksum.
+- Parent backup for incremental chains.
+- Retention expiry.
+- Verification status.
+
+
+17. BACKUP STATES
+--------------------------------------------------------------------
+Suggested states:
+
+CREATED
+QUEUED
+RUNNING
+UPLOADING
+VERIFYING
+VERIFIED
+PARTIALLY_VERIFIED
+FAILED
+CORRUPTED
+EXPIRED
+DELETED
+RESTORING
+RESTORED
+CANCELLED
+
+
+18. AUTOMATED BACKUP JOBS
+--------------------------------------------------------------------
+Automated jobs must support:
+
+- Scheduling.
+- Distributed locking.
+- Retry.
+- Backoff.
+- Idempotency.
+- Partial failure handling.
+- Progress tracking.
+- Verification.
+- Alerting.
+
+A failed backup must not silently appear successful.
+
+
+19. MANUAL BACKUPS
+--------------------------------------------------------------------
+Authorized users may trigger manual backups where entitled.
+
+Manual backup must support:
+
+- Scope selection.
+- Description.
+- Confirmation.
+- Progress.
+- Status.
+- Verification.
+- Retention.
+- Audit trail.
+
+
+20. TENANT BACKUPS
+--------------------------------------------------------------------
+Tenant backup may include:
+
+- Store configuration.
+- Store branding.
+- Theme configuration.
+- Catalog.
+- Inventory.
+- Orders.
+- Customers.
+- Promotions.
+- Marketing configuration.
+- SEO/content.
+- Domain metadata.
+- Notification templates.
+- Analytics/report configuration.
+- Integration configuration metadata.
+
+Secrets must be excluded or securely rehydrated from a secrets system.
+
+
+21. TENANT BACKUP ISOLATION
+--------------------------------------------------------------------
+A tenant backup must contain only authorized tenant data.
+
+Requirements:
+
+- Tenant ID in manifest.
+- Tenant-scoped storage path.
+- Tenant-scoped encryption/access policy where appropriate.
+- Tenant-scoped restore authorization.
+- No cross-tenant object references without explicit platform-level
+  handling.
+
+
+22. PLATFORM BACKUPS
+--------------------------------------------------------------------
+Platform backups may include:
+
+- Platform configuration.
+- Tenant registry.
+- Subscription configuration.
+- Package definitions.
+- Feature entitlements.
+- Shared system configuration.
+- Global templates.
+- Platform audit data where required.
+- Infrastructure metadata.
+
+Platform backups require elevated access.
+
+
+23. DATABASE BACKUPS
+--------------------------------------------------------------------
+Database backup architecture should support:
+
+- Full database backups.
+- Incremental backups.
+- Transaction/WAL/binlog/PITR foundations depending on DB engine.
+- Schema/version metadata.
+- Encryption.
+- Integrity verification.
+- Restore testing.
+
+Database credentials must never be embedded in backup manifests.
+
+
+24. POINT-IN-TIME RECOVERY
+--------------------------------------------------------------------
+Where supported, implement PITR foundations.
+
+PITR should allow recovery to a specific timestamp within the
+available retention window.
+
+Recovery point selection must account for:
+
+- Transaction consistency.
+- Schema version.
+- Backup chain.
+- Event ordering.
+
+
+25. OBJECT STORAGE BACKUPS
+--------------------------------------------------------------------
+Back up important persistent files such as:
+
+- Product images.
+- Store logos.
+- Theme assets.
+- Customer-uploaded permitted files.
+- Documents.
+- Generated business files.
+- Required exports.
+
+Exclude unnecessary caches and temporary files.
+
+Preserve tenant namespaces.
+
+
+26. MEDIA INTEGRITY
+--------------------------------------------------------------------
+Media backup should preserve:
+
+- Object key.
+- Tenant ID.
+- MIME type.
+- Size.
+- Hash.
+- Metadata where required.
+- Version where applicable.
+
+Restored media must not become publicly accessible unless its original
+authorization permits public access.
+
+
+27. CONFIGURATION BACKUPS
+--------------------------------------------------------------------
+Backup configuration such as:
+
+- Store settings.
+- Theme selection.
+- Theme customization.
+- Animation configuration.
+- SEO settings.
+- Shipping configuration.
+- Payment configuration metadata.
+- Notification templates.
+- Marketing automation definitions.
+- Domain configuration metadata.
+
+Secrets should not be copied into ordinary configuration backups.
+
+
+28. SECRET HANDLING
+--------------------------------------------------------------------
+Never store plaintext secrets in backup archives unless explicitly
+required by a hardened secrets backup architecture.
+
+Preferred approach:
+
+Backup secret references/identifiers
++
+Restore-time secret rehydration.
+
+Sensitive secrets may require separate encrypted backup policy.
+
+
+29. BACKUP RETENTION
+--------------------------------------------------------------------
+Support retention rules such as:
+
+- Daily retention.
+- Weekly retention.
+- Monthly retention.
+- Yearly retention where required.
+
+Retention may vary by:
+
+- Data class.
+- Package.
+- Legal requirement.
+- Business requirement.
+- Cost.
+
+
+30. RETENTION ENFORCEMENT
+--------------------------------------------------------------------
+Retention cleanup must:
+
+- Identify expired backups.
+- Respect legal holds where applicable.
+- Avoid deleting required recovery-chain dependencies.
+- Use idempotent deletion.
+- Log deletion.
+- Protect against accidental mass deletion.
+
+
+31. IMMUTABILITY
+--------------------------------------------------------------------
+Where infrastructure supports it, critical backups should use
+immutable retention.
+
+Immutable backups help protect against:
+
+- Ransomware.
+- Malicious deletion.
+- Compromised credentials.
+- Operator mistakes.
+
+
+32. LEGAL / COMPLIANCE HOLD FOUNDATION
+--------------------------------------------------------------------
+Support a foundation for preventing deletion of selected backups
+when a documented retention or legal hold applies.
+
+The exact legal requirement depends on jurisdiction and business
+context.
+
+
+33. RESTORE ARCHITECTURE
+--------------------------------------------------------------------
+Restore workflow:
+
+SELECT RECOVERY POINT
+        ↓
+AUTHORIZE
+        ↓
+VALIDATE SCOPE
+        ↓
+VALIDATE COMPATIBILITY
+        ↓
+PREVIEW
+        ↓
+LOCK/SAFEGUARD
+        ↓
+RESTORE
+        ↓
+VERIFY
+        ↓
+RECONCILE
+        ↓
+HEALTH CHECK
+        ↓
+AUDIT
+
+
+34. RESTORE MODES
+--------------------------------------------------------------------
+Possible modes:
+
+FULL PLATFORM RESTORE
+TENANT RESTORE
+DATABASE RESTORE
+TABLE/ENTITY-LEVEL RECOVERY FOUNDATION
+MEDIA RESTORE
+CONFIGURATION RESTORE
+POINT-IN-TIME RESTORE
+DISASTER RECOVERY RESTORE
+
+
+35. RESTORE SAFETY
+--------------------------------------------------------------------
+Restore must never silently overwrite production data.
+
+Use explicit modes:
+
+- Restore to new environment.
+- Restore to isolated tenant.
+- Restore selected data.
+- Controlled production restore.
+
+Production restore requires elevated authorization and explicit
+confirmation.
+
+
+36. RESTORE PREVIEW
+--------------------------------------------------------------------
+Before destructive or replacement restore, provide a preview showing:
+
+- Backup ID.
+- Timestamp.
+- Tenant.
+- Data scope.
+- Source version.
+- Target environment.
+- Expected record counts.
+- Expected file counts.
+- Conflicts.
+- Schema compatibility.
+- Potential data loss.
+
+
+37. RESTORE COMPATIBILITY
+--------------------------------------------------------------------
+Validate:
+
+- Application version.
+- Database schema.
+- Migration state.
+- Storage structure.
+- Theme version.
+- Configuration schema.
+- Integration compatibility.
+
+Never restore incompatible data blindly.
+
+
+38. TENANT RESTORE
+--------------------------------------------------------------------
+Tenant restore should preserve:
+
+- Store ID.
+- Tenant ID.
+- Ownership relationships.
+- Historical order identifiers where required.
+- External IDs where possible.
+
+A restore must not accidentally create a second tenant when the
+business requirement is to recover the original tenant.
+
+
+39. CLONE / RECOVERY ENVIRONMENT
+--------------------------------------------------------------------
+Provide a foundation for restoring backups into an isolated recovery
+environment.
+
+Purpose:
+
+- Validation.
+- Investigation.
+- Testing.
+- Data recovery.
+- Disaster rehearsal.
+
+Recovery environments must remain isolated from production.
+
+
+40. DATA CONFLICTS
+--------------------------------------------------------------------
+If restoring selected data into a live tenant, detect:
+
+- Existing IDs.
+- Duplicate SKUs.
+- Duplicate slugs.
+- Existing orders.
+- Existing customers.
+- Existing files.
+- Changed configuration.
+
+Conflict strategies must be explicit:
+
+- Skip.
+- Replace.
+- Merge.
+- Create new identifier.
+- Abort.
+
+
+41. ORDER & PAYMENT RESTORE SAFETY
+--------------------------------------------------------------------
+Orders and payment records are sensitive historical data.
+
+Restore must not:
+
+- Re-charge customers.
+- Re-trigger payment capture.
+- Re-send duplicate payment callbacks.
+- Re-create shipments unintentionally.
+- Re-send transactional notifications unintentionally.
+
+Restored events must not automatically replay business side effects.
+
+
+42. INVENTORY RESTORE SAFETY
+--------------------------------------------------------------------
+Inventory restoration must account for transactions occurring after
+the selected recovery point.
+
+Do not blindly overwrite current stock without reconciliation.
+
+Provide controlled recovery and reconciliation procedures.
+
+
+43. WEBHOOK & EVENT SAFETY
+--------------------------------------------------------------------
+Restored outbox/webhook records must not cause duplicate external
+side effects.
+
+Use:
+
+- Idempotency keys.
+- Delivery history.
+- Replay controls.
+- Disabled automatic replay during recovery unless explicitly
+  authorized.
+
+
+44. CACHE & SEARCH RESTORE
+--------------------------------------------------------------------
+Caches generally should be rebuilt.
+
+Search indexes should be rebuilt from authoritative restored data.
+
+Do not restore stale cache as authoritative business state.
+
+
+45. ANALYTICS RESTORE
+--------------------------------------------------------------------
+Analytics aggregates may be:
+
+- Restored.
+- Rebuilt.
+- Reconciled.
+
+Preferred architecture should allow rebuilding analytics from
+authoritative events/data where feasible.
+
+
+46. BACKUP VERIFICATION
+--------------------------------------------------------------------
+Verification levels:
+
+LEVEL 1:
+Artifact exists.
+
+LEVEL 2:
+Checksum matches.
+
+LEVEL 3:
+Archive readable.
+
+LEVEL 4:
+Schema/data validation.
+
+LEVEL 5:
+Automated restore test.
+
+Critical backups should periodically reach higher verification levels.
+
+
+47. RESTORE TESTING
+--------------------------------------------------------------------
+Scheduled restore tests should verify:
+
+- Backup readability.
+- Database recovery.
+- Object recovery.
+- Tenant isolation.
+- Application startup.
+- Schema compatibility.
+- Basic storefront functionality.
+- Basic admin functionality.
+- Order data integrity.
+- Payment history integrity.
+- Inventory integrity.
+
+
+48. DISASTER RECOVERY
+--------------------------------------------------------------------
+Disaster scenarios:
+
+- Database outage.
+- Storage outage.
+- Hosting provider outage.
+- Region outage.
+- Application corruption.
+- Deployment failure.
+- Ransomware.
+- Credential compromise.
+- Accidental deletion.
+- Large-scale data corruption.
+
+
+49. DISASTER RECOVERY STRATEGIES
+--------------------------------------------------------------------
+Possible strategies:
+
+- Backup restore.
+- Warm standby.
+- Cold standby.
+- Cross-region replica.
+- Database replica.
+- Object storage replication.
+- Infrastructure recreation from code.
+
+
+50. RECOVERY PRIORITY
+--------------------------------------------------------------------
+Recovery priority should generally consider:
+
+P0:
+Database and core transactional platform.
+
+P1:
+Storefront/API and order processing.
+
+P2:
+Payment/shipping/communication supporting services.
+
+P3:
+Analytics/search/cache and rebuildable services.
+
+Exact priorities must be documented in the production DR plan.
+
+
+51. BUSINESS CONTINUITY
+--------------------------------------------------------------------
+If analytics, search, or cache is unavailable:
+
+Commerce should continue where safely possible.
+
+If payment provider is unavailable:
+
+Use configured alternative/manual methods where supported.
+
+If database is unavailable:
+
+Do not operate against stale writable replicas unless explicitly
+designed and validated.
+
+
+52. BACKUP MONITORING
+--------------------------------------------------------------------
+Monitor:
+
+- Backup success rate.
+- Backup duration.
+- Backup size.
+- Storage consumption.
+- Verification status.
+- Retention failures.
+- Restore test success.
+- RPO compliance.
+- RTO test results.
+- Backup chain health.
+
+
+53. ALERTING
+--------------------------------------------------------------------
+Critical alerts:
+
+- Backup failure.
+- Repeated backup failure.
+- Verification failure.
+- Corruption detected.
+- Storage capacity risk.
+- RPO breach.
+- Restore failure.
+- DR test failure.
+- Unexpected backup deletion.
+- Encryption failure.
+- Cross-tenant scope anomaly.
+
+
+54. BACKUP DASHBOARD
+--------------------------------------------------------------------
+Authorized administrators may see:
+
+- Backup status.
+- Last successful backup.
+- Next scheduled backup.
+- Verification status.
+- Storage usage.
+- Retention.
+- Recovery points.
+- Restore jobs.
+- Failed jobs.
+- DR readiness.
+
+
+55. TENANT BACKUP DASHBOARD
+--------------------------------------------------------------------
+Where package/permissions allow, store owners may see:
+
+- Last backup.
+- Backup history.
+- Recovery points.
+- Backup size.
+- Verification status.
+- Restore availability.
+- Retention.
+
+Do not expose platform-wide infrastructure details.
+
+
+56. PACKAGE ENTITLEMENTS
+--------------------------------------------------------------------
+Module 04 remains authoritative.
+
+Possible entitlement keys:
+
+backup.basic
+backup.automated
+backup.manual
+backup.extended_retention
+backup.tenant_restore
+backup.advanced_restore
+backup.pitr
+backup.cross_region
+backup.disaster_recovery
+
+Possible limits:
+
+- Backup frequency.
+- Retention days.
+- Backup storage.
+- Manual backup count.
+- Restore frequency.
+- Recovery points.
+
+
+57. API REQUIREMENTS
+--------------------------------------------------------------------
+Example endpoint families:
+
+/api/stores/{storeId}/backups
+/api/stores/{storeId}/backups/{backupId}
+/api/stores/{storeId}/backups/{backupId}/verify
+/api/stores/{storeId}/backups/{backupId}/restore
+/api/stores/{storeId}/backup-policies
+/api/stores/{storeId}/recovery-points
+/api/platform/backups
+/api/platform/recovery
+/api/platform/dr
+
+All endpoints require authorization and tenant validation.
+
+
+58. DATA MODEL — HIGH LEVEL
+--------------------------------------------------------------------
+Core entities may include:
+
+BackupPolicy
+BackupSchedule
+BackupJob
+BackupArtifact
+BackupManifest
+BackupPart
+BackupVerification
+BackupRetentionRule
+BackupStorageTarget
+BackupEncryptionReference
+RecoveryPoint
+RestoreJob
+RestorePreview
+RestoreConflict
+RestoreVerification
+RecoveryEnvironment
+DisasterRecoveryPlan
+DisasterRecoveryTest
+BackupAlert
+BackupAuditRecord
+DataLifecyclePolicy
+LegalHoldReference
+
+Tenant-owned records must preserve tenant context.
+
+
+59. AUDIT LOGGING
+--------------------------------------------------------------------
+Audit:
+
+- Backup creation.
+- Backup deletion.
+- Backup verification.
+- Restore request.
+- Restore approval.
+- Restore execution.
+- Restore failure.
+- Retention change.
+- Policy change.
+- DR test.
+- Recovery environment creation.
+- Access to sensitive recovery operations.
+
+
+60. PERMISSIONS
+--------------------------------------------------------------------
+Example permissions:
+
+backup.view
+backup.create
+backup.delete
+backup.verify
+backup.restore
+backup.restore_production
+backup.manage_policy
+backup.manage_retention
+backup.manage_storage
+backup.view_platform
+backup.manage_dr
+backup.execute_dr
+
+
+61. PRODUCTION RESTORE AUTHORIZATION
+--------------------------------------------------------------------
+Production restore should require elevated authorization.
+
+For critical recovery:
+
+- Dual approval foundation may be used.
+- Explicit scope.
+- Explicit recovery point.
+- Confirmation.
+- Audit.
+- Post-restore verification.
+
+
+62. RATE LIMITING & ABUSE PROTECTION
+--------------------------------------------------------------------
+Protect against:
+
+- Backup spam.
+- Restore spam.
+- Export-like data extraction.
+- Storage exhaustion.
+- Repeated recovery jobs.
+
+High-cost operations should be queued and controlled.
+
+
+63. TENANT DATA EXPORT
+--------------------------------------------------------------------
+Backup architecture may support tenant export for migration.
+
+Exports must be:
+
+- Complete according to defined scope.
+- Tenant-scoped.
+- Encrypted.
+- Signed.
+- Expiring.
+- Audited.
+
+Export is not automatically equivalent to a disaster recovery backup.
+
+
+64. DATA LIFECYCLE
+--------------------------------------------------------------------
+Define lifecycle states where applicable:
+
+ACTIVE
+ARCHIVED
+RETENTION
+ANONYMIZED
+DELETED
+
+Deletion must respect:
+
+- Retention.
+- Dependencies.
+- Legal hold.
+- Backup lifecycle.
+
+
+65. DELETION & BACKUPS
+--------------------------------------------------------------------
+Deleting live data does not necessarily mean immediate deletion from
+all backups.
+
+Backup retention must follow the documented data lifecycle policy.
+
+Restoration of deleted data must be treated as a controlled recovery
+operation.
+
+
+66. PRIVACY
+--------------------------------------------------------------------
+Backups may contain personal information.
+
+Requirements:
+
+- Restricted access.
+- Encryption.
+- Retention control.
+- Audit.
+- Data minimization where possible.
+- Privacy request integration.
+- Secure deletion after retention expiry.
+
+
+67. BACKUP OF SECRETS
+--------------------------------------------------------------------
+Secret backup must be handled separately from ordinary business
+backups.
+
+Preferred model:
+
+- Secret manager retains encrypted secrets.
+- Backup stores references.
+- Recovery rehydrates secrets securely.
+
+Emergency secret recovery may use a separate controlled procedure.
+
+
+68. BACKUP OF DOMAINS
+--------------------------------------------------------------------
+Backup domain metadata such as:
+
+- Domain identity.
+- Store association.
+- Primary/alias state.
+- Verification state.
+- Configuration metadata.
+
+Registrar credentials and DNS secrets must remain protected.
+
+
+69. BACKUP OF INFRASTRUCTURE
+--------------------------------------------------------------------
+Infrastructure backup should rely on:
+
+- Infrastructure-as-code.
+- Versioned configuration.
+- Immutable deployment artifacts.
+- Provider configuration metadata.
+
+Do not depend solely on machine snapshots when infrastructure can be
+recreated deterministically.
+
+
+70. BACKUP COST MANAGEMENT
+--------------------------------------------------------------------
+Track:
+
+- Storage cost.
+- Replication cost.
+- Egress cost.
+- Backup compute cost.
+- Restore cost.
+
+Retention must balance:
+
+- Recovery needs.
+- Security.
+- Compliance.
+- Business value.
+- Infrastructure cost.
+
+
+71. PERFORMANCE
+--------------------------------------------------------------------
+Backup operations must minimize production impact.
+
+Use:
+
+- Database-native backup mechanisms.
+- Streaming where appropriate.
+- Incremental backup.
+- Throttling.
+- Background workers.
+- Off-peak scheduling where appropriate.
+
+Backup jobs must not block customer checkout or order processing.
+
+
+72. CONCURRENCY
+--------------------------------------------------------------------
+Prevent conflicting operations:
+
+- Two full backups of the same scope unnecessarily.
+- Restore while backup is running without explicit strategy.
+- Retention deletion during restore.
+- Multiple production restores.
+
+Use distributed locks and explicit job states.
+
+
+73. FAILURE HANDLING
+--------------------------------------------------------------------
+Backup failure:
+
+- Mark failed.
+- Preserve diagnostics.
+- Retry according to policy.
+- Alert after threshold.
+
+Restore failure:
+
+- Stop safely.
+- Preserve source backup.
+- Preserve diagnostics.
+- Prevent partial destructive completion where possible.
+- Require reconciliation before declaring recovery complete.
+
+
+74. ROLLBACK / RESTORE-UNDO FOUNDATION
+--------------------------------------------------------------------
+Before destructive restore, where feasible:
+
+Create a recovery checkpoint of the current target state.
+
+This enables controlled rollback if the restore produces an unexpected
+result.
+
+
+75. MIGRATION COMPATIBILITY
+--------------------------------------------------------------------
+Backups must record application/schema version.
+
+Database migrations must be designed with recovery in mind.
+
+Avoid irreversible migrations without a recovery strategy.
+
+
+76. OBSERVABILITY
+--------------------------------------------------------------------
+Every backup/restore job should support:
+
+- Correlation ID.
+- Job ID.
+- Tenant ID where applicable.
+- Start time.
+- End time.
+- Duration.
+- Progress.
+- Source.
+- Target.
+- Result.
+- Error code.
+- Diagnostics.
+
+
+77. SECURITY THREATS
+--------------------------------------------------------------------
+Defend against:
+
+- Unauthorized backup access.
+- Unauthorized restore.
+- Cross-tenant restore.
+- Backup deletion attacks.
+- Ransomware.
+- Credential compromise.
+- Backup exfiltration.
+- Malicious retention changes.
+- Archive tampering.
+- Restore-triggered webhook replay.
+- Secret leakage.
+
+
+78. SECURITY TESTING
+--------------------------------------------------------------------
+Test:
+
+- Tenant isolation.
+- Role escalation.
+- Backup access.
+- Restore access.
+- Production restore authorization.
+- Signed URL expiry.
+- Backup tampering.
+- Encryption.
+- Retention controls.
+- Legal hold protection.
+- Secret exclusion.
+- Cross-tenant restore attempts.
+
+
+79. RECOVERY TESTING
+--------------------------------------------------------------------
+Test scenarios:
+
+1. Single tenant restore.
+2. Database corruption.
+3. Deleted product recovery.
+4. Deleted order recovery.
+5. Inventory recovery.
+6. Media recovery.
+7. Configuration recovery.
+8. Full platform recovery.
+9. Point-in-time recovery.
+10. Provider outage.
+11. Region outage.
+12. Deployment corruption.
+13. Backup corruption.
+14. Backup storage loss.
+15. Ransomware-style backup protection scenario.
+
+
+80. ACCEPTANCE CRITERIA
+--------------------------------------------------------------------
+Module 23 is complete only when:
+
+1. Backup architecture exists.
+2. Backup policies exist.
+3. Automated backups work.
+4. Manual backups work where entitled.
+5. Backup manifests exist.
+6. Integrity verification works.
+7. Encryption is implemented.
+8. Retention works.
+9. Immutable backup foundation exists where supported.
+10. Database backup works.
+11. Object storage backup works.
+12. Configuration backup works.
+13. Tenant backup isolation is verified.
+14. Restore preview works.
+15. Restore authorization works.
+16. Tenant restore works where supported.
+17. Production restore safeguards work.
+18. PITR foundation works where supported.
+19. Restore verification works.
+20. Recovery checkpoints work where applicable.
+21. Webhook/event replay is protected.
+22. Cache/search rebuild strategy works.
+23. Backup monitoring works.
+24. Backup failure alerts work.
+25. RPO/RTO are documented.
+26. DR plan exists.
+27. DR testing exists.
+28. Security tests pass.
+29. Privacy/retention controls pass.
+30. Production recovery drill passes.
+
+
+81. REQUIRED FOLLOW-UP ARTIFACTS
+--------------------------------------------------------------------
+After implementation, create and maintain:
+
+1. Module 23 implementation checklist.
+2. Backup policy matrix.
+3. Backup data classification.
+4. Retention matrix.
+5. RPO/RTO matrix.
+6. Backup storage architecture.
+7. Encryption/key-management specification.
+8. Backup manifest specification.
+9. Restore workflow specification.
+10. Tenant restore specification.
+11. Production restore authorization matrix.
+12. PITR specification.
+13. Disaster recovery plan.
+14. Disaster recovery runbook.
+15. Recovery drill checklist.
+16. Backup monitoring specification.
+17. Alert matrix.
+18. Data lifecycle specification.
+19. Privacy/retention specification.
+20. Backup security audit checklist.
+21. API contract.
+22. Data model specification.
+23. Permission matrix.
+24. Package entitlement matrix.
+25. Automated test matrix.
+26. Recovery test matrix.
+27. Production readiness checklist.
+28. Repository checkpoint/progress note.
+
+
+82. CLAUDE DEVELOPMENT REQUIREMENTS
+--------------------------------------------------------------------
+Claude must:
+
+1. Read the Project Bible and finalized modules.
+2. Treat Module 23 as authoritative for backup/recovery policy.
+3. Inspect the repository before implementation.
+4. Identify the actual database engine and infrastructure.
+5. Reuse existing storage, queue, scheduler, and infrastructure
+   abstractions.
+6. Never expose backup credentials.
+7. Never store plaintext secrets in ordinary backup archives.
+8. Implement tenant isolation.
+9. Implement backup idempotency.
+10. Implement restore safeguards.
+11. Implement backup verification.
+12. Implement retention safely.
+13. Implement audit logging.
+14. Add failure recovery.
+15. Add cross-tenant security tests.
+16. Add restore integrity tests.
+17. Add event/webhook replay protection.
+18. Add production restore confirmation safeguards.
+19. Add monitoring and alerts.
+20. Validate RPO/RTO assumptions against actual infrastructure.
+21. Run all relevant builds and tests.
+22. Perform recovery drills in isolated environments.
+23. Record fixes and validation results.
+24. Commit only after successful validation.
+25. Preserve a concise repository checkpoint.
+
+
+83. PRODUCTION READINESS
+--------------------------------------------------------------------
+Before production:
+
+- Confirm backup scope.
+- Confirm authoritative data.
+- Confirm backup frequency.
+- Confirm RPO.
+- Confirm RTO.
+- Confirm encryption.
+- Confirm storage isolation.
+- Confirm off-site strategy.
+- Confirm retention.
+- Confirm integrity verification.
+- Confirm restore procedures.
+- Confirm tenant restore isolation.
+- Confirm production restore authorization.
+- Confirm webhook replay safety.
+- Confirm secrets handling.
+- Confirm backup monitoring.
+- Confirm alerts.
+- Confirm DR plan.
+- Confirm recovery runbook.
+- Confirm restore testing.
+- Confirm recovery drill.
+- Confirm documentation.
+- Confirm package entitlements.
+- Confirm audit logs.
+
+
+84. FINAL ARCHITECTURAL RULES
+--------------------------------------------------------------------
+RULE 01:
+Module 23 owns backup, restore, recovery, and data lifecycle
+orchestration.
+
+RULE 02:
+Source modules remain authoritative for business data.
+
+RULE 03:
+A backup is not valid until its integrity is verified according to
+the configured verification level.
+
+RULE 04:
+Backups must preserve tenant boundaries.
+
+RULE 05:
+Platform backups require elevated authorization.
+
+RULE 06:
+Tenant backups must never contain unauthorized tenant data.
+
+RULE 07:
+Backup credentials must be separated from ordinary application
+credentials where possible.
+
+RULE 08:
+Backups containing protected data must be encrypted.
+
+RULE 09:
+Encryption keys must not be stored inside ordinary backup archives.
+
+RULE 10:
+Critical backups should use immutable retention where supported.
+
+RULE 11:
+Retention cleanup must be dependency-aware.
+
+RULE 12:
+Legal/retention holds must prevent unauthorized deletion.
+
+RULE 13:
+Production restore must never be an implicit operation.
+
+RULE 14:
+Production restore requires explicit authorization and confirmation.
+
+RULE 15:
+Restore previews should be used before destructive recovery.
+
+RULE 16:
+Restore must validate application/schema compatibility.
+
+RULE 17:
+Restored events must not automatically duplicate external side
+effects.
+
+RULE 18:
+Payment records must never trigger accidental re-charging.
+
+RULE 19:
+Restored orders must not unintentionally create shipments or
+notifications.
+
+RULE 20:
+Inventory restore must account for transactions after the recovery
+point.
+
+RULE 21:
+Caches are not authoritative business data.
+
+RULE 22:
+Search indexes should be rebuildable from authoritative data.
+
+RULE 23:
+Analytics should be rebuildable where practical.
+
+RULE 24:
+Backup and restore jobs must be idempotent where applicable.
+
+RULE 25:
+Backup failures must be observable and alertable.
+
+RULE 26:
+RPO and RTO must be measurable and tested.
+
+RULE 27:
+Disaster recovery must be tested, not merely documented.
+
+RULE 28:
+Analytics or search failure must not unnecessarily stop commerce.
+
+RULE 29:
+Infrastructure execution belongs to Module 20.
+
+RULE 30:
+Security policy belongs to Module 32.
+
+RULE 31:
+Backup package entitlements belong to Module 04.
+
+RULE 32:
+Backup monitoring must integrate with Module 24.
+
+RULE 33:
+Billing/subscription backup data must preserve Module 29 authority.
+
+RULE 34:
+Secrets should be restored through secure secret-management
+mechanisms.
+
+RULE 35:
+Every production recovery action must be auditable.
+
+====================================================================
+END OF MODULE 23 — BACKUP, RESTORE & DATA PROTECTION
+====================================================================

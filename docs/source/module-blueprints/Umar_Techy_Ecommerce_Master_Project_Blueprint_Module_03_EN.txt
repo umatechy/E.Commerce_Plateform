@@ -1,0 +1,1677 @@
+UMAR TECHY
+E-COMMERCE PLATFORM
+MASTER PROJECT BLUEPRINT
+
+MODULE 03 — MULTI-TENANT & STORE MANAGEMENT
+Version: 1.0
+Status: Planning / Blueprint
+
+============================================================
+1. MODULE PURPOSE
+============================================================
+
+This module defines the Multi-Tenant and Store Management
+foundation of the Umar Techy E-Commerce Platform.
+
+This is one of the most critical modules in the entire system.
+
+The platform must be built once and operate as a shared
+Multi-Tenant SaaS platform capable of serving many independent
+e-commerce stores.
+
+A new customer must receive a new Store/Tenant within the
+existing platform rather than requiring a new software project,
+new application codebase, or manually rebuilt e-commerce system.
+
+The module is responsible for:
+
+- Store creation
+- Store lifecycle
+- Tenant isolation
+- Store identity
+- Store configuration
+- Store ownership
+- Store status
+- Store onboarding
+- Store package association
+- Store domain association
+- Store branding configuration
+- Store operational settings
+- Store suspension / reactivation
+- Store deletion / archival rules
+- Platform-level store management
+
+============================================================
+2. CORE PRINCIPLE
+============================================================
+
+ONE CORE PLATFORM
++
+MANY INDEPENDENT STORES
++
+STRICT TENANT ISOLATION
++
+CENTRALIZED PLATFORM MANAGEMENT
++
+STORE-SPECIFIC CONFIGURATION
++
+PACKAGE-BASED ENTITLEMENTS
+
+The Core Application is shared.
+
+Business data and store configuration are tenant-scoped.
+
+No store should require a separate source-code copy merely
+because it belongs to a different customer.
+
+============================================================
+3. WHAT IS A TENANT?
+============================================================
+
+A Tenant represents an independent business environment within
+the Umar Techy E-Commerce Platform.
+
+For the initial product model:
+
+One Store = One Primary Tenant
+
+The architecture should remain flexible enough to support
+future relationships such as:
+
+- One customer owning multiple stores
+- One user managing multiple stores
+- Reseller-managed stores
+- Multiple brands under a business account
+- Multi-store enterprise customers
+
+Each tenant must have a unique internal identifier.
+
+Example:
+
+Tenant ID: T000001
+Store ID: S000001
+
+The final identifier strategy will be defined in the
+Database Blueprint.
+
+============================================================
+4. STORE VS USER
+============================================================
+
+The platform must maintain a clear separation between:
+
+USER ACCOUNT
+and
+STORE / TENANT
+
+A user represents an identity.
+
+A store represents a business environment.
+
+A user gains access to a store through a membership relationship.
+
+Example:
+
+User A
+|
++-- Store A → Owner
++-- Store B → Manager
+
+This architecture must align with Module 02.
+
+============================================================
+5. STORE CREATION MODELS
+============================================================
+
+The platform should support two primary store creation methods.
+
+A. PLATFORM-ASSISTED CREATION
+
+Umar Techy staff creates a store for a customer.
+
+B. SELF-SERVICE CREATION
+
+Customer signs up and creates a store through the onboarding
+process.
+
+The same underlying Store Creation Service should be used by
+both flows wherever practical.
+
+This prevents two separate store creation systems from
+developing different behavior.
+
+============================================================
+6. STORE CREATION WORKFLOW
+============================================================
+
+Recommended high-level workflow:
+
+1. Customer Account Created
+2. Identity Verification
+3. Trial or Package Selected
+4. Store Creation Started
+5. Store Name Entered
+6. Business Information Entered
+7. Unique Store Identifier Generated
+8. Default Store Configuration Created
+9. Default Package Entitlements Applied
+10. Default Theme Assigned
+11. Default Animation Profile Assigned
+12. Default Storefront Configuration Created
+13. Owner Membership Created
+14. Store Setup Checklist Created
+15. Store Status Set to ONBOARDING
+16. Customer Completes Required Setup
+17. Domain Configured
+18. Products Added
+19. Payment / Shipping Configured
+20. Launch Readiness Checks Completed
+21. Store Activated
+
+The exact onboarding workflow will be finalized later.
+
+============================================================
+7. STORE LIFECYCLE
+============================================================
+
+The store must have a controlled lifecycle.
+
+Suggested states:
+
+- PROVISIONING
+- ONBOARDING
+- TRIAL
+- ACTIVE
+- GRACE_PERIOD
+- SUSPENDED
+- CANCELLED
+- ARCHIVED
+- DELETING
+
+State transitions must be controlled by business rules.
+
+A store should never move directly between arbitrary states
+without authorization.
+
+============================================================
+8. STORE STATUS DEFINITIONS
+============================================================
+
+PROVISIONING
+
+Store resources and configuration are being created.
+
+ONBOARDING
+
+Store exists but setup is incomplete.
+
+TRIAL
+
+Store is operating under a trial entitlement.
+
+ACTIVE
+
+Store is fully operational under a valid package/subscription.
+
+GRACE_PERIOD
+
+Subscription or required service has expired but limited
+recovery time remains.
+
+SUSPENDED
+
+Storefront and/or administrative access is restricted
+according to suspension rules.
+
+CANCELLED
+
+Customer has cancelled the service.
+
+ARCHIVED
+
+Store is retained for historical or recovery purposes but is
+not operational.
+
+DELETING
+
+Store is undergoing an approved deletion workflow.
+
+============================================================
+9. TENANT ISOLATION — NON-NEGOTIABLE
+============================================================
+
+Tenant isolation is a core security requirement.
+
+A tenant must not be able to:
+
+- Read another tenant's products
+- Read another tenant's customers
+- Read another tenant's orders
+- Modify another tenant's data
+- Delete another tenant's data
+- Search another tenant's data
+- Export another tenant's data
+- Access another tenant's files
+- Access another tenant's media
+- Access another tenant's reports
+- Access another tenant's backups
+- Access another tenant's API credentials
+- Access another tenant's settings
+
+Tenant isolation must be enforced server-side.
+
+Client-side filtering is never sufficient.
+
+============================================================
+10. TENANT CONTEXT
+============================================================
+
+Every tenant-scoped request must execute within a trusted
+tenant context.
+
+Tenant context should be derived from authenticated identity,
+authorized membership, and the requested store/domain context.
+
+The system must never trust tenant identity solely from:
+
+- Query parameters
+- URL segments
+- Request body
+- Hidden fields
+- Client-side state
+- Cookies without server validation
+
+Every tenant context must be validated.
+
+============================================================
+11. DATABASE TENANCY STRATEGY
+============================================================
+
+The initial architecture should strongly consider a shared
+database with tenant-scoped data and strict isolation controls.
+
+Conceptually:
+
+Shared Platform Database
+|
++-- Tenant A Data
++-- Tenant B Data
++-- Tenant C Data
++-- Tenant D Data
+
+Most tenant-owned entities should include a tenant identifier
+where required.
+
+Examples:
+
+- Products
+- Categories
+- Orders
+- Customers
+- Inventory
+- Store Settings
+- Themes
+- Media
+- Discounts
+- Reports
+
+The final database strategy will be determined in the
+Database Architecture Blueprint.
+
+The design must allow future scaling strategies if required,
+including database or infrastructure separation for very large
+tenants.
+
+============================================================
+12. TENANT-SCOPED DATA RULE
+============================================================
+
+Any entity that belongs to a store must have an explicit,
+consistent relationship to that tenant.
+
+A tenant-scoped query must enforce the tenant boundary.
+
+Example conceptual rule:
+
+WHERE TenantId = CurrentAuthorizedTenantId
+
+The actual implementation must use safe centralized patterns
+to reduce the risk of accidentally omitting tenant filtering.
+
+============================================================
+13. GLOBAL VS TENANT DATA
+============================================================
+
+The system must clearly distinguish:
+
+A. GLOBAL PLATFORM DATA
+
+Examples:
+
+- Platform Configuration
+- Package Definitions
+- Feature Definitions
+- Global Theme Templates
+- Global Animation Profiles
+- Supported Payment Gateway Definitions
+- Supported Integration Definitions
+
+B. TENANT DATA
+
+Examples:
+
+- Store Settings
+- Products
+- Orders
+- Customers
+- Inventory
+- Coupons
+- Store Theme Selection
+- Store Animation Configuration
+- Store Domain
+- Store Reports
+
+Global data must never accidentally expose tenant-specific
+business information.
+
+============================================================
+14. STORE IDENTITY
+============================================================
+
+Every store should have a unique internal identity.
+
+Potential properties:
+
+- Store ID
+- Tenant ID
+- Store Name
+- Legal Business Name
+- Store Slug
+- Store Status
+- Package
+- Owner
+- Created Date
+- Activated Date
+- Time Zone
+- Currency
+- Country
+- Language
+- Contact Information
+
+Internal identifiers should not rely on predictable public
+sequences where doing so could expose sensitive information.
+
+============================================================
+15. STORE SLUG
+============================================================
+
+Each store may have an internal/public slug.
+
+Example:
+
+store-name
+
+The slug may be used for:
+
+- Platform subdomain
+- Administrative navigation
+- Internal routing
+
+The final public URL architecture will be defined in the
+Domain Blueprint.
+
+Slug rules should include:
+
+- Uniqueness
+- Normalization
+- Reserved words
+- Safe characters
+- Length limits
+- Change policy
+- Redirect behavior where applicable
+
+============================================================
+16. PLATFORM SUBDOMAIN
+============================================================
+
+Each store may receive a default platform subdomain.
+
+Conceptually:
+
+store-name.platform-domain.example
+
+The exact production domain will be defined later.
+
+The platform subdomain allows a store to operate before a
+custom domain is connected.
+
+Custom domains can later become the primary public domain.
+
+============================================================
+17. CUSTOM DOMAIN MAPPING
+============================================================
+
+A store may connect:
+
+- Customer-owned domain
+- Umar Techy-managed domain
+
+The system should support:
+
+- Domain verification
+- Domain mapping
+- Primary domain selection
+- Domain status
+- SSL status
+- Domain activation
+- Domain removal
+- Domain replacement
+
+A domain must map to exactly the intended tenant/store.
+
+Domain routing must never permit cross-tenant access.
+
+============================================================
+18. DOMAIN ROUTING
+============================================================
+
+At a high level:
+
+Incoming Request
+      ↓
+Identify Host / Domain
+      ↓
+Resolve Store
+      ↓
+Validate Store Status
+      ↓
+Resolve Tenant
+      ↓
+Load Store Configuration
+      ↓
+Render Correct Storefront
+
+If the domain cannot be safely resolved, the request must not
+fall through to an unintended tenant.
+
+============================================================
+19. STORE CONFIGURATION
+============================================================
+
+Each store should have a centralized configuration model.
+
+Potential categories:
+
+A. Business Information
+B. Contact Information
+C. Address
+D. Currency
+E. Time Zone
+F. Language
+G. Tax Settings
+H. Order Settings
+I. Product Settings
+J. Checkout Settings
+K. Payment Settings
+L. Shipping Settings
+M. Notification Settings
+N. SEO Settings
+O. Theme Settings
+P. Animation Settings
+Q. Domain Settings
+R. Customer Settings
+S. Privacy Settings
+T. Integration Settings
+
+Configuration should be modular and versionable where needed.
+
+============================================================
+20. STORE BRANDING
+============================================================
+
+Each store should have independent branding.
+
+Potential properties:
+
+- Store Logo
+- Favicon
+- Primary Color
+- Secondary Color
+- Accent Color
+- Typography
+- Brand Images
+- Social Links
+- Business Name
+- Tagline
+- Brand Assets
+
+Branding is tenant-specific.
+
+Global themes may provide defaults, but store-level selections
+must override defaults safely.
+
+============================================================
+21. THEME ASSIGNMENT
+============================================================
+
+The platform will maintain a global Theme Library.
+
+A store will have:
+
+- Selected Theme
+- Theme Version
+- Theme Configuration
+- Store-specific Overrides
+
+Example:
+
+Global Theme:
+Modern Commerce v1
+
+Store A:
+Modern Commerce + Green Brand Override
+
+Store B:
+Modern Commerce + Blue Brand Override
+
+The core theme remains shared.
+
+Store-specific settings remain isolated.
+
+============================================================
+22. ANIMATION PROFILE ASSIGNMENT
+============================================================
+
+Similar to themes, the platform may maintain global
+Animation Profiles.
+
+A store may select:
+
+- Simple
+- Smooth
+- Modern
+- Premium
+
+The selected profile can be combined with store-specific
+configuration.
+
+Animation assets and configuration must not require separate
+source-code copies for every store.
+
+============================================================
+23. DEFAULT STORE CONFIGURATION
+============================================================
+
+When a store is created, the platform should automatically
+generate safe defaults.
+
+Examples:
+
+- Default Theme
+- Default Animation Profile
+- Default Currency
+- Default Language
+- Default Order Statuses
+- Default Customer Settings
+- Default Notification Settings
+- Default SEO Defaults
+- Default Storefront Pages
+- Default Shipping Configuration
+- Default Payment Configuration
+
+Defaults should be configurable at platform level where
+appropriate.
+
+============================================================
+24. STORE SETUP CHECKLIST
+============================================================
+
+Every newly created store should receive a setup checklist.
+
+Potential checklist:
+
+- Business Information
+- Logo
+- Theme
+- Branding
+- Domain
+- Products
+- Categories
+- Payment Method
+- Shipping Method
+- Contact Information
+- Store Policies
+- Tax Settings
+- Notification Settings
+- SEO Basics
+- Test Order
+- Store Preview
+- Launch Check
+
+The checklist should show completion percentage.
+
+============================================================
+25. STORE READINESS CHECK
+============================================================
+
+Before activation, the platform should be able to perform
+automated readiness checks.
+
+Examples:
+
+- Store identity configured
+- At least one active product
+- Required category configuration
+- Payment method configured
+- Shipping method configured
+- Contact information present
+- Domain valid where required
+- SSL valid where required
+- Required policies present
+- No critical configuration errors
+
+The exact launch checklist will be defined later.
+
+============================================================
+26. STORE OWNER CREATION
+============================================================
+
+When a store is created, the designated owner must receive
+the Store Owner membership.
+
+This membership should connect:
+
+User
++
+Store
++
+Owner Role
+
+The system should prevent accidental creation of a store with
+no valid owner unless the platform explicitly supports an
+assisted provisioning state.
+
+============================================================
+27. MULTI-STORE SUPPORT
+============================================================
+
+The architecture should support future scenarios where one
+account can manage multiple stores.
+
+Example:
+
+Business Account
+|
++-- Store A
++-- Store B
++-- Store C
+
+A user may have different roles across different stores.
+
+Store switching must:
+
+- Be explicit
+- Be secure
+- Revalidate membership
+- Update tenant context
+- Never expose data from the previous store
+
+============================================================
+28. STORE OWNERSHIP TRANSFER
+============================================================
+
+A future ownership transfer workflow may be supported.
+
+Potential flow:
+
+1. Current owner initiates transfer.
+2. New owner identity is verified.
+3. New owner accepts.
+4. Ownership transfer is confirmed.
+5. Membership roles are updated.
+6. Audit record is created.
+7. Relevant security notifications are sent.
+
+Ownership transfer must be treated as a high-risk operation.
+
+============================================================
+29. STORE STAFF MANAGEMENT
+============================================================
+
+Store Owners and authorized administrators will manage store
+memberships through the User Management system.
+
+Capabilities may include:
+
+- Invite staff
+- Assign role
+- Change role
+- Suspend membership
+- Reactivate membership
+- Revoke membership
+
+All actions must remain tenant-scoped.
+
+============================================================
+30. STORE PACKAGE ASSOCIATION
+============================================================
+
+Each store must be associated with a package/subscription state.
+
+Example:
+
+Store A → BASIC
+Store B → BUSINESS
+Store C → PREMIUM
+
+Package entitlement must be evaluated centrally.
+
+Changing a package should not create a new store.
+
+The same Store/Tenant identity remains intact.
+
+============================================================
+31. PACKAGE UPGRADE / DOWNGRADE
+============================================================
+
+When a store upgrades:
+
+- Store ID remains unchanged.
+- Tenant remains unchanged.
+- Existing data remains.
+- New entitlements become available.
+
+When a store downgrades:
+
+- Store ID remains unchanged.
+- Existing data should not be silently destroyed.
+- Restricted features become unavailable.
+- The system should identify data exceeding new limits.
+- Customer must receive clear guidance for resolution.
+
+The exact downgrade policy will be defined in Module 04.
+
+============================================================
+32. STORE RESOURCE LIMITS
+============================================================
+
+The platform should track usage against package limits.
+
+Potential metrics:
+
+- Product Count
+- Customer Count
+- Order Count
+- Storage
+- Media Storage
+- Bandwidth
+- Staff Accounts
+- API Usage
+- AI Usage
+
+Usage must be tenant-scoped and reportable.
+
+============================================================
+33. STORE SUSPENSION
+============================================================
+
+A store may be suspended due to defined business or security
+conditions.
+
+Examples:
+
+- Subscription expiry
+- Abuse
+- Security incident
+- Customer-requested suspension
+- Policy enforcement
+- Infrastructure issue
+
+Suspension must have:
+
+- Reason
+- Actor / system source
+- Timestamp
+- Expected behavior
+- Recovery process
+- Audit record
+
+============================================================
+34. STORE REACTIVATION
+============================================================
+
+Authorized platform processes may reactivate a store after the
+suspension condition is resolved.
+
+Reactivation must:
+
+- Validate subscription / entitlement
+- Validate critical configuration
+- Restore appropriate access
+- Record audit event
+
+============================================================
+35. STORE CANCELLATION
+============================================================
+
+Cancellation should not immediately destroy the tenant.
+
+The system should transition the store into a controlled
+cancelled state.
+
+Potential stages:
+
+CANCELLED
+→ RETENTION / GRACE
+→ ARCHIVED
+→ OPTIONAL PERMANENT DELETION
+
+The exact retention period will be defined later.
+
+============================================================
+36. STORE ARCHIVAL
+============================================================
+
+Archived stores should retain required historical information
+while remaining unavailable for normal operation.
+
+Archive strategy should consider:
+
+- Orders
+- Financial records
+- Audit records
+- Customer records
+- Subscription history
+- Domain history
+- Backup references
+
+Archived data must remain protected.
+
+============================================================
+37. STORE DELETION
+============================================================
+
+Permanent deletion must be treated as a high-risk operation.
+
+Requirements should include:
+
+- Explicit authorization
+- Confirmation
+- Grace period
+- Audit trail
+- Backup policy
+- Dependency checks
+- Data retention rules
+- Safe asynchronous deletion
+- Final verification
+
+The system must not expose a simple destructive action that
+can accidentally erase an entire store immediately.
+
+============================================================
+38. PLATFORM SUPER ADMIN STORE MANAGEMENT
+============================================================
+
+Umar Techy Super Admin should eventually provide:
+
+- Store List
+- Search
+- Filters
+- Store Status
+- Package
+- Subscription State
+- Owner
+- Domain
+- Creation Date
+- Last Activity
+- Resource Usage
+- Health Status
+- Backup Status
+
+Super Admin actions may include:
+
+- Create Store
+- View Store
+- Configure Store
+- Suspend Store
+- Reactivate Store
+- Change Package
+- Assist with Setup
+- Review Health
+- Review Audit
+- Archive Store
+
+Sensitive actions must require appropriate authorization.
+
+============================================================
+39. SUPPORT ACCESS
+============================================================
+
+Umar Techy support staff may need limited access to assist
+customers.
+
+Support access must be:
+
+- Tenant-scoped
+- Permission-scoped
+- Audited
+- Time-limited where practical
+- Clearly visible to the support operator
+- Prevented from exposing customer passwords
+
+Support must not automatically receive unrestricted
+platform-level access.
+
+============================================================
+40. STORE DATA EXPORT
+============================================================
+
+The platform should eventually allow authorized store owners
+to export appropriate business data.
+
+Potential exports:
+
+- Products
+- Customers
+- Orders
+- Inventory
+- Reports
+- Store configuration
+
+Exports must:
+
+- Respect tenant scope
+- Respect user permissions
+- Be logged
+- Be protected
+- Avoid exposing platform/global data
+
+============================================================
+41. STORE IMPORT
+============================================================
+
+Future onboarding may support importing:
+
+- Products
+- Customers
+- Inventory
+- Categories
+- Orders where appropriate
+
+Import processing must:
+
+- Validate tenant context
+- Validate file structure
+- Respect package limits
+- Prevent duplicate or destructive operations
+- Produce an import report
+- Run safely for large datasets
+
+============================================================
+42. STORE MEDIA ISOLATION
+============================================================
+
+Store media must be tenant-scoped.
+
+Examples:
+
+- Product images
+- Store logo
+- Banner images
+- Content images
+- Documents
+
+A Store A media URL or identifier must not allow Store B
+to access Store A's private media.
+
+Public product images may be publicly accessible where
+intended, but private storage and administrative media must
+remain protected.
+
+============================================================
+43. STORE CACHING ISOLATION
+============================================================
+
+Caching must never mix tenant-specific content.
+
+The cache key design must include appropriate tenant/store
+context.
+
+Examples:
+
+- Store configuration cache
+- Product cache
+- Category cache
+- Theme configuration cache
+- Storefront page cache
+
+A cached Store A response must never be returned for Store B.
+
+============================================================
+44. SEARCH ISOLATION
+============================================================
+
+Search indexes must preserve tenant boundaries.
+
+If a shared search infrastructure is used, tenant identity
+must be part of the indexing and query authorization model.
+
+A search request must never return products, customers,
+orders, or other private information from another tenant.
+
+============================================================
+45. QUEUE & JOB ISOLATION
+============================================================
+
+Background jobs must preserve tenant context.
+
+Examples:
+
+- Order notifications
+- Inventory updates
+- Scheduled reports
+- Backup jobs
+- Subscription jobs
+- Domain reminders
+- AI processing
+- Import jobs
+- Export jobs
+
+Every tenant-scoped job must carry sufficient context to
+process only the intended store.
+
+============================================================
+46. WEBHOOK ISOLATION
+============================================================
+
+Incoming and outgoing webhooks must be associated with the
+correct tenant.
+
+Webhook processing must validate:
+
+- Source
+- Signature
+- Tenant
+- Event Type
+- Authorization
+- Idempotency
+
+A webhook intended for Store A must never update Store B.
+
+============================================================
+47. RATE LIMITING
+============================================================
+
+Rate limiting should consider:
+
+- User
+- Store / Tenant
+- IP
+- API Key
+- Endpoint
+- Operation Type
+
+Limits may differ by package and infrastructure capacity.
+
+Security rate limits must not be bypassed by changing tenant
+identifiers.
+
+============================================================
+48. STORE OBSERVABILITY
+============================================================
+
+The platform should collect tenant-aware operational metrics.
+
+Examples:
+
+- Request Count
+- Error Count
+- Response Time
+- Order Activity
+- Resource Usage
+- Storage Usage
+- Backup Status
+- Integration Status
+
+Observability data must not expose one customer's private
+business information to another customer.
+
+============================================================
+49. TENANT-AWARE LOGGING
+============================================================
+
+Operational logs should include sufficient tenant context for
+troubleshooting while avoiding sensitive information.
+
+Useful fields may include:
+
+- Tenant ID
+- Store ID
+- User ID where appropriate
+- Request ID
+- Operation
+- Result
+- Timestamp
+
+Secrets, passwords, payment credentials, and sensitive
+personal data must not be logged unnecessarily.
+
+============================================================
+50. STORE CONFIGURATION VERSIONING
+============================================================
+
+Important store configuration changes may require versioning
+or audit history.
+
+Examples:
+
+- Theme changes
+- Domain changes
+- Payment configuration
+- Shipping configuration
+- Business settings
+- Staff permissions
+- Critical storefront settings
+
+This can support troubleshooting and controlled rollback.
+
+============================================================
+51. DEFAULTS VS OVERRIDES
+============================================================
+
+The platform should support a layered configuration model.
+
+Example:
+
+Platform Default
+      ↓
+Package Default
+      ↓
+Theme Default
+      ↓
+Store Configuration
+      ↓
+Store-Specific Override
+
+The final precedence order must be documented and implemented
+consistently.
+
+This will reduce duplicated configuration while allowing
+customer-specific customization.
+
+============================================================
+52. STORE TEMPLATE / CLONING CONCEPT
+============================================================
+
+A future store cloning or template system may allow authorized
+users to create a new store based on an existing configuration.
+
+However:
+
+- Customer data must never be copied unintentionally.
+- Orders must not be cloned unless explicitly supported.
+- Customer accounts must not be copied by default.
+- Private credentials must never be copied.
+- Tenant IDs must always be regenerated.
+- Domains must never be duplicated.
+- Package and subscription must be independently assigned.
+
+This should be implemented only through a controlled workflow.
+
+============================================================
+53. PLATFORM CONFIGURATION VS STORE CONFIGURATION
+============================================================
+
+Examples of PLATFORM-LEVEL configuration:
+
+- Available Packages
+- Global Theme Library
+- Global Animation Library
+- Supported Payment Gateways
+- Supported Shipping Integrations
+- Platform Email Provider
+- Global Security Policies
+
+Examples of STORE-LEVEL configuration:
+
+- Selected Theme
+- Brand Colors
+- Store Logo
+- Products
+- Shipping Rules
+- Payment Settings
+- Store Policies
+- Business Contact Information
+
+The boundary must remain explicit.
+
+============================================================
+54. HIGH-LEVEL STORE REQUEST FLOW
+============================================================
+
+Incoming Request
+      ↓
+Identify Domain / Store Route
+      ↓
+Resolve Store
+      ↓
+Validate Store Status
+      ↓
+Resolve Tenant Context
+      ↓
+Authenticate if required
+      ↓
+Authorize User / Membership
+      ↓
+Load Package Entitlements
+      ↓
+Load Store Configuration
+      ↓
+Execute Tenant-Scoped Operation
+      ↓
+Apply Theme / Branding
+      ↓
+Return Store-Specific Response
+      ↓
+Audit / Monitor if Required
+
+============================================================
+55. HIGH-LEVEL STORE CREATION SERVICE
+============================================================
+
+A centralized Store Provisioning Service should be responsible
+for creating a new store safely.
+
+Conceptual process:
+
+Create Store Request
+      ↓
+Validate Customer
+      ↓
+Validate Package
+      ↓
+Generate Tenant Identity
+      ↓
+Create Store
+      ↓
+Create Owner Membership
+      ↓
+Apply Entitlements
+      ↓
+Create Default Configuration
+      ↓
+Assign Theme
+      ↓
+Assign Animation Profile
+      ↓
+Create Default Storefront Data
+      ↓
+Create Setup Checklist
+      ↓
+Set Initial State
+      ↓
+Return Store
+
+The operation should be idempotent where practical.
+
+============================================================
+56. FAILURE HANDLING DURING PROVISIONING
+============================================================
+
+Store creation may involve multiple dependent operations.
+
+The system must handle partial failures safely.
+
+Examples:
+
+- Store created but theme assignment failed
+- Store created but owner membership failed
+- Domain setup failed
+- Default configuration failed
+
+The system should use transaction boundaries, retry policies,
+compensating actions, or provisioning state tracking as
+appropriate.
+
+A failed store must not appear as a fully active store.
+
+============================================================
+57. STORE ONBOARDING UX
+============================================================
+
+The onboarding experience should be:
+
+- Simple
+- Guided
+- Responsive
+- Fast
+- Clear
+- Progress-based
+
+The customer should always know:
+
+- What is complete
+- What remains
+- What is required
+- What is optional
+- What is blocking launch
+
+============================================================
+58. PACKAGE-AWARE ONBOARDING
+============================================================
+
+Onboarding should adapt to the selected package.
+
+Example:
+
+Basic:
+- Essential setup
+
+Business:
+- Essential + operational setup
+
+Premium:
+- Essential + advanced configuration + integrations
+
+The system must not force irrelevant configuration steps on
+customers whose package does not support them.
+
+============================================================
+59. STORE URL / ROUTING REQUIREMENTS
+============================================================
+
+The routing architecture should support:
+
+- Platform Subdomain
+- Custom Domain
+- Future custom paths if needed
+
+Routing must preserve tenant context across:
+
+- Storefront
+- Customer account
+- Checkout
+- Order tracking
+- Public pages
+
+============================================================
+60. PERFORMANCE & SCALE
+============================================================
+
+The Multi-Tenant architecture should be designed for growth.
+
+Initial target should not assume only a few stores.
+
+The system should be capable of evolving toward:
+
+- Hundreds of stores
+- Thousands of stores
+- High product counts
+- High order volumes
+- Large media storage
+
+Scaling strategies should be possible without redesigning the
+business model.
+
+Potential future strategies may include:
+
+- Read replicas
+- Caching
+- Queue workers
+- Object storage
+- CDN
+- Database partitioning
+- Tenant sharding
+- Dedicated infrastructure for enterprise tenants
+
+These are architectural extension points, not necessarily
+initial implementation requirements.
+
+============================================================
+61. TESTING REQUIREMENTS
+============================================================
+
+Module 03 must include comprehensive tests for:
+
+Store Creation:
+
+- Create store
+- Duplicate store handling
+- Invalid package
+- Owner assignment
+- Default configuration
+- Provisioning failure
+- Retry behavior
+
+Tenant Isolation:
+
+- Store A cannot read Store B
+- Store A cannot modify Store B
+- Store A cannot delete Store B
+- Store A cannot search Store B
+- Store A cannot access Store B media
+- Store A cannot export Store B data
+- Store A cannot access Store B APIs
+- Tenant ID manipulation fails
+
+Domain Routing:
+
+- Correct domain → correct store
+- Unknown domain → safe failure
+- Store A domain never resolves to Store B
+- Domain replacement works safely
+
+Lifecycle:
+
+- Provisioning
+- Onboarding
+- Trial
+- Active
+- Grace
+- Suspended
+- Reactivated
+- Cancelled
+- Archived
+
+Package:
+
+- Package assignment
+- Upgrade
+- Downgrade
+- Entitlement changes
+- Usage limits
+
+Configuration:
+
+- Theme isolation
+- Branding isolation
+- Animation isolation
+- Store settings isolation
+
+Background Processing:
+
+- Tenant-aware jobs
+- Tenant-aware notifications
+- Tenant-aware imports
+- Tenant-aware exports
+- Tenant-aware webhooks
+
+============================================================
+62. SECURITY NON-NEGOTIABLES
+============================================================
+
+- Never trust client-provided tenant IDs.
+- Never allow cross-tenant queries.
+- Never allow cross-tenant media access.
+- Never allow cross-tenant exports.
+- Never allow cross-tenant background processing.
+- Never allow cross-tenant search results.
+- Never allow package restrictions to be bypassed.
+- Never expose tenant secrets to another tenant.
+- Never allow unauthorized ownership transfer.
+- Never allow support access without proper authorization.
+- Never delete stores through an unsafe one-step operation.
+- Never mix tenant-specific cache entries.
+- Never allow domain routing to resolve to the wrong tenant.
+- Never log sensitive credentials.
+
+============================================================
+63. HIGH-LEVEL DATA ENTITIES
+============================================================
+
+Potential entities include:
+
+Platform:
+
+- PlatformConfiguration
+- Package
+- Feature
+- Theme
+- AnimationProfile
+
+Tenant / Store:
+
+- Tenant
+- Store
+- StoreSettings
+- StoreBranding
+- StoreThemeConfiguration
+- StoreAnimationConfiguration
+- StoreDomain
+- StoreLifecycleEvent
+- StoreUsage
+- StoreSetupChecklist
+- StoreProvisioningJob
+
+Membership:
+
+- StoreMembership
+- Role
+- Permission
+
+Operations:
+
+- StoreHealth
+- StoreResourceUsage
+- StoreBackupReference
+- StoreAuditEvent
+
+Exact schema, relationships, indexes, constraints, and
+tenant-key strategy will be defined in the Database Blueprint.
+
+============================================================
+64. REQUIRED API CAPABILITIES
+============================================================
+
+Future API contracts should support operations such as:
+
+- Create Store
+- Get Store
+- Update Store
+- Activate Store
+- Suspend Store
+- Reactivate Store
+- Cancel Store
+- Archive Store
+- Get Store Configuration
+- Update Store Configuration
+- Get Store Usage
+- Get Store Health
+- Manage Store Domains
+- Assign Package
+- Get Store Setup Status
+
+Every operation must enforce the correct platform or tenant
+authorization.
+
+============================================================
+65. REQUIRED FOLLOW-UP ARTIFACTS
+============================================================
+
+After this module, the following detailed artifacts should be
+created during the overall planning phase:
+
+1. Multi-Tenant Architecture Blueprint
+2. Tenant Isolation Strategy
+3. Store Lifecycle State Diagram
+4. Store Provisioning Workflow
+5. Store Onboarding Flow
+6. Domain Routing Blueprint
+7. Tenant-Aware Database Blueprint
+8. Store Configuration Blueprint
+9. Package / Entitlement Integration Rules
+10. Store Permission Matrix
+11. Store Health / Usage Blueprint
+12. Store Deletion / Retention Policy
+13. Tenant Isolation Test Matrix
+14. Multi-Tenant Security Checklist
+
+============================================================
+66. DEPENDENCIES
+============================================================
+
+This module depends on:
+
+- Module 01 — Complete Platform Structure
+- Module 02 — Authentication, Users, Roles & Permissions
+
+This module will be required by almost every business module,
+including:
+
+- Products
+- Categories
+- Inventory
+- Orders
+- Customers
+- Payments
+- Shipping
+- Themes
+- Domains
+- Billing
+- Reports
+- Notifications
+- AI
+- Integrations
+- Super Admin
+
+============================================================
+67. DEVELOPMENT PRINCIPLE
+============================================================
+
+The Multi-Tenant foundation must be implemented before large
+amounts of tenant-dependent business functionality are built.
+
+The goal is to avoid building individual modules first and
+trying to retrofit tenant isolation later.
+
+Every subsequent module must explicitly define:
+
+- Tenant ownership
+- Tenant access rules
+- Tenant database scope
+- Tenant API scope
+- Tenant background-job scope
+- Tenant caching scope
+- Tenant file/media scope
+
+============================================================
+68. STATUS
+============================================================
+
+Module 03 Status:
+MULTI-TENANT & STORE MANAGEMENT FOUNDATION — INITIALIZED
+
+Version:
+1.0
+
+This module defines the high-level multi-tenant and store
+management requirements.
+
+Detailed database structure, API contracts, domain routing
+implementation, infrastructure strategy, lifecycle diagrams,
+security controls, and testing specifications will be finalized
+in their respective blueprints.
+
+============================================================
+END OF MODULE 03
+============================================================

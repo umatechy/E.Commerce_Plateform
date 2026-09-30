@@ -1,0 +1,1631 @@
+UMAR TECHY
+E-COMMERCE PLATFORM
+MASTER PROJECT BLUEPRINT
+
+MODULE 04 — SUBSCRIPTION, PACKAGES & FEATURE ENTITLEMENTS
+Version: 1.0
+Status: Planning / Blueprint
+
+============================================================
+1. MODULE PURPOSE
+============================================================
+
+This module defines the commercial package, subscription,
+feature entitlement, usage-limit, trial, upgrade, downgrade,
+renewal, suspension, and access-control framework for the
+Umar Techy E-Commerce Platform.
+
+The platform will use ONE Core E-Commerce Platform.
+
+Basic, Business, and Premium are commercial packages built on
+top of the same Core Platform.
+
+A customer must never receive a separately developed software
+system simply because they selected a different package.
+
+Instead:
+
+ONE CORE PLATFORM
++
+PACKAGE ENTITLEMENTS
++
+FEATURE FLAGS / ACCESS RULES
++
+USAGE LIMITS
++
+OPTIONAL ADD-ONS
+
+will determine the capabilities available to each Store/Tenant.
+
+This module must work closely with:
+
+- Module 02 — Authentication, Users, Roles & Permissions
+- Module 03 — Multi-Tenant & Store Management
+- Module 29 — Billing, Invoices & Renewals
+
+============================================================
+2. CORE COMMERCIAL PRINCIPLE
+============================================================
+
+The platform should be developed once and monetized through
+multiple commercial packages.
+
+Example:
+
+Store A → BASIC
+Store B → BUSINESS
+Store C → PREMIUM
+
+All three stores use the same application.
+
+The package determines:
+
+- Available Features
+- Available Modules
+- Usage Limits
+- Resource Limits
+- Support Level
+- Theme Access
+- Animation Access
+- Integration Access
+- AI Access
+- API Access
+- Storage
+- Order Capacity
+- Staff Capacity
+
+============================================================
+3. INITIAL PACKAGE STRUCTURE
+============================================================
+
+PACKAGE 01 — BASIC
+
+Target:
+
+- Small businesses
+- Home businesses
+- New online sellers
+- Low-volume stores
+- Customers requiring essential e-commerce functionality
+
+PACKAGE 02 — BUSINESS
+
+Target:
+
+- Established businesses
+- Growing online stores
+- Brands
+- Businesses requiring operational and marketing tools
+
+PACKAGE 03 — PREMIUM
+
+Target:
+
+- Larger businesses
+- High-volume stores
+- Advanced brands
+- Customers requiring AI, advanced analytics, integrations,
+  automation, and higher infrastructure capacity
+
+The exact commercial prices will be defined separately from
+the technical entitlement model.
+
+============================================================
+4. PACKAGE DESIGN PRINCIPLE
+============================================================
+
+Packages should not be implemented as unrelated code paths.
+
+Bad approach:
+
+IF BASIC → separate code
+IF BUSINESS → separate code
+IF PREMIUM → separate code
+
+Preferred approach:
+
+Core Feature
++
+Entitlement Check
++
+Usage Limit
++
+Package Access
++
+Optional Add-On
+
+This keeps the platform maintainable and scalable.
+
+============================================================
+5. ENTITLEMENT MODEL
+============================================================
+
+An Entitlement represents a store's right to use a feature,
+module, resource, or capability.
+
+Potential entitlement types:
+
+A. FEATURE ENTITLEMENT
+
+Example:
+
+advanced_reports = enabled
+
+B. MODULE ENTITLEMENT
+
+Example:
+
+loyalty_module = enabled
+
+C. USAGE ENTITLEMENT
+
+Example:
+
+max_products = 500
+
+D. RESOURCE ENTITLEMENT
+
+Example:
+
+storage_gb = 10
+
+E. QUOTA ENTITLEMENT
+
+Example:
+
+monthly_orders = 1000
+
+F. ACCESS LEVEL ENTITLEMENT
+
+Example:
+
+support_level = priority
+
+G. AI ENTITLEMENT
+
+Example:
+
+monthly_ai_requests = 500
+
+============================================================
+6. CENTRALIZED ENTITLEMENT SERVICE
+============================================================
+
+The platform should have a centralized entitlement evaluation
+mechanism.
+
+Conceptual flow:
+
+Current User
+      ↓
+Store / Tenant
+      ↓
+Subscription
+      ↓
+Package
+      ↓
+Entitlements
+      ↓
+Feature / Usage Check
+      ↓
+Allow / Deny / Limit
+
+Individual modules should not implement their own inconsistent
+package rules.
+
+============================================================
+7. FEATURE DEFINITIONS
+============================================================
+
+Every controlled feature should have a unique internal key.
+
+Examples:
+
+products.basic
+products.variants
+inventory.basic
+inventory.advanced
+reports.basic
+reports.advanced
+marketing.basic
+marketing.advanced
+loyalty.points
+ai.recommendations
+ai.chatbot
+integrations.api
+integrations.accounting
+pwa.enabled
+custom_roles.enabled
+advanced_analytics.enabled
+
+Feature naming must remain consistent across:
+
+- Backend
+- Web
+- APIs
+- Database
+- Admin
+- Testing
+- Documentation
+
+============================================================
+8. PACKAGE FEATURE MATRIX
+============================================================
+
+A formal package matrix must be maintained.
+
+Illustrative structure:
+
+Feature                         Basic   Business   Premium
+----------------------------------------------------------------
+Core Storefront                   YES      YES        YES
+Products                          YES      YES        YES
+Orders                            YES      YES        YES
+Basic Inventory                   YES      YES        YES
+Advanced Inventory                NO       YES        YES
+Product Variants                  LIMITED  YES        YES
+Basic Reports                     YES      YES        YES
+Advanced Reports                  NO       YES        YES
+Advanced Analytics                NO       NO         YES
+Loyalty Program                   NO       NO         YES
+AI Recommendations                NO       NO         YES
+AI Chatbot                        NO       NO         YES
+Advanced Integrations             NO       YES        YES
+API Access                        NO       LIMITED    YES
+Custom Roles                      NO/LIMITED YES      YES
+PWA                               YES      YES        YES
+Advanced Marketing                NO       YES        YES
+
+This is an initial conceptual matrix.
+
+The final matrix will be approved after all module blueprints
+are completed.
+
+============================================================
+9. USAGE LIMITS
+============================================================
+
+Packages should support configurable usage limits.
+
+Potential limits:
+
+- Maximum Products
+- Maximum Categories
+- Maximum Customers
+- Maximum Monthly Orders
+- Maximum Staff Accounts
+- Maximum Storage
+- Maximum Media Storage
+- Maximum Bandwidth
+- Maximum API Requests
+- Maximum AI Requests
+- Maximum Integrations
+- Maximum Domains
+- Maximum Storefront Pages
+- Maximum Scheduled Campaigns
+- Maximum Backup Retention
+
+Limits should be configurable without changing application
+source code.
+
+============================================================
+10. HARD LIMIT VS SOFT LIMIT
+============================================================
+
+The platform should distinguish between:
+
+HARD LIMIT
+
+The action is blocked when the limit is reached.
+
+Example:
+
+Maximum products = 500
+
+Product 501 cannot be activated.
+
+SOFT LIMIT
+
+The customer receives warnings and may continue temporarily
+under defined conditions.
+
+Example:
+
+Storage approaching package limit.
+
+The exact behavior must be defined per resource.
+
+============================================================
+11. USAGE TRACKING
+============================================================
+
+The platform must track usage where a package limit applies.
+
+Examples:
+
+Products:
+current = 420
+limit = 500
+
+Storage:
+current = 7.4 GB
+limit = 10 GB
+
+Monthly Orders:
+current = 820
+limit = 1000
+
+Staff:
+current = 4
+limit = 5
+
+Usage tracking must be:
+
+- Tenant-scoped
+- Accurate
+- Efficient
+- Auditable where appropriate
+- Resistant to client-side manipulation
+
+============================================================
+12. USAGE COUNTER STRATEGY
+============================================================
+
+Counters may be:
+
+- Calculated dynamically
+- Maintained incrementally
+- Cached
+- Periodically reconciled
+
+The final strategy will depend on the resource.
+
+Critical usage values should have a reconciliation mechanism
+to detect counter drift.
+
+============================================================
+13. USAGE PERIODS
+============================================================
+
+Some limits reset according to a billing period.
+
+Examples:
+
+- Monthly Orders
+- Monthly AI Requests
+- Monthly API Requests
+
+Other limits may be persistent.
+
+Examples:
+
+- Product Count
+- Staff Count
+- Storage
+
+The system must explicitly define whether each limit is:
+
+- Monthly
+- Billing Cycle
+- Daily
+- Persistent
+- One-Time
+- Concurrent
+
+============================================================
+14. TRIAL SYSTEM
+============================================================
+
+The platform should support a configurable trial period.
+
+Initial business concept:
+
+7–14 days
+
+The exact trial duration should be configurable by Umar Techy.
+
+Trial should use the same Core Platform and entitlement system.
+
+A trial may provide:
+
+- Basic package access
+- Business trial access
+- Premium trial access
+
+The selected trial model should be configurable.
+
+============================================================
+15. TRIAL ENTITLEMENT MODEL
+============================================================
+
+Trial access should not require creating a separate product
+version.
+
+Instead:
+
+Subscription State = TRIAL
+
+and:
+
+Trial Entitlements = Defined Feature Set
+
+The platform should track:
+
+- Trial Start
+- Trial End
+- Trial Package
+- Trial Status
+- Trial Extensions if permitted
+- Trial Conversion
+- Trial Expiry
+
+============================================================
+16. TRIAL ABUSE PROTECTION
+============================================================
+
+The platform should reduce abuse of repeated trials.
+
+Potential controls:
+
+- Verified email
+- Verified phone where applicable
+- Account history
+- Store identity checks
+- Domain checks
+- Payment verification where appropriate
+- Rate limiting
+- Trial eligibility rules
+
+The exact anti-abuse policy will be finalized later.
+
+============================================================
+17. SUBSCRIPTION STATES
+============================================================
+
+Suggested subscription states:
+
+- PENDING
+- TRIAL
+- ACTIVE
+- PAST_DUE
+- GRACE_PERIOD
+- SUSPENDED
+- CANCELLED
+- EXPIRED
+- ARCHIVED
+
+The final state machine will be defined in the Billing Blueprint.
+
+============================================================
+18. PACKAGE ASSIGNMENT
+============================================================
+
+Every Store/Tenant must have a current package entitlement.
+
+Example:
+
+Store A
+Package = BASIC
+
+Store B
+Package = BUSINESS
+
+Store C
+Package = PREMIUM
+
+The package assignment should reference a centrally defined
+package rather than duplicating package definitions per store.
+
+============================================================
+19. PACKAGE VERSIONING
+============================================================
+
+Packages may change over time.
+
+Example:
+
+Business v1
+Business v2
+
+The system should support package/version history so that
+pricing and feature changes do not corrupt historical records.
+
+Existing customers may remain on:
+
+- Legacy Package
+- Current Package
+- Custom Contract Package
+
+where the business model requires it.
+
+============================================================
+20. PACKAGE CHANGE
+============================================================
+
+Changing the package must NOT create a new store.
+
+Example:
+
+BASIC
+  ↓
+BUSINESS
+  ↓
+PREMIUM
+
+The following remain unchanged:
+
+- Store ID
+- Tenant ID
+- Products
+- Orders
+- Customers
+- Inventory
+- Domain
+- Storefront
+- Store branding
+
+Only entitlement and resource access changes.
+
+============================================================
+21. UPGRADE
+============================================================
+
+Upgrade should provide a controlled transition.
+
+Example:
+
+Basic → Business
+
+Expected behavior:
+
+- Existing data remains intact.
+- New features become available.
+- New limits become active.
+- New resources become available according to plan.
+- Billing changes are recorded.
+- Customer receives confirmation.
+
+If upgrade is immediate, the exact billing proration rules
+will be handled by Module 29.
+
+============================================================
+22. DOWNGRADE
+============================================================
+
+Downgrade is more complex because existing usage may exceed
+the new package limits.
+
+Example:
+
+Business:
+Products = 2,000
+
+Basic:
+Maximum Products = 500
+
+The system should NOT silently delete 1,500 products.
+
+Instead it should:
+
+- Detect over-limit resources
+- Notify customer
+- Prevent new usage beyond the limit
+- Provide resolution guidance
+- Preserve existing data according to policy
+
+Possible resolution options:
+
+- Remove excess data
+- Archive excess data
+- Upgrade again
+- Purchase add-on capacity
+
+The final policy will be defined later.
+
+============================================================
+23. ADD-ONS
+============================================================
+
+The platform should support optional add-ons.
+
+Examples:
+
+- Additional Storage
+- Additional Products
+- Additional Orders
+- Additional Staff
+- Advanced Backup
+- Premium Support
+- Additional Domains
+- AI Credits
+- API Capacity
+- Advanced Integrations
+
+Add-ons should extend the package without creating a new
+software system.
+
+============================================================
+24. ADD-ON ENTITLEMENT MODEL
+============================================================
+
+Example:
+
+Business Package
++
+Storage Add-on +50 GB
+=
+Business effective storage limit of 60 GB
+
+The entitlement system should calculate effective limits from:
+
+Base Package
++
+Add-ons
++
+Temporary Promotions where applicable
+
+============================================================
+25. PROMOTIONAL ENTITLEMENTS
+============================================================
+
+Umar Techy may offer temporary promotional access.
+
+Examples:
+
+- Extra storage for 30 days
+- Premium feature trial
+- Extra AI credits
+- Discounted package
+- Free domain for one year
+- Extended trial
+
+Promotional entitlements must have:
+
+- Start Date
+- End Date
+- Source
+- Scope
+- Priority
+- Audit Trail
+
+============================================================
+26. ENTITLEMENT PRIORITY
+============================================================
+
+When multiple entitlement sources exist, the platform must
+have a deterministic precedence model.
+
+Potential sources:
+
+1. Platform Policy
+2. Package
+3. Add-on
+4. Promotion
+5. Contract Override
+
+The final precedence rules must be documented before
+implementation.
+
+============================================================
+27. CUSTOM / CONTRACT PACKAGES
+============================================================
+
+Umar Techy may eventually need custom plans for larger clients.
+
+Example:
+
+Enterprise Contract
+
+with:
+
+- Custom storage
+- Custom order limits
+- Custom integrations
+- Dedicated support
+- Special pricing
+
+The entitlement architecture should support custom values
+without requiring a new code branch.
+
+============================================================
+28. FEATURE FLAGS VS ENTITLEMENTS
+============================================================
+
+Feature Flags and Commercial Entitlements must remain distinct.
+
+FEATURE FLAG
+
+Controls software rollout or technical availability.
+
+ENTITLEMENT
+
+Controls whether a customer is commercially authorized to use
+a feature.
+
+Example:
+
+Feature technically available = YES
+
+Store entitlement = NO
+
+Result:
+
+Feature remains unavailable to that store.
+
+This separation is important for safe development and staged
+rollouts.
+
+============================================================
+29. PACKAGE ACCESS EVALUATION
+============================================================
+
+A protected operation may conceptually evaluate:
+
+1. User authenticated?
+2. User authorized?
+3. Store active?
+4. Subscription valid?
+5. Feature entitled?
+6. Usage within limit?
+7. Resource available?
+8. Operation allowed?
+
+Only then should the operation proceed.
+
+============================================================
+30. API ENFORCEMENT
+============================================================
+
+Package restrictions must apply to APIs as well as the web UI.
+
+Example:
+
+If advanced reports are unavailable:
+
+The UI should not show the feature.
+
+AND
+
+The API must reject unauthorized advanced report requests.
+
+A user must never bypass package restrictions by calling the
+API directly.
+
+============================================================
+31. BACKGROUND JOB ENFORCEMENT
+============================================================
+
+Package entitlements must also apply to background operations.
+
+Examples:
+
+- AI jobs
+- Scheduled reports
+- Marketing campaigns
+- Backups
+- Integrations
+- API jobs
+- Notifications
+
+Background workers must verify the relevant entitlement where
+the operation requires it.
+
+============================================================
+32. PACKAGE-SPECIFIC THEMES
+============================================================
+
+Theme availability may vary by package.
+
+Example:
+
+Basic:
+5–10 standard themes
+
+Business:
+Standard + advanced themes
+
+Premium:
+Full theme library + premium layouts
+
+The exact theme entitlement will be finalized in Module 17.
+
+============================================================
+33. PACKAGE-SPECIFIC ANIMATIONS
+============================================================
+
+Animation profiles may vary by package.
+
+Example:
+
+Basic:
+Essential animation profiles
+
+Business:
+Advanced interaction profiles
+
+Premium:
+Premium animation profiles and advanced controls
+
+The final animation entitlement will be finalized in Module 18.
+
+============================================================
+34. PACKAGE-SPECIFIC AI
+============================================================
+
+AI may be restricted according to package.
+
+Example:
+
+Basic:
+No AI or limited AI
+
+Business:
+Selected AI tools
+
+Premium:
+AI recommendations
+AI chatbot
+Advanced AI assistance
+Higher AI usage limits
+
+AI usage must be measurable and enforceable.
+
+============================================================
+35. PACKAGE-SPECIFIC SUPPORT
+============================================================
+
+Support levels may include:
+
+- Standard
+- Business
+- Priority
+- Premium / Dedicated
+
+Support entitlement should affect service policy, not core
+security permissions.
+
+============================================================
+36. PACKAGE EXPIRY BEHAVIOR
+============================================================
+
+When subscription access expires:
+
+1. Subscription state changes.
+2. Entitlements are recalculated.
+3. Store enters the appropriate lifecycle state.
+4. Customer receives notification.
+5. Grace period rules apply where applicable.
+6. Restricted features are handled safely.
+7. Store may eventually be suspended.
+
+The system must avoid immediate destructive behavior.
+
+============================================================
+37. DATA PRESERVATION DURING EXPIRY
+============================================================
+
+Subscription expiry must not automatically delete customer
+business data.
+
+Data such as:
+
+- Products
+- Orders
+- Customers
+- Inventory
+- Reports
+- Store configuration
+
+should be preserved according to retention policies.
+
+The store may become restricted, but data preservation remains
+separate from access state.
+
+============================================================
+38. REACTIVATION
+============================================================
+
+When a suspended or expired store becomes active again:
+
+- Subscription is validated.
+- Entitlements are recalculated.
+- Store access is restored.
+- Usage limits are re-evaluated.
+- Services resume according to package.
+
+Historical data must remain intact.
+
+============================================================
+39. PACKAGE CHANGE AUDIT
+============================================================
+
+Every important package change should be auditable.
+
+Record:
+
+- Store
+- Previous Package
+- New Package
+- Previous Entitlements
+- New Entitlements where appropriate
+- Actor
+- Source
+- Timestamp
+- Billing Reference
+- Reason where applicable
+
+============================================================
+40. CUSTOMER PACKAGE VISIBILITY
+============================================================
+
+Store Owners should be able to view:
+
+- Current Package
+- Included Features
+- Usage
+- Limits
+- Remaining Capacity
+- Trial Status
+- Renewal Date
+- Available Upgrades
+- Available Add-ons
+
+The customer should not need to contact Umar Techy merely to
+understand their package usage.
+
+============================================================
+41. USAGE DASHBOARD
+============================================================
+
+Store Owner dashboard may display:
+
+Products:
+420 / 500
+
+Storage:
+7.4 GB / 10 GB
+
+Monthly Orders:
+820 / 1,000
+
+Staff:
+4 / 5
+
+AI Requests:
+320 / 500
+
+The system should provide warnings as limits approach.
+
+============================================================
+42. USAGE THRESHOLD ALERTS
+============================================================
+
+Potential thresholds:
+
+- 70%
+- 80%
+- 90%
+- 100%
+
+At thresholds, the system may:
+
+- Show dashboard warnings
+- Send email
+- Send WhatsApp
+- Send in-app notifications
+- Recommend upgrade
+- Offer add-on
+
+Marketing messages must remain separate from critical
+security and billing notifications.
+
+============================================================
+43. FAIR USAGE / RESOURCE PROTECTION
+============================================================
+
+Even packages with high limits must remain subject to platform
+resource protection policies.
+
+The platform may enforce:
+
+- Rate limits
+- Abuse prevention
+- Infrastructure safety limits
+- Storage restrictions
+- API throttling
+- AI abuse controls
+
+These should be clearly defined and not used as hidden
+commercial restrictions.
+
+============================================================
+44. PACKAGE CANCELLATION
+============================================================
+
+Cancellation should be handled through subscription lifecycle.
+
+Customer cancellation should record:
+
+- Cancellation request
+- Effective date
+- Reason where optionally provided
+- Current package
+- Billing state
+- Access state
+- Retention period
+
+The store should not be immediately destroyed.
+
+============================================================
+45. FREE / ENTRY PLAN POSSIBILITY
+============================================================
+
+The architecture may support a future:
+
+FREE
+
+or
+
+STARTER
+
+package without requiring architectural changes.
+
+This is optional and not part of the initial three-package
+commercial commitment.
+
+============================================================
+46. PACKAGE COMPARISON PAGE
+============================================================
+
+The storefront/platform marketing site may present a package
+comparison.
+
+The comparison should be generated from centralized package
+definitions where practical to avoid inconsistent information.
+
+Potential comparison dimensions:
+
+- Features
+- Limits
+- Storage
+- Orders
+- Staff
+- Themes
+- Integrations
+- AI
+- Support
+- PWA
+- Analytics
+- API
+
+Marketing copy may be managed separately from technical
+entitlement definitions.
+
+============================================================
+47. PACKAGE CHANGE PREVIEW
+============================================================
+
+Before confirming an upgrade or downgrade, the customer should
+be shown:
+
+- Current package
+- New package
+- New features
+- Features that will become unavailable
+- Current usage
+- New limits
+- Over-limit items
+- Billing impact
+- Effective date
+
+This reduces accidental package changes.
+
+============================================================
+48. PACKAGE MIGRATION
+============================================================
+
+When Umar Techy changes package definitions:
+
+Existing stores must not be unexpectedly broken.
+
+Migration strategies may include:
+
+- Grandfathered package
+- Automatic migration
+- Manual migration
+- Contract-specific version
+- Customer notification
+
+The package versioning model must protect historical
+subscriptions.
+
+============================================================
+49. RESOURCE ALLOCATION
+============================================================
+
+Some package differences may involve infrastructure resources.
+
+Examples:
+
+- Storage
+- CPU allocation
+- Memory
+- Database capacity
+- Queue priority
+- Backup retention
+- CDN limits
+
+These should be represented separately from business features
+where necessary.
+
+A package can therefore define both:
+
+A. Commercial Entitlements
+B. Infrastructure Entitlements
+
+============================================================
+50. HOSTING ENTITLEMENTS
+============================================================
+
+For Umar Techy Managed Hosting, package may define:
+
+- Storage
+- Bandwidth
+- Backup frequency
+- Backup retention
+- Performance tier
+- Resource limits
+- Monitoring level
+
+The infrastructure system will enforce these values.
+
+============================================================
+51. CUSTOMER-HOSTED STORES
+============================================================
+
+If a customer provides their own hosting, some infrastructure
+limits may no longer be controlled directly by Umar Techy.
+
+In that model:
+
+- Software entitlements remain active.
+- Customer infrastructure is responsible for physical resources.
+- Umar Techy software limits may still apply.
+- Support scope must be clearly defined.
+
+============================================================
+52. DOMAIN ENTITLEMENTS
+============================================================
+
+Package may control:
+
+- Number of custom domains
+- Subdomain availability
+- Domain aliases
+- Redirects
+- Advanced domain features
+
+The final domain rules will be defined in Module 19.
+
+============================================================
+53. API ENTITLEMENTS
+============================================================
+
+API access may be package-specific.
+
+Example:
+
+Basic:
+No public API
+
+Business:
+Limited API
+
+Premium:
+Full API access with higher quotas
+
+API access must also use permission and authentication
+controls from Module 02.
+
+============================================================
+54. INTEGRATION ENTITLEMENTS
+============================================================
+
+Package may control:
+
+- Number of integrations
+- Available integration categories
+- Advanced webhooks
+- Automation
+- External APIs
+
+Example:
+
+Basic:
+Core payment and shipping integrations
+
+Business:
+Advanced integrations
+
+Premium:
+Full integration ecosystem
+
+============================================================
+55. MARKETPLACE ENTITLEMENTS
+============================================================
+
+Future App / Plugin Marketplace may support:
+
+- Free apps
+- Paid apps
+- Package-restricted apps
+- Premium integrations
+- Usage-based apps
+
+The entitlement system should allow a marketplace application
+to declare required permissions and package compatibility.
+
+============================================================
+56. ENTITLEMENT CACHING
+============================================================
+
+Entitlements may be cached for performance, but cache
+invalidation must be reliable.
+
+When a package changes:
+
+- Entitlement cache must refresh.
+- API access must reflect the new state.
+- Background jobs must use the new state.
+- UI must refresh appropriately.
+
+Security-sensitive access decisions must not depend on stale
+cache data beyond defined safety boundaries.
+
+============================================================
+57. FAIL-SAFE BEHAVIOR
+============================================================
+
+When entitlement information cannot be safely determined,
+sensitive protected operations should fail closed.
+
+The system should not assume:
+
+"Unable to check entitlement = allow"
+
+Instead:
+
+"Unable to safely verify access = deny or controlled fallback"
+
+depending on the operation.
+
+============================================================
+58. HIGH-LEVEL DATA ENTITIES
+============================================================
+
+Potential entities:
+
+- Package
+- PackageVersion
+- Feature
+- PackageFeature
+- Entitlement
+- StoreEntitlement
+- Subscription
+- SubscriptionItem
+- AddOn
+- StoreAddOn
+- Promotion
+- PromotionEntitlement
+- UsageMetric
+- UsageCounter
+- UsagePeriod
+- UsageEvent
+- PackageChange
+- EntitlementOverride
+- ContractPlan
+
+Exact tables, relationships, indexes, constraints, and audit
+requirements will be defined in the Database Blueprint.
+
+============================================================
+59. HIGH-LEVEL ENTITLEMENT FLOW
+============================================================
+
+Request
+  ↓
+Authenticated User
+  ↓
+Store Membership
+  ↓
+Store Status
+  ↓
+Subscription State
+  ↓
+Package
+  ↓
+Base Entitlements
+  ↓
+Add-ons
+  ↓
+Promotions / Overrides
+  ↓
+Effective Entitlements
+  ↓
+Usage Check
+  ↓
+Authorization
+  ↓
+Execute Operation
+
+============================================================
+60. HIGH-LEVEL PACKAGE CHANGE FLOW
+============================================================
+
+Customer Requests Change
+        ↓
+Validate Current Subscription
+        ↓
+Calculate New Package
+        ↓
+Preview Feature / Limit Changes
+        ↓
+Check Downgrade Conflicts
+        ↓
+Calculate Billing Impact
+        ↓
+Customer Confirmation
+        ↓
+Update Subscription
+        ↓
+Recalculate Entitlements
+        ↓
+Update Resource Limits
+        ↓
+Audit Event
+        ↓
+Notify Customer
+
+============================================================
+61. TESTING REQUIREMENTS
+============================================================
+
+Module 04 must include comprehensive tests for:
+
+Package:
+
+- Basic assignment
+- Business assignment
+- Premium assignment
+- Package versioning
+- Invalid package
+
+Entitlements:
+
+- Feature enabled
+- Feature disabled
+- Add-on enabled
+- Promotion applied
+- Contract override
+- Entitlement precedence
+
+Usage:
+
+- Under limit
+- At limit
+- Over limit
+- Hard limit
+- Soft limit
+- Monthly reset
+- Persistent limit
+- Counter reconciliation
+
+Trial:
+
+- Trial start
+- Trial active
+- Trial expiry
+- Trial grace period
+- Trial conversion
+- Trial abuse controls
+
+Upgrade:
+
+- Basic → Business
+- Business → Premium
+- Immediate access
+- Entitlement recalculation
+- Usage limit update
+
+Downgrade:
+
+- Premium → Business
+- Business → Basic
+- Existing over-limit data
+- No silent deletion
+- Feature restriction
+- Customer warning
+
+Expiry:
+
+- Past due
+- Grace period
+- Suspension
+- Reactivation
+- Data preservation
+
+API:
+
+- Restricted feature blocked
+- Entitled feature allowed
+- API quota enforced
+
+Background Jobs:
+
+- Entitlement checked
+- Usage checked
+- Expired subscription handled
+
+Tenant Isolation:
+
+- Store A cannot use Store B entitlement
+- Store A cannot consume Store B quota
+- Store A cannot modify Store B package
+
+============================================================
+62. SECURITY NON-NEGOTIABLES
+============================================================
+
+- Never trust package or entitlement values from the client.
+- Never enforce package access only in the UI.
+- Never allow API bypass of package restrictions.
+- Never allow one tenant to modify another tenant's package.
+- Never allow one tenant to consume another tenant's quota.
+- Never expose internal commercial configuration unnecessarily.
+- Never silently delete customer data during downgrade.
+- Never allow expired access through stale authorization state.
+- Never log payment secrets or credentials.
+- Never allow unauthorized entitlement overrides.
+- Never allow support staff to grant arbitrary premium access.
+- Every privileged entitlement override must be auditable.
+
+============================================================
+63. ADMIN MANAGEMENT REQUIREMENTS
+============================================================
+
+Umar Techy Super Admin should eventually be able to:
+
+- Create Package
+- Edit Package
+- Version Package
+- Enable / Disable Feature
+- Set Limits
+- Set Resource Entitlements
+- Create Add-ons
+- Create Promotions
+- Apply Contract Overrides
+- View Store Package
+- View Store Usage
+- Change Store Package
+- Grant Temporary Entitlement
+- Revoke Temporary Entitlement
+- View Entitlement History
+
+Sensitive changes should require appropriate authorization.
+
+============================================================
+64. CUSTOMER SELF-SERVICE REQUIREMENTS
+============================================================
+
+Store Owner should eventually be able to:
+
+- View Current Package
+- View Feature List
+- View Usage
+- View Limits
+- Start Trial
+- Upgrade
+- Request Downgrade
+- Purchase Add-ons
+- View Billing Status
+- View Renewal Date
+- View Entitlement Changes
+
+Actions requiring manual Umar Techy approval should be
+explicitly marked.
+
+============================================================
+65. DEPENDENCIES
+============================================================
+
+Module 04 depends on:
+
+- Module 01 — Complete Platform Structure
+- Module 02 — Authentication, Users, Roles & Permissions
+- Module 03 — Multi-Tenant & Store Management
+
+Module 04 will strongly integrate with:
+
+- Module 17 — Theme & Branding
+- Module 18 — Animation
+- Module 19 — Domain
+- Module 20 — Hosting
+- Module 21 — Notifications
+- Module 22 — Reports & Analytics
+- Module 23 — Backup & Restore
+- Module 25 — PWA
+- Module 26 — AI
+- Module 27 — App / Plugin Marketplace
+- Module 29 — Billing
+- Module 30 — Super Admin
+- Module 31 — API
+- Module 32 — Security
+
+============================================================
+66. REQUIRED FOLLOW-UP ARTIFACTS
+============================================================
+
+After this module, the following detailed artifacts should be
+created during the overall planning phase:
+
+1. Complete Package Feature Matrix
+2. Complete Entitlement Catalog
+3. Usage Limit Matrix
+4. Subscription State Machine
+5. Trial State Machine
+6. Upgrade / Downgrade Rules
+7. Add-On Framework
+8. Promotion Framework
+9. Contract Override Framework
+10. Entitlement Evaluation Rules
+11. Usage Tracking Architecture
+12. Package Versioning Strategy
+13. Package Administration Blueprint
+14. Customer Package Dashboard Blueprint
+15. Entitlement Test Matrix
+16. Billing Integration Rules
+
+============================================================
+67. DEVELOPMENT PRINCIPLE
+============================================================
+
+The package and entitlement foundation should be implemented
+as a centralized platform service.
+
+Business modules should request access through the centralized
+entitlement mechanism rather than implementing independent
+package logic.
+
+This is essential for:
+
+- Maintainability
+- Security
+- Consistency
+- Scalability
+- Upgrades
+- Add-ons
+- Future packages
+- Enterprise contracts
+- Marketplace extensions
+
+============================================================
+68. STATUS
+============================================================
+
+Module 04 Status:
+SUBSCRIPTION, PACKAGES & FEATURE ENTITLEMENTS FOUNDATION —
+INITIALIZED
+
+Version:
+1.0
+
+This module defines the high-level commercial and entitlement
+architecture.
+
+Exact prices, package limits, feature matrix, billing rules,
+database schema, API contracts, and UI details will be finalized
+in their respective detailed blueprints.
+
+============================================================
+END OF MODULE 04
+============================================================

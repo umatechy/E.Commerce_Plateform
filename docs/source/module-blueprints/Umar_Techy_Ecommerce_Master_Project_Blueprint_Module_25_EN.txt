@@ -1,0 +1,1478 @@
+====================================================================
+UMAR TECHY E-COMMERCE PLATFORM
+MASTER PROJECT BLUEPRINT — MODULE 25
+PWA / MOBILE EXPERIENCE
+Technical Specification — English Only
+Version 1.0
+====================================================================
+
+1. MODULE PURPOSE
+--------------------------------------------------------------------
+Module 25 provides the Core Progressive Web App (PWA), Mobile Web,
+Installable Store Experience, Mobile UX, Offline Presentation,
+Push-Enabled Mobile Experience, Device Adaptation, and future mobile
+application foundation for the Umar Techy Multi-Tenant E-Commerce
+Platform.
+
+The module extends the same Core Storefront Engine into a fast,
+responsive, installable, mobile-first experience without creating a
+separate business logic codebase.
+
+Core principle:
+
+ONE CORE COMMERCE ENGINE
+        +
+RESPONSIVE STOREFRONT
+        +
+PWA CAPABILITIES
+        +
+MOBILE UX
+        +
+SAFE OFFLINE EXPERIENCE
+        +
+PUSH/APP EXPERIENCE
+        +
+TENANT BRANDING
+        +
+SHARED BUSINESS RULES
+
+
+2. PRIMARY OBJECTIVES
+--------------------------------------------------------------------
+The module shall:
+
+1. Provide PWA support.
+2. Provide responsive mobile storefront behavior.
+3. Support installable web applications.
+4. Support web app manifests.
+5. Support service workers.
+6. Support safe asset caching.
+7. Support offline storefront foundations.
+8. Support offline-safe content access.
+9. Support online/offline state detection.
+10. Support push notification foundations.
+11. Support mobile-specific navigation.
+12. Support mobile checkout UX.
+13. Support mobile account experience.
+14. Support mobile product discovery.
+15. Support device-aware performance.
+16. Support tenant-specific PWA branding.
+17. Support app icons and splash configuration.
+18. Support install prompts.
+19. Support deep links.
+20. Support future native mobile application foundations.
+21. Preserve server-authoritative business rules.
+22. Prevent unsafe offline transactions.
+23. Support analytics integration.
+24. Support accessibility.
+25. Support production-grade mobile performance.
+
+
+3. ARCHITECTURAL POSITION
+--------------------------------------------------------------------
+Module 25 owns:
+
+- PWA configuration.
+- Web app manifest.
+- Service worker strategy.
+- Offline presentation.
+- Cache strategy for storefront assets.
+- Install experience.
+- Push subscription foundation.
+- Mobile UX behavior.
+- Mobile navigation.
+- Device capability detection.
+- PWA-specific analytics events.
+- PWA health signals.
+
+Module 25 does NOT own:
+
+- Storefront business logic — Module 05.
+- Theme system — Module 17.
+- Animation runtime — Module 18.
+- Notifications delivery — Module 21.
+- Analytics/reporting — Module 22.
+- Infrastructure execution — Module 20.
+- Security policy — Module 32.
+- Product/order/payment/inventory truth — Modules 06/09/12/08.
+
+Business logic remains server-authoritative.
+
+
+4. CORE PRINCIPLE — NO SECOND BUSINESS LOGIC
+--------------------------------------------------------------------
+PWA/mobile clients must not create an independent version of:
+
+- Pricing.
+- Discounts.
+- Tax.
+- Inventory.
+- Shipping.
+- Payment.
+- Order state.
+- Customer authorization.
+
+The server remains authoritative.
+
+
+5. PWA SUPPORT
+--------------------------------------------------------------------
+Support:
+
+- Web App Manifest.
+- Service Worker.
+- Installability.
+- HTTPS requirement.
+- Application icons.
+- Splash experience.
+- Theme color.
+- Background color.
+- Display modes.
+- Start URL.
+- Scope.
+- Orientation preference.
+- Shortcuts foundation.
+
+
+6. DISPLAY MODES
+--------------------------------------------------------------------
+Support:
+
+- Browser.
+- Standalone.
+- Minimal UI foundation.
+- Fullscreen where appropriate.
+
+Store configuration may control supported modes within safe platform
+constraints.
+
+
+7. TENANT-SCOPED PWA
+--------------------------------------------------------------------
+Each store may have its own:
+
+- App name.
+- Short name.
+- Description.
+- Logo.
+- Icon.
+- Theme color.
+- Background color.
+- Start URL.
+- Display preference.
+- Splash assets.
+- Shortcut definitions.
+
+Tenant identity must be resolved before generating PWA configuration.
+
+
+8. PWA MANIFEST
+--------------------------------------------------------------------
+Manifest should be generated dynamically or safely configured per
+tenant.
+
+Example fields:
+
+name
+short_name
+description
+start_url
+scope
+display
+theme_color
+background_color
+icons
+shortcuts
+orientation
+
+
+9. MANIFEST SECURITY
+--------------------------------------------------------------------
+Manifest generation must:
+
+- Validate tenant ownership.
+- Sanitize text.
+- Validate URLs.
+- Prevent cross-tenant asset references.
+- Prevent unsafe external resources.
+- Avoid open redirects.
+
+
+10. SERVICE WORKER
+--------------------------------------------------------------------
+Service worker responsibilities may include:
+
+- Static asset caching.
+- App shell caching.
+- Controlled runtime caching.
+- Offline fallback.
+- Cache versioning.
+- Cache cleanup.
+- Update lifecycle.
+
+Service workers must never become the authoritative source for
+business data.
+
+
+11. CACHE STRATEGIES
+--------------------------------------------------------------------
+Possible strategies:
+
+CACHE_FIRST
+NETWORK_FIRST
+STALE_WHILE_REVALIDATE
+NETWORK_ONLY
+CACHE_ONLY
+
+Strategy must be selected per resource type.
+
+
+12. STATIC ASSET CACHING
+--------------------------------------------------------------------
+Suitable resources:
+
+- CSS.
+- JavaScript.
+- Fonts.
+- Public icons.
+- Theme assets.
+- Public images where appropriate.
+
+Use immutable versioned assets where possible.
+
+
+13. API CACHING
+--------------------------------------------------------------------
+API caching must be highly restricted.
+
+Do not cache sensitive or rapidly changing business data casually.
+
+Never treat cached API data as authoritative.
+
+
+14. CUSTOMER DATA CACHING
+--------------------------------------------------------------------
+Avoid persistent caching of:
+
+- Account details.
+- Payment information.
+- Private orders.
+- Private addresses.
+- Sensitive customer information.
+
+If offline access is supported, use encrypted/local protected storage
+and strict expiration where technically appropriate.
+
+
+15. PRODUCT OFFLINE EXPERIENCE
+--------------------------------------------------------------------
+A limited product browsing experience may be available offline if
+safe cached content exists.
+
+Offline product data must be clearly marked as potentially stale.
+
+
+16. OFFLINE STORE EXPERIENCE
+--------------------------------------------------------------------
+Offline experience may provide:
+
+- Previously cached storefront.
+- Previously viewed product information.
+- Static pages.
+- Cached navigation.
+- Offline status message.
+- Retry controls.
+
+The experience must degrade gracefully.
+
+
+17. OFFLINE CHECKOUT
+--------------------------------------------------------------------
+Offline checkout must NOT automatically create real orders unless a
+future architecture explicitly provides a secure offline transaction
+protocol.
+
+Default behavior:
+
+Offline
+→ User may review cart
+→ Checkout requires connectivity
+→ Server validation
+→ Payment/order creation
+
+This prevents stale price, inventory, shipping, and payment state.
+
+
+18. OFFLINE CART
+--------------------------------------------------------------------
+A local cart may be retained for UX purposes.
+
+When reconnecting:
+
+- Revalidate products.
+- Revalidate variants.
+- Revalidate prices.
+- Revalidate discounts.
+- Revalidate inventory.
+- Revalidate shipping.
+- Revalidate customer state.
+
+Server values always win.
+
+
+19. CART MERGE
+--------------------------------------------------------------------
+Guest offline cart may merge with an online customer cart after
+authentication.
+
+Merge must use Module 11 rules.
+
+Conflicts must be resolved server-side.
+
+
+20. OFFLINE WISHLIST
+--------------------------------------------------------------------
+Wishlist may have a limited local UX.
+
+When synchronized:
+
+- Validate product existence.
+- Validate store ownership.
+- Remove invalid items.
+- Preserve customer authorization.
+
+
+21. ONLINE/OFFLINE DETECTION
+--------------------------------------------------------------------
+Provide:
+
+- Browser network state.
+- Application connectivity state.
+- Server reachability.
+
+Browser "online" state alone must not be considered proof that the
+application backend is reachable.
+
+
+22. CONNECTION RECOVERY
+--------------------------------------------------------------------
+When connectivity returns:
+
+- Refresh critical data.
+- Revalidate cart.
+- Refresh customer state.
+- Refresh prices.
+- Refresh inventory.
+- Refresh promotions.
+- Refresh shipping options.
+- Refresh payment methods.
+
+Avoid automatically executing sensitive actions.
+
+
+23. PWA UPDATE STRATEGY
+--------------------------------------------------------------------
+Service worker updates must support:
+
+- New version detection.
+- Background download.
+- Controlled activation.
+- User notification.
+- Safe reload.
+- Rollback/recovery foundation.
+
+
+24. UPDATE SAFETY
+--------------------------------------------------------------------
+Do not activate a new application version in a way that leaves the
+user with incompatible cached application assets.
+
+
+25. CACHE VERSIONING
+--------------------------------------------------------------------
+Cache names must include:
+
+- Application version.
+- Tenant context where applicable.
+- Asset generation/version.
+
+Old caches must be cleaned safely.
+
+
+26. MULTI-TENANT CACHE ISOLATION
+--------------------------------------------------------------------
+Tenant identity must be included wherever tenant-specific content is
+cached.
+
+Never allow:
+
+Store A cached content
+→ Store B user
+
+This includes:
+
+- HTML.
+- Theme configuration.
+- Product content.
+- Store branding.
+- PWA manifest.
+- Runtime API responses.
+
+
+27. DOMAIN & PWA
+--------------------------------------------------------------------
+PWA behavior must work with:
+
+- Platform subdomain.
+- Customer custom domain.
+- Umar Techy-managed domain.
+
+Module 19 remains authoritative for domain identity.
+
+
+28. CUSTOM DOMAIN START URL
+--------------------------------------------------------------------
+Manifest start URL must remain within the resolved tenant domain and
+scope.
+
+Do not generate cross-domain start URLs unintentionally.
+
+
+29. MOBILE NAVIGATION
+--------------------------------------------------------------------
+Provide mobile-first navigation for:
+
+- Home.
+- Shop.
+- Categories.
+- Search.
+- Cart.
+- Wishlist.
+- Account.
+
+Navigation should be configurable by Module 17.
+
+
+30. MOBILE HEADER
+--------------------------------------------------------------------
+Support:
+
+- Logo.
+- Search.
+- Cart.
+- Menu.
+- Account.
+- Back navigation where appropriate.
+
+Avoid excessive header complexity.
+
+
+31. MOBILE SEARCH
+--------------------------------------------------------------------
+Support:
+
+- Search input.
+- Suggestions.
+- Recent searches foundation.
+- Filters.
+- Sort.
+- Category selection.
+- Voice-search foundation.
+
+
+32. MOBILE PRODUCT EXPERIENCE
+--------------------------------------------------------------------
+Product pages must support:
+
+- Image gallery.
+- Product information.
+- Variant selection.
+- Quantity.
+- Price.
+- Discount.
+- Stock status.
+- Delivery information.
+- Add to cart.
+- Wishlist.
+- Related products.
+
+Controls must remain touch-friendly.
+
+
+33. MOBILE PRODUCT CARDS
+--------------------------------------------------------------------
+Cards should support:
+
+- Image.
+- Name.
+- Price.
+- Sale price.
+- Rating where enabled.
+- Stock state.
+- Wishlist.
+- Quick add where enabled.
+
+
+34. MOBILE CART
+--------------------------------------------------------------------
+Support:
+
+- Quantity changes.
+- Remove.
+- Save/wishlist.
+- Coupon.
+- Shipping estimate.
+- Totals.
+- Checkout CTA.
+
+Server must recalculate authoritative totals.
+
+
+35. MOBILE CHECKOUT
+--------------------------------------------------------------------
+Optimize checkout for mobile.
+
+Support:
+
+- Customer details.
+- Address.
+- Shipping.
+- Payment.
+- Order review.
+- Confirmation.
+
+Minimize unnecessary steps without weakening security.
+
+
+36. MOBILE PAYMENT UX
+--------------------------------------------------------------------
+Payment flow must support:
+
+- COD.
+- Bank transfer.
+- JazzCash.
+- Easypaisa.
+- Online gateway.
+- Future wallets/card flows.
+
+Payment state remains Module 12 authority.
+
+
+37. MOBILE ORDER TRACKING
+--------------------------------------------------------------------
+Customers should be able to view:
+
+- Order number.
+- Status.
+- Items.
+- Payment state.
+- Fulfillment state.
+- Shipment tracking.
+- Delivery information.
+
+Historical order snapshots remain authoritative in Module 09.
+
+
+38. MOBILE ACCOUNT
+--------------------------------------------------------------------
+Support:
+
+- Profile.
+- Addresses.
+- Orders.
+- Wishlist.
+- Communication preferences.
+- Password/security.
+- Logout.
+
+
+39. MOBILE ACCESSIBILITY
+--------------------------------------------------------------------
+Support:
+
+- Touch targets.
+- Keyboard navigation where applicable.
+- Screen-reader labels.
+- Contrast.
+- Focus states.
+- Reduced motion.
+- Text scaling.
+- Orientation flexibility.
+
+
+40. RTL / LTR
+--------------------------------------------------------------------
+PWA/mobile experience must support:
+
+- RTL.
+- LTR.
+- Mixed-language content.
+
+Layout direction must be configurable by locale/store settings.
+
+
+41. MULTILINGUAL
+--------------------------------------------------------------------
+Support store-configured languages.
+
+PWA manifest and static metadata should use the appropriate locale.
+
+
+42. RESPONSIVE DESIGN
+--------------------------------------------------------------------
+Support:
+
+- Small mobile.
+- Large mobile.
+- Tablet.
+- Desktop.
+
+Use fluid layouts and responsive breakpoints.
+
+
+43. DEVICE ADAPTATION
+--------------------------------------------------------------------
+Adapt where useful to:
+
+- Screen size.
+- Touch capability.
+- Network quality.
+- Device performance.
+- Reduced-motion preference.
+- Battery constraints where detectable safely.
+
+
+44. NETWORK-AWARE EXPERIENCE
+--------------------------------------------------------------------
+Where browser capabilities permit, adapt resource loading for:
+
+- Fast connection.
+- Slow connection.
+- Offline.
+
+Do not compromise functionality or security solely based on network
+classification.
+
+
+45. PERFORMANCE
+--------------------------------------------------------------------
+Target:
+
+- Fast first render.
+- Fast interaction.
+- Optimized images.
+- Code splitting.
+- Lazy loading.
+- Efficient caching.
+- Minimal JavaScript.
+- Efficient fonts.
+- Responsive interaction.
+
+
+46. CORE WEB PERFORMANCE
+--------------------------------------------------------------------
+Monitor appropriate web performance indicators such as:
+
+- Largest Contentful Paint.
+- Interaction to Next Paint.
+- Cumulative Layout Shift.
+- First Contentful Paint foundation.
+
+Actual targets should be documented in the performance specification.
+
+
+47. IMAGE OPTIMIZATION
+--------------------------------------------------------------------
+Support:
+
+- Responsive images.
+- Modern formats.
+- Compression.
+- Lazy loading.
+- Correct dimensions.
+- CDN delivery.
+- Tenant-safe URLs.
+
+
+48. FONT OPTIMIZATION
+--------------------------------------------------------------------
+Support:
+
+- Font subsetting.
+- Preload where justified.
+- Fallback fonts.
+- Limited font variants.
+
+
+49. JAVASCRIPT BUDGET
+--------------------------------------------------------------------
+Keep mobile JavaScript controlled.
+
+Avoid unnecessary dependencies.
+
+Large features should use code splitting.
+
+
+50. ANIMATION INTEGRATION
+--------------------------------------------------------------------
+Module 18 controls runtime animation.
+
+Module 25 must support:
+
+- Reduced motion.
+- Lower animation intensity on mobile where configured.
+- Performance-aware transitions.
+
+Animation must never block critical actions.
+
+
+51. PUSH NOTIFICATIONS
+--------------------------------------------------------------------
+PWA push notification foundation may support:
+
+- Order updates.
+- Payment updates.
+- Shipping updates.
+- Marketing notifications.
+- Back-in-stock.
+- Promotions.
+
+Module 21 owns delivery.
+
+
+52. PUSH SUBSCRIPTION
+--------------------------------------------------------------------
+Store:
+
+- Subscription endpoint/token reference.
+- Tenant ID.
+- Customer/user reference where authorized.
+- Device/browser metadata where appropriate.
+- Status.
+- Created/updated timestamps.
+
+Do not expose push credentials.
+
+
+53. PUSH CONSENT
+--------------------------------------------------------------------
+Push permission must be explicit.
+
+Do not request notification permission unnecessarily or repeatedly.
+
+
+54. PUSH SECURITY
+--------------------------------------------------------------------
+Push subscription records must be tenant-scoped.
+
+Unauthorized users must not be able to attach subscriptions to another
+customer.
+
+
+55. APP INSTALL EXPERIENCE
+--------------------------------------------------------------------
+Support:
+
+- Installability detection.
+- Install prompt foundation.
+- Install education.
+- Installed-state detection.
+- Re-engagement foundation.
+
+
+56. INSTALL PROMPT
+--------------------------------------------------------------------
+Do not aggressively interrupt users.
+
+Use configurable triggers and package/theme-safe presentation.
+
+
+57. APP ICONS
+--------------------------------------------------------------------
+Support required icon sizes and variants.
+
+Validate:
+
+- Format.
+- Dimensions.
+- File size.
+- Tenant ownership.
+
+
+58. SPLASH EXPERIENCE
+--------------------------------------------------------------------
+Splash experience may use:
+
+- Store logo.
+- Theme colors.
+- Background.
+- Safe animation.
+
+Avoid heavy startup work.
+
+
+59. PWA SHORTCUTS
+--------------------------------------------------------------------
+Possible shortcuts:
+
+- Shop.
+- Orders.
+- Cart.
+- Wishlist.
+- Search.
+
+Only expose routes that are valid for the current tenant.
+
+
+60. DEEP LINKS
+--------------------------------------------------------------------
+Support deep links to:
+
+- Product.
+- Category.
+- Collection.
+- Order/account routes where authorized.
+
+Private links must require authentication.
+
+
+61. LINK SECURITY
+--------------------------------------------------------------------
+Never expose private customer data through publicly shareable URLs.
+
+Use authorization and signed/expiring links where necessary.
+
+
+62. MOBILE SESSION SECURITY
+--------------------------------------------------------------------
+Support:
+
+- Secure cookies/tokens.
+- Session expiry.
+- Logout.
+- Revocation.
+- Device/session management foundation.
+
+Follow Module 02 security rules.
+
+
+63. LOCAL STORAGE
+--------------------------------------------------------------------
+Only store data that is safe and necessary.
+
+Never store:
+
+- Plaintext passwords.
+- Payment credentials.
+- Provider secrets.
+- Long-lived authentication secrets without secure architecture.
+
+
+64. INDEXED STORAGE
+--------------------------------------------------------------------
+If browser local database storage is used:
+
+- Version schemas.
+- Handle migration.
+- Expire stale data.
+- Clear data on logout where required.
+- Keep tenant identity.
+
+
+65. SERVICE WORKER SECURITY
+--------------------------------------------------------------------
+Service workers must:
+
+- Be served securely.
+- Have correct scope.
+- Validate cache sources.
+- Avoid unsafe dynamic script execution.
+- Avoid caching private responses accidentally.
+
+
+66. OFFLINE SECURITY
+--------------------------------------------------------------------
+Offline data must be treated as potentially exposed on a shared device.
+
+Minimize stored private information.
+
+Provide logout/data-clear behavior.
+
+
+67. MOBILE FRAUD / ABUSE FOUNDATION
+--------------------------------------------------------------------
+Protect against:
+
+- Automated checkout attempts.
+- Cart abuse.
+- Push subscription abuse.
+- Excessive API traffic.
+- Install/prompt abuse.
+
+Module 32 owns security policy.
+
+
+68. ANALYTICS INTEGRATION
+--------------------------------------------------------------------
+PWA/mobile analytics may track:
+
+- Install.
+- Launch.
+- Session.
+- Device.
+- Screen/page.
+- Add-to-cart.
+- Checkout.
+- Purchase.
+- Push opt-in.
+- Offline usage.
+- Online recovery.
+
+Module 22 owns analytics/reporting.
+
+
+69. PRIVACY-AWARE ANALYTICS
+--------------------------------------------------------------------
+Respect:
+
+- Consent.
+- Data minimization.
+- Retention.
+- Customer privacy.
+
+Do not collect unnecessary device identifiers.
+
+
+70. MOBILE SEO
+--------------------------------------------------------------------
+PWA must preserve Module 16 SEO requirements.
+
+Ensure:
+
+- Crawlable public pages.
+- Canonical URLs.
+- Structured data.
+- Metadata.
+- Open Graph.
+- Correct indexing.
+
+
+71. PWA SEO SAFETY
+--------------------------------------------------------------------
+Do not rely on service-worker content for search-engine authority.
+
+Server-rendered/public canonical content remains authoritative.
+
+
+72. OFFLINE FALLBACK PAGE
+--------------------------------------------------------------------
+Provide a branded offline page containing:
+
+- Store identity.
+- Offline message.
+- Retry action.
+- Available cached navigation where safe.
+
+
+73. ERROR EXPERIENCE
+--------------------------------------------------------------------
+Mobile errors should provide:
+
+- Human-readable message.
+- Retry.
+- Back.
+- Contact/support option where configured.
+
+Do not expose internal errors or stack traces.
+
+
+74. MOBILE SUPPORT FOR THEMES
+--------------------------------------------------------------------
+Theme system must support mobile-specific configuration:
+
+- Navigation.
+- Layout.
+- Typography.
+- Spacing.
+- Product grid.
+- Header.
+- Footer.
+- Mobile menu.
+
+
+75. MOBILE ANIMATION PROFILES
+--------------------------------------------------------------------
+Theme/package configuration may select animation intensity.
+
+Module 18 remains runtime authority.
+
+
+76. PACKAGE ENTITLEMENTS
+--------------------------------------------------------------------
+Module 04 remains authoritative.
+
+Possible entitlement keys:
+
+pwa.enabled
+pwa.installable
+pwa.push
+pwa.offline
+pwa.advanced_offline
+pwa.shortcuts
+pwa.advanced_mobile
+pwa.app_branding
+pwa.custom_splash
+pwa.analytics
+pwa.native_app_bridge
+
+
+77. USAGE LIMITS
+--------------------------------------------------------------------
+Possible limits:
+
+- Push subscriptions.
+- Push sends.
+- Offline cache size.
+- PWA analytics events.
+- Mobile integrations.
+- Native app integrations.
+
+
+78. API REQUIREMENTS
+--------------------------------------------------------------------
+Example endpoints:
+
+/api/stores/{storeId}/pwa/manifest
+/api/stores/{storeId}/pwa/config
+/api/stores/{storeId}/pwa/push/subscribe
+/api/stores/{storeId}/pwa/push/unsubscribe
+/api/stores/{storeId}/pwa/health
+/api/stores/{storeId}/mobile/config
+
+
+79. DATA MODEL — HIGH LEVEL
+--------------------------------------------------------------------
+Core entities may include:
+
+PwaConfiguration
+PwaManifestVersion
+PwaAsset
+PwaCachePolicy
+PwaInstallationEvent
+PushSubscription
+PushSubscriptionStatus
+MobileDeviceReference
+PwaOfflineState
+PwaAnalyticsEventReference
+PwaHealthSnapshot
+PwaUpdateRecord
+PwaShortcut
+PwaAuditRecord
+
+Tenant-scoped entities must preserve tenant context.
+
+
+80. PWA CONFIGURATION LIFECYCLE
+--------------------------------------------------------------------
+Suggested states:
+
+DRAFT
+TESTING
+PUBLISHED
+DISABLED
+ARCHIVED
+
+Published configurations should be versioned.
+
+
+81. CONFIGURATION VERSIONING
+--------------------------------------------------------------------
+Version:
+
+- Manifest.
+- Icons.
+- Splash.
+- Cache rules.
+- Shortcuts.
+- Mobile settings.
+
+Published versions should remain immutable.
+
+
+82. CACHE INVALIDATION
+--------------------------------------------------------------------
+When a theme/store configuration changes:
+
+- Generate new asset/version identifiers.
+- Update service-worker cache version.
+- Remove stale cache safely.
+
+
+83. STORE SUSPENSION
+--------------------------------------------------------------------
+If a store is suspended:
+
+- PWA should not continue presenting stale storefront as if active.
+- Service worker behavior must respect current server state.
+- Sensitive/private cached content should be invalidated where
+  required.
+
+
+84. STORE DELETION
+--------------------------------------------------------------------
+When a tenant is permanently deleted:
+
+- Tenant PWA configuration must be removed according to retention.
+- Push subscriptions must be revoked/deleted.
+- Tenant-specific cache must be invalidated.
+- Public assets must be handled according to Module 23 lifecycle.
+
+
+85. HOSTING & CDN INTEGRATION
+--------------------------------------------------------------------
+Module 20 owns infrastructure.
+
+Module 25 should integrate with:
+
+- CDN.
+- Static asset hosting.
+- HTTPS.
+- Cache headers.
+- Service worker deployment.
+- Edge caching.
+
+
+86. PWA HEALTH
+--------------------------------------------------------------------
+Monitor:
+
+- Manifest availability.
+- Service worker errors.
+- Installability.
+- Cache failures.
+- Push subscription failures.
+- Update failures.
+- Offline recovery failures.
+
+
+87. TESTING — FUNCTIONAL
+--------------------------------------------------------------------
+Test:
+
+- Installability.
+- Manifest.
+- Service worker.
+- Cache.
+- Offline page.
+- Online recovery.
+- Cart merge.
+- Wishlist sync.
+- Push subscription.
+- Deep links.
+- Theme branding.
+- Tenant isolation.
+
+
+88. TESTING — BUSINESS SAFETY
+--------------------------------------------------------------------
+Verify offline mode cannot:
+
+- Bypass price validation.
+- Bypass inventory validation.
+- Bypass discounts.
+- Bypass shipping validation.
+- Bypass payment authorization.
+- Create unauthorized orders.
+
+
+89. TESTING — SECURITY
+--------------------------------------------------------------------
+Test:
+
+- Cross-tenant cache access.
+- Private response caching.
+- Push subscription authorization.
+- Deep-link authorization.
+- Local storage leakage.
+- Service worker scope abuse.
+- Manifest URL abuse.
+- Open redirect.
+- Token/session exposure.
+
+
+90. TESTING — PERFORMANCE
+--------------------------------------------------------------------
+Test:
+
+- Low-end mobile device.
+- Slow network.
+- Offline.
+- Large catalog.
+- Large images.
+- Large theme.
+- High traffic.
+- Concurrent users.
+
+
+91. TESTING — ACCESSIBILITY
+--------------------------------------------------------------------
+Test:
+
+- Screen readers.
+- Keyboard.
+- Touch.
+- Text scaling.
+- Reduced motion.
+- RTL.
+- LTR.
+- Contrast.
+- Focus behavior.
+
+
+92. ACCEPTANCE CRITERIA
+--------------------------------------------------------------------
+Module 25 is complete only when:
+
+1. PWA architecture exists.
+2. Manifest works.
+3. Tenant-specific manifest works.
+4. Service worker works.
+5. Cache versioning works.
+6. Tenant cache isolation is verified.
+7. Offline experience works.
+8. Offline cart safety works.
+9. Online recovery works.
+10. Installability works.
+11. App icons work.
+12. Splash configuration works.
+13. Push subscription foundation works.
+14. Push consent works.
+15. Mobile navigation works.
+16. Mobile storefront works.
+17. Mobile product experience works.
+18. Mobile cart works.
+19. Mobile checkout works online.
+20. Mobile account works.
+21. Deep links work.
+22. Theme integration works.
+23. Animation/reduced-motion integration works.
+24. Analytics integration works.
+25. SEO remains valid.
+26. Performance tests pass.
+27. Accessibility tests pass.
+28. Security tests pass.
+29. Package entitlements work.
+30. Production PWA/mobile validation passes.
+
+
+93. REQUIRED FOLLOW-UP ARTIFACTS
+--------------------------------------------------------------------
+After implementation, create and maintain:
+
+1. Module 25 implementation checklist.
+2. PWA architecture specification.
+3. Manifest specification.
+4. Service-worker specification.
+5. Cache policy matrix.
+6. Offline capability matrix.
+7. Offline data-safety specification.
+8. Cart synchronization specification.
+9. Push subscription specification.
+10. Push consent specification.
+11. Mobile UX specification.
+12. Responsive design specification.
+13. Mobile performance budget.
+14. Device/network adaptation specification.
+15. Deep-link specification.
+16. PWA update/versioning specification.
+17. Tenant cache isolation specification.
+18. PWA security checklist.
+19. Accessibility checklist.
+20. Analytics event specification.
+21. API contract.
+22. Data model specification.
+23. Permission matrix.
+24. Package entitlement matrix.
+25. Automated test matrix.
+26. Production deployment checklist.
+27. PWA health monitoring specification.
+28. Repository checkpoint/progress note.
+
+
+94. CLAUDE DEVELOPMENT REQUIREMENTS
+--------------------------------------------------------------------
+Claude must:
+
+1. Read the Project Bible and all finalized modules.
+2. Treat Module 25 as authoritative for PWA/mobile experience.
+3. Inspect the existing storefront architecture.
+4. Reuse Module 05 storefront components.
+5. Reuse Module 17 theme configuration.
+6. Reuse Module 18 animation runtime.
+7. Reuse Module 21 push/notification delivery.
+8. Reuse Module 22 analytics.
+9. Reuse Module 20 hosting/CDN infrastructure.
+10. Reuse Module 32 security controls.
+11. Preserve server-authoritative business logic.
+12. Implement tenant-safe cache strategies.
+13. Implement safe service-worker updates.
+14. Prevent private API response caching.
+15. Implement offline cart revalidation.
+16. Add security tests.
+17. Add low-end mobile tests.
+18. Add slow-network tests.
+19. Add offline/reconnect tests.
+20. Add accessibility tests.
+21. Run builds, static analysis, and automated tests.
+22. Validate production domains and HTTPS.
+23. Record fixes and validation results.
+24. Commit only after successful validation.
+25. Preserve a concise repository checkpoint.
+
+
+95. PRODUCTION READINESS
+--------------------------------------------------------------------
+Before production:
+
+- Confirm HTTPS.
+- Confirm manifest.
+- Confirm service worker.
+- Confirm cache isolation.
+- Confirm cache invalidation.
+- Confirm offline fallback.
+- Confirm online recovery.
+- Confirm cart revalidation.
+- Confirm no unsafe offline checkout.
+- Confirm push permissions.
+- Confirm push subscription security.
+- Confirm app icons.
+- Confirm splash assets.
+- Confirm mobile navigation.
+- Confirm mobile checkout.
+- Confirm deep links.
+- Confirm theme integration.
+- Confirm reduced motion.
+- Confirm analytics.
+- Confirm SEO.
+- Confirm performance.
+- Confirm accessibility.
+- Confirm tenant suspension behavior.
+- Confirm tenant deletion/cache invalidation.
+- Confirm monitoring.
+- Confirm package entitlements.
+
+
+96. FINAL ARCHITECTURAL RULES
+--------------------------------------------------------------------
+RULE 01:
+Module 25 owns PWA and mobile experience.
+
+RULE 02:
+Module 05 owns storefront business presentation and behavior.
+
+RULE 03:
+Module 17 owns themes and branding.
+
+RULE 04:
+Module 18 owns animation runtime.
+
+RULE 05:
+Module 21 owns notification delivery.
+
+RULE 06:
+Module 22 owns analytics/reporting.
+
+RULE 07:
+Module 20 owns infrastructure execution.
+
+RULE 08:
+Module 32 owns security policy.
+
+RULE 09:
+The server remains authoritative for all commerce business rules.
+
+RULE 10:
+Offline data must never be treated as authoritative for price,
+inventory, tax, shipping, discount, payment, or order state.
+
+RULE 11:
+Offline checkout must require server validation and connectivity by
+default.
+
+RULE 12:
+Local carts must be revalidated after reconnect.
+
+RULE 13:
+Tenant identity must be preserved in PWA configuration and caches.
+
+RULE 14:
+Cross-tenant cache leakage is a critical security failure.
+
+RULE 15:
+Private customer data must not be casually cached.
+
+RULE 16:
+Service workers must not become a second business logic engine.
+
+RULE 17:
+Service-worker updates must be versioned and safe.
+
+RULE 18:
+Old caches must be removed without breaking active sessions.
+
+RULE 19:
+PWA manifest URLs must remain tenant-safe.
+
+RULE 20:
+Deep links to private data require authorization.
+
+RULE 21:
+Push subscription requires explicit user permission.
+
+RULE 22:
+Push delivery belongs to Module 21.
+
+RULE 23:
+PWA analytics belongs to Module 22.
+
+RULE 24:
+PWA package entitlements belong to Module 04.
+
+RULE 25:
+PWA infrastructure belongs to Module 20.
+
+RULE 26:
+PWA must support responsive mobile-first UX.
+
+RULE 27:
+Accessibility is mandatory.
+
+RULE 28:
+Reduced-motion support is mandatory.
+
+RULE 29:
+Critical actions must work without animation.
+
+RULE 30:
+PWA must degrade gracefully on slow or unavailable networks.
+
+RULE 31:
+Synthetic/mobile testing must never create unintended real
+transactions.
+
+RULE 32:
+Tenant suspension must be respected by cached applications.
+
+RULE 33:
+Tenant deletion must invalidate tenant-specific PWA data.
+
+RULE 34:
+PWA must preserve Module 16 SEO requirements.
+
+RULE 35:
+Module 25 must provide a fast, installable, secure, tenant-aware
+mobile experience without creating a second commerce authority.
+
+====================================================================
+END OF MODULE 25 — PWA / MOBILE EXPERIENCE
+====================================================================

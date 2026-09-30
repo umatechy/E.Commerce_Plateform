@@ -1,0 +1,2120 @@
+============================================================
+UMAR TECHY
+E-COMMERCE PLATFORM
+MASTER PROJECT BLUEPRINT
+MODULE 32 — SECURITY, AUDIT & COMPLIANCE
+VERSION 1.0
+============================================================
+
+DOCUMENT PURPOSE
+------------------------------------------------------------
+This module defines the complete security, audit, privacy,
+compliance, governance, and security-operations foundation for the
+Umar Techy Core Multi-Tenant E-Commerce SaaS.
+
+Security is a platform-wide responsibility. This module establishes
+the controls that protect:
+- Umar Techy platform infrastructure
+- Tenant/store data
+- Customer data
+- Administrator accounts
+- Developer applications
+- API credentials
+- Payment integrations
+- Billing records
+- Inventory and order integrity
+- Files and media
+- Backups
+- Logs and audit records
+- Webhooks and integrations
+- AI capabilities
+- Marketplace applications
+- Internal services
+- Super Admin operations
+
+This module does not replace the security requirements defined in
+individual modules. It provides the centralized security framework
+that all modules MUST follow.
+
+DOCUMENT LANGUAGE
+------------------------------------------------------------
+All technical specifications in this module are intentionally
+written in English.
+
+============================================================
+1. MODULE OBJECTIVES
+============================================================
+
+1.1 Establish defense-in-depth security across the entire platform.
+1.2 Protect all tenants from cross-tenant access and data leakage.
+1.3 Protect user accounts, credentials, sessions, tokens, and secrets.
+1.4 Protect business-critical resources from unauthorized modification.
+1.5 Establish immutable or tamper-resistant auditability.
+1.6 Provide privacy-by-design controls.
+1.7 Establish secure development and deployment practices.
+1.8 Provide security monitoring, alerting, incident response, and
+    recovery procedures.
+1.9 Establish compliance-ready foundations without claiming legal
+    certification automatically.
+1.10 Protect APIs, webhooks, integrations, files, backups, and queues.
+1.11 Establish security policies for Super Admin and internal access.
+1.12 Provide security testing and continuous regression controls.
+1.13 Support future regional, regulatory, enterprise, and compliance
+    requirements.
+
+============================================================
+2. SECURITY PRINCIPLES
+============================================================
+
+2.1 Security by design.
+2.2 Secure by default.
+2.3 Least privilege.
+2.4 Zero trust between security boundaries.
+2.5 Explicit authorization.
+2.6 Tenant isolation by default.
+2.7 Defense in depth.
+2.8 Fail closed for security-sensitive operations.
+2.9 Minimize collected data.
+2.10 Minimize exposed data.
+2.11 Minimize credential lifetime.
+2.12 Never trust client-controlled authorization data.
+2.13 Never trust external provider data without validation.
+2.14 Never expose secrets in logs.
+2.15 Never commit secrets to source control.
+2.16 Never bypass security to simplify development.
+2.17 Security controls must be testable.
+2.18 Security events must be observable.
+2.19 Sensitive actions must be auditable.
+2.20 Security incidents must have defined response procedures.
+
+============================================================
+3. SECURITY SCOPE
+============================================================
+
+Security coverage MUST include:
+
+3.1 Web storefront.
+3.2 Admin panels.
+3.3 Mobile/PWA clients.
+3.4 APIs.
+3.5 Internal services.
+3.6 Databases.
+3.7 Object/file storage.
+3.8 Cache.
+3.9 Queues and background workers.
+3.10 Search infrastructure.
+3.11 Webhooks.
+3.12 Payment integrations.
+3.13 Shipping integrations.
+3.14 Notification providers.
+3.15 AI providers.
+3.16 Marketplace applications.
+3.17 Developer applications.
+3.18 Domains and DNS integrations.
+3.19 Hosting/infrastructure.
+3.20 Backups.
+3.21 CI/CD.
+3.22 Source repositories.
+3.23 Monitoring and logging.
+3.24 Support systems.
+3.25 Super Admin operations.
+
+============================================================
+4. SECURITY BOUNDARY MODEL
+============================================================
+
+The platform SHOULD be treated as multiple security zones:
+
+4.1 Public Zone
+- Public storefront
+- Public catalog
+- Public content
+- Public search
+
+4.2 Authenticated User Zone
+- Customer
+- Tenant staff
+- Store owner
+
+4.3 Developer/Integration Zone
+- API applications
+- OAuth clients
+- Webhooks
+- Partners
+- Marketplace apps
+
+4.4 Administrative Zone
+- Tenant administration
+- Umar Techy Super Admin
+
+4.5 Internal Service Zone
+- Backend services
+- Workers
+- Queues
+- Internal APIs
+
+4.6 Infrastructure Zone
+- Databases
+- Storage
+- Cache
+- Monitoring
+- Deployment systems
+
+4.7 Recovery Zone
+- Backups
+- Restore workflows
+- Disaster recovery systems
+
+Every transition between zones MUST have explicit authentication,
+authorization, validation, and logging appropriate to the risk.
+
+============================================================
+5. SECURITY GOVERNANCE
+============================================================
+
+5.1 Define a platform security owner.
+5.2 Define ownership for:
+- Identity security
+- API security
+- Data security
+- Infrastructure security
+- Application security
+- Incident response
+- Compliance
+- Backup/recovery security
+
+5.3 Maintain security policies in version control.
+5.4 Security policies MUST have:
+- Owner
+- Version
+- Effective date
+- Review date
+- Scope
+- Change history
+
+5.5 Critical security policies SHOULD be reviewed at least annually
+    and after major architectural changes.
+
+============================================================
+6. IDENTITY SECURITY
+============================================================
+
+6.1 All authenticated identities MUST be uniquely identifiable.
+6.2 Authentication MUST be separated from authorization.
+6.3 User identity MUST never be inferred from client-controlled fields.
+6.4 Account status MUST be evaluated on every sensitive operation.
+6.5 Suspended/deactivated users MUST lose access according to policy.
+6.6 Deleted identities MUST follow documented retention requirements.
+6.7 Service identities MUST be separate from human identities.
+
+============================================================
+7. PASSWORD SECURITY
+============================================================
+
+7.1 Passwords MUST be stored using a modern adaptive password hash.
+7.2 Recommended algorithms include:
+- Argon2id
+- bcrypt where legacy compatibility requires it
+
+7.3 Plaintext passwords MUST never be stored.
+7.4 Passwords MUST never appear in logs.
+7.5 Password reset tokens MUST:
+- Be random
+- Be single-use
+- Expire
+- Be invalidated after successful reset
+
+7.6 Password reset MUST not reveal whether an account exists through
+    overly specific public responses.
+7.7 Password policy SHOULD support configurable minimum strength.
+7.8 Password reuse controls may be implemented for higher-risk roles.
+
+============================================================
+8. MULTI-FACTOR AUTHENTICATION
+============================================================
+
+8.1 MFA SHOULD be supported for:
+- Super Admin
+- Tenant owners
+- High-privilege administrators
+- Developer organizations
+- Enterprise integrations
+
+8.2 Supported methods may include:
+- TOTP
+- Passkeys/WebAuthn
+- Security keys
+- Approved recovery methods
+
+8.3 MFA recovery MUST be strongly protected.
+8.4 Recovery codes MUST be single-use and securely stored.
+8.5 MFA enrollment and removal MUST be audited.
+8.6 Disabling MFA for privileged accounts SHOULD require additional
+    verification.
+
+============================================================
+9. SESSION SECURITY
+============================================================
+
+9.1 Sessions MUST have defined expiration.
+9.2 Refresh tokens MUST be protected.
+9.3 Refresh token rotation SHOULD be used.
+9.4 Session revocation MUST be supported.
+9.5 Password changes SHOULD invalidate appropriate active sessions.
+9.6 Suspicious session activity may trigger reauthentication.
+9.7 Browser cookies MUST use:
+- Secure
+- HttpOnly where appropriate
+- SameSite appropriate to the application
+
+9.8 Session identifiers MUST be unpredictable.
+9.9 Session fixation MUST be prevented.
+9.10 Sensitive operations may require step-up authentication.
+
+============================================================
+10. AUTHORIZATION SECURITY
+============================================================
+
+10.1 Authorization MUST be enforced server-side.
+10.2 Roles MUST not be treated as the only authorization layer.
+10.3 Authorization SHOULD combine:
+- User
+- Role
+- Permission
+- Scope
+- Tenant
+- Resource ownership
+- Package entitlement
+- Application status
+- Operation sensitivity
+
+10.4 Object-level authorization is mandatory.
+10.5 Field-level authorization MUST be used for sensitive data.
+10.6 Write permissions MUST be allowlisted.
+10.7 Mass assignment MUST be prevented.
+10.8 Authorization failures MUST not disclose sensitive resource data.
+
+============================================================
+11. TENANT ISOLATION SECURITY
+============================================================
+
+11.1 Tenant isolation is a critical security boundary.
+11.2 Every tenant-scoped query MUST enforce tenant context.
+11.3 Every tenant-scoped resource MUST have ownership validation.
+11.4 Tenant ID supplied by a client MUST never be trusted as sufficient.
+11.5 Cross-tenant object access MUST fail.
+11.6 Cross-tenant update MUST fail.
+11.7 Cross-tenant delete MUST fail.
+11.8 Cross-tenant export MUST fail.
+11.9 Cross-tenant file access MUST fail.
+11.10 Cross-tenant search MUST fail.
+11.11 Cross-tenant cache retrieval MUST fail.
+11.12 Cross-tenant webhook access MUST fail.
+11.13 Cross-tenant analytics MUST fail.
+
+11.14 Tenant isolation MUST be tested at:
+- API
+- Service
+- Repository
+- Database
+- Cache
+- Search
+- Storage
+- Queue
+- Export
+- Analytics
+- Logs
+- Webhooks
+
+============================================================
+12. OBJECT-LEVEL AUTHORIZATION
+============================================================
+
+12.1 Every resource access MUST validate resource ownership/scope.
+12.2 Sequential or predictable IDs MUST not be treated as secret.
+12.3 UUIDs do not replace authorization.
+12.4 Resource existence MUST be concealed where appropriate.
+12.5 Nested resources MUST validate every parent boundary.
+
+============================================================
+13. API SECURITY
+============================================================
+
+13.1 Follow Module 31.
+13.2 Enforce HTTPS.
+13.3 Enforce authentication where required.
+13.4 Enforce authorization.
+13.5 Enforce rate limits.
+13.6 Validate request schemas.
+13.7 Limit request size.
+13.8 Protect against injection.
+13.9 Protect against SSRF.
+13.10 Protect against broken access control.
+13.11 Protect against replay.
+13.12 Protect against credential abuse.
+13.13 Redact sensitive response fields.
+13.14 Standardize safe error responses.
+
+============================================================
+14. API CREDENTIAL SECURITY
+============================================================
+
+14.1 API keys MUST be securely generated.
+14.2 API secrets MUST not be stored in plaintext.
+14.3 Secret display SHOULD be one-time where possible.
+14.4 Credentials MUST support rotation.
+14.5 Credentials MUST support revocation.
+14.6 Credential usage MUST be auditable.
+14.7 Credentials MUST be scoped.
+14.8 Credentials MUST be tenant-bound where applicable.
+14.9 Dormant credentials MAY expire according to policy.
+14.10 Credentials must never be placed in client-side source code
+     when they are intended to be secret.
+
+============================================================
+15. OAUTH SECURITY
+============================================================
+
+15.1 Use approved OAuth 2.0 flows.
+15.2 Public clients MUST use PKCE.
+15.3 Redirect URIs MUST be exact/allowlisted.
+15.4 Authorization state MUST be protected.
+15.5 Tokens MUST have appropriate expiry.
+15.6 Refresh tokens MUST be protected and rotated where appropriate.
+15.7 Scope escalation MUST require explicit authorization.
+15.8 OAuth consent MUST identify the application and requested access.
+15.9 Revoked installations MUST lose access.
+15.10 OAuth secrets MUST never appear in logs.
+
+============================================================
+16. WEB SECURITY
+============================================================
+
+16.1 Prevent XSS.
+16.2 Prevent CSRF where cookie authentication is used.
+16.3 Prevent clickjacking.
+16.4 Use appropriate Content Security Policy.
+16.5 Use secure security headers.
+16.6 Validate redirects.
+16.7 Sanitize user-generated HTML.
+16.8 Never render untrusted content as executable code.
+16.9 Avoid inline executable scripts where practical.
+16.10 Protect admin routes from public exposure.
+
+============================================================
+17. CORS SECURITY
+============================================================
+
+17.1 Use explicit origin allowlists.
+17.2 Do not use wildcard origins for sensitive authenticated APIs.
+17.3 Credentials-enabled CORS requires explicit origins.
+17.4 Review allowed origins when domains change.
+17.5 Remove stale origins.
+
+============================================================
+18. INPUT VALIDATION
+============================================================
+
+18.1 Validate every external input.
+18.2 Use typed request schemas.
+18.3 Validate:
+- Type
+- Length
+- Format
+- Range
+- Enumeration
+- Encoding
+- Ownership
+- Business constraints
+
+18.4 Reject unexpected fields for security-sensitive requests.
+18.5 Normalize input where required.
+18.6 Validate file uploads independently.
+18.7 Never rely only on frontend validation.
+
+============================================================
+19. INJECTION PROTECTION
+============================================================
+
+Protect against:
+- SQL injection
+- NoSQL injection where applicable
+- Command injection
+- Template injection
+- LDAP injection where applicable
+- Header injection
+- Log injection
+- HTML injection
+- Script injection
+
+19.1 Use parameterized database access.
+19.2 Avoid shell execution from user-controlled input.
+19.3 Encode output according to context.
+19.4 Validate dynamic query fields against allowlists.
+
+============================================================
+20. SSRF PROTECTION
+============================================================
+
+20.1 Any feature that fetches a URL MUST validate destination.
+20.2 Block private/internal network destinations unless explicitly
+     required.
+20.3 Block cloud metadata endpoints.
+20.4 Restrict protocols.
+20.5 Limit redirects.
+20.6 Resolve and validate destination safely.
+20.7 Apply network egress controls where practical.
+
+============================================================
+21. FILE AND MEDIA SECURITY
+============================================================
+
+21.1 Validate file type.
+21.2 Validate actual MIME/content where possible.
+21.3 Limit file size.
+21.4 Generate safe storage names.
+21.5 Never use user filename as a filesystem path.
+21.6 Scan uploaded files where practical.
+21.7 Store private files outside public web roots where possible.
+21.8 Use short-lived signed URLs.
+21.9 Enforce tenant/resource ownership.
+21.10 Prevent executable uploads.
+21.11 Image processing MUST protect against decompression bombs and
+     malformed media where relevant.
+
+============================================================
+22. DATABASE SECURITY
+============================================================
+
+22.1 Database credentials MUST be stored in secure configuration.
+22.2 Application users MUST receive least-privilege DB permissions.
+22.3 Production databases MUST not be publicly exposed unnecessarily.
+22.4 Database connections MUST use encryption where supported.
+22.5 Sensitive data MUST have appropriate protection at rest.
+22.6 Destructive administrative operations MUST be restricted.
+22.7 Database migrations MUST be reviewed.
+22.8 Backup access MUST be restricted.
+22.9 Production database credentials MUST never be used in development.
+22.10 Database activity should be monitored for critical operations.
+
+============================================================
+23. DATA CLASSIFICATION
+============================================================
+
+Define at least:
+
+23.1 Public
+- Public catalog
+- Published pages
+- Public branding
+
+23.2 Internal
+- Operational configuration
+- Non-sensitive system metadata
+
+23.3 Confidential
+- Business analytics
+- Internal reports
+- Supplier information
+- Store configuration
+
+23.4 Restricted
+- Password hashes
+- API credentials
+- Payment tokens
+- Customer PII
+- Billing data
+- Recovery credentials
+- Security logs
+- Backup credentials
+
+23.5 Highly Restricted
+- Root/admin credentials
+- Encryption keys
+- MFA recovery secrets
+- Production infrastructure credentials
+- Master security secrets
+
+============================================================
+24. DATA MINIMIZATION
+============================================================
+
+24.1 Collect only data required for business functionality.
+24.2 Avoid storing unnecessary sensitive data.
+24.3 Avoid exposing unnecessary fields through APIs.
+24.4 Avoid copying sensitive data between services.
+24.5 Do not duplicate secrets.
+24.6 Review data collection during feature development.
+
+============================================================
+25. ENCRYPTION
+============================================================
+
+25.1 Data in transit MUST use modern TLS.
+25.2 Sensitive data at rest SHOULD be encrypted.
+25.3 Secrets MUST use secure secret-management controls.
+25.4 Encryption keys MUST be separated from encrypted data where
+     practical.
+25.5 Key rotation MUST be supported for critical secrets.
+25.6 Encryption implementation MUST use established cryptographic
+     libraries.
+25.7 Never implement custom cryptography without formal review.
+
+============================================================
+26. SECRET MANAGEMENT
+============================================================
+
+26.1 Secrets include:
+- Database passwords
+- API keys
+- OAuth secrets
+- JWT signing keys
+- Encryption keys
+- Payment gateway secrets
+- SMTP credentials
+- Cloud credentials
+- Webhook secrets
+- AI provider keys
+- Deployment credentials
+
+26.2 Secrets MUST:
+- Stay outside source control
+- Be environment-specific
+- Be rotated
+- Be access-controlled
+- Be audited where feasible
+- Be redacted from logs
+
+26.3 .env files containing production secrets MUST never be committed.
+26.4 Sample configuration files MUST contain placeholders only.
+26.5 Secret scanning MUST run in CI.
+
+============================================================
+27. KEY MANAGEMENT
+============================================================
+
+27.1 Define key ownership.
+27.2 Define key rotation.
+27.3 Define key revocation.
+27.4 Define key recovery.
+27.5 Define emergency key replacement.
+27.6 Separate development, staging, and production keys.
+27.7 High-value keys SHOULD use managed key-management services
+     where available.
+
+============================================================
+28. PAYMENT SECURITY
+============================================================
+
+28.1 Follow Module 12.
+28.2 Do not store raw card data unless formally required and
+     compliant architecture exists.
+28.3 Prefer tokenized/hosted gateway flows.
+28.4 Payment secrets remain server-side.
+28.5 Payment webhooks require signature validation.
+28.6 Payment status is server-authoritative.
+28.7 Refunds require authorization and audit.
+28.8 Payment operations require idempotency.
+28.9 Payment logs MUST redact sensitive payment data.
+
+============================================================
+29. BILLING SECURITY
+============================================================
+
+29.1 Billing operations require elevated authorization.
+29.2 Invoice records are authoritative.
+29.3 Client applications cannot arbitrarily mark invoices paid.
+29.4 Subscription changes must be authorized.
+29.5 Refund/credit actions must be audited.
+29.6 Billing APIs must follow Module 31 and Module 29.
+29.7 Financial records require appropriate retention and integrity
+     controls.
+
+============================================================
+30. ORDER AND INVENTORY INTEGRITY
+============================================================
+
+30.1 Order state transitions are server-controlled.
+30.2 Inventory adjustments require explicit permissions.
+30.3 Stock changes must be audited.
+30.4 Price totals are server-calculated.
+30.5 Discounts are server-calculated.
+30.6 Client-provided financial values are never authoritative.
+30.7 Duplicate requests must not create duplicate financial effects.
+30.8 High-risk changes SHOULD require step-up authentication.
+
+============================================================
+31. WEBHOOK SECURITY
+============================================================
+
+31.1 Validate webhook signatures.
+31.2 Validate timestamps.
+31.3 Protect against replay.
+31.4 Enforce HTTPS.
+31.5 Rotate webhook secrets.
+31.6 Record delivery attempts.
+31.7 Prevent untrusted payloads from directly changing sensitive state.
+31.8 Apply idempotent processing.
+31.9 Rate-limit webhook ingestion.
+31.10 Validate external provider event types and schemas.
+
+============================================================
+32. THIRD-PARTY INTEGRATION SECURITY
+============================================================
+
+32.1 Treat all third-party integrations as untrusted boundaries.
+32.2 Store provider credentials securely.
+32.3 Validate provider responses.
+32.4 Validate webhook signatures.
+32.5 Apply least-privilege permissions.
+32.6 Monitor failures and unusual behavior.
+32.7 Support integration revocation.
+32.8 Maintain an integration inventory.
+32.9 Document data shared with each provider.
+
+============================================================
+33. MARKETPLACE APP SECURITY
+============================================================
+
+33.1 Marketplace apps MUST be isolated by scopes.
+33.2 App permissions MUST be explicit.
+33.3 High-risk scopes require review.
+33.4 App installation MUST be auditable.
+33.5 App uninstall MUST revoke access.
+33.6 Suspended apps MUST lose access.
+33.7 App credentials MUST be revocable.
+33.8 App callbacks/webhooks MUST be verified.
+33.9 App-provided URLs MUST be validated.
+33.10 App code MUST never receive unrestricted platform credentials.
+
+============================================================
+34. AI SECURITY
+============================================================
+
+34.1 AI features follow Module 26.
+34.2 AI cannot bypass authorization.
+34.3 AI cannot directly override business rules.
+34.4 AI tool calls require explicit permission.
+34.5 AI access is tenant-scoped.
+34.6 AI prompts must not unintentionally expose restricted data.
+34.7 Sensitive customer data should be minimized in AI prompts.
+34.8 AI provider data handling must be documented.
+34.9 AI-generated actions must pass normal validation.
+34.10 AI usage must be metered and auditable.
+34.11 High-risk AI actions SHOULD require human confirmation.
+
+============================================================
+35. LOGGING SECURITY
+============================================================
+
+35.1 Logs MUST be structured.
+35.2 Logs MUST avoid secrets.
+35.3 Logs MUST avoid unnecessary PII.
+35.4 Sensitive fields MUST be redacted.
+35.5 Log access MUST be restricted.
+35.6 Logs MUST have retention policies.
+35.7 Security logs SHOULD be protected from unauthorized modification.
+35.8 Log timestamps MUST be reliable.
+35.9 Request/correlation IDs SHOULD be included.
+35.10 Logs MUST support incident investigation.
+
+============================================================
+36. AUDIT LOGGING
+============================================================
+
+36.1 Audit logging is distinct from ordinary application logging.
+36.2 Audit events MUST cover high-risk actions.
+36.3 Audit records SHOULD include:
+- Event ID
+- Timestamp
+- Actor
+- Tenant
+- Application
+- Action
+- Resource type
+- Resource ID
+- Result
+- Request/correlation ID
+- Safe IP/network metadata where appropriate
+- Reason/context where required
+
+36.4 Audit records MUST not contain:
+- Passwords
+- API secrets
+- OAuth secrets
+- Private encryption keys
+- Raw payment credentials
+
+36.5 Audit storage SHOULD be append-only or tamper-resistant.
+36.6 Audit access MUST itself be audited.
+
+============================================================
+37. REQUIRED AUDIT EVENTS
+============================================================
+
+At minimum audit:
+
+37.1 Authentication success/failure.
+37.2 Password reset.
+37.3 MFA enrollment/removal.
+37.4 Session revocation.
+37.5 Role changes.
+37.6 Permission changes.
+37.7 Tenant creation.
+37.8 Tenant suspension.
+37.9 Package changes.
+37.10 API credential creation.
+37.11 API credential rotation.
+37.12 API credential revocation.
+37.13 OAuth consent.
+37.14 App installation/uninstallation.
+37.15 Scope changes.
+37.16 Product changes.
+37.17 Inventory adjustments.
+37.18 Order status changes.
+37.19 Payment actions.
+37.20 Refunds.
+37.21 Billing actions.
+37.22 Customer data exports.
+37.23 Data deletion requests.
+37.24 Domain changes.
+37.25 Backup creation.
+37.26 Backup deletion/retention events.
+37.27 Restore actions.
+37.28 Super Admin actions.
+37.29 Security policy changes.
+37.30 Configuration changes.
+37.31 Incident actions.
+
+============================================================
+38. AUDIT INTEGRITY
+============================================================
+
+38.1 Audit records SHOULD be append-only.
+38.2 Unauthorized users MUST not edit audit history.
+38.3 Deletion MUST follow strict retention policy.
+38.4 Critical audit data SHOULD have integrity verification.
+38.5 Audit backups MUST be protected separately.
+38.6 Audit timestamps SHOULD use a trusted server time source.
+
+============================================================
+39. PRIVACY FRAMEWORK
+============================================================
+
+39.1 Privacy MUST be considered during feature design.
+39.2 Identify personal data collected by each module.
+39.3 Identify why each data element is collected.
+39.4 Identify retention requirements.
+39.5 Identify data processors/providers.
+39.6 Identify data access paths.
+39.7 Identify export/deletion workflows.
+39.8 Provide tenant/customer privacy controls appropriate to
+     applicable law and business requirements.
+
+============================================================
+40. DATA SUBJECT / CUSTOMER RIGHTS FOUNDATION
+============================================================
+
+Where legally applicable and commercially required, support workflows
+for:
+- Access/export
+- Correction
+- Deletion
+- Restriction
+- Consent management
+- Communication preferences
+
+The platform MUST NOT claim legal compliance solely because these
+technical features exist. Applicable law, contracts, policies,
+organizational processes, and legal review remain separate.
+
+============================================================
+41. CONSENT MANAGEMENT
+============================================================
+
+41.1 Consent records SHOULD include:
+- Subject
+- Tenant
+- Purpose
+- Channel
+- Timestamp
+- Source
+- Version
+- Status
+
+41.2 Consent MUST be distinguishable from general account creation.
+41.3 Marketing communication MUST respect consent/preferences.
+41.4 Consent withdrawal MUST be supported where required.
+41.5 Consent history MUST be auditable.
+
+============================================================
+42. DATA RETENTION
+============================================================
+
+42.1 Define retention policies by data class.
+42.2 Consider:
+- Business need
+- Security
+- Privacy
+- Billing
+- Legal requirements
+- Operational requirements
+
+42.3 Retention schedules MUST be documented.
+42.4 Automatic cleanup MUST be safe and auditable.
+42.5 Legal holds, where applicable, MUST override normal deletion.
+
+============================================================
+43. DATA DELETION
+============================================================
+
+43.1 Deletion MUST be authorization-controlled.
+43.2 Deletion MUST respect dependencies.
+43.3 Financial/legal records may require retention.
+43.4 Soft deletion may be required for auditability.
+43.5 Destructive deletion MUST require explicit confirmation.
+43.6 High-risk deletion SHOULD require step-up authentication.
+43.7 Deletion operations MUST be audited.
+43.8 Backup copies follow documented retention/erasure policy.
+
+============================================================
+44. BACKUP SECURITY
+============================================================
+
+44.1 Follow Module 23.
+44.2 Backups MUST be encrypted.
+44.3 Backup credentials MUST be restricted.
+44.4 Backups MUST be isolated from normal application credentials.
+44.5 Backup access MUST be audited.
+44.6 Backup integrity MUST be tested.
+44.7 Restore procedures MUST be tested.
+44.8 Backup deletion MUST follow retention policy.
+44.9 Critical backups SHOULD have immutable/protected copies where
+     infrastructure supports it.
+
+============================================================
+45. DISASTER RECOVERY SECURITY
+============================================================
+
+45.1 Recovery procedures MUST preserve tenant isolation.
+45.2 Recovery credentials MUST be separately protected.
+45.3 Recovery operations MUST be audited.
+45.4 Restore access MUST be restricted.
+45.5 Recovery environments MUST not expose production data broadly.
+45.6 Recovery testing MUST include security validation.
+
+============================================================
+46. INFRASTRUCTURE SECURITY
+============================================================
+
+46.1 Production infrastructure MUST use least privilege.
+46.2 Publicly exposed services MUST be minimized.
+46.3 Administrative ports MUST be restricted.
+46.4 SSH/RDP access MUST be restricted and monitored where applicable.
+46.5 Firewall rules MUST be documented.
+46.6 Unused services MUST be disabled.
+46.7 Operating systems and dependencies MUST be patched.
+46.8 Infrastructure credentials MUST be rotated.
+46.9 Production and development infrastructure MUST be separated.
+46.10 Infrastructure changes MUST be auditable.
+
+============================================================
+47. CONTAINER / RUNTIME SECURITY
+============================================================
+
+Where containers are used:
+
+47.1 Use minimal base images.
+47.2 Run as non-root where practical.
+47.3 Scan images for vulnerabilities.
+47.4 Pin trusted dependencies/images.
+47.5 Do not embed secrets in images.
+47.6 Restrict network access.
+47.7 Apply resource limits.
+47.8 Keep runtime permissions minimal.
+
+============================================================
+48. DEPENDENCY SECURITY
+============================================================
+
+48.1 Maintain dependency inventory.
+48.2 Use supported dependency versions.
+48.3 Scan for known vulnerabilities.
+48.4 Review critical advisories.
+48.5 Remove unused dependencies.
+48.6 Pin or constrain versions appropriately.
+48.7 Review transitive dependency risks.
+48.8 Do not install arbitrary packages into production.
+
+============================================================
+49. SOURCE CONTROL SECURITY
+============================================================
+
+49.1 Protect main/production branches.
+49.2 Require code review for security-sensitive changes.
+49.3 Use secret scanning.
+49.4 Use dependency scanning.
+49.5 Protect deployment credentials.
+49.6 Restrict repository access.
+49.7 Audit privileged repository actions.
+49.8 Do not commit:
+- Passwords
+- Tokens
+- API keys
+- Certificates/private keys
+- Production .env files
+- Customer exports
+- Database dumps containing real data
+
+============================================================
+50. SECURE DEVELOPMENT LIFECYCLE
+============================================================
+
+Every feature SHOULD follow:
+
+50.1 Requirement security review.
+50.2 Threat identification.
+50.3 Secure design.
+50.4 Implementation.
+50.5 Code review.
+50.6 Automated security testing.
+50.7 Dependency scanning.
+50.8 Integration testing.
+50.9 Deployment security checks.
+50.10 Post-deployment monitoring.
+
+High-risk features require additional security review.
+
+============================================================
+51. THREAT MODELING
+============================================================
+
+Threat modeling SHOULD cover:
+- Authentication
+- Authorization
+- Tenant isolation
+- API abuse
+- Payment
+- Billing
+- File uploads
+- Webhooks
+- OAuth
+- Marketplace apps
+- AI
+- Exports
+- Backups
+- Admin actions
+- Domain management
+- Third-party integrations
+
+For each threat document:
+- Asset
+- Threat actor
+- Attack path
+- Impact
+- Likelihood
+- Existing controls
+- Mitigation
+- Residual risk
+- Owner
+
+============================================================
+52. VULNERABILITY MANAGEMENT
+============================================================
+
+52.1 Maintain vulnerability inventory.
+52.2 Classify vulnerabilities by severity.
+52.3 Critical vulnerabilities require expedited remediation.
+52.4 Security fixes MUST be regression tested.
+52.5 Track remediation status.
+52.6 Document accepted risks.
+52.7 Reassess accepted risks periodically.
+
+============================================================
+53. SECURITY TESTING
+============================================================
+
+Required testing categories:
+
+53.1 Authentication tests.
+53.2 Authorization tests.
+53.3 Tenant isolation tests.
+53.4 API security tests.
+53.5 Session tests.
+53.6 Input validation tests.
+53.7 Injection tests.
+53.8 File upload tests.
+53.9 SSRF tests.
+53.10 CSRF tests where applicable.
+53.11 CORS tests.
+53.12 Rate-limit tests.
+53.13 Webhook signature tests.
+53.14 Replay tests.
+53.15 Idempotency tests.
+53.16 Secret exposure tests.
+53.17 Dependency vulnerability tests.
+53.18 Backup/restore security tests.
+53.19 Privilege escalation tests.
+53.20 Data export security tests.
+
+============================================================
+54. PENETRATION TESTING FOUNDATION
+============================================================
+
+54.1 Perform periodic security assessment appropriate to platform
+     maturity and risk.
+54.2 Test:
+- Public storefront
+- APIs
+- Admin
+- Authentication
+- Authorization
+- Multi-tenancy
+- File handling
+- Webhooks
+- Integrations
+
+54.3 Findings MUST be tracked.
+54.4 Critical/high findings MUST be remediated or formally accepted
+     by authorized ownership before release of affected functionality.
+
+============================================================
+55. SECURITY HEADERS
+============================================================
+
+Configure appropriate headers including, where applicable:
+- Strict-Transport-Security
+- Content-Security-Policy
+- X-Content-Type-Options
+- Referrer-Policy
+- Permissions-Policy
+- Frame protection
+
+Headers MUST be validated for actual application behavior.
+
+============================================================
+56. RATE LIMITING AND ABUSE PROTECTION
+============================================================
+
+56.1 Protect:
+- Login
+- Registration
+- Password reset
+- OTP/MFA
+- Search
+- API
+- Checkout
+- Coupon validation
+- File upload
+- Webhooks
+- Exports
+- AI requests
+
+56.2 Limits MUST be appropriate to risk.
+56.3 Rate limits MUST not create an easy tenant-wide denial of
+     service through one compromised credential.
+56.4 Abuse controls MUST be observable.
+
+============================================================
+57. BOT AND AUTOMATION PROTECTION
+============================================================
+
+57.1 Identify high-risk automated abuse.
+57.2 Protect authentication and account creation.
+57.3 Protect checkout from automated abuse.
+57.4 Protect expensive search and AI endpoints.
+57.5 Use CAPTCHA/challenge mechanisms only where justified.
+57.6 Do not unnecessarily block legitimate integrations.
+
+============================================================
+58. SECURITY MONITORING
+============================================================
+
+Monitor:
+- Authentication failures
+- Privilege changes
+- Cross-tenant access attempts
+- API abuse
+- Credential anomalies
+- Suspicious exports
+- High-risk configuration changes
+- Payment anomalies
+- Billing anomalies
+- Webhook failures
+- File upload anomalies
+- Infrastructure anomalies
+- Dependency vulnerabilities
+
+============================================================
+59. SECURITY ALERTING
+============================================================
+
+Alerts SHOULD exist for:
+- Repeated privileged login failures
+- MFA disablement for privileged users
+- New Super Admin
+- Unexpected privilege escalation
+- Mass data export
+- Repeated cross-tenant access failures
+- Credential compromise indicators
+- Suspicious API spikes
+- Large-scale deletion
+- Unusual payment/refund activity
+- Backup deletion
+- Restore operation
+- Security policy changes
+
+Alerts MUST have:
+- Severity
+- Timestamp
+- Source
+- Tenant/application context where relevant
+- Recommended response
+- Status/owner
+
+============================================================
+60. INCIDENT RESPONSE
+============================================================
+
+Define an incident lifecycle:
+
+60.1 Detection
+60.2 Triage
+60.3 Containment
+60.4 Eradication
+60.5 Recovery
+60.6 Validation
+60.7 Communication
+60.8 Post-incident review
+
+============================================================
+61. INCIDENT SEVERITY
+============================================================
+
+Define severity levels such as:
+
+Critical:
+- Active cross-tenant data exposure
+- Compromised production credentials
+- Critical payment/security compromise
+- Platform-wide unauthorized access
+
+High:
+- Privilege escalation
+- Significant tenant data exposure
+- High-risk API compromise
+
+Medium:
+- Limited security weakness
+- Repeated abuse
+- Non-critical data exposure
+
+Low:
+- Minor policy/control issue
+- Low-impact vulnerability
+
+Severity definitions MUST be refined by actual business risk.
+
+============================================================
+62. INCIDENT CONTAINMENT
+============================================================
+
+Possible controls:
+- Revoke credentials
+- Suspend application
+- Suspend account
+- Block IP/range
+- Disable integration
+- Disable vulnerable endpoint
+- Increase authentication requirements
+- Isolate service
+- Rotate secrets
+- Disable compromised webhook
+
+Containment MUST preserve evidence where possible.
+
+============================================================
+63. SECURITY INCIDENT EVIDENCE
+============================================================
+
+63.1 Preserve relevant logs.
+63.2 Preserve audit events.
+63.3 Preserve affected request IDs.
+63.4 Preserve configuration history.
+63.5 Preserve deployment information.
+63.6 Avoid modifying evidence unnecessarily.
+63.7 Access to incident evidence MUST be restricted.
+
+============================================================
+64. BREACH / NOTIFICATION READINESS
+============================================================
+
+The platform SHOULD maintain procedures for determining:
+- What data was affected
+- Which tenants/customers were affected
+- When the incident occurred
+- Whether data was accessed or only exposed
+- Which providers were involved
+- Which legal/contractual obligations may apply
+
+Legal notification decisions MUST be made through appropriate
+organizational/legal processes.
+
+============================================================
+65. SUPER ADMIN SECURITY
+============================================================
+
+65.1 Super Admin is the highest-risk application role.
+65.2 Super Admin accounts MUST use strong authentication.
+65.3 MFA SHOULD be mandatory.
+65.4 Privileged sessions SHOULD have shorter lifetimes.
+65.5 Sensitive actions SHOULD require step-up authentication.
+65.6 Super Admin access MUST be audited.
+65.7 Super Admin API access MUST use separate policies.
+65.8 Super Admin credentials MUST never be shared.
+65.9 Break-glass access MUST be controlled and audited.
+65.10 Super Admin access SHOULD support IP/device restrictions where
+     operationally appropriate.
+
+============================================================
+66. BREAK-GLASS ACCESS
+============================================================
+
+66.1 Define emergency administrative access.
+66.2 Break-glass credentials MUST be protected separately.
+66.3 Usage MUST be highly visible and audited.
+66.4 Break-glass access SHOULD require reason/incident reference.
+66.5 Credentials MUST be rotated after use where appropriate.
+66.6 Break-glass access MUST not become routine administration.
+
+============================================================
+67. SUPPORT STAFF SECURITY
+============================================================
+
+67.1 Support staff MUST receive least privilege.
+67.2 Support staff SHOULD not access customer passwords/secrets.
+67.3 Impersonation tools, if provided, MUST be controlled and audited.
+67.4 Support access to tenant data MUST require business justification.
+67.5 Sensitive customer data SHOULD be masked by default.
+67.6 Support sessions SHOULD be time-limited.
+
+============================================================
+68. ADMIN ACTION SAFETY
+============================================================
+
+High-risk actions should require:
+- Confirmation
+- Reason
+- Step-up authentication
+- Audit event
+- Optional dual approval for extreme operations
+
+Examples:
+- Restore
+- Tenant deletion
+- Bulk deletion
+- Credential revocation
+- Security policy changes
+- Package/global entitlement changes
+- Domain ownership changes
+- Payment configuration changes
+
+============================================================
+69. COMPLIANCE-READY FOUNDATION
+============================================================
+
+The platform SHOULD maintain technical controls that can support
+future compliance efforts such as:
+
+- Privacy regulations applicable to target markets
+- Payment security requirements
+- Security management frameworks
+- Data protection requirements
+- Contractual customer security requirements
+
+The system MUST NOT claim certification or legal compliance unless
+formal assessment, organizational controls, and required
+certification/legal processes have actually been completed.
+
+============================================================
+70. COMPLIANCE CONTROL REGISTER
+============================================================
+
+Maintain a register containing:
+- Control ID
+- Control description
+- Applicable modules
+- Owner
+- Evidence source
+- Frequency
+- Status
+- Last review
+- Next review
+- Exception/risk
+
+============================================================
+71. SECURITY EXCEPTIONS
+============================================================
+
+71.1 Security exceptions MUST be documented.
+71.2 Every exception MUST have:
+- Description
+- Reason
+- Risk
+- Compensating control
+- Owner
+- Expiration/review date
+
+71.3 Permanent undocumented exceptions are prohibited.
+71.4 Critical exceptions require elevated approval.
+
+============================================================
+72. THIRD-PARTY RISK MANAGEMENT
+============================================================
+
+Maintain an inventory of providers:
+- Payment gateways
+- Shipping carriers
+- Email/SMS/WhatsApp providers
+- AI providers
+- Cloud infrastructure
+- Object storage
+- Analytics
+- Monitoring
+- Domain/DNS providers
+- Marketplace services
+
+For each provider document:
+- Data shared
+- Credentials
+- Security dependency
+- Availability dependency
+- Revocation process
+- Contract/terms
+- Risk classification
+
+============================================================
+73. BUSINESS CONTINUITY
+============================================================
+
+73.1 Identify critical services.
+73.2 Identify critical dependencies.
+73.3 Define recovery priorities.
+73.4 Define backup requirements.
+73.5 Define alternate operational procedures.
+73.6 Test continuity procedures.
+
+============================================================
+74. SECURITY AND AVAILABILITY DEPENDENCIES
+============================================================
+
+For each critical dependency define:
+- Timeout
+- Retry policy
+- Circuit breaker where appropriate
+- Failure mode
+- Security implications
+- Fallback behavior
+
+A security-sensitive dependency failure MUST fail safely.
+
+============================================================
+75. DATA INTEGRITY
+============================================================
+
+75.1 Financial records require strong integrity.
+75.2 Inventory records require strong integrity.
+75.3 Order records require strong integrity.
+75.4 Subscription/billing records require strong integrity.
+75.5 Audit records require strong integrity.
+75.6 Security configuration requires strong integrity.
+
+Use:
+- Transactions
+- Constraints
+- Versioning
+- Idempotency
+- Audit logs
+- Integrity checks
+
+============================================================
+76. SECURITY OF ASYNC JOBS
+============================================================
+
+76.1 Jobs MUST carry authorized tenant context.
+76.2 Job payloads MUST not contain unnecessary secrets.
+76.3 Job execution MUST validate authorization context.
+76.4 Job ownership MUST be enforced.
+76.5 Job results MUST be access-controlled.
+76.6 Failed jobs MUST not leak sensitive payloads.
+76.7 Queue messages MUST be protected from unauthorized consumers.
+
+============================================================
+77. SEARCH SECURITY
+============================================================
+
+77.1 Search indexes MUST enforce tenant boundaries.
+77.2 Restricted resources MUST not appear in public search.
+77.3 Draft/private content MUST require authorization.
+77.4 Search queries MUST be bounded.
+77.5 Search results MUST be filtered by authorization before return.
+
+============================================================
+78. CACHE SECURITY
+============================================================
+
+78.1 Private cache entries MUST be tenant-aware.
+78.2 Authenticated cache entries MUST not leak between users.
+78.3 Sensitive data MUST not be publicly cached.
+78.4 Cache invalidation MUST follow authorization/resource changes.
+78.5 Cache poisoning risks MUST be considered.
+
+============================================================
+79. DOMAIN AND DNS SECURITY
+============================================================
+
+79.1 Domain operations require authorization.
+79.2 Domain verification must be authoritative.
+79.3 DNS credentials remain protected.
+79.4 Domain changes must be audited.
+79.5 High-risk domain changes SHOULD require step-up authentication.
+79.6 Domain takeover protections MUST be considered.
+79.7 SSL/TLS certificate issuance must be monitored.
+
+============================================================
+80. HOSTING AND DEPLOYMENT SECURITY
+============================================================
+
+80.1 Production deployment credentials must be protected.
+80.2 CI/CD permissions must be least privilege.
+80.3 Deployments should require protected branch controls.
+80.4 Production deployments must be traceable to source revisions.
+80.5 Build artifacts must be reproducible or traceable where practical.
+80.6 Rollback must be available.
+80.7 Emergency deployment procedures must be documented.
+
+============================================================
+81. CI/CD SECURITY GATES
+============================================================
+
+CI SHOULD enforce:
+- Secret scanning
+- Dependency scanning
+- Static analysis
+- Security linting
+- Unit tests
+- Integration tests
+- Authorization tests
+- Tenant isolation tests
+- Contract tests
+- Migration checks
+- Build validation
+
+Critical security failures MUST block production deployment.
+
+============================================================
+82. SECURITY TEST DATA
+============================================================
+
+82.1 Do not use real customer production data in development.
+82.2 Test fixtures must use synthetic data.
+82.3 Production data copied for exceptional testing requires
+     documented authorization and protection.
+82.4 Test credentials must never be production credentials.
+
+============================================================
+83. PRIVACY-SAFE OBSERVABILITY
+============================================================
+
+83.1 Logs/metrics/traces MUST minimize PII.
+83.2 Sensitive request bodies MUST not be logged by default.
+83.3 Authorization headers MUST be redacted.
+83.4 Cookies/tokens MUST be redacted.
+83.5 Payment information MUST be redacted.
+83.6 Customer secrets MUST be redacted.
+
+============================================================
+84. SECURITY DOCUMENTATION
+============================================================
+
+Maintain:
+1. Security Architecture
+2. Threat Model
+3. Data Classification
+4. Access Control Matrix
+5. Security Policies
+6. Incident Response Plan
+7. Disaster Recovery Security Plan
+8. Secret Management Policy
+9. Credential Rotation Policy
+10. Vulnerability Management Policy
+11. Privacy/Data Retention Policy
+12. Audit Logging Specification
+13. Security Testing Plan
+14. Third-Party Risk Register
+15. Compliance Control Register
+16. Security Exception Register
+17. Production Security Runbook
+18. Break-Glass Procedure
+
+============================================================
+85. SECURITY DASHBOARD
+============================================================
+
+Security dashboard SHOULD show:
+- Authentication failures
+- MFA adoption
+- Privileged accounts
+- Privilege changes
+- API abuse
+- Rate-limit events
+- Cross-tenant access attempts
+- Vulnerability counts
+- Critical dependency alerts
+- Credential age
+- Security incidents
+- Backup status
+- Restore tests
+- Security control status
+
+Tenant administrators receive only tenant-relevant security metrics.
+Super Admin receives platform-level metrics.
+
+============================================================
+86. SECURITY KPIs
+============================================================
+
+Track measurable indicators such as:
+- Critical vulnerabilities open
+- High vulnerabilities open
+- Mean time to remediate
+- Failed privileged logins
+- Credential rotation age
+- MFA coverage
+- Cross-tenant access violations
+- Security incident count
+- Failed backup tests
+- Failed restore tests
+- Security test pass rate
+- Secret scanning violations
+- Dependency vulnerabilities
+
+KPIs are operational measurements, not proof of absolute security.
+
+============================================================
+87. REQUIRED CLAUDE DEVELOPMENT BEHAVIOR
+============================================================
+
+Claude MUST:
+
+87.1 Read Modules 01–31 before implementing Module 32.
+87.2 Treat Module 32 as a platform-wide security layer.
+87.3 Preserve all existing module security requirements.
+87.4 Never weaken authorization to make functionality work.
+87.5 Never disable security checks to make tests pass.
+87.6 Never hardcode credentials.
+87.7 Never expose secrets.
+87.8 Never commit real customer data.
+87.9 Never use production credentials in tests.
+87.10 Never bypass tenant isolation.
+87.11 Add security regression tests for changes.
+87.12 Add authorization tests for every sensitive endpoint.
+87.13 Add tenant isolation tests.
+87.14 Add secret scanning.
+87.15 Add dependency scanning.
+87.16 Add input validation tests.
+87.17 Add file security tests.
+87.18 Add webhook security tests.
+87.19 Add audit logging tests.
+87.20 Add privacy/data minimization checks.
+87.21 Preserve existing APIs unless explicitly versioned.
+87.22 Avoid unrelated code changes.
+87.23 Do not perform destructive production operations.
+87.24 Report security findings honestly.
+87.25 Maintain a security checkpoint after each implementation session.
+
+============================================================
+88. IMPLEMENTATION ORDER
+============================================================
+
+Phase 1:
+- Security architecture
+- Threat model
+- Data classification
+- Security policies
+- Security ownership
+
+Phase 2:
+- Identity security
+- Password security
+- MFA
+- Session security
+- Authorization hardening
+
+Phase 3:
+- Tenant isolation hardening
+- Object-level authorization
+- Field-level protection
+- Privileged access controls
+
+Phase 4:
+- API security
+- OAuth security
+- Credential management
+- Rate limiting
+- Abuse protection
+
+Phase 5:
+- Data encryption
+- Secret management
+- Database security
+- File security
+- Cache/search security
+
+Phase 6:
+- Audit logging
+- Security logging
+- Monitoring
+- Alerting
+- Security dashboard
+
+Phase 7:
+- Privacy controls
+- Consent
+- Data retention
+- Export/deletion workflows
+
+Phase 8:
+- Infrastructure/CI/CD security
+- Dependency security
+- Deployment controls
+
+Phase 9:
+- Incident response
+- Disaster recovery security
+- Break-glass procedures
+- Business continuity
+
+Phase 10:
+- Penetration/security testing
+- Compliance control mapping
+- Production security review
+
+============================================================
+89. REQUIRED SECURITY TEST MATRIX
+============================================================
+
+Authentication:
+[ ] Password hashing
+[ ] Reset token security
+[ ] MFA
+[ ] Session expiry
+[ ] Session revocation
+[ ] Token rotation
+
+Authorization:
+[ ] Role checks
+[ ] Permission checks
+[ ] Scope checks
+[ ] Object-level checks
+[ ] Field-level checks
+[ ] Privilege escalation
+
+Multi-tenancy:
+[ ] API isolation
+[ ] DB isolation
+[ ] Cache isolation
+[ ] Search isolation
+[ ] File isolation
+[ ] Queue isolation
+[ ] Export isolation
+[ ] Webhook isolation
+[ ] Analytics isolation
+
+Application:
+[ ] SQL injection
+[ ] XSS
+[ ] CSRF
+[ ] SSRF
+[ ] File upload
+[ ] Path traversal
+[ ] Open redirect
+[ ] Mass assignment
+[ ] Rate limiting
+[ ] Replay attacks
+
+Infrastructure:
+[ ] Secret scanning
+[ ] Dependency scanning
+[ ] Container/image scanning
+[ ] Network exposure review
+[ ] Deployment permissions
+[ ] Backup security
+[ ] Restore security
+
+============================================================
+90. ACCEPTANCE CRITERIA
+============================================================
+
+Module 32 is accepted only when:
+
+90.1 Security architecture is documented.
+90.2 Threat model exists for critical boundaries.
+90.3 Identity security is implemented.
+90.4 Authorization is consistently enforced.
+90.5 Tenant isolation is independently tested.
+90.6 Privileged access is protected.
+90.7 MFA is available for required roles.
+90.8 Secrets are securely managed.
+90.9 API security controls are operational.
+90.10 Rate limits and abuse controls are operational.
+90.11 Encryption is correctly configured.
+90.12 File security controls are operational.
+90.13 Database security controls are operational.
+90.14 Audit logging covers required actions.
+90.15 Audit records are protected.
+90.16 Security monitoring is operational.
+90.17 Security alerts are configured.
+90.18 Incident response procedures exist.
+90.19 Backup/recovery security is tested.
+90.20 Privacy controls are documented.
+90.21 Data retention is documented.
+90.22 Security exception process exists.
+90.23 Dependency/secret scanning is active.
+90.24 Security regression tests pass.
+90.25 No known critical security issue remains unresolved without
+     formal authorized risk acceptance.
+90.26 Production security checklist is complete.
+
+============================================================
+91. PRODUCTION SECURITY READINESS CHECKLIST
+============================================================
+
+[ ] HTTPS/TLS enforced
+[ ] Secure headers configured
+[ ] CORS restricted
+[ ] CSRF protected where applicable
+[ ] Authentication tested
+[ ] MFA tested for privileged roles
+[ ] Session security tested
+[ ] Authorization tested
+[ ] Object-level authorization tested
+[ ] Tenant isolation tested
+[ ] Field-level PII protection tested
+[ ] API rate limits enabled
+[ ] Abuse protection enabled
+[ ] Secrets removed from source
+[ ] Secret scanning enabled
+[ ] Dependency scanning enabled
+[ ] Production credentials separated
+[ ] Database access restricted
+[ ] Storage access restricted
+[ ] File upload validation enabled
+[ ] Malware scanning enabled where applicable
+[ ] SSRF protections enabled
+[ ] SQL injection protections verified
+[ ] XSS protections verified
+[ ] Audit logging enabled
+[ ] Log redaction verified
+[ ] Security monitoring enabled
+[ ] Security alerts enabled
+[ ] Backup encryption verified
+[ ] Restore security tested
+[ ] Incident response documented
+[ ] Break-glass access documented
+[ ] Super Admin access hardened
+[ ] Third-party integrations reviewed
+[ ] Marketplace app controls reviewed
+[ ] AI security controls reviewed
+[ ] Payment security reviewed
+[ ] Billing security reviewed
+[ ] Domain security reviewed
+[ ] CI/CD security gates enabled
+[ ] Security tests passing
+[ ] Penetration/security assessment completed as appropriate
+[ ] Security exceptions documented
+[ ] Compliance control register updated
+[ ] Rollback procedure verified
+
+============================================================
+92. REQUIRED MODULE INTEGRATIONS
+============================================================
+
+Module 32 MUST integrate with:
+
+Module 01 — Complete Platform Structure
+Module 02 — Authentication, Users, Roles & Permissions
+Module 03 — Multi-Tenant & Store Management
+Module 04 — Subscription & Feature Entitlements
+Module 05 — Storefront
+Module 06 — Product & Catalog
+Module 07 — Category, Brand & Attribute
+Module 08 — Inventory
+Module 09 — Orders
+Module 10 — Customers
+Module 11 — Cart, Wishlist & Checkout
+Module 12 — Payments
+Module 13 — Shipping
+Module 14 — Discounts & Promotions
+Module 15 — Marketing
+Module 16 — SEO & Content
+Module 17 — Theme & Branding
+Module 18 — Animation
+Module 19 — Domains
+Module 20 — Hosting & Infrastructure
+Module 21 — Notifications
+Module 22 — Analytics
+Module 23 — Backup & Data Protection
+Module 24 — Store Health & Resource Usage
+Module 25 — PWA/Mobile
+Module 26 — AI
+Module 27 — Marketplace & Integrations
+Module 28 — Affiliate & Reseller
+Module 29 — Billing
+Module 30 — Umar Techy Super Admin
+Module 31 — API & Developer Platform
+
+============================================================
+93. FUTURE EXPANSION
+============================================================
+
+The security architecture MUST support future:
+
+93.1 Regional privacy controls.
+93.2 Enterprise SSO.
+93.3 Passkeys/WebAuthn.
+93.4 Hardware security keys.
+93.5 Advanced device trust.
+93.6 Managed security keys.
+93.7 Customer-managed encryption keys.
+93.8 Advanced SIEM integration.
+93.9 Security information/event automation.
+93.10 Advanced anomaly detection.
+93.11 Fraud detection.
+93.12 Data loss prevention.
+93.13 Advanced API threat detection.
+93.14 Runtime application protection.
+93.15 Zero-trust service networking.
+93.16 mTLS service identity.
+93.17 Formal compliance assessments.
+93.18 External penetration testing.
+93.19 Bug bounty/security disclosure program.
+93.20 Enterprise security reporting.
+93.21 Regional data residency.
+93.22 Advanced legal hold workflows.
+93.23 Privacy-preserving analytics.
+93.24 AI security governance.
+93.25 Automated security posture management.
+
+============================================================
+94. FINAL ARCHITECTURAL RULES
+============================================================
+
+1. Security is a platform-wide requirement.
+2. Security is not an optional feature.
+3. Security must be designed before implementation.
+4. Security controls must be enabled by default.
+5. Least privilege is mandatory.
+6. Defense in depth is mandatory.
+7. Fail closed for security-sensitive decisions.
+8. Authentication and authorization remain separate concerns.
+9. Server-side authorization is authoritative.
+10. Client-side security checks never replace server-side checks.
+11. Tenant isolation is a critical security boundary.
+12. Tenant IDs from clients are never trusted by themselves.
+13. Object-level authorization is mandatory.
+14. Field-level authorization is required for sensitive data.
+15. Mass assignment is prohibited.
+16. Write fields must be allowlisted.
+17. Public data must be intentionally public.
+18. Private data must require authorization.
+19. Sensitive data must be minimized.
+20. Secrets must never be exposed.
+21. Secrets must never be committed to source control.
+22. Production secrets must be separated from development.
+23. Credentials must support rotation.
+24. Credentials must support revocation.
+25. Passwords must be adaptively hashed.
+26. Plaintext passwords are prohibited.
+27. Password reset tokens must be single-use and expiring.
+28. MFA should protect privileged accounts.
+29. MFA changes must be audited.
+30. Sessions must expire.
+31. Sessions must be revocable.
+32. Refresh tokens must be protected.
+33. OAuth public clients must use PKCE.
+34. OAuth redirect URIs must be controlled.
+35. OAuth scope escalation requires consent.
+36. API credentials must be scoped.
+37. API credentials must be tenant-bound where applicable.
+38. API security follows Module 31.
+39. HTTPS is mandatory.
+40. CORS must be explicit.
+41. CSRF must be addressed where cookies are used.
+42. Security headers must be configured.
+43. Input validation is mandatory.
+44. Frontend validation is never sufficient.
+45. SQL injection must be prevented.
+46. XSS must be prevented.
+47. SSRF must be prevented.
+48. Path traversal must be prevented.
+49. Open redirects must be prevented.
+50. File uploads must be validated.
+51. Executable uploads must be prohibited unless explicitly designed.
+52. Private files must remain private.
+53. Signed URLs must expire.
+54. Databases must use least privilege.
+55. Production databases must not be unnecessarily public.
+56. Sensitive data must receive appropriate encryption.
+57. TLS must protect data in transit.
+58. Established cryptographic libraries must be used.
+59. Custom cryptography is prohibited without formal review.
+60. Encryption keys must be protected.
+61. Critical keys must support rotation.
+62. Payment credentials must remain protected.
+63. Raw card data must not be stored without formally approved
+    architecture.
+64. Payment status is server-authoritative.
+65. Refunds must be authorized.
+66. Financial operations must be idempotent.
+67. Billing state must be protected.
+68. Invoice records must remain authoritative.
+69. Order state must be server-controlled.
+70. Inventory changes must be authorized and audited.
+71. Webhook signatures must be validated.
+72. Webhooks must be replay-resistant.
+73. Third-party data must be validated.
+74. Third-party credentials must remain server-side.
+75. Marketplace apps must use least privilege.
+76. App uninstall must revoke access.
+77. Suspended apps must lose access.
+78. AI cannot bypass authorization.
+79. AI-generated actions must pass domain validation.
+80. AI usage must be auditable.
+81. Audit logs are separate from ordinary application logs.
+82. Sensitive actions must be audited.
+83. Audit logs must not contain secrets.
+84. Audit logs should be append-only or tamper-resistant.
+85. Audit access must itself be audited.
+86. Logs must be redacted.
+87. Logs must minimize PII.
+88. Request IDs should support investigations.
+89. Security monitoring is mandatory.
+90. Security alerts must have severity.
+91. Security incidents require defined response procedures.
+92. Incident evidence must be preserved where possible.
+93. Credential compromise requires rapid revocation.
+94. Break-glass access must be controlled.
+95. Super Admin access requires stronger protection.
+96. Support access must be least privilege.
+97. Impersonation must be audited if provided.
+98. High-risk admin actions should require confirmation.
+99. High-risk actions may require step-up authentication.
+100. Destructive operations must be protected.
+101. Backups must be encrypted.
+102. Backups must be access-controlled.
+103. Restore operations must be restricted and audited.
+104. Disaster recovery must preserve tenant isolation.
+105. Production infrastructure must use least privilege.
+106. Administrative network access must be restricted.
+107. Unused services must be disabled.
+108. Dependencies must be monitored.
+109. Vulnerabilities must be tracked.
+110. Critical vulnerabilities require expedited remediation.
+111. Source repositories must be protected.
+112. CI/CD must include security gates.
+113. Secret scanning must be automated.
+114. Dependency scanning must be automated.
+115. Security tests must run in CI.
+116. Real production data must not be used in ordinary development.
+117. Synthetic test data is preferred.
+118. Threat modeling is required for critical features.
+119. Security exceptions must be documented.
+120. Security exceptions require ownership.
+121. Security exceptions require review/expiry.
+122. Third-party providers must be inventoried.
+123. Third-party data sharing must be documented.
+124. Compliance claims must not be made without evidence.
+125. Technical controls do not automatically create legal compliance.
+126. Privacy must be considered during feature design.
+127. Data retention must be documented.
+128. Data deletion must be authorization-controlled.
+129. Legal/financial retention must be respected.
+130. Consent must be distinguishable from account creation.
+131. Marketing communication must honor consent/preferences.
+132. Data exports must be authorized.
+133. Customer PII must be minimized.
+134. Customer PII must not leak across tenants.
+135. Analytics must be tenant-aware.
+136. Search must be tenant-aware.
+137. Cache must be tenant-aware.
+138. Queues must preserve tenant context.
+139. Async jobs must preserve authorization context.
+140. Export jobs must preserve tenant isolation.
+141. File storage must preserve tenant isolation.
+142. Security events must be observable.
+143. Security controls must be testable.
+144. Security regressions must be prevented.
+145. Security testing must cover authentication.
+146. Security testing must cover authorization.
+147. Security testing must cover tenant isolation.
+148. Security testing must cover injection.
+149. Security testing must cover file security.
+150. Security testing must cover API abuse.
+151. Security testing must cover webhook security.
+152. Security testing must cover secret exposure.
+153. Security testing must cover privilege escalation.
+154. Security testing must cover backup/restore.
+155. Security testing must cover data export.
+156. Production security readiness must be documented.
+157. Rollback must be available.
+158. Security changes must be traceable.
+159. Security ownership must be explicit.
+160. Security policy changes must be audited.
+161. Security controls must be reviewed after major architecture changes.
+162. Security must not be weakened for convenience.
+163. Security must not be disabled to pass tests.
+164. Business functionality must never bypass security controls.
+165. Performance optimization must not weaken security.
+166. Caching must never override authorization.
+167. Retries must never create duplicate financial effects.
+168. External webhooks must never be blindly trusted.
+169. External URLs must never be blindly fetched.
+170. External applications must never receive unrestricted credentials.
+171. Super Admin must remain separately governed.
+172. Internal services must not be assumed trusted.
+173. Service identities must be explicit.
+174. High-trust service communication may use mTLS.
+175. Future protocols must preserve the same security model.
+176. Future modules must inherit platform security requirements.
+177. Security architecture must remain modular.
+178. Security architecture must remain tenant-aware.
+179. Security architecture must remain observable.
+180. Security architecture must remain auditable.
+181. Security architecture must remain recoverable.
+182. Security architecture must remain extensible.
+183. Security architecture must support future compliance.
+184. Security architecture must support future regional privacy needs.
+185. Security architecture must support future enterprise security.
+186. Security architecture must support future AI security governance.
+187. Security architecture must support future marketplace security.
+188. Security architecture must support future developer platform security.
+189. Security architecture must preserve data integrity.
+190. Security architecture must preserve customer privacy.
+191. Security architecture must preserve tenant isolation.
+192. Security architecture must preserve financial integrity.
+193. Security architecture must preserve credential confidentiality.
+194. Security architecture must preserve audit integrity.
+195. Security architecture must preserve platform availability.
+196. Security architecture must preserve disaster recoverability.
+197. Security architecture must preserve backward compatibility where
+     security allows.
+198. Security architecture must provide safe failure behavior.
+199. Security architecture must provide measurable controls.
+200. Module 32 is complete only when the platform has a tested,
+     documented, monitored, auditable, tenant-isolated, privacy-aware,
+     and production-ready security foundation.
+
+============================================================
+END OF MODULE 32
+============================================================

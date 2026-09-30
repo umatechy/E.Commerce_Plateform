@@ -1,0 +1,3511 @@
+============================================================
+UMAR TECHY
+E-COMMERCE PLATFORM — MASTER PROJECT BLUEPRINT
+MODULE 28 — AFFILIATE & RESELLER PROGRAM
+VERSION 1.0
+============================================================
+
+DOCUMENT STATUS
+------------------------------------------------------------
+Module: 28
+Name: Affiliate & Reseller Program
+Platform: Umar Techy E-Commerce Platform
+Architecture: Core Multi-Tenant E-Commerce SaaS
+Primary Principle: One Core Platform, Many Isolated Stores
+Document Language: English
+Implementation Target: Production-Grade, Scalable, Secure
+============================================================
+
+
+1. MODULE PURPOSE
+------------------------------------------------------------
+
+Module 28 defines the complete Affiliate, Referral, Reseller,
+Partner, Commission, Attribution, Payout, and Reseller Store
+Provisioning framework for the Umar Techy E-Commerce Platform.
+
+The module must support:
+
+- Umar Techy platform-level affiliate programs.
+- Store/tenant-level affiliate programs.
+- Reseller programs for selling Umar Techy packages/services.
+- Referral links, referral codes, coupons, and campaigns.
+- Customer, order, and store attribution.
+- Commission calculation and lifecycle management.
+- Commission approval, holding, reversal, and payout.
+- Affiliate and reseller dashboards.
+- Reseller-driven store provisioning.
+- Custom reseller pricing and commercial rules.
+- Tiered commission structures.
+- Future sub-reseller capabilities.
+- Fraud and abuse prevention.
+- Tax/KYC/compliance foundations.
+- Full auditability and reconciliation.
+- Strict multi-tenant isolation.
+- Integration with Orders, Customers, Promotions, Marketing,
+  Billing, Analytics, Subscriptions, Payments, and Super Admin.
+
+This module must not bypass the authoritative business rules of
+other Core modules.
+
+Affiliate and reseller functionality is a commercial orchestration
+layer. Orders, payments, inventory, subscriptions, customer
+identity, and tenant isolation remain authoritative in their
+respective Core modules.
+
+
+2. CORE ARCHITECTURAL PRINCIPLES
+------------------------------------------------------------
+
+2.1 One Core Program Engine
+
+Affiliate and reseller functionality must be implemented through
+one reusable Core Program Engine.
+
+Do not create separate codebases for:
+
+- Platform affiliates.
+- Store affiliates.
+- Resellers.
+- Partners.
+- Referral programs.
+
+Program configuration and role-specific capabilities must
+differentiate behavior.
+
+2.2 Multi-Tenant by Design
+
+Every tenant-owned affiliate program, campaign, referral code,
+commission, customer attribution, order attribution, and report
+must be tenant-scoped.
+
+Platform-level programs may operate across multiple tenants only
+through explicitly authorized platform rules.
+
+Tenant context must be resolved before accessing tenant-owned
+affiliate data.
+
+2.3 Server Authority
+
+The server is authoritative for:
+
+- Attribution.
+- Referral validity.
+- Commission eligibility.
+- Commission amount.
+- Qualification rules.
+- Order qualification.
+- Subscription qualification.
+- Refund/return impact.
+- Chargeback impact.
+- Payout eligibility.
+- Reseller pricing.
+- Reseller discount limits.
+- Store provisioning permissions.
+
+Client-provided attribution or commission amounts must never be
+trusted.
+
+2.4 Immutable Financial Snapshots
+
+Commission calculations must preserve historical snapshots of:
+
+- Program.
+- Commission rule.
+- Rate.
+- Fixed amount.
+- Order value.
+- Eligible amount.
+- Currency.
+- Attribution source.
+- Affiliate/reseller.
+- Customer.
+- Order/subscription/store.
+- Qualification status.
+
+Later changes to a program must not rewrite historical financial
+records.
+
+2.5 Separation of Attribution and Commission
+
+Attribution determines who receives credit.
+
+Commission rules determine how much credit is financially
+recognized.
+
+These concerns must remain separately modeled.
+
+2.6 Separation of Commission and Payout
+
+A commission can be approved without being immediately payable.
+
+Commission records and payout records must remain separate.
+
+2.7 No Direct Financial Mutation
+
+The module must never directly modify payment provider balances,
+order totals, subscription invoices, or financial ledger authority
+owned by other modules.
+
+It may create commission obligations and payout instructions through
+approved interfaces.
+
+
+3. PROGRAM TYPES
+------------------------------------------------------------
+
+The system must support the following program types.
+
+3.1 PLATFORM_AFFILIATE
+
+Managed by Umar Techy.
+
+Purpose:
+
+- Refer customers to the Umar Techy platform.
+- Refer new stores.
+- Refer subscriptions/packages.
+- Refer hosting/domain/services where applicable.
+- Earn platform-defined commissions.
+
+3.2 STORE_AFFILIATE
+
+Owned by an individual tenant/store.
+
+Purpose:
+
+- Allow a store to recruit affiliates.
+- Affiliates promote store products.
+- Commission is calculated from qualifying store orders.
+
+3.3 PLATFORM_RESELLER
+
+Managed by Umar Techy.
+
+Purpose:
+
+- Resellers sell Umar Techy packages/services.
+- Resellers may receive special pricing.
+- Resellers may receive recurring or one-time commissions.
+- Resellers may provision or onboard stores if authorized.
+
+3.4 STORE_RESELLER
+
+Optional future program.
+
+A store may authorize a partner to sell its products or services
+under controlled reseller rules.
+
+3.5 PARTNER_PROGRAM
+
+Generalized future partner model supporting agencies,
+consultants, implementation partners, technology partners, or
+service partners.
+
+3.6 REFERRAL_PROGRAM
+
+Customer referral program that may reward:
+
+- Referrer.
+- Referred customer.
+- Both.
+
+Rewards may be monetary, coupon-based, store credit, loyalty
+points, or other configured rewards.
+
+
+4. PROGRAM OWNERSHIP
+------------------------------------------------------------
+
+Each program must have an ownership scope.
+
+Ownership types:
+
+- PLATFORM.
+- TENANT.
+- PARTNER_ORGANIZATION.
+
+Program ownership must determine:
+
+- Who can configure it.
+- Which customers/orders/stores can qualify.
+- Which currency applies.
+- Which payout account is responsible.
+- Which package entitlements apply.
+- Which reports are visible.
+
+Platform programs must never expose unrelated tenant data.
+
+
+5. AFFILIATE / PARTNER ROLES
+------------------------------------------------------------
+
+Supported roles:
+
+5.1 AFFILIATE
+
+Promotes products, stores, services, or platform offers.
+
+5.2 REFERRER
+
+Refers another customer or user.
+
+5.3 RESELLER
+
+Commercially sells platform packages/services under an authorized
+reseller agreement.
+
+5.4 AGENCY_PARTNER
+
+May onboard and manage multiple stores if explicitly entitled.
+
+5.5 SUB_RESELLER
+
+Future capability.
+
+A reseller may create or manage authorized sub-resellers under
+platform-defined controls.
+
+5.6 PROGRAM_MANAGER
+
+Internal role authorized to administer a specific program.
+
+5.7 PLATFORM_ADMIN
+
+Authorized platform-level administrator.
+
+5.8 STORE_ADMIN
+
+Authorized tenant-level administrator for store affiliate
+programs.
+
+All roles must be enforced through Module 02 RBAC and program-level
+scopes.
+
+
+6. AFFILIATE / RESELLER ACCOUNT MODEL
+------------------------------------------------------------
+
+Affiliate identity must remain separate from:
+
+- Platform user identity.
+- Store customer identity.
+- Store staff membership.
+
+An affiliate may also be a customer or store user, but these roles
+must not be conflated.
+
+Core account states:
+
+- INVITED.
+- PENDING_APPROVAL.
+- ACTIVE.
+- PAUSED.
+- SUSPENDED.
+- REJECTED.
+- TERMINATED.
+- ARCHIVED.
+
+Required profile foundations:
+
+- Affiliate ID.
+- User ID where applicable.
+- Display name.
+- Legal/business name where required.
+- Email.
+- Phone.
+- Country.
+- Preferred currency.
+- Timezone.
+- Payout profile.
+- Tax/compliance profile.
+- Marketing profile.
+- Status.
+- Program memberships.
+- Created/updated timestamps.
+
+Sensitive payout and compliance data must be protected and access
+controlled.
+
+
+7. PROGRAM LIFECYCLE
+------------------------------------------------------------
+
+Program states:
+
+- DRAFT.
+- PENDING_REVIEW.
+- APPROVED.
+- ACTIVE.
+- PAUSED.
+- SUSPENDED.
+- EXPIRED.
+- ARCHIVED.
+
+Only eligible states may generate new attribution.
+
+Program activation must validate:
+
+- Commission rules.
+- Attribution settings.
+- Currency.
+- Eligible products/categories.
+- Payout configuration.
+- Terms.
+- Program owner.
+- Package entitlement.
+- Required compliance settings.
+
+
+8. REFERRAL LINKS
+------------------------------------------------------------
+
+The platform must support unique referral links.
+
+Example conceptual structure:
+
+https://store.example.com/?ref=ABC123
+
+Referral links must resolve through a secure attribution process.
+
+Required properties:
+
+- Referral ID.
+- Affiliate ID.
+- Program ID.
+- Tenant ID where applicable.
+- Campaign ID.
+- Destination URL.
+- Status.
+- Expiration.
+- Tracking parameters.
+- Created timestamp.
+
+Do not expose internal database identifiers unnecessarily.
+
+Referral URLs must prevent:
+
+- Open redirects.
+- Cross-tenant attribution.
+- Tampering.
+- Arbitrary destination injection.
+
+
+9. REFERRAL CODES
+------------------------------------------------------------
+
+Support human-readable referral codes.
+
+Requirements:
+
+- Unique within applicable scope.
+- Case-normalized.
+- Reserved words protected.
+- Collision resistant.
+- Optional expiration.
+- Optional campaign association.
+- Optional product/category association.
+- Optional customer eligibility.
+- Optional usage limits.
+
+Codes may be used for:
+
+- Attribution.
+- Discount.
+- Commission.
+- Referral reward.
+- Campaign tracking.
+
+Promotion rules remain authoritative through Module 14.
+
+
+10. COUPON + AFFILIATE INTEGRATION
+------------------------------------------------------------
+
+An affiliate may have an associated coupon/referral code.
+
+Possible configurations:
+
+A. Attribution only.
+B. Discount only.
+C. Attribution + discount.
+D. Attribution + customer reward.
+E. Attribution + affiliate commission.
+F. Attribution + discount + commission.
+
+The system must explicitly define stacking and conflict behavior.
+
+A coupon must never automatically imply commission unless the
+program configuration says so.
+
+Historical orders must preserve coupon and commission snapshots.
+
+
+11. CAMPAIGNS
+------------------------------------------------------------
+
+Affiliate campaigns must support:
+
+- Campaign ID.
+- Program ID.
+- Affiliate ID.
+- Tenant ID.
+- Name.
+- Description.
+- Start/end dates.
+- Landing page.
+- Referral link.
+- Referral code.
+- UTM parameters.
+- Product/category scope.
+- Commission override where authorized.
+- Discount override where authorized.
+- Status.
+
+Campaign states:
+
+- DRAFT.
+- SCHEDULED.
+- ACTIVE.
+- PAUSED.
+- EXPIRED.
+- ARCHIVED.
+
+
+12. ATTRIBUTION ENGINE
+------------------------------------------------------------
+
+The Attribution Engine determines which affiliate or reseller
+receives credit.
+
+Supported attribution models:
+
+- LAST_TOUCH.
+- FIRST_TOUCH.
+- COUPON_CODE.
+- REFERRAL_CODE.
+- DIRECT_REFERRAL.
+- CAMPAIGN_BASED.
+- CONFIGURABLE_PRIORITY.
+
+Future foundation:
+
+- MULTI_TOUCH.
+- WEIGHTED_MULTI_TOUCH.
+
+Attribution rules must be configurable per program.
+
+Attribution must record:
+
+- Visitor/session identifier.
+- Affiliate.
+- Program.
+- Tenant.
+- Campaign.
+- Referral link/code.
+- Timestamp.
+- Landing page.
+- Source.
+- Medium.
+- Campaign.
+- Device/browser metadata where permitted.
+- Customer ID when identified.
+- Order ID after conversion.
+
+
+13. ATTRIBUTION WINDOW
+------------------------------------------------------------
+
+Each program may define an attribution window.
+
+Example:
+
+- 1 day.
+- 7 days.
+- 14 days.
+- 30 days.
+- 60 days.
+- 90 days.
+
+The actual configurable maximum must be controlled by platform policy.
+
+Attribution must respect:
+
+- Program expiration.
+- Affiliate status.
+- Tenant status.
+- Customer consent/privacy settings.
+- Browser/storage restrictions.
+- Explicit referral code use.
+- Later qualifying attribution events.
+
+
+14. COOKIE / SESSION ATTRIBUTION
+------------------------------------------------------------
+
+Attribution may use:
+
+- First-party cookies.
+- Secure session storage.
+- Server-side attribution tokens.
+- Logged-in customer association.
+- Referral codes.
+
+Do not rely exclusively on third-party cookies.
+
+Attribution records must be tenant-scoped.
+
+Where privacy regulations or platform rules require consent, tracking
+must respect applicable consent state.
+
+Attribution must not store unnecessary personal data.
+
+
+15. CUSTOMER-BASED ATTRIBUTION
+------------------------------------------------------------
+
+When a visitor becomes an identified customer, eligible referral
+attribution may be associated with that customer.
+
+The system must prevent arbitrary reassignment.
+
+Attribution precedence must be deterministic.
+
+Example precedence:
+
+1. Explicit valid referral code.
+2. Valid direct referral.
+3. Program-configured link attribution.
+4. Existing eligible attribution.
+
+The actual order must be configurable per program.
+
+Attribution changes after conversion require explicit business rules
+and audit records.
+
+
+16. ORDER ATTRIBUTION
+------------------------------------------------------------
+
+When a qualifying order is created:
+
+- Resolve tenant.
+- Resolve customer.
+- Resolve affiliate/reseller attribution.
+- Validate program status.
+- Validate affiliate status.
+- Validate order eligibility.
+- Calculate eligible commission base.
+- Create commission snapshot.
+- Link commission to order.
+- Emit commission event.
+
+Order attribution must survive:
+
+- Order status changes.
+- Payment retries.
+- Partial fulfillment.
+- Returns.
+- Refunds.
+- Cancellations.
+- Chargebacks.
+
+
+17. STORE ATTRIBUTION FOR RESELLERS
+------------------------------------------------------------
+
+Platform resellers may receive attribution for a newly created
+store.
+
+Supported attribution sources:
+
+- Reseller referral link.
+- Reseller code.
+- Manual authorized assignment.
+- Reseller onboarding portal.
+- Reseller-created store.
+
+Store attribution record must include:
+
+- Reseller.
+- Program.
+- Store/Tenant ID.
+- Referral source.
+- Package.
+- Attribution timestamp.
+- Qualification period.
+- Commission rule.
+- Commission snapshot.
+
+
+18. COMMISSION MODELS
+------------------------------------------------------------
+
+The platform must support:
+
+18.1 PERCENTAGE
+
+Example:
+
+10% of eligible commission base.
+
+18.2 FIXED
+
+Example:
+
+PKR 500 per qualifying order.
+
+18.3 TIERED
+
+Commission rate changes based on:
+
+- Monthly sales.
+- Number of orders.
+- Revenue.
+- New stores.
+- Subscription count.
+
+18.4 PRODUCT_BASED
+
+Different products may have different rates.
+
+18.5 CATEGORY_BASED
+
+Different categories may have different rates.
+
+18.6 ORDER_BASED
+
+Commission based on order-level thresholds.
+
+18.7 CUSTOMER_TYPE_BASED
+
+Different rates for:
+
+- New customer.
+- Returning customer.
+- Business customer.
+- Wholesale customer.
+
+18.8 SUBSCRIPTION_BASED
+
+Commission based on qualifying package subscription.
+
+18.9 RECURRING
+
+Recurring commission may be supported for qualifying subscriptions.
+
+18.10 HYBRID
+
+Fixed + percentage or other controlled combinations.
+
+
+19. COMMISSION BASE
+------------------------------------------------------------
+
+The program must define what amount is commissionable.
+
+Possible bases:
+
+- Product subtotal.
+- Eligible item subtotal.
+- Net sales.
+- Net sales excluding tax.
+- Net sales excluding shipping.
+- Net sales excluding discounts.
+- Net sales after discounts.
+- Subscription amount.
+- Custom configured eligible base.
+
+The default should be explicitly defined by program configuration.
+
+Taxes, shipping, payment fees, discounts, refunds, and other
+components must never be assumed.
+
+Commission calculations must use server-authoritative financial
+values.
+
+
+20. COMMISSION EXCLUSIONS
+------------------------------------------------------------
+
+Programs may exclude:
+
+- Specific products.
+- Specific categories.
+- Specific brands.
+- Digital products.
+- Services.
+- Shipping.
+- Taxes.
+- Payment fees.
+- Discounts.
+- Gift cards.
+- Store credit.
+- Refunded items.
+- Cancelled orders.
+- Fraudulent orders.
+- Employee/internal orders.
+- Test orders.
+
+Exclusion rules must be deterministic and auditable.
+
+
+21. COMMISSION LIFECYCLE
+------------------------------------------------------------
+
+Commission states:
+
+- CALCULATED.
+- PENDING.
+- HELD.
+- APPROVED.
+- REJECTED.
+- REVERSED.
+- PARTIALLY_REVERSED.
+- PAYABLE.
+- PAYOUT_PENDING.
+- PAID.
+- CANCELLED.
+- EXPIRED.
+
+Typical lifecycle:
+
+QUALIFIED
+→ CALCULATED
+→ PENDING
+→ HOLD PERIOD
+→ APPROVED
+→ PAYABLE
+→ PAYOUT_PENDING
+→ PAID
+
+Refunds, returns, chargebacks, fraud, or cancellation may trigger:
+
+APPROVED
+→ REVERSED
+
+or:
+
+PAID
+→ RECOVERY_REQUIRED.
+
+
+22. COMMISSION HOLD PERIOD
+------------------------------------------------------------
+
+Programs may define a hold period to protect against:
+
+- Returns.
+- Refunds.
+- Chargebacks.
+- Payment reversals.
+- COD delivery failures.
+- Fraud investigations.
+
+Hold period may be configured in days.
+
+The hold period must use the applicable store/platform timezone.
+
+
+23. RETURNS, REFUNDS AND REVERSALS
+------------------------------------------------------------
+
+Commission must be recalculated or reversed when the underlying
+qualifying transaction changes.
+
+Examples:
+
+Full refund:
+- Full commission reversal.
+
+Partial refund:
+- Proportional or rule-based commission reversal.
+
+Returned product:
+- Reverse commission for returned eligible item.
+
+Cancelled order:
+- Remove or reverse commission depending on lifecycle state.
+
+Chargeback:
+- Mark affected commission for reversal/recovery.
+
+Historical commission records must remain auditable.
+
+
+24. COD QUALIFICATION
+------------------------------------------------------------
+
+For Cash on Delivery orders, the program may require:
+
+- Order delivered.
+- Payment collected.
+- Return window passed.
+
+A COD order must not automatically become payable merely because
+the order was created.
+
+
+25. SUBSCRIPTION / RECURRING COMMISSIONS
+------------------------------------------------------------
+
+For platform package referrals, recurring commissions may be
+supported.
+
+The system must distinguish:
+
+- Initial subscription commission.
+- Renewal commission.
+- Upgrade commission.
+- Downgrade adjustment.
+- Cancellation.
+- Failed renewal.
+- Refund.
+- Chargeback.
+
+Recurring commission must be controlled by explicit program rules.
+
+
+26. RESELLER PRICING
+------------------------------------------------------------
+
+Platform resellers may receive:
+
+- Wholesale package pricing.
+- Fixed reseller discount.
+- Percentage discount.
+- Tier-based pricing.
+- Volume pricing.
+- Promotional reseller pricing.
+
+Reseller pricing must be separate from public package pricing.
+
+The server must calculate reseller price.
+
+Clients must not submit an arbitrary reseller price.
+
+
+27. RESELLER DISCOUNTS
+------------------------------------------------------------
+
+Reseller discount rules may include:
+
+- Package-specific discount.
+- Quantity-based discount.
+- Monthly volume discount.
+- Annual volume discount.
+- Campaign discount.
+- Tier discount.
+
+Rules must define whether discounts stack.
+
+Commercial pricing must remain centrally controlled.
+
+
+28. RESELLER STORE PROVISIONING
+------------------------------------------------------------
+
+Authorized resellers may provision stores if entitled.
+
+Provisioning flow:
+
+RESELLER
+→ SELECT PACKAGE
+→ APPLY AUTHORIZED RESELLER PRICE
+→ CREATE STORE REQUEST
+→ VALIDATE RESELLER
+→ VALIDATE PACKAGE
+→ VALIDATE ENTITLEMENTS
+→ CREATE TENANT
+→ ASSIGN OWNER
+→ APPLY PACKAGE
+→ CREATE DEFAULT CONFIGURATION
+→ RECORD RESELLER ATTRIBUTION
+→ ACTIVATE/ONBOARD STORE
+
+Store provisioning must delegate actual tenant creation to
+Module 03.
+
+Subscription/package authority remains with Module 04.
+
+Billing authority remains with Module 29.
+
+
+29. RESELLER STORE OWNERSHIP
+------------------------------------------------------------
+
+The reseller must not automatically become the legal or permanent
+owner of the customer's store.
+
+Store ownership and reseller relationship must remain separate.
+
+The platform must support:
+
+- Customer-owned store.
+- Reseller-managed store.
+- Agency-managed store.
+- Platform-managed store.
+
+Ownership transfer must be governed by Module 03 and Module 02.
+
+
+30. RESELLER MANAGEMENT ACCESS
+------------------------------------------------------------
+
+A reseller may receive limited delegated access to stores.
+
+Possible permissions:
+
+- View store status.
+- View package.
+- Assist onboarding.
+- Configure allowed settings.
+- View reseller attribution.
+- View commercial data authorized by policy.
+- Submit support requests.
+
+A reseller must not automatically receive:
+
+- Customer private data.
+- Payment credentials.
+- Platform secrets.
+- Unrelated tenant data.
+- Full Super Admin privileges.
+
+Delegated access must be time-bound and auditable where applicable.
+
+
+31. SUB-RESELLER FOUNDATION
+------------------------------------------------------------
+
+Future support may include:
+
+RESELLER
+→ SUB-RESELLER
+→ CUSTOMER STORE
+
+Requirements:
+
+- Hierarchical partner relationship.
+- Commission split rules.
+- Maximum depth.
+- Platform approval.
+- Visibility boundaries.
+- Payout responsibility.
+- Fraud controls.
+- Termination handling.
+
+No recursive unlimited hierarchy.
+
+
+32. COMMISSION SPLIT
+------------------------------------------------------------
+
+Future programs may support controlled commission splitting.
+
+Example:
+
+Platform: 5%
+Master Reseller: 3%
+Sub-Reseller: 2%
+
+The final financial rules must be explicitly configured.
+
+Total commission must not exceed configured program limits.
+
+Split calculations must use immutable snapshots.
+
+
+33. PAYOUT ENGINE
+------------------------------------------------------------
+
+Payouts are separate from commissions.
+
+A payout may aggregate multiple payable commissions.
+
+Payout fields:
+
+- Payout ID.
+- Affiliate/reseller ID.
+- Program ID.
+- Tenant ID where applicable.
+- Currency.
+- Gross commission.
+- Reversals.
+- Adjustments.
+- Fees.
+- Net payout.
+- Minimum threshold.
+- Payment method.
+- Status.
+- Requested date.
+- Approved date.
+- Paid date.
+- External transaction ID.
+
+
+34. PAYOUT STATES
+------------------------------------------------------------
+
+Payout states:
+
+- DRAFT.
+- ELIGIBILITY_CHECK.
+- PENDING_APPROVAL.
+- APPROVED.
+- PROCESSING.
+- PAID.
+- FAILED.
+- CANCELLED.
+- REVERSED.
+- RECONCILIATION_REQUIRED.
+
+
+35. PAYOUT THRESHOLD
+------------------------------------------------------------
+
+Programs may define minimum payout thresholds.
+
+Example:
+
+PKR 5,000 minimum payable balance.
+
+Thresholds may vary by:
+
+- Program.
+- Currency.
+- Affiliate type.
+- Reseller tier.
+
+Below-threshold commissions remain payable balance unless
+program rules specify expiration or another valid treatment.
+
+
+36. PAYOUT METHODS
+------------------------------------------------------------
+
+Foundation support may include:
+
+- Bank transfer.
+- Local bank account.
+- Digital wallet.
+- Platform balance.
+- Manual payout.
+- Future automated payment provider.
+
+Payment credentials must be securely stored or delegated to a
+compliant payment/payout provider.
+
+Raw sensitive financial credentials must never be exposed to clients.
+
+
+37. PAYOUT APPROVAL
+------------------------------------------------------------
+
+Payout approval may require:
+
+- Minimum threshold.
+- Affiliate status ACTIVE.
+- Compliance requirements.
+- Valid payout profile.
+- No unresolved fraud hold.
+- No unresolved chargeback exposure.
+- No suspended program.
+- No duplicate payout.
+- Currency compatibility.
+
+Manual approval must require appropriate permissions and audit logs.
+
+
+38. PAYOUT RECONCILIATION
+------------------------------------------------------------
+
+Payout reconciliation must compare:
+
+- Commission records.
+- Payout records.
+- Payment/payout provider records.
+- External transaction IDs.
+- Internal totals.
+
+Reconciliation states:
+
+- MATCHED.
+- PENDING.
+- MISMATCH.
+- PROVIDER_ONLY.
+- INTERNAL_ONLY.
+- FAILED.
+- RESOLVED.
+
+Never mark a payout as successfully paid solely from a client-side
+confirmation.
+
+
+39. NEGATIVE BALANCE / RECOVERY
+------------------------------------------------------------
+
+If reversals exceed available commission balance, the system may
+create a negative payable balance subject to program policy.
+
+Possible recovery methods:
+
+- Offset future commissions.
+- Manual recovery.
+- Reseller account adjustment.
+- Contractual recovery workflow.
+
+Negative balances must be explicitly visible and auditable.
+
+
+40. FRAUD AND ABUSE PROTECTION
+------------------------------------------------------------
+
+The system must detect or prevent:
+
+- Self-referrals.
+- Self-purchases.
+- Duplicate customer identities.
+- Duplicate affiliate accounts.
+- Fake orders.
+- Test orders.
+- Repeated refund abuse.
+- Coupon abuse.
+- Referral spam.
+- Click flooding.
+- Bot traffic.
+- Automated account creation.
+- Fake store provisioning.
+- Payment fraud.
+- Chargeback abuse.
+- Cookie stuffing.
+- Attribution manipulation.
+- Referral hijacking.
+- Cross-tenant attribution attacks.
+- Commission farming.
+- Reseller account sharing.
+
+
+41. SELF-REFERRAL RULES
+------------------------------------------------------------
+
+Programs must define self-referral policy.
+
+Signals may include:
+
+- Same user.
+- Same customer identity.
+- Same verified email.
+- Same phone.
+- Same payout identity where legally appropriate.
+- Same business entity.
+- Same payment instrument where appropriate and lawful.
+- Same store owner.
+- Same device/IP signals where permitted.
+
+Signals are risk indicators, not automatic proof of fraud unless
+program policy explicitly says so.
+
+False-positive handling must exist.
+
+
+42. FRAUD HOLD
+------------------------------------------------------------
+
+Potentially suspicious commissions may enter:
+
+FRAUD_REVIEW.
+
+Fraud review must support:
+
+- Reason.
+- Evidence references.
+- Reviewer.
+- Decision.
+- Notes.
+- Timestamp.
+- Commission impact.
+
+Possible decisions:
+
+- RELEASE.
+- HOLD.
+- REVERSE.
+- REJECT.
+- ESCALATE.
+
+
+43. AFFILIATE DASHBOARD
+------------------------------------------------------------
+
+Affiliate dashboard may show:
+
+- Profile.
+- Program memberships.
+- Status.
+- Referral links.
+- Referral codes.
+- Campaigns.
+- Clicks.
+- Visits.
+- Leads.
+- Customers.
+- Orders.
+- Revenue attributed.
+- Commission pending.
+- Commission approved.
+- Commission payable.
+- Commission paid.
+- Reversals.
+- Payout history.
+- Conversion rate.
+- Top campaigns.
+- Top products.
+- Performance trends.
+
+Data must be scoped to the affiliate's authorized programs.
+
+
+44. RESELLER DASHBOARD
+------------------------------------------------------------
+
+Reseller dashboard may show:
+
+- Reseller tier.
+- Package pricing.
+- Customers referred.
+- Stores referred.
+- Stores provisioned.
+- Active stores.
+- Package distribution.
+- Revenue attributed.
+- Commission.
+- Recurring commission.
+- Pending payouts.
+- Paid payouts.
+- Referral links.
+- Campaigns.
+- Reseller resources.
+- Support requests.
+- Usage limits.
+
+Commercially sensitive platform data must remain restricted.
+
+
+45. STORE OWNER AFFILIATE DASHBOARD
+------------------------------------------------------------
+
+Store administrators may view:
+
+- Affiliate list.
+- Affiliate status.
+- Referral activity.
+- Orders attributed.
+- Revenue attributed.
+- Commission liability.
+- Pending approvals.
+- Payout history.
+- Top campaigns.
+- Fraud flags.
+- Program configuration.
+
+A store must never see another tenant's affiliate data.
+
+
+46. SUPER ADMIN DASHBOARD
+------------------------------------------------------------
+
+Umar Techy Super Admin may manage:
+
+- All platform programs.
+- Tenant affiliate programs where authorized.
+- Reseller accounts.
+- Affiliate approvals.
+- Program configuration.
+- Commission rules.
+- Payout approvals.
+- Fraud reviews.
+- Reconciliation.
+- Reseller tiers.
+- Package pricing.
+- Store provisioning permissions.
+- Partner hierarchy.
+- Program health.
+- Usage.
+- Revenue.
+- Liability.
+- Audit logs.
+
+Access must be permission-controlled.
+
+
+47. PROGRAM TERMS
+------------------------------------------------------------
+
+Each program must support versioned terms.
+
+Terms may define:
+
+- Eligibility.
+- Commission rules.
+- Attribution model.
+- Attribution window.
+- Hold period.
+- Reversal rules.
+- Payout threshold.
+- Payout method.
+- Prohibited traffic.
+- Prohibited promotion.
+- Coupon rules.
+- Reseller restrictions.
+- Compliance requirements.
+- Termination conditions.
+
+Accepted terms must be recorded with:
+
+- Version.
+- Timestamp.
+- Program.
+- Affiliate/reseller.
+- IP/device metadata where legally appropriate.
+
+
+48. MARKETING INTEGRATION
+------------------------------------------------------------
+
+Integration with Module 15 must support:
+
+- Affiliate campaign content.
+- Referral links.
+- Promotional assets.
+- Email campaigns.
+- SMS campaigns.
+- WhatsApp campaigns.
+- Push campaigns.
+- Landing pages.
+- Coupon campaigns.
+
+Marketing consent remains governed by Module 10 and Module 15.
+
+Affiliate tracking must not bypass communication consent.
+
+
+49. PROMOTION INTEGRATION
+------------------------------------------------------------
+
+Integration with Module 14 must support:
+
+- Affiliate coupons.
+- Referral discounts.
+- Affiliate-specific promotions.
+- Campaign discounts.
+- Product/category eligibility.
+- Customer eligibility.
+- Usage limits.
+
+Module 14 remains authoritative for promotion calculation.
+
+
+50. CUSTOMER INTEGRATION
+------------------------------------------------------------
+
+Integration with Module 10 must support:
+
+- Referred customer association.
+- Affiliate attribution.
+- Referral history.
+- Customer eligibility.
+- Referral rewards.
+- Fraud signals.
+- Privacy preferences.
+
+Affiliate users must not automatically gain customer profile access.
+
+
+51. ORDER INTEGRATION
+------------------------------------------------------------
+
+Integration with Module 09 must support:
+
+- Order attribution.
+- Commission creation.
+- Commission snapshot.
+- Cancellation handling.
+- Return/refund impact.
+- Chargeback impact.
+- Historical reporting.
+
+Module 09 remains authoritative for order state and financial
+order snapshots.
+
+
+52. BILLING / SUBSCRIPTION INTEGRATION
+------------------------------------------------------------
+
+Integration with Modules 04 and 29 must support:
+
+- Package referral.
+- Subscription attribution.
+- Reseller pricing.
+- Recurring commissions.
+- Renewal commissions.
+- Upgrade/downgrade handling.
+- Subscription cancellation.
+- Billing reconciliation.
+
+Module 04 remains authoritative for entitlements.
+
+Module 29 remains authoritative for invoices, billing, renewals,
+and subscription financial records.
+
+
+53. ANALYTICS INTEGRATION
+------------------------------------------------------------
+
+Integration with Module 22 must provide:
+
+- Clicks.
+- Visits.
+- Conversions.
+- Orders.
+- Revenue attributed.
+- Commission.
+- Payouts.
+- Conversion rates.
+- Campaign performance.
+- Reseller performance.
+- Store acquisition performance.
+
+Analytics must not become the financial source of truth.
+
+
+54. PAYMENT INTEGRATION
+------------------------------------------------------------
+
+Integration with Module 12 may support payout providers in the
+future.
+
+Payment provider credentials must be isolated and encrypted.
+
+Payment success must be confirmed by authoritative provider state.
+
+Affiliate payout logic must not interfere with customer checkout
+payments.
+
+
+55. SHIPPING / FULFILLMENT IMPACT
+------------------------------------------------------------
+
+Shipping status may affect commission qualification when the
+program requires:
+
+- Delivery.
+- Successful delivery.
+- Return-window completion.
+
+Module 13 remains authoritative for shipment status.
+
+
+56. INVENTORY IMPACT
+------------------------------------------------------------
+
+Affiliate commission must never modify inventory directly.
+
+Order and fulfillment modules remain authoritative.
+
+Inventory changes may indirectly affect qualification through order
+status and fulfillment outcomes.
+
+
+57. NOTIFICATION INTEGRATION
+------------------------------------------------------------
+
+Module 21 may deliver:
+
+- Affiliate approval.
+- Program invitation.
+- Referral conversion.
+- Commission created.
+- Commission approved.
+- Commission reversed.
+- Payout approved.
+- Payout paid.
+- Fraud hold.
+- Reseller store provisioned.
+- Program suspension.
+
+Marketing messages must remain separated from transactional/system
+notifications.
+
+
+58. DOMAIN / STOREFRONT INTEGRATION
+------------------------------------------------------------
+
+Referral links must work with:
+
+- Platform domains.
+- Tenant subdomains.
+- Custom domains.
+- PWA.
+- Future mobile applications.
+
+Domain resolution remains owned by Module 19.
+
+Referral attribution must occur after safe tenant resolution.
+
+
+59. API
+------------------------------------------------------------
+
+The module must expose secure APIs for:
+
+- Programs.
+- Affiliate accounts.
+- Reseller accounts.
+- Referral links.
+- Referral codes.
+- Campaigns.
+- Attribution.
+- Commissions.
+- Payouts.
+- Fraud reviews.
+- Store provisioning requests.
+- Program analytics.
+- Partner hierarchy.
+
+APIs must support:
+
+- Authentication.
+- Authorization.
+- Tenant scoping.
+- Pagination.
+- Filtering.
+- Sorting.
+- Rate limiting.
+- Idempotency.
+- Audit logging.
+- Validation.
+
+
+60. WEBHOOKS
+------------------------------------------------------------
+
+The module may expose or consume webhooks for:
+
+- Order events.
+- Payment events.
+- Refund events.
+- Subscription events.
+- Store creation events.
+- Store status events.
+- Payout provider events.
+
+Webhook requirements:
+
+- Signature verification.
+- Timestamp validation.
+- Replay protection.
+- Idempotency.
+- Tenant validation.
+- Event versioning.
+- Retry handling.
+- Dead-letter handling.
+
+
+61. EVENT MODEL
+------------------------------------------------------------
+
+Important events include:
+
+- AffiliateInvited.
+- AffiliateApproved.
+- AffiliateSuspended.
+- ProgramActivated.
+- ProgramPaused.
+- ReferralCreated.
+- ReferralClicked.
+- ReferralAttributed.
+- CustomerAttributed.
+- OrderAttributed.
+- CommissionCalculated.
+- CommissionHeld.
+- CommissionApproved.
+- CommissionReversed.
+- CommissionPayable.
+- PayoutCreated.
+- PayoutApproved.
+- PayoutPaid.
+- PayoutFailed.
+- FraudFlagRaised.
+- FraudReviewCompleted.
+- ResellerApproved.
+- StoreProvisioningRequested.
+- StoreProvisioned.
+- ResellerTierChanged.
+
+
+62. ASYNCHRONOUS PROCESSING
+------------------------------------------------------------
+
+Background jobs should handle:
+
+- Attribution processing where appropriate.
+- Commission calculation.
+- Commission qualification.
+- Hold-period release.
+- Refund/reversal processing.
+- Payout preparation.
+- Payout reconciliation.
+- Fraud analysis.
+- Campaign statistics.
+- Usage metering.
+- Notifications.
+
+Jobs must be:
+
+- Idempotent.
+- Retryable.
+- Tenant-aware.
+- Observable.
+- Rate-limited.
+- Protected against duplicate financial effects.
+
+
+63. DATA MODEL FOUNDATION
+------------------------------------------------------------
+
+Suggested entities:
+
+- AffiliateProgram
+- AffiliateProgramVersion
+- Affiliate
+- AffiliateMembership
+- Reseller
+- ResellerTier
+- ResellerRelationship
+- ReferralLink
+- ReferralCode
+- AffiliateCampaign
+- AttributionRecord
+- AttributionEvent
+- CustomerReferral
+- OrderAttribution
+- StoreAttribution
+- CommissionRule
+- CommissionRuleVersion
+- Commission
+- CommissionAdjustment
+- CommissionReversal
+- CommissionHold
+- PayoutProfile
+- Payout
+- PayoutItem
+- PayoutTransaction
+- PayoutReconciliation
+- FraudSignal
+- FraudCase
+- FraudDecision
+- ProgramTerm
+- TermAcceptance
+- ResellerStoreProvisioningRequest
+- ResellerPriceRule
+- ResellerDiscountRule
+- PartnerResource
+- AffiliateAsset
+- AffiliateNote
+- AffiliateAuditLog
+- PartnerUsageRecord
+- AffiliateEvent
+- OutboxEvent
+
+
+64. DATA INTEGRITY
+------------------------------------------------------------
+
+Required controls:
+
+- Unique program identifiers.
+- Tenant-scoped uniqueness.
+- Unique referral codes within scope.
+- Unique active primary attribution where required.
+- Foreign key integrity.
+- Immutable commission snapshots.
+- Immutable payout transaction references.
+- Currency consistency.
+- Decimal-safe money calculations.
+- Idempotency keys.
+- Concurrency protection.
+- Transaction boundaries.
+- Audit trails.
+
+
+65. MONEY AND CURRENCY
+------------------------------------------------------------
+
+All financial amounts must use safe decimal arithmetic.
+
+Never use floating-point arithmetic for monetary calculations.
+
+Every financial record must include:
+
+- Amount.
+- Currency.
+- Precision policy.
+- Calculation basis where appropriate.
+
+Cross-currency commission must require explicit conversion rules.
+
+Do not silently convert currencies.
+
+
+66. COMMISSION CALCULATION ENGINE
+------------------------------------------------------------
+
+Calculation pipeline:
+
+1. Resolve program.
+2. Resolve affiliate/reseller.
+3. Resolve attribution.
+4. Validate program status.
+5. Validate affiliate status.
+6. Validate order/subscription/store qualification.
+7. Resolve applicable commission rule.
+8. Resolve commission base.
+9. Apply exclusions.
+10. Apply caps/floors if configured.
+11. Calculate commission.
+12. Apply tier/split rules if applicable.
+13. Create immutable snapshot.
+14. Create commission record.
+15. Emit event.
+16. Schedule qualification/hold handling.
+
+Every calculation must be reproducible from stored snapshots.
+
+
+67. COMMISSION CAPS AND FLOORS
+------------------------------------------------------------
+
+Programs may define:
+
+- Maximum commission per order.
+- Maximum commission per customer.
+- Maximum commission per month.
+- Maximum commission per campaign.
+- Minimum commission.
+- Maximum recurring duration.
+
+These controls must be server-enforced.
+
+
+68. ATTRIBUTION CONFLICTS
+------------------------------------------------------------
+
+When multiple affiliates claim the same conversion, the engine must
+apply deterministic rules.
+
+Possible rules:
+
+- Last valid touch.
+- First valid touch.
+- Coupon code priority.
+- Explicit referral code priority.
+- Program priority.
+- Existing customer referral ownership.
+
+Manual override must require authorization and audit logging.
+
+
+69. MANUAL ADJUSTMENTS
+------------------------------------------------------------
+
+Authorized staff may create commission adjustments.
+
+Adjustment fields:
+
+- Reason.
+- Amount.
+- Currency.
+- Reference.
+- Authorized user.
+- Timestamp.
+- Before/after balance.
+
+Manual adjustment must never silently modify original commission
+records.
+
+
+70. AFFILIATE SUSPENSION
+------------------------------------------------------------
+
+When an affiliate is suspended:
+
+- New attribution may be blocked.
+- Existing pending commissions may be held.
+- Existing approved commissions may remain subject to review.
+- Payouts may be paused.
+- Historical data remains intact.
+
+The exact effect must follow program policy.
+
+
+71. PROGRAM SUSPENSION
+------------------------------------------------------------
+
+When a program is suspended:
+
+- New referrals stop.
+- New attribution stops.
+- Existing commissions remain auditable.
+- Pending qualification continues or freezes according to policy.
+- Payouts may continue or pause according to policy.
+
+No historical records may be deleted merely because a program is
+suspended.
+
+
+72. RESELLER TERMINATION
+------------------------------------------------------------
+
+When a reseller is terminated:
+
+- New store provisioning stops.
+- New referrals stop.
+- Existing stores remain customer-owned unless contractually
+  governed otherwise.
+- Existing commission obligations remain subject to program terms.
+- Future recurring commissions follow termination rules.
+- Delegated access is revoked.
+
+
+73. STORE DELETION / ARCHIVAL IMPACT
+------------------------------------------------------------
+
+If a tenant is archived or deleted:
+
+- Affiliate program state must be preserved according to retention
+  policy.
+- Financial commission records must not be silently deleted.
+- Historical attribution must remain auditable where legally and
+  operationally required.
+- Personal data must follow privacy/retention rules.
+- Analytics and caches must be handled through their owning modules.
+
+
+74. PACKAGE ENTITLEMENTS
+------------------------------------------------------------
+
+Affiliate/reseller features must integrate with Module 04.
+
+Example entitlement keys:
+
+- affiliate.basic
+- affiliate.advanced
+- affiliate.programs
+- affiliate.campaigns
+- affiliate.custom_commission
+- affiliate.advanced_attribution
+- affiliate.affiliate_portal
+- affiliate.bulk_management
+- affiliate.advanced_analytics
+- referral.customer_referrals
+- reseller.basic
+- reseller.advanced
+- reseller.custom_pricing
+- reseller.store_provisioning
+- reseller.multi_store_management
+- reseller.sub_reseller
+- reseller.commission_split
+- reseller.advanced_reporting
+
+Exact package mapping must be centrally configurable.
+
+
+75. USAGE LIMITS
+------------------------------------------------------------
+
+Possible limits:
+
+- Active affiliates.
+- Programs.
+- Referral links.
+- Referral codes.
+- Campaigns.
+- Monthly clicks.
+- Monthly attributed orders.
+- Monthly commissions.
+- Reseller stores.
+- Active resellers.
+- Sub-reseller depth.
+- API requests.
+- Export jobs.
+- Analytics retention.
+
+Hard and soft limits must be supported.
+
+
+76. PRIVACY
+------------------------------------------------------------
+
+The module must minimize tracking data.
+
+Requirements:
+
+- Purpose limitation.
+- Data minimization.
+- Consent integration where applicable.
+- Retention policy.
+- Anonymization foundations.
+- Export/delete request integration.
+- Access control.
+- Sensitive payout data protection.
+- Auditability.
+
+Affiliate tracking must not be treated as permission to collect
+unlimited customer data.
+
+
+77. SECURITY
+------------------------------------------------------------
+
+Security requirements include:
+
+- Tenant isolation.
+- RBAC.
+- Secure referral token generation.
+- Signed/validated attribution data.
+- Open redirect protection.
+- Coupon abuse protection.
+- Rate limiting.
+- Bot protection.
+- Session security.
+- CSRF protection where applicable.
+- XSS protection.
+- SQL injection protection.
+- SSRF protection.
+- Webhook verification.
+- Replay protection.
+- Idempotency.
+- Secrets encryption.
+- Payout credential protection.
+- Audit logs.
+- Privileged action confirmation.
+- Secure exports.
+- Abuse detection.
+
+
+78. CROSS-TENANT SECURITY
+------------------------------------------------------------
+
+A referral from Tenant A must never:
+
+- Attribute an order from Tenant B without an explicit platform-level
+  program rule.
+- Read Tenant B customer data.
+- Read Tenant B commission data.
+- Access Tenant B payout data.
+- Access Tenant B campaigns.
+- Modify Tenant B program configuration.
+
+Tenant identity must be part of attribution validation.
+
+
+79. CACHE RULES
+------------------------------------------------------------
+
+Cached data must include appropriate tenant/program context.
+
+Never use global cache keys for tenant-owned affiliate state.
+
+Cache invalidation must occur when:
+
+- Program changes.
+- Affiliate status changes.
+- Commission rules change.
+- Referral code changes.
+- Reseller tier changes.
+- Store status changes.
+
+
+80. SEARCH AND INDEXING
+------------------------------------------------------------
+
+Search/indexes may support:
+
+- Affiliate search.
+- Reseller search.
+- Campaign search.
+- Referral code search.
+- Commission search.
+- Payout search.
+- Fraud case search.
+
+Indexes must be tenant-aware.
+
+Sensitive payout/compliance information must not be unnecessarily
+indexed into broadly accessible search systems.
+
+
+81. EXPORTS
+------------------------------------------------------------
+
+Authorized users may export:
+
+- Affiliate lists.
+- Referral activity.
+- Attribution reports.
+- Commission reports.
+- Payout reports.
+- Reseller reports.
+
+Exports must enforce:
+
+- RBAC.
+- Tenant scope.
+- Date limits.
+- Data minimization.
+- Secure file handling.
+- Audit logging.
+- Expiration.
+
+
+82. BACKUP AND RECOVERY
+------------------------------------------------------------
+
+Module 23 must protect:
+
+- Program configuration.
+- Affiliate accounts.
+- Referral data.
+- Attribution records.
+- Commission records.
+- Payout records.
+- Reseller relationships.
+- Fraud cases.
+- Terms and acceptance.
+
+Restore must not:
+
+- Re-credit already paid commissions.
+- Duplicate payouts.
+- Reprocess old referrals incorrectly.
+- Re-trigger historical payout webhooks.
+- Double-create store provisioning.
+
+Restore workflows must use idempotent recovery logic.
+
+
+83. MONITORING
+------------------------------------------------------------
+
+Module 24 must monitor:
+
+- Referral volume.
+- Attribution rate.
+- Conversion rate.
+- Commission calculation failures.
+- Payout failures.
+- Reconciliation mismatches.
+- Fraud signals.
+- Queue backlog.
+- Attribution latency.
+- API latency.
+- Store provisioning failures.
+- Reseller usage.
+- Program limits.
+
+
+84. OBSERVABILITY
+------------------------------------------------------------
+
+Important telemetry:
+
+- Correlation ID.
+- Tenant ID.
+- Program ID.
+- Affiliate ID where permitted.
+- Reseller ID where permitted.
+- Order ID.
+- Commission ID.
+- Payout ID.
+- Event ID.
+- Job ID.
+
+Sensitive personal and financial information must be redacted.
+
+
+85. AUDIT LOGGING
+------------------------------------------------------------
+
+Audit events must cover:
+
+- Program creation/update.
+- Rule changes.
+- Affiliate approval.
+- Affiliate suspension.
+- Referral code creation.
+- Attribution override.
+- Commission adjustment.
+- Commission reversal.
+- Fraud decision.
+- Payout approval.
+- Payout cancellation.
+- Reseller tier change.
+- Reseller pricing change.
+- Store provisioning.
+- Delegated access.
+- Terms acceptance.
+
+Audit records must be append-only.
+
+
+86. PERFORMANCE
+------------------------------------------------------------
+
+The module must scale for:
+
+- Large click volume.
+- Large referral volume.
+- High-order stores.
+- Large affiliate programs.
+- Large reseller networks.
+
+Use:
+
+- Indexed attribution records.
+- Async processing.
+- Aggregated analytics.
+- Efficient event processing.
+- Partitioning where necessary.
+- Rate limiting.
+- Backpressure.
+- Queue isolation.
+
+High-volume clicks must not block checkout.
+
+
+87. CHECKOUT PERFORMANCE RULE
+------------------------------------------------------------
+
+Affiliate attribution must add minimal latency to checkout.
+
+The checkout path must not depend on slow analytics processing.
+
+Critical order creation must continue using authoritative order,
+payment, inventory, and checkout services.
+
+
+88. RESILIENCE
+------------------------------------------------------------
+
+If affiliate analytics is unavailable:
+
+- Checkout must continue.
+- Order creation must continue.
+- Payment must continue.
+- Inventory must continue.
+
+If commission processing is temporarily unavailable:
+
+- Qualifying order events must be safely persisted.
+- Commission processing must resume idempotently.
+
+If payout provider is unavailable:
+
+- Payout must remain pending/failed safely.
+- No duplicate payout should occur.
+
+
+89. FRAUD SYSTEM RESILIENCE
+------------------------------------------------------------
+
+Fraud scoring failure must not automatically destroy valid
+transactions unless configured as a hard security block.
+
+The system must support:
+
+- Soft risk flag.
+- Manual review.
+- Temporary hold.
+- Hard block for defined high-confidence conditions.
+
+
+90. ADMIN APPROVAL WORKFLOWS
+------------------------------------------------------------
+
+Approval may be required for:
+
+- Affiliate onboarding.
+- Reseller onboarding.
+- Program activation.
+- Custom commission rates.
+- Manual attribution override.
+- Large commission adjustment.
+- Payout release.
+- Reseller store provisioning.
+- Sub-reseller activation.
+
+Approval requirements must be package/program configurable.
+
+
+91. AFFILIATE ONBOARDING
+------------------------------------------------------------
+
+Suggested flow:
+
+INVITATION
+→ ACCOUNT CREATION
+→ TERMS ACCEPTANCE
+→ PROFILE
+→ PAYOUT PROFILE
+→ PROGRAM APPROVAL
+→ TRAINING/RESOURCES
+→ ACTIVE
+
+Optional KYC/compliance checks may be inserted according to
+jurisdiction, business policy, and program requirements.
+
+
+92. RESELLER ONBOARDING
+------------------------------------------------------------
+
+Suggested flow:
+
+APPLICATION
+→ BUSINESS PROFILE
+→ AGREEMENT
+→ TERMS
+→ COMPLIANCE CHECKS IF REQUIRED
+→ APPROVAL
+→ RESELLER TIER
+→ PRICING ASSIGNMENT
+→ PORTAL ACCESS
+→ ACTIVE
+
+
+93. PARTNER RESOURCES
+------------------------------------------------------------
+
+The module may provide:
+
+- Banners.
+- Product images.
+- Marketing copy.
+- Referral URLs.
+- Campaign assets.
+- Product feeds.
+- Package brochures.
+- Training documents.
+- Brand guidelines.
+
+Resource access must be controlled by program and tenant.
+
+
+94. PRODUCT FEEDS
+------------------------------------------------------------
+
+Future affiliate programs may support product feeds.
+
+Feed requirements:
+
+- Tenant isolation.
+- Product eligibility.
+- Price snapshot/current price policy.
+- Stock visibility policy.
+- Image URLs.
+- Product URLs.
+- Tracking links.
+- Update schedule.
+- Authentication where required.
+
+Private product/customer information must never be exposed.
+
+
+95. AFFILIATE LINK HEALTH
+------------------------------------------------------------
+
+The system should detect:
+
+- Broken destination.
+- Expired campaign.
+- Disabled product.
+- Disabled store.
+- Invalid referral code.
+- Suspended affiliate.
+- Removed domain.
+
+Affiliate links should fail safely and avoid open redirects.
+
+
+96. RESELLER STORE ONBOARDING AUTOMATION
+------------------------------------------------------------
+
+The reseller portal may support:
+
+- Store creation wizard.
+- Package selection.
+- Store identity.
+- Domain setup request.
+- Theme selection.
+- Basic configuration.
+- Owner invitation.
+- Subscription creation.
+- Onboarding checklist.
+
+Actual domain provisioning remains Module 19 authority.
+
+Infrastructure execution remains Module 20 authority.
+
+
+97. API DEVELOPER MODEL
+------------------------------------------------------------
+
+Future external partner APIs may allow:
+
+- Referral creation.
+- Campaign retrieval.
+- Attribution status.
+- Commission status.
+- Payout status.
+- Store provisioning request.
+- Product feed retrieval.
+
+External API access must require:
+
+- OAuth/API key.
+- Scopes.
+- Rate limits.
+- Tenant binding.
+- Versioning.
+- Audit logs.
+
+
+98. THIRD-PARTY TRACKING INTEGRATION
+------------------------------------------------------------
+
+Future integrations may support:
+
+- Advertising platforms.
+- Analytics providers.
+- Affiliate networks.
+- CRM.
+- Marketing platforms.
+
+External tracking must not override Core attribution authority.
+
+External identifiers should be stored as references.
+
+
+99. COMPLIANCE FOUNDATION
+------------------------------------------------------------
+
+The module must provide configurable foundations for:
+
+- Tax information.
+- KYC information.
+- Business verification.
+- Payout documentation.
+- Terms acceptance.
+- Record retention.
+- Geographic eligibility.
+- Restricted jurisdictions.
+
+Do not hard-code legal conclusions.
+
+Actual legal/tax requirements must be configured according to
+applicable jurisdiction and professional/legal guidance.
+
+
+100. TAX / WITHHOLDING FOUNDATION
+------------------------------------------------------------
+
+Future payout processing may support:
+
+- Tax profile.
+- Tax classification.
+- Withholding rule.
+- Tax document reference.
+- Gross payout.
+- Withholding amount.
+- Net payout.
+
+Tax calculation authority should be delegated to a dedicated
+tax/compliance service when required.
+
+
+101. ACCOUNTING INTEGRATION FOUNDATION
+------------------------------------------------------------
+
+Future integration may support:
+
+- Commission expense.
+- Affiliate payable.
+- Reseller payable.
+- Payout.
+- Reversal.
+- Adjustment.
+- Fees.
+
+Accounting integration must not become the source of truth for
+affiliate attribution.
+
+
+102. FINANCIAL RECONCILIATION
+------------------------------------------------------------
+
+The system must support reconciliation among:
+
+- Orders.
+- Refunds.
+- Payments.
+- Subscriptions.
+- Commissions.
+- Payouts.
+- External payout providers.
+
+Differences must be surfaced rather than silently corrected.
+
+
+103. REPORTING
+------------------------------------------------------------
+
+Required reports:
+
+- Affiliate performance.
+- Reseller performance.
+- Referral funnel.
+- Attribution report.
+- Commission liability.
+- Commission approval.
+- Commission reversal.
+- Payout report.
+- Payout reconciliation.
+- Program performance.
+- Campaign performance.
+- Store acquisition.
+- Customer referral performance.
+- Fraud/abuse report.
+- Reseller store portfolio.
+
+
+104. KEY METRICS
+------------------------------------------------------------
+
+Metrics include:
+
+- Clicks.
+- Unique visitors.
+- Referral sessions.
+- Leads.
+- Referred customers.
+- Attributed orders.
+- Attributed revenue.
+- Conversion rate.
+- Commission generated.
+- Commission approved.
+- Commission reversed.
+- Commission paid.
+- Payout pending.
+- Average order value.
+- Customer acquisition cost foundation.
+- Reseller store acquisition.
+- Active referred stores.
+- Recurring subscription revenue attributed.
+
+
+105. ATTRIBUTION ANALYTICS RULE
+------------------------------------------------------------
+
+Analytics may report attribution outcomes but must not independently
+recalculate authoritative commissions.
+
+Commission records remain authoritative for financial reporting.
+
+
+106. CUSTOMER REFERRAL REWARDS
+------------------------------------------------------------
+
+Referral programs may reward:
+
+- Referrer.
+- Referred customer.
+- Both.
+
+Reward types:
+
+- Coupon.
+- Store credit.
+- Loyalty points.
+- Fixed reward.
+- Percentage reward.
+
+Reward issuance must be idempotent and linked to the qualifying
+event.
+
+
+107. REFERRAL REWARD ABUSE
+------------------------------------------------------------
+
+Controls must include:
+
+- New-customer qualification.
+- Minimum order value.
+- Delivery qualification.
+- Refund protection.
+- Usage limits.
+- Self-referral detection.
+- Account duplication detection.
+- Reward reversal.
+
+
+108. PROGRAM VERSIONING
+------------------------------------------------------------
+
+Published program versions must be immutable.
+
+Changes create a new version.
+
+Historical commissions must reference the version used for their
+calculation.
+
+
+109. CONFIGURATION HIERARCHY
+------------------------------------------------------------
+
+Configuration precedence:
+
+Platform Defaults
+→ Program Defaults
+→ Program Version
+→ Affiliate/Reseller Tier
+→ Campaign Override
+→ Product/Category Rule
+→ Explicit Authorized Override
+
+The hierarchy must be deterministic.
+
+
+110. FEATURE FLAGS VS COMMERCIAL ENTITLEMENTS
+------------------------------------------------------------
+
+Feature flags control technical rollout.
+
+Commercial entitlements control customer access.
+
+Do not use feature flags as the only commercial authorization
+mechanism.
+
+
+111. ACCESS CONTROL
+------------------------------------------------------------
+
+Minimum permission categories:
+
+- affiliate.view
+- affiliate.create
+- affiliate.update
+- affiliate.approve
+- affiliate.suspend
+- affiliate.manage_program
+- affiliate.manage_rules
+- affiliate.manage_campaigns
+- affiliate.view_commissions
+- affiliate.adjust_commissions
+- affiliate.approve_payouts
+- affiliate.view_payouts
+- affiliate.manage_fraud
+- reseller.view
+- reseller.create
+- reseller.approve
+- reseller.manage_pricing
+- reseller.provision_store
+- reseller.manage_stores
+- reseller.manage_tiers
+- reseller.manage_sub_resellers
+- affiliate.export
+
+Permissions must be scoped by platform, program, and tenant.
+
+
+112. SUPPORT ACCESS
+------------------------------------------------------------
+
+Support staff may receive temporary scoped access.
+
+Support access must:
+
+- Be authorized.
+- Be logged.
+- Be tenant-scoped.
+- Expire.
+- Hide sensitive payout credentials.
+- Prevent unauthorized financial mutation.
+
+
+113. DATA RETENTION
+------------------------------------------------------------
+
+Retention must distinguish:
+
+- Attribution events.
+- Click events.
+- Analytics aggregates.
+- Customer referrals.
+- Commission records.
+- Payout records.
+- Fraud records.
+- Compliance records.
+
+Financial records may require longer retention than raw tracking
+events.
+
+Retention periods must be configurable according to policy and
+jurisdiction.
+
+
+114. ANONYMIZATION
+------------------------------------------------------------
+
+When privacy deletion is requested, the system must determine which
+data can be anonymized while preserving legitimate financial and
+audit obligations.
+
+Examples:
+
+- Remove unnecessary personal tracking details.
+- Preserve commission financial record.
+- Preserve payout transaction reference.
+- Replace customer identity with anonymized identifier.
+
+No deletion workflow may break financial reconciliation.
+
+
+115. DATA EXPORT / PORTABILITY
+------------------------------------------------------------
+
+Affiliate/reseller users may request authorized exports of their
+own data.
+
+Store owners may export authorized tenant affiliate data.
+
+Platform administrators may export platform-level data.
+
+Exports must be scoped, auditable, and secure.
+
+
+116. RATE LIMITING
+------------------------------------------------------------
+
+Rate limits must apply to:
+
+- Referral endpoints.
+- Referral code validation.
+- Affiliate login.
+- Reseller portal.
+- Store provisioning.
+- Commission APIs.
+- Payout APIs.
+- Fraud endpoints.
+- Export endpoints.
+
+High-volume click tracking must use efficient ingestion strategies.
+
+
+117. BOT PROTECTION
+------------------------------------------------------------
+
+Referral tracking endpoints must support:
+
+- Rate limiting.
+- Bot detection.
+- Anomaly detection.
+- IP reputation foundation.
+- User-agent analysis.
+- Token validation.
+
+Tracking protection must not block legitimate customers
+unnecessarily.
+
+
+118. IDEMPOTENCY
+------------------------------------------------------------
+
+Financially meaningful operations must be idempotent:
+
+- Commission creation.
+- Commission reversal.
+- Reward issuance.
+- Payout creation.
+- Payout submission.
+- Payout callback processing.
+- Store provisioning.
+- Reseller assignment.
+
+Repeated events must not create duplicate financial effects.
+
+
+119. CONCURRENCY
+------------------------------------------------------------
+
+Concurrency controls are required for:
+
+- Commission qualification.
+- Commission reversal.
+- Payout creation.
+- Payout approval.
+- Referral code usage.
+- Reseller store provisioning.
+- Tier qualification.
+
+Use transactions, locks, unique constraints, and idempotency keys
+as appropriate.
+
+
+120. STORE PROVISIONING SAFETY
+------------------------------------------------------------
+
+A reseller must not create duplicate stores because of:
+
+- Double-click.
+- Browser retry.
+- API retry.
+- Webhook retry.
+- Worker retry.
+
+Use idempotency keys and unique business references.
+
+
+121. PACKAGE DOWNGRADE IMPACT
+------------------------------------------------------------
+
+If a store loses affiliate/reseller entitlements:
+
+- Existing records remain intact.
+- Existing commissions remain auditable.
+- New feature usage may be restricted.
+- Historical reports remain available according to retention.
+- Existing payout obligations are not erased.
+
+Data preservation must follow Module 04 downgrade policy.
+
+
+122. TRIAL IMPACT
+------------------------------------------------------------
+
+Trial stores may receive limited affiliate/referral capabilities
+according to package entitlements.
+
+Trial restrictions must not corrupt attribution or financial data.
+
+
+123. SUSPENDED STORE IMPACT
+------------------------------------------------------------
+
+If a tenant is suspended:
+
+- New affiliate activity may stop.
+- New referrals may be blocked.
+- Existing order commissions remain auditable.
+- Payout handling follows platform policy.
+- Customer data remains protected.
+
+
+124. PWA / MOBILE SUPPORT
+------------------------------------------------------------
+
+Referral links and codes must work across:
+
+- Responsive storefront.
+- PWA.
+- Future native mobile application.
+
+Deep-link foundation may preserve referral attribution across
+approved navigation paths.
+
+
+125. OFFLINE RULE
+------------------------------------------------------------
+
+Affiliate attribution must never be finalized solely offline.
+
+Offline presentation may show referral information, but authoritative
+attribution and commission qualification require server validation.
+
+
+126. AI INTEGRATION
+------------------------------------------------------------
+
+Future AI capabilities may assist with:
+
+- Affiliate recruitment suggestions.
+- Campaign recommendations.
+- Fraud anomaly detection.
+- Reseller performance insights.
+- Content generation.
+- Product promotion suggestions.
+
+AI must never autonomously override:
+
+- Commission rules.
+- Payout authorization.
+- Tenant isolation.
+- Fraud decisions without approved controls.
+- Financial source-of-truth data.
+
+
+127. AI SAFETY
+------------------------------------------------------------
+
+AI-generated affiliate content must not:
+
+- Fabricate product claims.
+- Create unauthorized discounts.
+- Reveal customer private data.
+- Expose payout information.
+- Circumvent program restrictions.
+
+Human approval may be required for high-risk actions.
+
+
+128. MARKETPLACE INTEGRATION
+------------------------------------------------------------
+
+Module 27 may allow third-party affiliate/influencer integrations.
+
+Third-party extensions must use approved APIs.
+
+Extensions must never bypass:
+
+- Attribution authority.
+- Commission engine.
+- Payment authority.
+- Tenant isolation.
+- Security controls.
+
+
+129. HOSTING / INFRASTRUCTURE
+------------------------------------------------------------
+
+Module 20 owns:
+
+- Runtime.
+- Queues.
+- Workers.
+- Storage.
+- Cache.
+- Search.
+- Scaling.
+- Monitoring infrastructure.
+
+Module 28 owns affiliate/reseller business logic.
+
+Do not mix infrastructure responsibilities with business rules.
+
+
+130. NOTIFICATION DELIVERY RULE
+------------------------------------------------------------
+
+Module 28 determines:
+
+- Event.
+- Recipient.
+- Message purpose.
+- Required template.
+
+Module 21 determines:
+
+- Channel.
+- Provider.
+- Delivery.
+- Retry.
+- Webhook handling.
+
+
+131. ANALYTICS DATA FLOW
+------------------------------------------------------------
+
+Recommended flow:
+
+Business Event
+→ Affiliate Event
+→ Outbox
+→ Analytics Pipeline
+→ Aggregate
+→ Dashboard
+
+Financial authority remains:
+
+Order/Payment/Subscription/Commission/Payout records.
+
+
+132. OUTBOX PATTERN
+------------------------------------------------------------
+
+Financially meaningful events should use an outbox pattern where
+appropriate.
+
+Requirements:
+
+- Atomic event persistence with business transaction.
+- Idempotent publishing.
+- Retry.
+- Dead-letter handling.
+- Event versioning.
+- Tenant context.
+
+
+133. ERROR HANDLING
+------------------------------------------------------------
+
+Use normalized errors for:
+
+- Invalid referral.
+- Expired referral.
+- Invalid program.
+- Affiliate inactive.
+- Tenant unavailable.
+- Commission rule conflict.
+- Payout threshold not met.
+- Payout profile invalid.
+- Fraud hold.
+- Unauthorized action.
+- Package entitlement denied.
+- Store provisioning failure.
+
+
+134. USER EXPERIENCE
+------------------------------------------------------------
+
+Affiliate portal should prioritize:
+
+- Simple onboarding.
+- Easy link generation.
+- Clear earnings.
+- Transparent commission status.
+- Clear payout requirements.
+- Campaign discovery.
+- Performance visibility.
+
+Reseller portal should prioritize:
+
+- Package pricing.
+- Store provisioning.
+- Customer/store portfolio.
+- Commission visibility.
+- Commercial documents.
+- Support.
+
+
+135. TRANSPARENCY
+------------------------------------------------------------
+
+Affiliates/resellers should be able to understand:
+
+- Why a commission is pending.
+- Why a commission was reversed.
+- Why a payout is unavailable.
+- Which order generated a commission.
+- Which rule was applied.
+- What hold period applies.
+
+Sensitive internal fraud evidence may remain restricted.
+
+
+136. LOCALIZATION
+------------------------------------------------------------
+
+The system must support:
+
+- Urdu.
+- English.
+- RTL/LTR.
+- Store locale.
+- Platform locale.
+
+Technical identifiers remain language-neutral.
+
+
+137. CURRENCY DISPLAY
+------------------------------------------------------------
+
+Amounts must display using applicable:
+
+- Currency.
+- Locale.
+- Decimal precision.
+- Formatting rules.
+
+Stored financial values must remain normalized and precise.
+
+
+138. ACCESSIBILITY
+------------------------------------------------------------
+
+Affiliate/reseller portals must support:
+
+- Keyboard navigation.
+- Screen readers.
+- Accessible forms.
+- Clear status indicators.
+- Responsive layouts.
+- RTL support.
+- Reduced motion where applicable.
+
+
+139. SECURITY TESTING
+------------------------------------------------------------
+
+Test:
+
+- Cross-tenant access.
+- Privilege escalation.
+- Referral tampering.
+- Coupon abuse.
+- Attribution manipulation.
+- Open redirect.
+- XSS.
+- SQL injection.
+- CSRF.
+- Webhook replay.
+- Duplicate payout.
+- Duplicate commission.
+- Unauthorized store provisioning.
+- Sensitive data exposure.
+- API enumeration.
+- Rate-limit bypass.
+
+
+140. FUNCTIONAL TESTING
+------------------------------------------------------------
+
+Test:
+
+- Affiliate onboarding.
+- Reseller onboarding.
+- Program creation.
+- Program activation.
+- Referral link.
+- Referral code.
+- Attribution.
+- First-touch.
+- Last-touch.
+- Coupon attribution.
+- Commission calculation.
+- Commission hold.
+- Approval.
+- Reversal.
+- Partial refund.
+- Full refund.
+- COD qualification.
+- Subscription commission.
+- Payout.
+- Reconciliation.
+- Store provisioning.
+- Reseller pricing.
+- Tier changes.
+- Suspension.
+- Termination.
+
+
+141. CONCURRENCY TESTING
+------------------------------------------------------------
+
+Test:
+
+- Duplicate referral events.
+- Simultaneous order conversion.
+- Simultaneous payout creation.
+- Simultaneous commission approval.
+- Simultaneous reseller store provisioning.
+- Referral code race conditions.
+- Tier qualification race conditions.
+
+
+142. FAILURE TESTING
+------------------------------------------------------------
+
+Test:
+
+- Payment provider outage.
+- Payout provider outage.
+- Queue outage.
+- Worker crash.
+- Webhook duplication.
+- Webhook delay.
+- Analytics outage.
+- Database transient failure.
+- Cache outage.
+- Store suspension.
+- Program suspension.
+- Network timeout.
+
+
+143. PERFORMANCE TESTING
+------------------------------------------------------------
+
+Test:
+
+- High click volume.
+- High conversion volume.
+- Large affiliate programs.
+- Large reseller portfolios.
+- Large commission datasets.
+- High-frequency attribution events.
+- Concurrent payout processing.
+
+Ensure affiliate tracking does not degrade checkout performance.
+
+
+144. DATA RECONCILIATION TESTING
+------------------------------------------------------------
+
+Verify:
+
+Order total
+↔ Commission base
+↔ Commission
+↔ Refund/reversal
+↔ Payable balance
+↔ Payout
+↔ External payout transaction
+
+Differences must be detectable.
+
+
+145. ACCEPTANCE CRITERIA
+------------------------------------------------------------
+
+Module 28 is production-ready only when:
+
+1. Affiliate programs are tenant-safe.
+2. Platform programs are isolated from tenant data.
+3. Reseller accounts are securely managed.
+4. Referral links work safely.
+5. Referral codes are deterministic.
+6. Attribution is server-authoritative.
+7. Attribution windows work correctly.
+8. Commission rules are versioned.
+9. Commission calculations are reproducible.
+10. Refunds and returns reverse commissions correctly.
+11. COD qualification is supported.
+12. Subscription commissions are supported where enabled.
+13. Payouts are separate from commissions.
+14. Payout thresholds work.
+15. Payout reconciliation works.
+16. Fraud controls exist.
+17. Self-referral protection exists.
+18. Store provisioning is idempotent.
+19. Reseller pricing is server-controlled.
+20. Package entitlements are enforced.
+21. APIs are authenticated and authorized.
+22. Webhooks are signed and replay-protected.
+23. Financial operations are idempotent.
+24. Audit logs are complete.
+25. Privacy controls exist.
+26. Backup/restore does not duplicate financial effects.
+27. Monitoring exists.
+28. Analytics reconcile with authoritative records.
+29. Performance tests pass.
+30. Security tests pass.
+31. Cross-tenant tests pass.
+32. Failure recovery tests pass.
+33. Documentation is complete.
+34. Production configuration is validated.
+35. Rollback/recovery procedures are documented.
+
+
+146. REQUIRED DEVELOPMENT ARTIFACTS
+------------------------------------------------------------
+
+Claude must produce/update:
+
+- Module 28 implementation.
+- Database migrations.
+- Entity/model definitions.
+- API contracts.
+- Service layer.
+- Attribution engine.
+- Commission engine.
+- Payout engine.
+- Reseller provisioning integration.
+- Fraud foundations.
+- RBAC permissions.
+- Background jobs.
+- Event/outbox integration.
+- Admin UI.
+- Affiliate portal UI.
+- Reseller portal UI.
+- Tests.
+- Seed/configuration data.
+- API documentation.
+- Security documentation.
+- Operational runbook.
+- Migration notes.
+- Rollback notes.
+- Module 28 checkpoint/progress document.
+
+
+147. CLAUDE DEVELOPMENT REQUIREMENTS
+------------------------------------------------------------
+
+Claude must:
+
+1. Read the entire existing project repository.
+2. Read the Project Bible.
+3. Read URS/SRS and technical specifications.
+4. Read Modules 01–27.
+5. Identify existing architecture before modifying code.
+6. Reuse existing Core services.
+7. Never create parallel business engines unnecessarily.
+8. Respect Module ownership boundaries.
+9. Preserve existing functionality.
+10. Avoid destructive database operations.
+11. Create safe migrations.
+12. Use tenant-aware repositories/services.
+13. Add authorization before exposing endpoints.
+14. Add tests before declaring completion.
+15. Run full regression tests.
+16. Run backend build.
+17. Run web build.
+18. Run Flutter analyze/build where applicable.
+19. Run security checks.
+20. Check secrets and sensitive data exposure.
+21. Validate tenant isolation.
+22. Validate idempotency.
+23. Validate concurrency.
+24. Validate rollback behavior.
+25. Update documentation.
+26. Create a concise checkpoint.
+27. Commit only after validation.
+28. Report exact commit hash.
+29. Report migration status.
+30. Report test counts.
+31. Report warnings/errors.
+32. Report remaining known limitations.
+
+
+148. CLAUDE IMPLEMENTATION ORDER
+------------------------------------------------------------
+
+Recommended implementation sequence:
+
+PHASE A
+- Architecture review.
+- Existing module dependency mapping.
+- Database design.
+- Permission model.
+
+PHASE B
+- Program model.
+- Affiliate/reseller account model.
+- Referral links/codes.
+- Campaigns.
+
+PHASE C
+- Attribution engine.
+- Order/store/subscription attribution.
+
+PHASE D
+- Commission rule engine.
+- Commission lifecycle.
+- Refund/reversal logic.
+
+PHASE E
+- Payout engine.
+- Reconciliation.
+- Manual approval.
+
+PHASE F
+- Reseller pricing.
+- Reseller store provisioning.
+
+PHASE G
+- Fraud protection.
+- Compliance foundations.
+
+PHASE H
+- Affiliate dashboard.
+- Reseller dashboard.
+- Admin dashboard.
+
+PHASE I
+- Analytics.
+- Notifications.
+- API/webhooks.
+
+PHASE J
+- Security.
+- Performance.
+- Failure testing.
+- Full regression.
+- Production hardening.
+
+
+149. PRODUCTION READINESS
+------------------------------------------------------------
+
+Before production:
+
+- No cross-tenant leakage.
+- No duplicate commission creation.
+- No duplicate payout.
+- No duplicate store provisioning.
+- No client-authoritative financial values.
+- No unsafe referral redirects.
+- No secrets in source code.
+- No unauthorized payout access.
+- No missing audit trail for financial mutations.
+- No unresolved critical security findings.
+- All required migrations tested.
+- Backup and restore tested.
+- Queue retry behavior verified.
+- Webhook replay protection verified.
+- Monitoring configured.
+- Alerts configured.
+- Rate limits configured.
+- Fraud controls enabled.
+- Package entitlements verified.
+- Terms/versioning verified.
+- Rollback procedure documented.
+
+
+150. REQUIRED MODULE INTEGRATIONS
+------------------------------------------------------------
+
+Module 28 integrates with:
+
+Module 02 — Authentication, Users, Roles & Permissions
+Module 03 — Multi-Tenant & Store Management
+Module 04 — Subscription, Packages & Feature Entitlements
+Module 05 — Storefront
+Module 06 — Product & Catalog
+Module 07 — Category, Brand & Attribute
+Module 09 — Order Management
+Module 10 — Customer Management
+Module 11 — Cart, Wishlist & Checkout
+Module 12 — Payment Management
+Module 13 — Shipping & Delivery
+Module 14 — Discounts, Coupons & Promotions
+Module 15 — Marketing & Customer Engagement
+Module 16 — SEO & Content
+Module 19 — Domain Management
+Module 20 — Hosting & Infrastructure
+Module 21 — Notifications & Communication
+Module 22 — Reports, Analytics & Dashboard
+Module 23 — Backup, Restore & Data Protection
+Module 24 — Store Health & Monitoring
+Module 25 — PWA / Mobile Experience
+Module 26 — AI Features
+Module 27 — App / Plugin Marketplace
+Module 29 — Billing, Invoices & Renewals
+Module 30 — Umar Techy Super Admin
+Module 31 — API & Developer Platform
+Module 32 — Security, Audit & Compliance
+Module 33 — System Settings & Configuration
+Module 34 — Help, Support & Documentation
+Module 35 — Future Expansion Framework
+
+
+151. FUTURE EXPANSION
+------------------------------------------------------------
+
+The architecture should allow future:
+
+- Influencer programs.
+- Ambassador programs.
+- Creator programs.
+- Affiliate networks.
+- Multi-level reseller networks.
+- Agency partner programs.
+- Franchise partner programs.
+- Marketplace seller referrals.
+- B2B referral programs.
+- Wholesale partner programs.
+- Loyalty/referral combinations.
+- AI-assisted affiliate management.
+- Automated fraud scoring.
+- Automated payout providers.
+- Cross-store referral networks.
+- International currencies.
+- Advanced tax withholding.
+- Advanced partner contracts.
+
+
+152. FINAL ARCHITECTURAL RULES
+------------------------------------------------------------
+
+1. One Core Affiliate & Reseller Engine.
+2. Multi-tenant isolation is mandatory.
+3. Platform programs and tenant programs are distinct scopes.
+4. Affiliate identity is separate from customer identity.
+5. Reseller identity is separate from store ownership.
+6. Attribution and commission are separate concerns.
+7. Commission and payout are separate records.
+8. Server is authoritative for all financial calculations.
+9. Client-provided commission amounts are never trusted.
+10. Client-provided attribution cannot override server rules.
+11. Commission calculations must be reproducible.
+12. Commission snapshots are immutable.
+13. Published program versions are immutable.
+14. Refunds and returns can reverse commissions.
+15. COD commissions may require delivery/collection qualification.
+16. Subscription commissions require explicit rules.
+17. Payouts require idempotency.
+18. Payout reconciliation is mandatory.
+19. Duplicate payouts must be impossible through normal retries.
+20. Referral links must never become open redirects.
+21. Referral codes must be unique within scope.
+22. Self-referral protection is mandatory.
+23. Fraud controls must be configurable.
+24. Fraud signals are not automatically proof unless policy defines it.
+25. Reseller pricing is server-controlled.
+26. Store provisioning must be idempotent.
+27. Reseller access never equals Super Admin access.
+28. Tenant context must be resolved before tenant data access.
+29. Cache keys must preserve tenant/program identity.
+30. Analytics is not the financial source of truth.
+31. Orders remain authoritative for order state.
+32. Payments remain authoritative for payment state.
+33. Subscriptions remain authoritative for subscription state.
+34. Billing remains authoritative for invoices and renewals.
+35. Promotions remain authoritative for discount rules.
+36. Inventory remains authoritative for stock.
+37. Shipping remains authoritative for delivery state.
+38. Notifications remain authoritative for message delivery.
+39. Backup/restore must not duplicate financial effects.
+40. Financial records must remain auditable.
+41. Sensitive payout/compliance data must be protected.
+42. Marketing consent must not be bypassed.
+43. Affiliate tracking must minimize personal data.
+44. External integrations must use approved APIs.
+45. Third-party extensions cannot bypass Core authority.
+46. Background jobs must be idempotent.
+47. Webhooks must be authenticated and replay-protected.
+48. Queue failures must not lose qualifying financial events.
+49. Checkout must not depend on affiliate analytics availability.
+50. Affiliate tracking must not materially degrade checkout.
+51. High-volume tracking must be asynchronous where possible.
+52. Program suspension must not erase historical records.
+53. Affiliate suspension must be auditable.
+54. Reseller termination must revoke delegated access.
+55. Historical commission obligations must follow program terms.
+56. Package downgrade must preserve historical data.
+57. Entitlements are enforced centrally.
+58. Feature flags are not commercial authorization.
+59. Manual financial adjustments require authorization and audit.
+60. No destructive database operations without explicit migration
+    safety procedures.
+61. Production secrets must never be committed.
+62. Security testing is mandatory.
+63. Tenant isolation testing is mandatory.
+64. Concurrency testing is mandatory.
+65. Failure recovery testing is mandatory.
+66. Reconciliation testing is mandatory.
+67. Backup restore testing is mandatory.
+68. Monitoring and alerting are mandatory.
+69. Documentation and operational runbooks are mandatory.
+70. The module must remain extensible for future partner models.
+
+============================================================
+END OF MODULE 28
+============================================================

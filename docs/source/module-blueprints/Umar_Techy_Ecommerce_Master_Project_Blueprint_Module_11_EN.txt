@@ -1,0 +1,1822 @@
+UMAR TECHY
+E-COMMERCE PLATFORM
+MASTER PROJECT BLUEPRINT
+
+MODULE 11 — CART, WISHLIST & CHECKOUT
+Version: 1.0
+Status: Planning / Blueprint
+
+============================================================
+1. MODULE PURPOSE
+============================================================
+
+This module defines the Core Cart, Wishlist, and Checkout Engine
+for the Umar Techy multi-tenant E-Commerce Platform.
+
+The module manages the customer journey from product selection
+through cart creation, wishlist management, checkout validation,
+pricing calculation, inventory reservation, payment initiation,
+shipping selection, and final Order creation.
+
+Core flow:
+
+Product
+  ↓
+Cart
+  ↓
+Checkout
+  ↓
+Validation
+  ↓
+Pricing
+  ↓
+Inventory Reservation
+  ↓
+Shipping Selection
+  ↓
+Payment Selection
+  ↓
+Order Creation
+  ↓
+Module 09 — Order Management
+
+The system must support guest and registered customers and must
+remain fully tenant-aware.
+
+============================================================
+2. CORE ARCHITECTURAL PRINCIPLE
+============================================================
+
+ONE CORE CART / WISHLIST / CHECKOUT ENGINE
++
+STORE-SCOPED CONFIGURATION
++
+SERVER-AUTHORITATIVE VALIDATION
++
+REAL-TIME PRICE VALIDATION
++
+INVENTORY RESERVATION
++
+SECURE PAYMENT COORDINATION
++
+STRICT TENANT ISOLATION
+
+must serve every store.
+
+Basic, Business, and Premium packages use the same engine.
+Package differences are controlled through Module 04.
+
+============================================================
+3. TENANT ISOLATION
+============================================================
+
+Every:
+
+- Cart
+- Cart Item
+- Wishlist
+- Wishlist Item
+- Checkout Session
+- Checkout Token
+- Shipping Selection
+- Discount Evaluation
+- Customer Reference
+- Saved Checkout Data
+
+must belong to the correct store/tenant.
+
+Store A must never access Store B's carts, wishlists,
+checkout sessions, customer data, pricing context, or
+reserved inventory.
+
+Tenant scope must be enforced at:
+
+- API
+- Database
+- Cache
+- Session
+- Search
+- Queue
+- Events
+- Logs
+- Analytics
+- Integrations
+
+============================================================
+4. CART TYPES
+============================================================
+
+The architecture should support:
+
+- Guest Cart
+- Registered Customer Cart
+- Admin-Created Cart
+- POS Cart
+- API Cart
+- Future Marketplace Cart
+
+The storefront is the primary initial channel.
+
+============================================================
+5. CART OWNERSHIP
+============================================================
+
+A cart may be associated with:
+
+- Store/Tenant
+- Customer
+- Anonymous Session
+- User/Customer Identity Reference
+- Sales Channel
+
+A cart must have a unique secure identifier.
+
+Public cart identifiers must not expose internal database IDs
+where avoidable.
+
+============================================================
+6. GUEST CART
+============================================================
+
+Guests must be able to:
+
+- Browse products
+- Add products
+- Update quantities
+- Remove products
+- View totals
+- Proceed to checkout
+
+Guest carts should be associated with a secure anonymous
+session/token.
+
+Guest cart data must not be accessible by guessing another
+cart identifier.
+
+============================================================
+7. REGISTERED CUSTOMER CART
+============================================================
+
+Authenticated customers may have an active cart per store and
+sales channel.
+
+The cart may persist across sessions where configured.
+
+Cart ownership must be verified on every protected request.
+
+============================================================
+8. CART LIFECYCLE
+============================================================
+
+Suggested states:
+
+- ACTIVE
+- CHECKOUT_STARTED
+- CONVERTED
+- ABANDONED
+- EXPIRED
+- MERGED
+- CANCELLED
+
+Converted carts must remain available as historical technical
+records where required for audit and analytics.
+
+============================================================
+9. CART EXPIRATION
+============================================================
+
+Cart expiration should be configurable.
+
+Expired carts should:
+
+- Stop checkout
+- Release any active reservations
+- Remain available for analytics where permitted
+
+Expired cart cleanup must be safe and tenant-scoped.
+
+============================================================
+10. CART ITEM
+============================================================
+
+Cart item should reference:
+
+- Product
+- Variant/SKU
+- Quantity
+- Current price context
+- Added timestamp
+- Selected options where applicable
+
+The cart must not blindly trust price values sent by the client.
+
+============================================================
+11. PRODUCT VALIDATION
+============================================================
+
+When adding an item, validate server-side:
+
+- Product exists
+- Product belongs to current store
+- Product is purchasable
+- Product status is ACTIVE
+- Product is visible to the sales channel
+- Variant exists
+- Variant belongs to product
+- Variant is purchasable
+- Package entitlement allows the feature
+- Customer eligibility where applicable
+
+============================================================
+12. QUANTITY VALIDATION
+============================================================
+
+Validate:
+
+- Positive quantity
+- Integer/decimal rules based on product
+- Minimum quantity
+- Maximum quantity
+- Quantity increments
+- Per-customer purchase limits
+- Available inventory
+- Backorder/preorder rules
+
+All final quantities must be server validated.
+
+============================================================
+13. CART PRICE
+============================================================
+
+Cart prices are provisional.
+
+The server must recalculate prices during:
+
+- Add to cart
+- Cart update
+- Cart retrieval where necessary
+- Checkout start
+- Checkout confirmation
+- Order creation
+
+The final Order price is authoritative.
+
+============================================================
+14. PRICE CHANGES
+============================================================
+
+If product pricing changes after an item enters the cart:
+
+The system should detect the change and require the cart to be
+recalculated.
+
+Customer-facing behavior may include:
+
+- Updated price notice
+- Updated total
+- Checkout recalculation
+
+The system must never silently charge an outdated unauthorized
+price.
+
+============================================================
+15. SALE PRICE
+============================================================
+
+Support:
+
+- Regular price
+- Sale price
+- Scheduled sale price
+- Customer/group price
+- Promotion-adjusted price
+
+Final pricing must use the authoritative pricing engine.
+
+============================================================
+16. PRODUCT VARIANTS
+============================================================
+
+Cart items must support variants.
+
+Example:
+
+Product:
+T-Shirt
+
+Variant:
+Black / XL
+
+The exact SKU must be stored or resolved server-side.
+
+Inventory must operate against the correct SKU/variant.
+
+============================================================
+17. CART ATTRIBUTES
+============================================================
+
+Future-ready cart item attributes may include:
+
+- Gift Message
+- Custom Text
+- Selected Add-on
+- Personalization
+- Service Option
+
+Attributes must be validated against the product configuration.
+
+============================================================
+18. BUNDLES
+============================================================
+
+The cart architecture should support future product bundles.
+
+A bundle may contain:
+
+- Parent Product
+- Child Products
+- Bundle Quantity
+- Bundle Pricing
+
+Inventory behavior must be defined by the product/bundle engine.
+
+============================================================
+19. DIGITAL PRODUCTS
+============================================================
+
+The cart should be architecture-ready for digital products.
+
+Digital products may require:
+
+- No shipping
+- Digital delivery
+- Download entitlement
+- Separate fulfillment
+
+Checkout must determine whether shipping is required.
+
+============================================================
+20. SERVICE PRODUCTS
+============================================================
+
+Service products may support:
+
+- No physical shipping
+- Appointment/time selection in future
+- Service area validation
+- Special checkout fields
+
+The architecture should not hard-code every cart item as a
+physical shipment.
+
+============================================================
+21. MIXED CARTS
+============================================================
+
+The system should support future mixed carts containing:
+
+- Physical Products
+- Digital Products
+- Services
+
+Checkout must determine:
+
+- Shipping requirements
+- Fulfillment requirements
+- Payment rules
+- Tax behavior
+- Delivery method
+
+============================================================
+22. CART MERGE
+============================================================
+
+When a guest logs in, the system may merge:
+
+Guest Cart
++
+Existing Customer Cart
+↓
+Merged Cart
+
+Rules must prevent:
+
+- Duplicate unintended quantities
+- Invalid products
+- Exceeded limits
+- Inventory overselling
+
+The customer must receive a clear result when conflicts occur.
+
+============================================================
+23. CART CONCURRENCY
+============================================================
+
+Multiple tabs/devices may update the same cart.
+
+Use safe concurrency controls to prevent:
+
+- Lost updates
+- Invalid quantities
+- Incorrect totals
+- Reservation inconsistencies
+
+============================================================
+24. CART IDEMPOTENCY
+============================================================
+
+Critical cart operations should support idempotency where
+repeated requests could otherwise create duplicate actions.
+
+Examples:
+
+- Add item
+- Update quantity
+- Start checkout
+- Apply coupon
+- Create payment intent
+- Submit order
+
+============================================================
+25. CART TOTALS
+============================================================
+
+Cart totals may include:
+
+- Subtotal
+- Item Discounts
+- Cart Discounts
+- Shipping
+- Tax
+- Fees
+- Store Credit
+- Gift Card foundation
+- Total
+
+Exact calculation rules will integrate with Modules 12–14.
+
+============================================================
+26. MONEY PRECISION
+============================================================
+
+Money calculations must use safe decimal/fixed-precision
+representation.
+
+Do not rely on binary floating-point arithmetic for financial
+calculations.
+
+Every monetary value must have an associated currency context.
+
+============================================================
+27. CURRENCY
+============================================================
+
+Checkout must know:
+
+- Store Currency
+- Order Currency
+- Currency Precision
+
+Multi-currency is future-ready but must not create ambiguous
+financial records.
+
+The final Order currency becomes immutable after order creation
+unless a controlled correction workflow exists.
+
+============================================================
+28. TAX FOUNDATION
+============================================================
+
+Checkout should calculate or consume tax according to the
+store's configured tax rules.
+
+Potential inputs:
+
+- Product tax category
+- Customer location
+- Shipping location
+- Store configuration
+- Tax exemptions
+
+Tax calculation must be server-authoritative.
+
+============================================================
+29. DISCOUNT INTEGRATION
+============================================================
+
+Checkout integrates with Module 14 for:
+
+- Coupons
+- Promotions
+- Automatic discounts
+- Customer-specific offers
+- Group discounts
+- Quantity discounts
+- Buy X Get Y foundation
+
+The cart must display discount results clearly.
+
+============================================================
+30. COUPON APPLICATION
+============================================================
+
+Coupon validation should check:
+
+- Code
+- Store
+- Active period
+- Usage limits
+- Customer eligibility
+- Minimum spend
+- Product/category restrictions
+- Exclusions
+- Package entitlement
+
+Invalid coupons must not affect the final price.
+
+============================================================
+31. COUPON REMOVAL
+============================================================
+
+Customers must be able to remove eligible coupons.
+
+Removing a coupon must trigger a complete price recalculation.
+
+============================================================
+32. SHIPPING INTEGRATION
+============================================================
+
+Checkout integrates with Module 13.
+
+Potential shipping methods:
+
+- Standard Delivery
+- Express Delivery
+- Local Delivery
+- Store Pickup
+- Courier
+- Free Shipping
+
+Available methods depend on:
+
+- Store
+- Destination
+- Cart contents
+- Weight
+- Dimensions
+- Delivery zone
+- Order value
+- Product restrictions
+
+============================================================
+33. SHIPPING ADDRESS
+============================================================
+
+Checkout must support:
+
+- Existing saved address
+- New address
+- Guest address
+
+The final Order must receive an immutable address snapshot.
+
+============================================================
+34. BILLING ADDRESS
+============================================================
+
+Billing address may:
+
+- Match shipping address
+- Be different
+
+The checkout flow must explicitly support the selected mode.
+
+============================================================
+35. ADDRESS VALIDATION
+============================================================
+
+Before order creation:
+
+- Required fields
+- Valid country
+- Province/state
+- City
+- Postal code where applicable
+- Phone
+- Shipping serviceability
+
+must be validated.
+
+============================================================
+36. SHIPPING CALCULATION
+============================================================
+
+Shipping price must be recalculated server-side using:
+
+- Destination
+- Cart
+- Weight
+- Dimensions
+- Delivery zone
+- Shipping method
+- Store rules
+- Promotions
+
+Client-submitted shipping cost must never be trusted.
+
+============================================================
+37. PAYMENT INTEGRATION
+============================================================
+
+Checkout integrates with Module 12.
+
+Initial payment methods may include:
+
+- Cash on Delivery
+- Bank Transfer
+- JazzCash
+- Easypaisa
+- Other supported gateways
+
+Future gateways can be added through a provider abstraction.
+
+============================================================
+38. CASH ON DELIVERY
+============================================================
+
+COD checkout may require:
+
+- Customer contact
+- Address validation
+- Order value limits
+- COD availability
+- Risk rules
+- Shipping area eligibility
+
+COD orders must still pass inventory and order validation.
+
+============================================================
+39. BANK TRANSFER
+============================================================
+
+Bank transfer checkout may create an order with:
+
+Payment Status:
+PENDING
+
+The store may later confirm payment.
+
+Customers must receive clear instructions without exposing
+sensitive internal financial data.
+
+============================================================
+40. ONLINE PAYMENT
+============================================================
+
+Online payment flow:
+
+Checkout
+↓
+Server Validation
+↓
+Payment Intent / Transaction
+↓
+Gateway
+↓
+Customer Payment
+↓
+Verified Callback/Webhook
+↓
+Payment Confirmation
+↓
+Order Confirmation
+
+Payment success must never be accepted solely from a client
+redirect.
+
+============================================================
+41. PAYMENT CALLBACK SECURITY
+============================================================
+
+Payment callbacks must use:
+
+- Signature verification
+- Provider verification
+- Transaction reference validation
+- Amount validation
+- Currency validation
+- Store validation
+- Idempotency
+
+A callback for Store A must never update Store B.
+
+============================================================
+42. CHECKOUT SESSION
+============================================================
+
+Checkout should use a dedicated Checkout Session.
+
+Potential fields:
+
+- Checkout ID
+- Store ID
+- Customer/Guest Reference
+- Cart Reference
+- Currency
+- Shipping Address
+- Billing Address
+- Shipping Method
+- Payment Method
+- Discount Context
+- Tax Context
+- Status
+- Expiry
+- Created At
+- Updated At
+
+============================================================
+43. CHECKOUT STATES
+============================================================
+
+Suggested states:
+
+- CREATED
+- ADDRESS_PENDING
+- SHIPPING_PENDING
+- PAYMENT_PENDING
+- REVIEW
+- PROCESSING
+- COMPLETED
+- EXPIRED
+- CANCELLED
+- FAILED
+
+The exact state machine must be finalized before implementation.
+
+============================================================
+44. CHECKOUT EXPIRY
+============================================================
+
+Checkout sessions should expire after a configurable period.
+
+Expired sessions must not create orders without fresh validation.
+
+Any associated temporary reservations must be released.
+
+============================================================
+45. CHECKOUT SNAPSHOT
+============================================================
+
+At checkout review, the system may show a calculated snapshot.
+
+However, the final Order must still perform authoritative
+server-side validation before creation.
+
+============================================================
+46. FINAL VALIDATION
+============================================================
+
+Before creating an Order, validate again:
+
+- Store status
+- Customer status
+- Product status
+- Variant status
+- Product availability
+- Quantity
+- Price
+- Discount
+- Coupon
+- Tax
+- Shipping
+- Payment method
+- Currency
+- Address
+- Inventory
+- Package entitlement
+- Usage limits
+
+============================================================
+47. INVENTORY RESERVATION
+============================================================
+
+Inventory reservation must happen safely during checkout/order
+coordination.
+
+Conceptual flow:
+
+Cart
+↓
+Checkout
+↓
+Validate Stock
+↓
+Create Reservation
+↓
+Payment / Order Coordination
+↓
+Commit or Release
+
+Module 08 remains the source of truth for inventory.
+
+============================================================
+48. RESERVATION EXPIRY
+============================================================
+
+Temporary reservations must have an expiry policy.
+
+If checkout fails or expires:
+
+Reservation
+→ RELEASED
+
+If order succeeds:
+
+Reservation
+→ CONVERTED / COMMITTED
+
+This prevents stock from remaining permanently locked.
+
+============================================================
+49. OVERSelling PREVENTION
+============================================================
+
+Checkout must prevent overselling through:
+
+- Transactional inventory checks
+- Reservations
+- Concurrency controls
+- Server-authoritative stock
+- Idempotent order creation
+
+Never rely on storefront stock display alone.
+
+============================================================
+50. OUT-OF-STOCK DURING CHECKOUT
+============================================================
+
+If stock becomes unavailable:
+
+- Stop order creation for the affected quantity
+- Release any invalid reservation
+- Show clear customer message
+- Recalculate cart
+- Allow customer to modify cart
+
+============================================================
+51. ORDER CREATION
+============================================================
+
+Final flow:
+
+Validated Checkout
+↓
+Inventory Coordination
+↓
+Payment Coordination
+↓
+Create Order
+↓
+Create Order Items
+↓
+Create Financial Totals
+↓
+Create Historical Snapshots
+↓
+Commit Inventory
+↓
+Publish Outbox Events
+↓
+Send Notifications
+
+Module 09 owns the final Order model and lifecycle.
+
+============================================================
+52. ATOMICITY
+============================================================
+
+Critical checkout/order operations must use transactional
+boundaries appropriate to the architecture.
+
+The system must prevent:
+
+- Paid order without order record
+- Order without inventory handling
+- Duplicate order
+- Duplicate payment capture
+- Incorrect reservation conversion
+
+Distributed provider operations must use reliable reconciliation
+and idempotency rather than assuming a single database
+transaction can control external systems.
+
+============================================================
+53. ORDER DUPLICATION PREVENTION
+============================================================
+
+Use:
+
+- Idempotency keys
+- Checkout session identity
+- Payment transaction references
+- Unique constraints
+- Server-side state checks
+
+Repeated submit requests must not create duplicate orders.
+
+============================================================
+54. CHECKOUT RETRY
+============================================================
+
+If payment fails:
+
+Customer should be able to retry where safe.
+
+The system should avoid creating multiple orders for a single
+checkout attempt unless explicitly intended.
+
+============================================================
+55. FAILED PAYMENT
+============================================================
+
+Payment failure should:
+
+- Record failure
+- Preserve useful checkout state
+- Release or maintain reservation according to policy
+- Allow retry
+- Avoid false order confirmation
+
+============================================================
+56. SUCCESSFUL PAYMENT
+============================================================
+
+Payment success must be reconciled with:
+
+- Checkout
+- Store
+- Customer
+- Amount
+- Currency
+- Payment transaction
+- Order
+
+Only verified payment state may trigger payment confirmation.
+
+============================================================
+57. ORDER CONFIRMATION
+============================================================
+
+After successful order creation, customer may receive:
+
+- Order Number
+- Items
+- Total
+- Payment Status
+- Fulfillment Status
+- Shipping Method
+- Delivery Address summary
+- Estimated delivery information
+- Tracking information when available
+
+============================================================
+58. CHECKOUT ERROR HANDLING
+============================================================
+
+Errors must be actionable.
+
+Examples:
+
+- Product no longer available
+- Quantity unavailable
+- Price changed
+- Coupon expired
+- Shipping unavailable
+- Payment failed
+- Address invalid
+- Store temporarily unavailable
+
+Do not expose internal stack traces or sensitive system details.
+
+============================================================
+59. CHECKOUT SECURITY
+============================================================
+
+Protect against:
+
+- Cart ID manipulation
+- Customer ID manipulation
+- Price manipulation
+- Quantity manipulation
+- Coupon manipulation
+- Shipping price manipulation
+- Payment amount manipulation
+- Tenant crossing
+- Session theft
+- Replay attacks
+- Duplicate submissions
+- CSRF where applicable
+- Bot abuse
+
+============================================================
+60. CART API
+============================================================
+
+Potential endpoints:
+
+GET    /cart
+POST   /cart/items
+PATCH  /cart/items/{id}
+DELETE /cart/items/{id}
+DELETE /cart
+POST   /cart/merge
+POST   /cart/coupon
+DELETE /cart/coupon
+
+Exact routes will be defined in the API Blueprint.
+
+============================================================
+61. CHECKOUT API
+============================================================
+
+Potential endpoints:
+
+POST   /checkout
+GET    /checkout/{id}
+PATCH  /checkout/{id}/address
+PATCH  /checkout/{id}/shipping
+PATCH  /checkout/{id}/payment
+POST   /checkout/{id}/validate
+POST   /checkout/{id}/confirm
+POST   /checkout/{id}/cancel
+
+Final API naming must follow the platform-wide API standard.
+
+============================================================
+62. CUSTOMER OWNERSHIP
+============================================================
+
+Customer APIs must ensure:
+
+Authenticated Customer
++
+Tenant
++
+Customer Ownership
++
+Resource Ownership
+
+before returning private cart or checkout data.
+
+============================================================
+63. GUEST SECURITY
+============================================================
+
+Guest cart and checkout tokens should be:
+
+- High entropy
+- Short-lived where appropriate
+- Revocable
+- Non-sequential
+- Scoped to the store
+
+============================================================
+64. WISHLIST PURPOSE
+============================================================
+
+Wishlist allows customers to save products for future interest.
+
+It is separate from the active cart.
+
+Wishlist must not reserve inventory.
+
+============================================================
+65. WISHLIST TYPES
+============================================================
+
+Initial:
+
+- Default Wishlist
+
+Future:
+
+- Multiple Wishlists
+- Shared Wishlist
+- Gift Wishlist
+- Private/Public Wishlist
+
+============================================================
+66. WISHLIST ITEM
+============================================================
+
+Wishlist item may reference:
+
+- Product
+- Variant where appropriate
+- Customer
+- Store
+- Added At
+
+The product must be revalidated when displayed or moved to cart.
+
+============================================================
+67. WISHLIST AVAILABILITY
+============================================================
+
+Wishlist may show:
+
+- Available
+- Out of Stock
+- Hidden
+- Archived
+- Price Changed
+
+The wishlist must not assume that a saved product remains
+purchasable forever.
+
+============================================================
+68. WISHLIST TO CART
+============================================================
+
+Customer may move a wishlist item to cart.
+
+The system must perform full product, variant, price, inventory,
+and entitlement validation.
+
+============================================================
+69. WISHLIST GUEST SUPPORT
+============================================================
+
+Guest wishlist may be supported through local/device storage
+where appropriate.
+
+A guest wishlist must not be treated as permanently persisted
+customer data unless explicitly created server-side.
+
+============================================================
+70. WISHLIST LOGIN MERGE
+============================================================
+
+When a guest becomes authenticated, wishlist items may merge.
+
+Duplicates should be safely de-duplicated.
+
+Invalid or unavailable products should not create invalid cart
+items.
+
+============================================================
+71. WISHLIST LIMITS
+============================================================
+
+Package entitlements may control:
+
+- Wishlist availability
+- Number of wishlist items
+- Number of wishlists
+- Shared wishlist functionality
+
+============================================================
+72. ABANDONED CART FOUNDATION
+============================================================
+
+The cart engine should emit events for abandoned-cart detection.
+
+Potential logic:
+
+Active Cart
+↓
+No Activity
+↓
+Threshold Reached
+↓
+Abandoned Cart Event
+↓
+Module 15 Marketing Automation
+
+Marketing messages require appropriate consent and configuration.
+
+============================================================
+73. CART ANALYTICS
+============================================================
+
+Events may include:
+
+- Cart Created
+- Product Added
+- Quantity Changed
+- Product Removed
+- Coupon Applied
+- Checkout Started
+- Checkout Abandoned
+- Checkout Completed
+
+These events feed Module 22 analytics.
+
+============================================================
+74. CONVERSION METRICS
+============================================================
+
+The architecture should support:
+
+- Add-to-Cart Rate
+- Cart-to-Checkout Rate
+- Checkout Completion Rate
+- Cart Abandonment Rate
+- Average Cart Value
+- Coupon Usage
+- Wishlist-to-Cart Conversion
+
+Metrics must be tenant-scoped.
+
+============================================================
+75. CUSTOMER PERSONALIZATION
+============================================================
+
+Future AI/personalization may use:
+
+- Cart
+- Wishlist
+- Browsing
+- Purchase History
+- Preferences
+
+Use must respect privacy, consent, tenant isolation, and
+Module 26 AI policies.
+
+============================================================
+76. RECENTLY VIEWED
+============================================================
+
+The storefront may support recently viewed products.
+
+This can be:
+
+- Device-local
+- Customer-linked
+- Store-scoped
+
+It must not leak browsing information across stores.
+
+============================================================
+77. SAVED CHECKOUT DATA
+============================================================
+
+Registered customers may reuse:
+
+- Address
+- Contact information
+- Preferences
+
+Payment credentials should not be stored directly unless the
+payment provider and security architecture explicitly support
+tokenized storage.
+
+============================================================
+78. PAYMENT TOKENIZATION
+============================================================
+
+Where supported, the platform may store provider-issued
+payment tokens rather than raw payment credentials.
+
+The core platform must never store prohibited raw card
+credentials.
+
+============================================================
+79. CHECKOUT UI
+============================================================
+
+The storefront checkout should be:
+
+- Mobile-first
+- Fast
+- Clear
+- RTL/LTR compatible
+- Accessible
+- Keyboard-friendly
+- Low-friction
+
+Recommended sections:
+
+1. Contact
+2. Shipping Address
+3. Delivery Method
+4. Billing Address
+5. Payment Method
+6. Discount
+7. Order Review
+8. Confirmation
+
+The exact layout remains theme-configurable.
+
+============================================================
+80. CHECKOUT UI VALIDATION
+============================================================
+
+Client-side validation improves usability.
+
+Server-side validation remains authoritative.
+
+Never rely only on browser validation.
+
+============================================================
+81. CHECKOUT LOCALIZATION
+============================================================
+
+Support:
+
+- Urdu
+- English
+- Future languages
+
+Messages, validation, dates, numbers, and currency formatting
+must follow the store/customer locale where configured.
+
+============================================================
+82. CHECKOUT ACCESSIBILITY
+============================================================
+
+Support:
+
+- Keyboard navigation
+- Screen readers
+- Clear labels
+- Error announcements
+- Focus management
+- Adequate contrast
+- Accessible buttons
+- Accessible form controls
+
+============================================================
+83. CHECKOUT PERFORMANCE
+============================================================
+
+Optimize:
+
+- Product validation
+- Price calculation
+- Shipping calculation
+- Tax calculation
+- Coupon evaluation
+- Inventory checks
+
+Avoid unnecessary repeated database calls.
+
+Use caching only where correctness is preserved.
+
+============================================================
+84. CHECKOUT OBSERVABILITY
+============================================================
+
+Track:
+
+- Checkout start
+- Validation failures
+- Payment failures
+- Shipping failures
+- Inventory failures
+- Order creation
+- Checkout completion
+- Abandonment
+
+Logs must avoid exposing sensitive payment or personal data.
+
+============================================================
+85. RECONCILIATION
+============================================================
+
+The system must support reconciliation for:
+
+- Payment vs Order
+- Reservation vs Order
+- Cart vs Checkout
+- Checkout vs Order
+- Gateway callback vs payment transaction
+
+Module 09 and Module 12 define detailed reconciliation
+requirements.
+
+============================================================
+86. WEBHOOK / EVENT INTEGRATION
+============================================================
+
+Potential events:
+
+- CartCreated
+- CartUpdated
+- CartAbandoned
+- WishlistItemAdded
+- CheckoutStarted
+- CheckoutValidated
+- CheckoutFailed
+- CheckoutCompleted
+- OrderCreationRequested
+- OrderCreated
+
+Events should use the platform Outbox pattern where appropriate.
+
+============================================================
+87. CACHE STRATEGY
+============================================================
+
+Cache candidates:
+
+- Public product data
+- Public pricing where safe
+- Shipping configuration
+- Store configuration
+
+Do not blindly cache:
+
+- Customer carts
+- Private checkout sessions
+- Private addresses
+- Payment state
+
+============================================================
+88. DATABASE CONSIDERATIONS
+============================================================
+
+Potential indexes:
+
+- Store + Cart ID
+- Store + Customer ID
+- Store + Cart Status
+- Store + Checkout ID
+- Store + Checkout Status
+- Store + Wishlist ID
+- Store + Customer + Wishlist
+- Expiry timestamps
+
+Exact indexes will be defined in the Database Blueprint.
+
+============================================================
+89. DATA RETENTION
+============================================================
+
+Cart and checkout retention should be configurable.
+
+Keep enough information for:
+
+- Customer experience
+- Analytics
+- Fraud/security
+- Reconciliation
+- Operational debugging
+
+Avoid retaining unnecessary personal data indefinitely.
+
+============================================================
+90. PACKAGE ENTITLEMENTS
+============================================================
+
+Potential package behavior:
+
+Basic:
+- Standard Cart
+- Basic Wishlist
+- Standard Checkout
+- COD / configured payment methods
+
+Business:
+- Advanced promotions integration
+- Saved customer features
+- Advanced checkout options
+- Abandoned-cart integration
+
+Premium:
+- Advanced personalization
+- AI-assisted recommendations
+- Advanced checkout automation
+- Premium payment/integration options
+
+Exact mapping must be finalized in Module 04.
+
+============================================================
+91. SUPER ADMIN CONTROLS
+============================================================
+
+Umar Techy Super Admin may manage:
+
+- Global checkout configuration
+- Gateway availability
+- Security controls
+- Rate limits
+- Feature definitions
+- Package entitlements
+- Global defaults
+- Monitoring
+- Incident controls
+
+Super Admin must not automatically bypass tenant authorization.
+
+============================================================
+92. STORE ADMIN CONTROLS
+============================================================
+
+Authorized store users may manage:
+
+- Cart settings
+- Checkout settings
+- Guest checkout
+- Wishlist settings
+- Minimum/maximum order rules
+- Customer checkout requirements
+- Available payment methods
+- Available shipping methods
+- Checkout messaging
+
+Permissions are controlled by Module 02.
+
+============================================================
+93. FRAUD / ABUSE FOUNDATION
+============================================================
+
+Checkout may generate risk signals such as:
+
+- Repeated failed payments
+- Excessive checkout attempts
+- Suspicious velocity
+- Multiple accounts using same signals
+- Excessive COD failures
+
+Risk scoring must remain a separate capability and should not
+silently replace deterministic checkout validation.
+
+============================================================
+94. BOT PROTECTION
+============================================================
+
+High-risk endpoints may use:
+
+- Rate limits
+- CAPTCHA/challenge where appropriate
+- IP/device heuristics
+- Request throttling
+
+Controls must not break legitimate customers unnecessarily.
+
+============================================================
+95. TESTING — CART
+============================================================
+
+Test:
+
+- Add item
+- Update quantity
+- Remove item
+- Clear cart
+- Guest cart
+- Registered cart
+- Cart merge
+- Product deletion
+- Variant deletion
+- Price change
+- Stock change
+- Coupon application
+- Coupon removal
+- Cart expiration
+- Concurrent updates
+- Duplicate requests
+
+============================================================
+96. TESTING — WISHLIST
+============================================================
+
+Test:
+
+- Add item
+- Remove item
+- Duplicate item
+- Move to cart
+- Out-of-stock item
+- Archived item
+- Guest wishlist
+- Login merge
+- Tenant isolation
+- Wishlist limits
+
+============================================================
+97. TESTING — CHECKOUT
+============================================================
+
+Test:
+
+- Guest checkout
+- Registered checkout
+- Address creation
+- Address validation
+- Shipping selection
+- Payment selection
+- Coupon
+- Tax
+- Inventory reservation
+- Payment success
+- Payment failure
+- Retry
+- Checkout expiry
+- Duplicate submission
+- Order creation
+- Order confirmation
+
+============================================================
+98. SECURITY TESTING
+============================================================
+
+Mandatory:
+
+- Cross-tenant cart access
+- Cross-customer cart access
+- Cart IDOR
+- Checkout IDOR
+- Price tampering
+- Quantity tampering
+- Coupon tampering
+- Shipping price tampering
+- Payment amount tampering
+- Payment callback forgery
+- Replay attack
+- Session theft
+- Guest token guessing
+- Rate-limit bypass
+- Duplicate order creation
+
+============================================================
+99. CONCURRENCY TESTING
+============================================================
+
+Test:
+
+- Same SKU purchased simultaneously
+- Same cart edited from two devices
+- Multiple checkout submissions
+- Simultaneous coupon application
+- Simultaneous payment callbacks
+- Reservation expiry during payment
+- Stock change during checkout
+
+============================================================
+100. FAILURE RECOVERY TESTING
+============================================================
+
+Simulate:
+
+- Payment gateway timeout
+- Payment callback delayed
+- Database failure
+- Inventory reservation failure
+- Order creation failure
+- Notification failure
+- Shipping calculation failure
+- Queue failure
+
+The system must recover without creating inconsistent
+financial or inventory states.
+
+============================================================
+101. HIGH-LEVEL DATA ENTITIES
+============================================================
+
+Potential entities:
+
+- Cart
+- CartItem
+- CartItemOption
+- CartCoupon
+- CartAdjustment
+- CartSession
+- CartMergeRecord
+- Wishlist
+- WishlistItem
+- CheckoutSession
+- CheckoutAddress
+- CheckoutShippingSelection
+- CheckoutPaymentSelection
+- CheckoutDiscount
+- CheckoutTaxSummary
+- CheckoutPriceSnapshot
+- CheckoutValidationResult
+- CheckoutAttempt
+- CheckoutIdempotencyRecord
+- CheckoutRiskAssessment
+- CartAbandonmentRecord
+- CartOutboxEvent
+
+Exact schema will be finalized in the Database Blueprint.
+
+============================================================
+102. MODULE DEPENDENCIES
+============================================================
+
+Required:
+
+- Module 01 — Complete Platform Structure
+- Module 02 — Authentication, Users, Roles & Permissions
+- Module 03 — Multi-Tenant & Store Management
+- Module 04 — Subscription, Packages & Feature Entitlements
+- Module 05 — Storefront
+- Module 06 — Product & Catalog
+- Module 07 — Category, Brand & Attribute
+- Module 08 — Inventory & Stock
+- Module 09 — Order Management
+- Module 10 — Customer Management
+
+Strong integration with:
+
+- Module 12 — Payment Management & Gateways
+- Module 13 — Shipping & Delivery
+- Module 14 — Discounts, Coupons & Promotions
+- Module 15 — Marketing & Customer Engagement
+- Module 21 — Notifications & Communication
+- Module 22 — Reports & Analytics
+- Module 26 — AI Features
+- Module 31 — API & Developer Platform
+- Module 32 — Security, Audit & Compliance
+
+============================================================
+103. REQUIRED FOLLOW-UP ARTIFACTS
+============================================================
+
+1. Cart Database Blueprint
+2. Wishlist Database Blueprint
+3. Checkout Database Blueprint
+4. Cart State Machine
+5. Checkout State Machine
+6. Pricing Calculation Blueprint
+7. Checkout Validation Blueprint
+8. Inventory Reservation Integration Blueprint
+9. Payment Coordination Blueprint
+10. Shipping Calculation Integration Blueprint
+11. Discount/Coupon Integration Blueprint
+12. Guest Cart Security Blueprint
+13. Cart Merge Blueprint
+14. Checkout Idempotency Blueprint
+15. Checkout Failure Recovery Blueprint
+16. Cart/Wishlist API Contract
+17. Checkout API Contract
+18. Cart/Checkout Event Blueprint
+19. Cart Abandonment Event Blueprint
+20. Cart/Checkout Security Test Matrix
+
+============================================================
+104. FINAL ARCHITECTURAL RULES
+============================================================
+
+1. One Core Cart, Wishlist, and Checkout Engine.
+2. Every resource must be tenant-scoped.
+3. Guest checkout must be supported.
+4. Registered customers must have persistent cart support where
+   configured.
+5. Cart prices are provisional.
+6. Final prices must be server-calculated.
+7. Client-submitted prices must never be trusted.
+8. Shipping charges must be server-calculated.
+9. Tax must be server-authoritative.
+10. Coupon eligibility must be server-authoritative.
+11. Inventory must remain authoritative in Module 08.
+12. Inventory reservations must be concurrency-safe.
+13. Checkout expiry must release temporary reservations.
+14. Payment success must be verified server-side.
+15. Payment callbacks must be authenticated and idempotent.
+16. Duplicate checkout submissions must not create duplicate
+    orders.
+17. Final Order creation belongs to Module 09.
+18. Historical Order snapshots must be created during order
+    creation.
+19. Wishlist must never reserve inventory.
+20. Wishlist-to-cart must perform full validation.
+21. Guest-to-account cart merge must be safe and deterministic.
+22. Private cart and checkout data must never be publicly cached.
+23. Customer ownership must be enforced on every protected
+    customer request.
+24. Checkout must support physical, digital, and service products
+    through an extensible fulfillment model.
+25. The system must remain ready for future payment gateways,
+    shipping providers, loyalty, subscriptions, marketplace,
+    POS, AI, and mobile/PWA channels.
+26. All financial operations must use safe monetary precision.
+27. All critical operations must support idempotency and reliable
+    recovery.
+28. Security, privacy, tenant isolation, and auditability are
+    mandatory non-functional requirements.
+
+============================================================
+105. STATUS
+============================================================
+
+Module 11 Status:
+CART, WISHLIST & CHECKOUT — INITIALIZED
+
+Version:
+1.0
+
+This module establishes the complete purchase-entry and checkout
+foundation connecting Storefront, Customer, Catalog, Inventory,
+Shipping, Payments, Promotions, and Order Management.
+
+The next module will define:
+
+MODULE 12 — PAYMENT MANAGEMENT & GATEWAYS
+
+============================================================
+END OF MODULE 11
+============================================================

@@ -1,0 +1,1935 @@
+UMAR TECHY
+E-COMMERCE PLATFORM
+MASTER PROJECT BLUEPRINT
+
+MODULE 08 — INVENTORY & STOCK MANAGEMENT
+Version: 1.0
+Status: Planning / Blueprint
+
+============================================================
+1. MODULE PURPOSE
+============================================================
+
+This module defines the centralized inventory and stock
+management architecture for the Umar Techy multi-tenant
+E-Commerce Platform.
+
+The inventory system must support stores of different sizes,
+from small sellers with one stock location to larger stores
+with multiple warehouses, purchasing workflows, reservations,
+adjustments, transfers, and future POS synchronization.
+
+The module covers:
+
+- Inventory
+- Stock quantities
+- Stock movements
+- Warehouses
+- Stock locations
+- Stock reservations
+- Available stock
+- Incoming stock
+- Outgoing stock
+- Low-stock management
+- Stock adjustments
+- Stock transfers
+- Inventory history
+- Purchase receiving foundation
+- Inventory valuation foundation
+- Product/variant inventory
+- Multi-warehouse support
+- POS synchronization foundation
+- Offline/sync readiness
+- API
+- Events
+- Audit
+- Package limits
+- Security
+- Performance
+- Reporting foundations
+
+============================================================
+2. CORE INVENTORY PRINCIPLE
+============================================================
+
+ONE CORE INVENTORY ENGINE
++
+TENANT-SCOPED STOCK
++
+PRODUCT / VARIANT INTEGRATION
++
+WAREHOUSE-READY ARCHITECTURE
++
+ORDER RESERVATION
++
+AUDITABLE STOCK MOVEMENTS
+
+must serve every store.
+
+Basic, Business, and Premium stores use the same inventory
+engine.
+
+Package differences are enforced through Module 04.
+
+============================================================
+3. TENANT ISOLATION
+============================================================
+
+Every inventory record must belong to the correct Store/Tenant.
+
+Store A must never be able to:
+
+- Read Store B stock
+- Modify Store B stock
+- Transfer Store B stock
+- Reserve Store B stock
+- View Store B warehouses
+- Access Store B inventory reports
+- Import Store B inventory
+- Export Store B inventory
+
+All inventory APIs, jobs, caches, events, reports, and files must
+preserve tenant context.
+
+============================================================
+4. PRODUCT INVENTORY OWNERSHIP
+============================================================
+
+Inventory should normally be tracked at the sellable SKU level.
+
+For simple products:
+
+Product
+→ Inventory
+
+For variable products:
+
+Product
+→ Variant
+→ SKU
+→ Inventory
+
+This allows each variant to maintain independent stock.
+
+============================================================
+5. INVENTORY TRACKING MODES
+============================================================
+
+The system should support configurable inventory tracking.
+
+Potential modes:
+
+1. Not Tracked
+2. Tracked at Product Level
+3. Tracked at Variant/SKU Level
+
+Future support may include:
+
+- Batch Tracking
+- Lot Tracking
+- Serial Number Tracking
+- Expiry Tracking
+
+The initial architecture must not block these extensions.
+
+============================================================
+6. STOCK QUANTITY MODEL
+============================================================
+
+Inventory should distinguish at least:
+
+- On Hand
+- Reserved
+- Available
+- Incoming
+- Committed
+- Damaged where supported
+
+Conceptual calculation:
+
+AVAILABLE =
+ON_HAND
+-
+RESERVED
+-
+OTHER_COMMITTED_STOCK
+
+The exact calculation must be centralized in the inventory
+domain service.
+
+============================================================
+7. AUTHORITATIVE STOCK
+============================================================
+
+The server-side inventory system is authoritative.
+
+The client must never be allowed to directly set:
+
+- Available Stock
+- Reserved Stock
+- On Hand Stock
+
+All changes must occur through authorized inventory operations.
+
+============================================================
+8. INVENTORY RECORD
+============================================================
+
+Potential inventory record fields:
+
+- Inventory ID
+- Store/Tenant ID
+- Product ID
+- Variant ID
+- SKU
+- Warehouse ID
+- On Hand Quantity
+- Reserved Quantity
+- Incoming Quantity
+- Available Quantity
+- Reorder Point
+- Reorder Quantity
+- Status
+- Created At
+- Updated At
+
+Derived quantities should be calculated or maintained
+consistently.
+
+============================================================
+9. STOCK UNIT
+============================================================
+
+The inventory system should define a base stock unit.
+
+Examples:
+
+- Piece
+- Box
+- Pair
+- Kg
+- Liter
+- Meter
+
+Future unit conversion should be supported architecturally.
+
+============================================================
+10. QUANTITY PRECISION
+============================================================
+
+The inventory system should support configurable quantity
+precision.
+
+Examples:
+
+Integer:
+
+10 pieces
+
+Decimal:
+
+2.5 kg
+
+The database must avoid floating-point errors for authoritative
+inventory quantities.
+
+Use an appropriate decimal/numeric representation.
+
+============================================================
+11. WAREHOUSE
+============================================================
+
+A Warehouse represents a physical or logical stock location.
+
+Example:
+
+Main Warehouse
+Lahore Warehouse
+Islamabad Warehouse
+Retail Shop
+Back Store
+
+Each warehouse belongs to exactly one store.
+
+============================================================
+12. WAREHOUSE DATA
+============================================================
+
+Potential fields:
+
+- Warehouse ID
+- Store/Tenant ID
+- Name
+- Code
+- Address
+- Contact
+- Status
+- Default Warehouse Flag
+- Fulfillment Priority
+- Created At
+- Updated At
+
+Warehouse codes should be unique within the tenant.
+
+============================================================
+13. WAREHOUSE STATUS
+============================================================
+
+Possible states:
+
+- ACTIVE
+- INACTIVE
+- ARCHIVED
+
+Inactive warehouses should not accept normal new inventory
+operations.
+
+Historical records must remain accessible.
+
+============================================================
+14. DEFAULT WAREHOUSE
+============================================================
+
+A store may define a default warehouse.
+
+Default warehouse may be used for:
+
+- New inventory records
+- Default fulfillment
+- Basic stores without multi-warehouse management
+- Initial order routing
+
+Only one warehouse should normally be the default per store.
+
+============================================================
+15. STOCK LOCATIONS
+============================================================
+
+Future warehouse expansion may support internal locations.
+
+Example:
+
+Warehouse:
+Main Warehouse
+
+Locations:
+A-01
+A-02
+B-01
+Shelf-10
+
+The first implementation may operate at warehouse level while
+remaining architecture-ready for bin/location tracking.
+
+============================================================
+16. MULTI-WAREHOUSE
+============================================================
+
+Business/Premium stores may support multiple warehouses depending
+on package entitlements.
+
+A product SKU may have stock in multiple warehouses.
+
+Example:
+
+SKU:
+PHONE-001
+
+Lahore:
+20
+
+Islamabad:
+15
+
+Total:
+35
+
+Storefront availability may use aggregated or fulfillment-aware
+logic.
+
+============================================================
+17. WAREHOUSE STOCK
+============================================================
+
+Inventory quantity should be associated with:
+
+Store
++
+Warehouse
++
+Product/Variant
+
+This allows independent stock tracking per location.
+
+============================================================
+18. TOTAL STOCK
+============================================================
+
+Total stock may be calculated as the sum of eligible warehouse
+stock.
+
+Example:
+
+Warehouse A = 10
+Warehouse B = 20
+Warehouse C = 5
+
+Total On Hand = 35
+
+The calculation must respect inactive/archived warehouse rules.
+
+============================================================
+19. STOCK AVAILABILITY
+============================================================
+
+Available stock should account for reservations.
+
+Example:
+
+On Hand = 100
+Reserved = 20
+
+Available = 80
+
+Storefront must use the authoritative available quantity or
+availability status.
+
+============================================================
+20. STOCK RESERVATION
+============================================================
+
+Reservations temporarily hold inventory for an order or checkout
+process.
+
+Reservation may occur during:
+
+- Checkout
+- Order creation
+- Payment processing
+- Manual order workflows
+
+Reservation rules must prevent overselling.
+
+============================================================
+21. RESERVATION LIFECYCLE
+============================================================
+
+Possible reservation states:
+
+- PENDING
+- ACTIVE
+- RELEASED
+- CONVERTED
+- EXPIRED
+- CANCELLED
+
+Example:
+
+Cart/Checkout
+→ Reserve
+→ Payment
+→ Order Confirmed
+→ Reservation Converted
+
+Failed/expired checkout:
+→ Reservation Released
+
+============================================================
+22. RESERVATION EXPIRY
+============================================================
+
+Reservations should have an expiry policy.
+
+Example:
+
+Reservation created
+→ expires after configured period
+
+Expired reservations must be released safely.
+
+The exact duration should be configurable.
+
+============================================================
+23. CONCURRENCY CONTROL
+============================================================
+
+Inventory operations must be safe under concurrent purchases.
+
+Example:
+
+Stock = 1
+
+Customer A and Customer B attempt checkout simultaneously.
+
+The system must ensure only valid available stock is committed.
+
+Use appropriate:
+
+- Database transactions
+- Row-level locking where appropriate
+- Atomic updates
+- Optimistic concurrency
+- Reservation logic
+
+============================================================
+24. OVERSelling PROTECTION
+============================================================
+
+Overselling must be explicitly controlled.
+
+Possible store setting:
+
+Allow Overselling:
+YES / NO
+
+If disabled:
+
+Available Stock <= 0
+→ Product cannot be purchased.
+
+If enabled:
+
+The system must clearly represent negative or backordered stock
+according to business rules.
+
+============================================================
+25. BACKORDER FOUNDATION
+============================================================
+
+The architecture should reserve support for backorders.
+
+Possible states:
+
+- In Stock
+- Low Stock
+- Out of Stock
+- Backorder
+- Preorder
+
+Backorder behavior must integrate with order and fulfillment
+modules.
+
+============================================================
+26. PREORDER FOUNDATION
+============================================================
+
+Future products may support preorder.
+
+Potential data:
+
+- Preorder Start
+- Expected Availability
+- Maximum Quantity
+- Customer Message
+
+Preorder stock behavior must be explicitly defined.
+
+============================================================
+27. LOW STOCK
+============================================================
+
+Each tracked SKU may have:
+
+- Reorder Point
+- Low Stock Threshold
+- Reorder Quantity
+
+Example:
+
+Stock = 5
+Low Stock Threshold = 10
+
+→ Low Stock Alert
+
+============================================================
+28. STOCK ALERTS
+============================================================
+
+Potential alerts:
+
+- Low Stock
+- Out of Stock
+- Negative Stock
+- Incoming Stock
+- Reservation Expiry
+- Inventory Sync Failure
+
+Notification channels may include:
+
+- Email
+- WhatsApp
+- In-App
+- Dashboard
+
+Notifications must respect store settings and permissions.
+
+============================================================
+29. STOCK MOVEMENT
+============================================================
+
+Every stock-changing operation should produce a stock movement.
+
+Examples:
+
+- Purchase Receipt
+- Sale
+- Return
+- Refund
+- Adjustment Increase
+- Adjustment Decrease
+- Transfer Out
+- Transfer In
+- Damage
+- Loss
+- Opening Balance
+- Reservation
+- Reservation Release
+
+============================================================
+30. STOCK LEDGER
+============================================================
+
+The inventory ledger should provide an auditable history.
+
+Each movement may contain:
+
+- Movement ID
+- Store/Tenant
+- Product/Variant
+- Warehouse
+- Quantity
+- Direction
+- Reason
+- Reference Type
+- Reference ID
+- Actor
+- Timestamp
+- Previous Quantity
+- New Quantity
+- Notes
+
+The ledger should be append-oriented where possible.
+
+============================================================
+31. STOCK MOVEMENT TYPES
+============================================================
+
+Recommended movement types:
+
+PURCHASE_IN
+SALE_OUT
+RETURN_IN
+REFUND_IN
+ADJUSTMENT_IN
+ADJUSTMENT_OUT
+TRANSFER_IN
+TRANSFER_OUT
+DAMAGE_OUT
+LOSS_OUT
+OPENING_BALANCE
+CORRECTION
+RESERVATION
+RESERVATION_RELEASE
+
+Exact financial treatment will be defined in relevant modules.
+
+============================================================
+32. OPENING STOCK
+============================================================
+
+Stores must be able to establish opening inventory.
+
+Workflow:
+
+Select SKU
+→ Select Warehouse
+→ Enter Quantity
+→ Enter Reason
+→ Confirm
+→ Create Opening Balance Movement
+
+Opening stock must be audited.
+
+============================================================
+33. STOCK ADJUSTMENT
+============================================================
+
+Authorized users may adjust inventory.
+
+Examples:
+
+- Physical count difference
+- Damaged goods
+- Lost goods
+- Found stock
+- Data correction
+
+Every adjustment requires:
+
+- Reason
+- Quantity
+- Warehouse
+- Actor
+- Timestamp
+
+============================================================
+34. ADJUSTMENT APPROVAL
+============================================================
+
+For stronger controls, Premium or configured stores may require
+approval for large inventory adjustments.
+
+Example:
+
+Staff creates adjustment
+→ Manager approval
+→ Stock movement posted
+
+The architecture should support configurable approval rules.
+
+============================================================
+35. STOCK COUNT
+============================================================
+
+The architecture should support physical stock counts.
+
+Possible workflow:
+
+Create Count Session
+→ Select Warehouse
+→ Select Products
+→ Enter Counted Quantity
+→ Compare System Quantity
+→ Review Variance
+→ Approve
+→ Post Adjustments
+
+============================================================
+36. STOCK COUNT VARIANCE
+============================================================
+
+Variance should show:
+
+System Quantity
+Counted Quantity
+Difference
+
+Example:
+
+System = 100
+Counted = 97
+Variance = -3
+
+The system should record the reason and adjustment.
+
+============================================================
+37. STOCK TRANSFER
+============================================================
+
+Stock may be transferred between warehouses.
+
+Example:
+
+Lahore Warehouse
+→ Islamabad Warehouse
+
+Transfer should create:
+
+TRANSFER_OUT
+and
+TRANSFER_IN
+
+The operation should preserve a common transfer reference.
+
+============================================================
+38. TRANSFER LIFECYCLE
+============================================================
+
+Potential states:
+
+- DRAFT
+- REQUESTED
+- APPROVED
+- IN_TRANSIT
+- RECEIVED
+- CANCELLED
+
+Basic stores may only require immediate transfer.
+
+Advanced stores may use full transfer lifecycle.
+
+============================================================
+39. TRANSFER VALIDATION
+============================================================
+
+Before transfer:
+
+- Source warehouse active
+- Destination warehouse active
+- Same tenant
+- SKU exists
+- Available stock sufficient
+- Quantity valid
+- Permissions valid
+
+Cross-tenant transfers are prohibited.
+
+============================================================
+40. TRANSFER RECEIVING
+============================================================
+
+Destination warehouse should confirm receipt where required.
+
+If partial quantity is received, the system must support:
+
+- Sent Quantity
+- Received Quantity
+- Variance
+- Remaining Quantity
+- Reason
+
+============================================================
+41. PURCHASE RECEIVING FOUNDATION
+============================================================
+
+Inventory should integrate with purchasing.
+
+Potential flow:
+
+Purchase Order
+→ Goods Received
+→ Inventory Increase
+→ Stock Movement
+→ Purchase Record
+
+Detailed purchasing architecture may be introduced as part of
+future procurement modules.
+
+============================================================
+42. INCOMING STOCK
+============================================================
+
+Incoming quantity represents expected stock not yet available.
+
+Example:
+
+On Hand = 20
+Incoming = 50
+Available = 20
+
+The storefront should normally not count incoming stock as
+available unless preorder/backorder rules explicitly allow it.
+
+============================================================
+43. INVENTORY COST FOUNDATION
+============================================================
+
+The architecture should reserve support for inventory costing.
+
+Potential methods:
+
+- Average Cost
+- FIFO
+- Specific Cost
+- Standard Cost
+
+The initial release may use a simpler approach, but the data
+model should avoid blocking future methods.
+
+============================================================
+44. COST TRACKING
+============================================================
+
+Where enabled, inventory may track:
+
+- Unit Cost
+- Total Cost
+- Purchase Cost
+- Adjustment Cost
+- Transfer Cost
+
+Cost information is private store data.
+
+============================================================
+45. PROFITABILITY FOUNDATION
+============================================================
+
+Inventory data may later support:
+
+- Cost of Goods Sold
+- Gross Profit
+- Margin
+- Stock Value
+
+These should integrate with financial/reporting modules rather
+than duplicating accounting logic.
+
+============================================================
+46. RETURNS
+============================================================
+
+Returned products may increase inventory depending on condition.
+
+Possible return conditions:
+
+- Resalable
+- Damaged
+- Used
+- Defective
+- Scrap
+
+Example:
+
+Customer Return
+→ Inspection
+→ Resalable → Stock In
+→ Damaged → Separate/Excluded Stock
+
+Detailed order return workflow belongs to Module 09.
+
+============================================================
+47. DAMAGED STOCK
+============================================================
+
+Damaged stock should be distinguishable from normal available
+stock.
+
+Possible approaches:
+
+- Separate quantity state
+- Separate inventory location
+- Damage movement ledger
+
+The final model must prevent damaged stock from being sold
+accidentally.
+
+============================================================
+48. RESERVED VS COMMITTED STOCK
+============================================================
+
+The architecture should distinguish:
+
+RESERVED:
+Temporarily held.
+
+COMMITTED:
+Associated with a confirmed order.
+
+ON HAND:
+Physically available in inventory.
+
+AVAILABLE:
+Sellable after deductions.
+
+This distinction becomes important for fulfillment.
+
+============================================================
+49. ORDER INTEGRATION
+============================================================
+
+Order events should affect inventory.
+
+Example:
+
+Order Created
+→ Reserve Stock
+
+Order Confirmed
+→ Commit Stock
+
+Order Cancelled
+→ Release/Return Stock
+
+Order Fulfilled
+→ Finalize Stock Out
+
+Exact timing must be defined in Module 09.
+
+============================================================
+50. CART INTEGRATION
+============================================================
+
+Cart should not permanently decrease On Hand stock.
+
+If reservations are used, cart/checkout may temporarily reserve
+stock according to configured policy.
+
+Abandoned carts must not permanently lock inventory.
+
+============================================================
+51. PAYMENT INTEGRATION
+============================================================
+
+For payment-sensitive orders, inventory behavior may depend on
+payment state.
+
+Example:
+
+COD:
+Order confirmation may commit stock.
+
+Online Payment:
+Reserve during payment
+→ Commit after successful payment
+
+Failed payment:
+→ Release reservation
+
+Exact workflow will be finalized in Modules 09 and 12.
+
+============================================================
+52. SHIPPING INTEGRATION
+============================================================
+
+Fulfillment may select the warehouse based on:
+
+- Stock availability
+- Customer location
+- Shipping zone
+- Warehouse priority
+- Delivery capability
+- Cost
+- Store rules
+
+The shipping module will consume inventory availability.
+
+============================================================
+53. INVENTORY ALLOCATION
+============================================================
+
+For multi-warehouse stores, the system may allocate an order
+across one or more warehouses.
+
+Initial strategy may prefer:
+
+1. Default Warehouse
+2. Highest Stock
+3. Nearest Warehouse
+4. Configured Priority
+
+The final strategy should be configurable.
+
+============================================================
+54. SPLIT FULFILLMENT FOUNDATION
+============================================================
+
+Future support may allow:
+
+One Order
+→ Warehouse A fulfills Item 1
+→ Warehouse B fulfills Item 2
+
+The architecture should reserve support without requiring it in
+the first release.
+
+============================================================
+55. STOCK RESERVATION ACROSS WAREHOUSES
+============================================================
+
+Reservations must identify the warehouse allocation where
+applicable.
+
+A reservation should not merely reserve an unscoped global
+quantity if fulfillment requires warehouse specificity.
+
+============================================================
+56. STOCK SYNCHRONIZATION
+============================================================
+
+The inventory engine should support synchronization with:
+
+- POS
+- Mobile App
+- External ERP
+- Marketplace
+- Supplier systems
+- Offline clients
+
+All synchronization must use tenant-aware identifiers.
+
+============================================================
+57. OFFLINE / POS FOUNDATION
+============================================================
+
+The architecture should support future offline operation.
+
+Example:
+
+POS Offline
+→ Local Sale
+→ Local Stock Change
+→ Sync Queue
+→ Server
+→ Conflict Resolution
+→ Server Inventory
+
+Server remains authoritative after synchronization.
+
+============================================================
+58. SYNC CONFLICTS
+============================================================
+
+Potential conflict:
+
+Server stock = 10
+Offline POS believes stock = 12
+Another sale occurs online
+
+The system must reconcile using:
+
+- Version
+- Timestamp where appropriate
+- Movement sequence
+- Idempotency key
+- Conflict policy
+
+No silent data loss.
+
+============================================================
+59. IDEMPOTENCY
+============================================================
+
+Inventory write operations should support idempotency.
+
+Examples:
+
+- Sale posting
+- Stock adjustment
+- Transfer
+- Receiving
+- Sync operation
+
+Repeated requests must not create duplicate stock movements.
+
+============================================================
+60. INVENTORY EVENTS
+============================================================
+
+Emit events such as:
+
+- InventoryCreated
+- StockIncreased
+- StockDecreased
+- StockReserved
+- StockReleased
+- StockCommitted
+- StockAdjusted
+- StockTransferred
+- StockReceived
+- LowStockDetected
+- OutOfStockDetected
+- InventorySyncCompleted
+- InventorySyncFailed
+
+These events support:
+
+- Orders
+- Notifications
+- Analytics
+- Reporting
+- Integrations
+- AI
+- Audit
+
+============================================================
+61. AUDIT LOGGING
+============================================================
+
+Important inventory operations must be auditable.
+
+Audit:
+
+- Stock adjustment
+- Opening stock
+- Transfer
+- Reservation
+- Release
+- Manual correction
+- Import
+- Sync
+- Warehouse changes
+- Count approval
+
+============================================================
+62. INVENTORY IMPORT
+============================================================
+
+The platform may support stock import.
+
+Potential data:
+
+- SKU
+- Warehouse
+- Quantity
+- Reorder Point
+- Cost
+
+Workflow:
+
+Upload
+→ Parse
+→ Validate
+→ Preview
+→ Confirm
+→ Process
+→ Report
+
+============================================================
+63. INVENTORY EXPORT
+============================================================
+
+Stores may export:
+
+- Current stock
+- Warehouse stock
+- Stock movements
+- Low stock report
+- Inventory valuation where enabled
+
+Exports must be tenant-scoped.
+
+============================================================
+64. INVENTORY DASHBOARD
+============================================================
+
+Admin dashboard may show:
+
+- Total SKUs
+- Total On Hand
+- Total Available
+- Reserved
+- Incoming
+- Low Stock
+- Out of Stock
+- Negative Stock
+- Stock Value where enabled
+- Recent Movements
+- Pending Transfers
+
+============================================================
+65. STOCK REPORTS
+============================================================
+
+Potential reports:
+
+- Stock Summary
+- Stock by Warehouse
+- Stock by Product
+- Stock Movement History
+- Low Stock
+- Out of Stock
+- Stock Adjustment
+- Transfer Report
+- Purchase Receiving
+- Stock Valuation
+- Inventory Aging
+- Dead Stock
+- Fast-Moving Products
+
+Detailed reporting belongs to Module 22.
+
+============================================================
+66. DEAD STOCK FOUNDATION
+============================================================
+
+The architecture should support identifying products with:
+
+- No sales for configured period
+- High stock
+- Low movement
+
+This can support future merchandising and purchasing decisions.
+
+============================================================
+67. INVENTORY AGING FOUNDATION
+============================================================
+
+Future inventory aging may track:
+
+- Stock received date
+- Quantity remaining
+- Age bucket
+
+Example:
+
+0–30 days
+31–60 days
+61–90 days
+90+ days
+
+Useful for businesses with perishable or aging inventory.
+
+============================================================
+68. BATCH / LOT FOUNDATION
+============================================================
+
+The architecture should reserve support for:
+
+- Batch Number
+- Lot Number
+- Manufacturing Date
+- Expiry Date
+
+This is important for:
+
+- Grocery
+- Cosmetics
+- Medicines where legally applicable
+- Food products
+
+Initial implementation may not activate this for every package.
+
+============================================================
+69. SERIAL NUMBER FOUNDATION
+============================================================
+
+Future serial tracking may support:
+
+- IMEI
+- Serial Number
+- Warranty
+- Device identity
+
+This is useful for electronics.
+
+The data model should remain extensible for serialized inventory.
+
+============================================================
+70. EXPIRY FOUNDATION
+============================================================
+
+Future expiry-aware inventory may support:
+
+- Expiry Date
+- Near Expiry Alert
+- Expired Quantity
+- FEFO allocation
+
+This should be architecture-ready.
+
+============================================================
+71. PACKAGE ENTITLEMENTS
+============================================================
+
+Potential package capabilities:
+
+Basic:
+- Single warehouse
+- Basic stock tracking
+- Low stock
+- Basic adjustments
+
+Business:
+- Multiple warehouses
+- Transfers
+- Advanced stock reports
+- Stock reservations
+- Purchase receiving
+
+Premium:
+- Advanced allocation
+- Advanced costing
+- Batch/lot/serial features where offered
+- Advanced analytics
+- POS synchronization
+- Advanced automation
+
+Exact package mapping must be finalized in Module 04.
+
+============================================================
+72. INVENTORY LIMITS
+============================================================
+
+Possible usage limits:
+
+- Warehouses
+- SKUs
+- Stock locations
+- Inventory transactions
+- Imports
+- Exports
+- POS devices
+- Sync operations
+- Historical retention
+
+Limits must be configurable.
+
+============================================================
+73. INVENTORY SECURITY
+============================================================
+
+Protect against:
+
+- Cross-tenant inventory access
+- Unauthorized stock adjustment
+- Price/cost exposure
+- Negative stock manipulation
+- Reservation manipulation
+- Transfer manipulation
+- Duplicate stock movement
+- Sync replay
+- API abuse
+- Unauthorized exports
+
+============================================================
+74. COST DATA SECURITY
+============================================================
+
+Private cost data must never be exposed through:
+
+- Public APIs
+- Storefront
+- Product JSON
+- Customer order responses
+- Public search
+- PWA cache
+
+Cost data is administrative/financial information.
+
+============================================================
+75. API DESIGN
+============================================================
+
+Secure APIs should support:
+
+- Get Inventory
+- Get Stock by Warehouse
+- Reserve Stock
+- Release Reservation
+- Commit Stock
+- Adjust Stock
+- Transfer Stock
+- Receive Transfer
+- Stock Count
+- Low Stock
+- Inventory History
+- Import
+- Export
+
+Every operation must enforce tenant, permission, entitlement,
+validation, and idempotency requirements.
+
+============================================================
+76. API RATE LIMITING
+============================================================
+
+Rate limits should apply to:
+
+- Inventory reads
+- Adjustments
+- Reservations
+- Transfers
+- Imports
+- Exports
+- Sync endpoints
+
+Higher limits may be available to trusted internal services
+through authenticated service identities.
+
+============================================================
+77. DATABASE INDEXING
+============================================================
+
+Likely indexes:
+
+- Store/Tenant ID
+- Warehouse ID
+- Product ID
+- Variant ID
+- SKU
+- Status
+- Updated At
+
+Composite indexes should support common queries.
+
+============================================================
+78. TRANSACTIONAL INTEGRITY
+============================================================
+
+Critical inventory changes should use transactional boundaries.
+
+Example:
+
+Reserve Stock
++
+Create Reservation
++
+Record Movement/Event
+
+must not partially succeed.
+
+The final implementation should define transaction and
+outbox/event consistency strategy.
+
+============================================================
+79. EVENT / OUTBOX FOUNDATION
+============================================================
+
+Inventory events should support reliable delivery.
+
+Recommended architecture:
+
+Inventory Transaction
+→ Outbox Event
+→ Commit
+→ Background Publisher
+→ Consumers
+
+This reduces the risk of stock changes succeeding while related
+events are lost.
+
+============================================================
+80. CACHE STRATEGY
+============================================================
+
+Public availability may be cached briefly, but critical checkout
+must use authoritative inventory state.
+
+Cache keys must include:
+
+- Tenant
+- Warehouse where applicable
+- Product/Variant
+- Channel
+
+Stale cache must never authorize an invalid sale.
+
+============================================================
+81. SEARCH INTEGRATION
+============================================================
+
+Inventory status may affect search:
+
+- In Stock
+- Out of Stock
+- Low Stock
+
+Search indexes should update when important availability changes.
+
+============================================================
+82. STOREFRONT INTEGRATION
+============================================================
+
+The storefront should consume:
+
+- Availability
+- Stock status
+- Backorder status
+- Preorder status where enabled
+
+Exact stock quantity may be hidden according to store settings.
+
+============================================================
+83. ADMIN INVENTORY PERMISSIONS
+============================================================
+
+Permissions should distinguish:
+
+- View Inventory
+- Adjust Inventory
+- Approve Adjustment
+- Transfer Inventory
+- Receive Transfer
+- Manage Warehouses
+- View Cost
+- Export Inventory
+- Manage Stock Counts
+
+Least privilege is mandatory.
+
+============================================================
+84. MULTI-ROLE WORKFLOW
+============================================================
+
+Example:
+
+Inventory Staff:
+Create adjustment
+
+Inventory Manager:
+Approve adjustment
+
+Finance:
+View cost impact
+
+Store Owner:
+View reports
+
+Each role sees only permitted capabilities.
+
+============================================================
+85. INVENTORY DATA QUALITY
+============================================================
+
+The system should identify:
+
+- Duplicate SKU
+- Missing SKU
+- Negative stock
+- Orphan inventory
+- Missing warehouse
+- Invalid quantity
+- Invalid product reference
+- Stale reservation
+- Failed synchronization
+
+============================================================
+86. RECONCILIATION
+============================================================
+
+The platform should provide reconciliation mechanisms.
+
+Examples:
+
+System Stock
+vs
+Physical Count
+
+Server Inventory
+vs
+POS Inventory
+
+Server Inventory
+vs
+External Marketplace
+
+Differences should be visible and auditable.
+
+============================================================
+87. INVENTORY REPAIR
+============================================================
+
+Authorized administrators may perform controlled corrections.
+
+Repair operations must:
+
+- Require reason
+- Require authorization
+- Preserve ledger
+- Avoid silent overwrites
+- Create audit record
+- Be tenant-scoped
+
+============================================================
+88. INVENTORY MIGRATION
+============================================================
+
+Schema/data migrations must preserve:
+
+- Inventory IDs
+- SKU references
+- Warehouse references
+- Movement history
+- Reservations where possible
+- Historical order references
+
+============================================================
+89. DATA RETENTION
+============================================================
+
+Inventory history may be needed for:
+
+- Auditing
+- Accounting
+- Reporting
+- Dispute resolution
+- Reconciliation
+
+Retention should be configurable according to platform and
+business requirements.
+
+============================================================
+90. PERFORMANCE AT SCALE
+============================================================
+
+The inventory engine should support:
+
+- Small stores
+- Medium stores
+- Large stores
+- Multiple warehouses
+- High order volume
+- High reservation volume
+- POS synchronization
+- Large movement history
+
+Potential scaling mechanisms:
+
+- Database indexing
+- Partitioning where justified
+- Caching
+- Queues
+- Read replicas
+- Event-driven processing
+- Archival strategies
+
+============================================================
+91. INVENTORY TESTING
+============================================================
+
+Mandatory functional tests:
+
+- Opening stock
+- Stock increase
+- Stock decrease
+- Reservation
+- Release
+- Commit
+- Adjustment
+- Transfer
+- Transfer receiving
+- Low stock
+- Out of stock
+- Warehouse creation
+- Warehouse deactivation
+- Stock count
+- Import
+- Export
+- Reconciliation
+
+============================================================
+92. CONCURRENCY TESTING
+============================================================
+
+Mandatory scenarios:
+
+- Two customers buy final unit
+- Multiple simultaneous reservations
+- Concurrent adjustment
+- Concurrent transfer
+- Concurrent order cancellation
+- Payment failure during reservation
+- Reservation expiry during checkout
+
+No scenario should create impossible inventory state.
+
+============================================================
+93. MULTI-TENANT SECURITY TESTING
+============================================================
+
+Test:
+
+- Store A cannot read Store B stock
+- Store A cannot modify Store B stock
+- Store A cannot reserve Store B stock
+- Store A cannot transfer Store B stock
+- Store A cannot access Store B warehouses
+- Store A cannot export Store B inventory
+- Store A cannot access Store B movement history
+- Store A cannot access Store B cache
+
+============================================================
+94. SYNC TESTING
+============================================================
+
+Test:
+
+- Duplicate sync request
+- Offline sale
+- Online sale during offline period
+- Conflict resolution
+- Retry
+- Partial failure
+- Network interruption
+- Device restart
+- Queue recovery
+
+============================================================
+95. PACKAGE TESTING
+============================================================
+
+Test:
+
+- Single warehouse limit
+- Multi-warehouse entitlement
+- Advanced reports
+- Reservation feature
+- Transfer feature
+- POS sync
+- Batch/serial feature
+- Inventory limits
+- Trial
+- Upgrade
+- Downgrade
+- Suspension
+
+============================================================
+96. HIGH-LEVEL DATA ENTITIES
+============================================================
+
+Potential entities:
+
+- Warehouse
+- WarehouseLocation
+- InventoryItem
+- InventoryBalance
+- InventoryMovement
+- InventoryReservation
+- InventoryReservationItem
+- StockTransfer
+- StockTransferItem
+- StockCount
+- StockCountItem
+- StockAdjustment
+- StockAdjustmentItem
+- PurchaseReceipt
+- PurchaseReceiptItem
+- InventoryCostLayer
+- InventoryExternalReference
+- InventorySyncJob
+- InventorySyncItem
+- InventoryReconciliation
+- InventoryAlert
+- InventoryConfiguration
+- InventoryOutboxEvent
+
+Exact schema will be finalized in the Database Blueprint.
+
+============================================================
+97. ADMIN CAPABILITIES
+============================================================
+
+Store administrators should be able to:
+
+- View Inventory
+- Manage Warehouses
+- Manage Stock
+- Adjust Stock
+- View Movements
+- Reserve/Release where authorized
+- Transfer Stock
+- Receive Transfers
+- Run Stock Counts
+- Import Inventory
+- Export Inventory
+- Configure Alerts
+- View Inventory Reports
+
+Permissions must come from Module 02.
+
+============================================================
+98. SUPER ADMIN CAPABILITIES
+============================================================
+
+Umar Techy Super Admin should manage platform-level:
+
+- Inventory feature definitions
+- Package entitlements
+- Usage limits
+- Global inventory rules
+- Monitoring
+- Operational diagnostics
+- Sync infrastructure
+- Approved integrations
+
+Tenant inventory access must remain controlled and audited.
+
+============================================================
+99. MODULE DEPENDENCIES
+============================================================
+
+Module 08 depends on:
+
+- Module 01 — Complete Platform Structure
+- Module 02 — Authentication, Users, Roles & Permissions
+- Module 03 — Multi-Tenant & Store Management
+- Module 04 — Subscription, Packages & Feature Entitlements
+- Module 05 — Storefront / Customer-Facing Website
+- Module 06 — Product & Catalog Management
+- Module 07 — Category, Brand & Attribute Management
+
+Strong integration with:
+
+- Module 09 — Order Management
+- Module 11 — Cart, Wishlist & Checkout
+- Module 12 — Payment Management
+- Module 13 — Shipping & Delivery
+- Module 22 — Reports & Analytics
+- Module 27 — App / Plugin Marketplace
+- Module 29 — Billing / Financial Integration
+- Module 31 — API & Developer Platform
+- Module 32 — Security
+
+============================================================
+100. REQUIRED FOLLOW-UP ARTIFACTS
+============================================================
+
+1. Inventory Database Blueprint
+2. Inventory Balance Blueprint
+3. Stock Ledger Blueprint
+4. Warehouse Blueprint
+5. Reservation Blueprint
+6. Stock Adjustment Blueprint
+7. Stock Transfer Blueprint
+8. Stock Count Blueprint
+9. Inventory Allocation Blueprint
+10. Purchase Receiving Blueprint
+11. Inventory Costing Blueprint
+12. Inventory API Contract
+13. Inventory Event / Outbox Blueprint
+14. Inventory Sync Blueprint
+15. POS Integration Blueprint
+16. Inventory Cache Strategy
+17. Inventory Reconciliation Blueprint
+18. Inventory Security Test Matrix
+19. Inventory Concurrency Test Plan
+20. Inventory Performance Test Plan
+
+============================================================
+101. FINAL ARCHITECTURAL RULES
+============================================================
+
+1. One Core Inventory Engine.
+2. All inventory data must be tenant-scoped.
+3. Inventory is authoritative on the server.
+4. Stock must be tracked at the correct sellable SKU level.
+5. Available stock must account for reservations.
+6. Critical stock changes must be transactional.
+7. Overselling behavior must be explicitly configured.
+8. Every stock-changing operation must be auditable.
+9. Stock movements must preserve historical integrity.
+10. Warehouse records must be tenant-scoped.
+11. Cross-tenant transfers are prohibited.
+12. Reservation lifecycle must be explicit.
+13. Reservation expiry must safely release stock.
+14. Duplicate inventory writes must be prevented through
+    idempotency where applicable.
+15. Cost data must never be exposed publicly.
+16. Inventory cache must never authorize a sale.
+17. Search availability must remain tenant-scoped.
+18. Bulk imports/exports must be permission-controlled.
+19. Offline/POS synchronization must be conflict-safe.
+20. Future batch/lot/serial/expiry support must remain possible.
+21. Inventory events should use reliable delivery mechanisms.
+22. Package restrictions must be entitlement-driven.
+23. Historical inventory data must be retained according to
+    configured retention rules.
+24. Inventory design must scale from one warehouse to many.
+25. Inventory must integrate cleanly with Orders, Payments,
+    Shipping, POS, Analytics, and future integrations.
+
+============================================================
+102. STATUS
+============================================================
+
+Module 08 Status:
+INVENTORY & STOCK MANAGEMENT — INITIALIZED
+
+Version:
+1.0
+
+This module establishes the reusable inventory foundation for
+single and multi-warehouse stores, stock balances, reservations,
+movements, adjustments, transfers, counts, purchasing
+integration, synchronization, POS readiness, costing,
+reconciliation, security, and scale.
+
+The next modules will define Order Management, Cart and Checkout,
+Payments, Shipping, Promotions, Marketing, SEO/Content, Theme,
+Notifications, Analytics, Backup, Monitoring, PWA, AI,
+Integrations, Billing, Super Admin, API, Security, and remaining
+platform capabilities.
+
+============================================================
+END OF MODULE 08
+============================================================

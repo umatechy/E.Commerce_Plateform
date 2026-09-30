@@ -1,0 +1,1526 @@
+====================================================================
+UMAR TECHY E-COMMERCE PLATFORM
+MASTER PROJECT BLUEPRINT — MODULE 20
+HOSTING & INFRASTRUCTURE MANAGEMENT
+Technical Specification — English Only
+Version 1.0
+====================================================================
+
+1. MODULE PURPOSE
+--------------------------------------------------------------------
+Module 20 provides the Core Hosting, Infrastructure, Deployment,
+Runtime, Environment, Resource Management, Scaling, and Infrastructure
+Automation foundation for the Umar Techy Multi-Tenant E-Commerce
+Platform.
+
+The module defines how the shared SaaS platform is hosted and how
+tenant storefronts and platform services consume infrastructure.
+
+The architecture must support:
+
+- Managed hosting.
+- VPS/cloud hosting.
+- Containerized deployment.
+- Application servers.
+- Database infrastructure.
+- Object/media storage.
+- CDN.
+- Caching.
+- Queues/workers.
+- Scheduled jobs.
+- Search infrastructure.
+- Monitoring.
+- Logging.
+- Backups.
+- SSL/certificate infrastructure.
+- Deployment pipelines.
+- Environment separation.
+- Resource quotas.
+- Horizontal scaling.
+- Vertical scaling.
+- Disaster recovery.
+- Infrastructure health.
+- Future multi-region deployment.
+
+Core principle:
+
+ONE CORE MULTI-TENANT PLATFORM
+        +
+SHARED INFRASTRUCTURE
+        +
+STRICT TENANT RESOURCE ISOLATION
+        +
+AUTOMATED DEPLOYMENT
+        +
+OBSERVABILITY
+        +
+SCALABLE SERVICE BOUNDARIES
+
+Infrastructure design must support many stores without creating a
+separate server/application codebase for every tenant unless an
+explicit enterprise isolation model is later introduced.
+
+
+2. PRIMARY OBJECTIVES
+--------------------------------------------------------------------
+The module shall:
+
+1. Define production infrastructure architecture.
+2. Separate development, staging, and production environments.
+3. Provide secure application runtime configuration.
+4. Support database hosting and connection management.
+5. Support object/media storage.
+6. Support CDN and edge delivery.
+7. Support cache infrastructure.
+8. Support queue and background worker infrastructure.
+9. Support scheduled jobs.
+10. Support search infrastructure.
+11. Support domain/SSL infrastructure integration.
+12. Support deployment automation.
+13. Support rollback.
+14. Support health checks.
+15. Support resource monitoring.
+16. Support tenant-aware quotas.
+17. Support horizontal/vertical scaling.
+18. Support infrastructure cost/resource visibility.
+19. Support backup and disaster recovery.
+20. Support future infrastructure provider abstraction.
+21. Prevent secrets exposure.
+22. Provide comprehensive operational testing.
+
+
+3. ARCHITECTURAL POSITION
+--------------------------------------------------------------------
+Module 20 owns:
+
+- Hosting architecture.
+- Runtime environments.
+- Infrastructure services.
+- Deployment architecture.
+- Infrastructure configuration.
+- Application runtime settings.
+- Worker infrastructure.
+- Queue infrastructure.
+- Cache infrastructure.
+- Storage infrastructure.
+- CDN integration.
+- Database hosting architecture.
+- Infrastructure scaling.
+- Resource limits.
+- Health checks.
+- Infrastructure automation.
+- Deployment/rollback mechanisms.
+- Environment configuration.
+- Infrastructure provider abstraction.
+
+Module 20 does NOT own:
+
+- Domain business lifecycle — Module 19.
+- Store lifecycle — Module 03.
+- Package entitlements — Module 04.
+- Business data ownership — Modules 06–15.
+- Analytics business reporting — Module 22.
+- Backup policy ownership — Module 23.
+- Store health/business monitoring ownership — Module 24.
+- Security/compliance policy ownership — Module 32.
+
+Module 20 provides infrastructure capabilities consumed by those
+modules.
+
+
+4. ENVIRONMENT STRATEGY
+--------------------------------------------------------------------
+Required environments:
+
+DEVELOPMENT
+STAGING
+PRODUCTION
+
+Optional:
+
+TEST
+QA
+PREVIEW
+DISASTER_RECOVERY
+
+Each environment must have:
+
+- Separate configuration.
+- Separate secrets.
+- Appropriate database isolation.
+- Separate storage namespaces.
+- Separate queues.
+- Separate cache namespace.
+- Separate domains where applicable.
+
+Production credentials must never be used in development or staging.
+
+
+5. INFRASTRUCTURE PROVIDER ABSTRACTION
+--------------------------------------------------------------------
+The architecture should avoid hard-coding the platform to one hosting
+provider.
+
+Provider adapters may support:
+
+- Compute.
+- Database.
+- Object storage.
+- CDN.
+- DNS.
+- SSL.
+- Email.
+- Queue.
+- Search.
+- Monitoring.
+
+Possible future providers include:
+
+- Managed hosting providers.
+- VPS providers.
+- Cloud providers.
+- Dedicated servers.
+- Enterprise private infrastructure.
+
+Provider-specific implementation must remain behind infrastructure
+adapters/interfaces where practical.
+
+
+6. DEPLOYMENT MODEL
+--------------------------------------------------------------------
+Preferred deployment model:
+
+Source Repository
+→ CI Validation
+→ Build
+→ Automated Tests
+→ Security Checks
+→ Artifact Creation
+→ Staging Deployment
+→ Smoke Tests
+→ Approval
+→ Production Deployment
+→ Health Verification
+
+Production deployment must be repeatable and auditable.
+
+
+7. APPLICATION RUNTIME
+--------------------------------------------------------------------
+The application runtime must support:
+
+- Web application.
+- API.
+- Background workers.
+- Scheduled jobs.
+- Webhook processors.
+- Search indexing workers.
+- Notification workers.
+- Media processing workers where required.
+
+Each workload should have clear resource limits and responsibilities.
+
+
+8. SERVICE BOUNDARIES
+--------------------------------------------------------------------
+Logical infrastructure services may include:
+
+Web/API
+Database
+Cache
+Queue
+Workers
+Scheduler
+Object Storage
+CDN
+Search
+Monitoring
+Logging
+Backup
+Secrets Management
+
+The platform should avoid premature microservice fragmentation.
+
+A modular monolith or service-oriented core may be preferred until
+scale requires further separation.
+
+
+9. DATABASE INFRASTRUCTURE
+--------------------------------------------------------------------
+Database requirements:
+
+- Production-grade relational database.
+- Automated backups.
+- Point-in-time recovery foundation where available.
+- Connection pooling.
+- Encryption in transit.
+- Encryption at rest where supported.
+- Restricted network access.
+- Separate credentials by environment.
+- Migration management.
+- Monitoring.
+
+Database remains authoritative for transactional business data.
+
+Application servers must never expose direct public database access.
+
+
+10. DATABASE CONNECTION MANAGEMENT
+--------------------------------------------------------------------
+Use:
+
+- Secure connection strings.
+- Secret management.
+- Connection pooling.
+- Timeouts.
+- Retry policy.
+- Circuit breaking where appropriate.
+- Maximum connection limits.
+
+Database credentials must never be committed to source control.
+
+
+11. DATABASE SCALING
+--------------------------------------------------------------------
+Support future:
+
+- Vertical scaling.
+- Read replicas.
+- Connection pool scaling.
+- Partitioning foundations.
+- Archival strategies.
+- Tenant-aware indexing.
+- Database sharding foundations if eventually required.
+
+Do not introduce sharding prematurely.
+
+
+12. OBJECT STORAGE
+--------------------------------------------------------------------
+Object storage shall support:
+
+- Product images.
+- Store logos.
+- Content media.
+- Documents.
+- Exports.
+- Generated files.
+- Backups where appropriate.
+
+Storage namespaces must include tenant isolation.
+
+Conceptual structure:
+
+environment/
+  tenant/{tenantId}/
+    media/
+    exports/
+    documents/
+
+Private files must use signed URLs or equivalent access control.
+
+
+13. MEDIA PROCESSING
+--------------------------------------------------------------------
+Media processing may include:
+
+- Image resizing.
+- Thumbnail generation.
+- WebP/AVIF derivatives where supported.
+- Compression.
+- Metadata extraction.
+- Validation.
+- Malware scanning foundation.
+
+Processing should occur asynchronously where practical.
+
+
+14. CDN
+--------------------------------------------------------------------
+The platform should support CDN delivery for:
+
+- Public images.
+- Static assets.
+- CSS.
+- JavaScript.
+- Fonts where appropriate.
+- Public storefront content where safely cacheable.
+
+CDN cache keys must preserve tenant/domain/locale context where
+necessary.
+
+Private customer/admin data must never be publicly cached.
+
+
+15. CACHE INFRASTRUCTURE
+--------------------------------------------------------------------
+Support distributed caching for:
+
+- Domain resolution.
+- Store configuration.
+- Theme configuration.
+- Entitlements.
+- Product/category cache.
+- SEO metadata.
+- Content.
+- Session data where appropriate.
+
+Cache keys must contain tenant context where the value is tenant
+specific.
+
+Cache invalidation must be event-driven where practical.
+
+
+16. QUEUE INFRASTRUCTURE
+--------------------------------------------------------------------
+Queues should support:
+
+- Notifications.
+- Marketing delivery.
+- Webhooks.
+- Search indexing.
+- Media processing.
+- Sitemap generation.
+- Scheduled tasks.
+- Reports.
+- Backups.
+- Imports/exports.
+
+Queues must support:
+
+- Retry.
+- Backoff.
+- Dead-letter handling.
+- Idempotency.
+- Visibility timeout where applicable.
+- Monitoring.
+
+
+17. WORKER MANAGEMENT
+--------------------------------------------------------------------
+Workers must be independently scalable.
+
+Workload categories may include:
+
+- High priority.
+- Standard.
+- Low priority.
+- Scheduled.
+- Resource-heavy.
+
+Critical business operations must not be blocked behind long-running
+non-critical jobs.
+
+
+18. SCHEDULER
+--------------------------------------------------------------------
+The infrastructure must provide reliable scheduled-job execution.
+
+Requirements:
+
+- Distributed locking.
+- Idempotency.
+- Retry.
+- Failure logging.
+- Timezone awareness.
+- Missed-job recovery where appropriate.
+
+Scheduled jobs include:
+
+- Subscription processing.
+- Domain health checks.
+- SSL checks.
+- Marketing campaigns.
+- Abandoned carts.
+- Sitemap generation.
+- Backups.
+- Cleanup.
+- Reports.
+
+
+19. SEARCH INFRASTRUCTURE
+--------------------------------------------------------------------
+Future-capable search infrastructure may support:
+
+- Product search.
+- Category search.
+- Content search.
+- Admin search.
+- Customer search where permitted.
+
+Search indexes must be tenant-aware.
+
+Documents must contain tenant identity.
+
+Search infrastructure must not permit cross-tenant query results.
+
+
+20. SECRETS MANAGEMENT
+--------------------------------------------------------------------
+Secrets may include:
+
+- Database passwords.
+- JWT signing keys.
+- Encryption keys.
+- Payment provider credentials.
+- Shipping provider credentials.
+- Email credentials.
+- WhatsApp provider credentials.
+- Storage credentials.
+- CDN credentials.
+- Registrar credentials.
+- Monitoring credentials.
+
+Requirements:
+
+- Never commit secrets.
+- Environment-specific secrets.
+- Encryption at rest.
+- Access control.
+- Rotation support.
+- Audit access.
+- No secrets in logs.
+- No secrets in client bundles.
+
+
+21. ENVIRONMENT VARIABLES
+--------------------------------------------------------------------
+Environment variables may contain non-secret configuration and secret
+references.
+
+Examples:
+
+APP_ENV
+APP_URL
+DATABASE_URL
+CACHE_URL
+QUEUE_URL
+STORAGE_BUCKET
+CDN_BASE_URL
+LOG_LEVEL
+
+Secrets should preferably be injected through a secure secret
+manager rather than plain deployment files.
+
+
+22. NETWORK ARCHITECTURE
+--------------------------------------------------------------------
+Production should use layered network security:
+
+Internet
+→ CDN / Load Balancer
+→ Web/API
+→ Internal Services
+→ Database/Cache/Queue/Storage
+
+Database and internal services should not be publicly exposed.
+
+Firewall rules must follow least privilege.
+
+
+23. LOAD BALANCING
+--------------------------------------------------------------------
+Support future horizontal scaling through:
+
+- Load balancer.
+- Multiple application instances.
+- Stateless API design.
+- Shared cache where required.
+- Shared object storage.
+- Externalized session state where needed.
+
+Application instances should not depend on local filesystem state.
+
+
+24. SESSION ARCHITECTURE
+--------------------------------------------------------------------
+Sessions must support multi-instance deployments.
+
+Options:
+
+- Secure signed tokens.
+- Distributed session storage.
+- Stateless authentication.
+
+Session design must remain compatible with custom domains and tenant
+isolation.
+
+
+25. AUTOSCALING FOUNDATION
+--------------------------------------------------------------------
+Future autoscaling may use:
+
+- CPU.
+- Memory.
+- Request rate.
+- Queue depth.
+- Database load.
+- Response latency.
+
+Autoscaling must respect infrastructure cost limits.
+
+Scaling policies should be observable and auditable.
+
+
+26. TENANT RESOURCE ISOLATION
+--------------------------------------------------------------------
+Even on shared infrastructure, tenant resources must be logically
+isolated.
+
+Track and control:
+
+- Storage.
+- API requests.
+- Bandwidth.
+- Background jobs.
+- Search operations.
+- AI workloads.
+- Media processing.
+- Report generation.
+
+Module 04 owns commercial quotas.
+
+Module 20 enforces infrastructure safety limits.
+
+
+27. RESOURCE QUOTAS
+--------------------------------------------------------------------
+Possible infrastructure safety quotas:
+
+- Requests per minute.
+- Requests per hour.
+- Concurrent requests.
+- Queue jobs per minute.
+- Media processing concurrency.
+- Storage capacity.
+- Bandwidth.
+- Search queries.
+- Export jobs.
+- Report jobs.
+- AI compute requests.
+
+Safety quotas may be stricter than commercial package limits.
+
+
+28. NOISY-NEIGHBOR PROTECTION
+--------------------------------------------------------------------
+The platform must protect tenants from excessive resource consumption.
+
+Controls:
+
+- Per-tenant rate limits.
+- Queue fairness.
+- Worker concurrency limits.
+- Export throttling.
+- Media processing limits.
+- Search throttling.
+- AI workload limits.
+- Circuit breakers.
+
+One tenant must not degrade the entire platform.
+
+
+29. RESOURCE USAGE METERING
+--------------------------------------------------------------------
+Track infrastructure-related usage:
+
+- Storage.
+- Bandwidth.
+- Requests.
+- Worker jobs.
+- Search usage.
+- Media processing.
+- Report generation.
+- AI workload.
+
+Usage may feed:
+
+- Module 04 entitlement enforcement.
+- Module 22 analytics.
+- Module 24 health monitoring.
+- Module 29 billing.
+
+
+30. LOGGING
+--------------------------------------------------------------------
+Centralized logging should support:
+
+- Application logs.
+- API logs.
+- Worker logs.
+- Deployment logs.
+- Security logs.
+- Infrastructure logs.
+- Domain/SSL operational logs.
+- Database operational metrics.
+
+Logs must:
+
+- Be structured.
+- Include environment.
+- Include service.
+- Include tenant context where safe.
+- Avoid secrets.
+- Avoid unnecessary PII.
+
+
+31. CORRELATION & TRACE IDs
+--------------------------------------------------------------------
+Requests should support:
+
+- Request ID.
+- Correlation ID.
+- Trace ID where distributed tracing is available.
+
+These identifiers should connect:
+
+API request
+→ Database operation
+→ Queue job
+→ Worker
+→ External provider
+→ Notification.
+
+
+32. MONITORING
+--------------------------------------------------------------------
+Infrastructure monitoring should track:
+
+- CPU.
+- Memory.
+- Disk.
+- Network.
+- Database connections.
+- Database latency.
+- Cache hit rate.
+- Queue depth.
+- Worker failures.
+- Request latency.
+- Error rates.
+- CDN performance.
+- Storage usage.
+- SSL/domain health.
+
+Module 24 consumes infrastructure health data for store/platform
+health views.
+
+
+33. ALERTING
+--------------------------------------------------------------------
+Alerts may include:
+
+- Application down.
+- Database unavailable.
+- High error rate.
+- High latency.
+- Queue backlog.
+- Worker failure.
+- Storage near limit.
+- Disk near limit.
+- SSL renewal failure.
+- Backup failure.
+- Deployment failure.
+- Security anomaly.
+- Resource exhaustion.
+
+Alert routing should integrate with Module 21.
+
+
+34. HEALTH CHECKS
+--------------------------------------------------------------------
+Provide:
+
+- Liveness checks.
+- Readiness checks.
+- Dependency health checks.
+- Database health.
+- Cache health.
+- Queue health.
+- Storage health.
+
+Readiness should prevent unhealthy instances from receiving traffic.
+
+
+35. DEPLOYMENT STRATEGIES
+--------------------------------------------------------------------
+Support:
+
+- Rolling deployment.
+- Blue/green deployment foundation.
+- Canary deployment foundation.
+- Maintenance deployment.
+
+Strategy should depend on platform scale and infrastructure
+capabilities.
+
+
+36. ZERO-DOWNTIME DEPLOYMENT
+--------------------------------------------------------------------
+Where supported:
+
+1. Build new artifact.
+2. Apply backward-compatible database changes.
+3. Deploy new application instances.
+4. Verify health.
+5. Shift traffic.
+6. Complete migration.
+7. Remove old instances.
+
+Database migrations must support compatibility between old and new
+application versions during rollout.
+
+
+37. DATABASE MIGRATION SAFETY
+--------------------------------------------------------------------
+Rules:
+
+- No destructive migration by default.
+- Backward-compatible changes first.
+- Data migration separately where practical.
+- Index changes planned for production load.
+- Large migrations asynchronous where possible.
+- Rollback strategy documented.
+
+Production database changes require explicit authorization.
+
+
+38. ROLLBACK
+--------------------------------------------------------------------
+Application rollback must support:
+
+- Previous application artifact.
+- Previous configuration.
+- Previous theme/content compatibility.
+- Database compatibility.
+
+Never assume database rollback is safe.
+
+Forward-compatible migrations are preferred.
+
+
+39. CI/CD
+--------------------------------------------------------------------
+Pipeline stages:
+
+1. Source validation.
+2. Dependency installation.
+3. Static analysis.
+4. Unit tests.
+5. Integration tests.
+6. Security scanning.
+7. Build.
+8. Artifact validation.
+9. Staging deployment.
+10. Smoke tests.
+11. Production approval.
+12. Production deployment.
+13. Health verification.
+14. Deployment report.
+
+All stages should produce auditable output.
+
+
+40. ARTIFACT MANAGEMENT
+--------------------------------------------------------------------
+Build artifacts should be:
+
+- Versioned.
+- Immutable.
+- Traceable to commit.
+- Environment-independent where possible.
+- Signed or integrity-verified where supported.
+
+Production should deploy known artifacts rather than building
+uncontrolled code directly on the server.
+
+
+41. CONFIGURATION MANAGEMENT
+--------------------------------------------------------------------
+Separate:
+
+CODE
+from
+CONFIGURATION
+from
+SECRETS.
+
+Configuration should be versioned where safe.
+
+Secrets should remain outside source control.
+
+
+42. INFRASTRUCTURE AS CODE
+--------------------------------------------------------------------
+Where supported, infrastructure should be defined declaratively.
+
+Examples:
+
+- Server configuration.
+- Containers.
+- Networks.
+- Databases.
+- Storage.
+- CDN.
+- Queues.
+- Monitoring.
+
+Infrastructure changes should be reviewable and reproducible.
+
+
+43. CONTAINERIZATION FOUNDATION
+--------------------------------------------------------------------
+The platform should remain container-compatible.
+
+Potential containers:
+
+- Web/API.
+- Worker.
+- Scheduler.
+- Search worker.
+- Media worker.
+
+Containers must:
+
+- Run as non-root where practical.
+- Use minimal images.
+- Pin dependencies.
+- Avoid embedded secrets.
+- Expose only required ports.
+
+
+44. FILESYSTEM RULES
+--------------------------------------------------------------------
+Application servers must treat local filesystem storage as ephemeral.
+
+Persistent data must use:
+
+- Database.
+- Object storage.
+- Managed persistent volumes where explicitly required.
+
+Uploads should not depend on one application instance.
+
+
+45. BACKUP INTEGRATION
+--------------------------------------------------------------------
+Module 23 owns backup policy.
+
+Module 20 provides infrastructure capabilities for:
+
+- Database backup.
+- Object storage backup.
+- Configuration backup.
+- Infrastructure configuration backup.
+- Backup storage.
+- Backup verification.
+
+Backups must be encrypted and access-controlled.
+
+
+46. DISASTER RECOVERY
+--------------------------------------------------------------------
+Support recovery planning for:
+
+- Application failure.
+- Database failure.
+- Storage failure.
+- Region/provider failure.
+- Credential compromise.
+- Deployment failure.
+
+Define:
+
+RPO — Recovery Point Objective
+RTO — Recovery Time Objective
+
+Targets should be configurable by platform/business requirements.
+
+
+47. HIGH AVAILABILITY
+--------------------------------------------------------------------
+Future high-availability architecture may include:
+
+- Multiple application instances.
+- Redundant database.
+- Replicated storage.
+- Redundant queues.
+- Load balancing.
+- Multi-zone deployment.
+- Multi-region deployment.
+
+The first production architecture may be simpler but must avoid
+design decisions that make future HA impossible.
+
+
+48. MULTI-REGION FOUNDATION
+--------------------------------------------------------------------
+Future support may include:
+
+- Regional application nodes.
+- Regional CDN.
+- Database replication.
+- Disaster recovery region.
+- Tenant region assignment.
+
+Tenant region assignment must be explicit and auditable.
+
+Do not implement multi-region complexity unless justified by scale.
+
+
+49. COST MANAGEMENT
+--------------------------------------------------------------------
+Track infrastructure cost drivers:
+
+- Compute.
+- Database.
+- Storage.
+- Bandwidth.
+- CDN.
+- Queue.
+- Search.
+- Monitoring.
+- Backups.
+- AI infrastructure.
+
+Cost data may be consumed by Module 22/24/29.
+
+Tenant-level cost attribution may be approximate unless provider
+metering is sufficiently granular.
+
+
+50. HOSTING PLAN INTEGRATION
+--------------------------------------------------------------------
+The platform may support commercial hosting packages such as:
+
+- Included hosting.
+- Managed hosting.
+- Premium managed hosting.
+- Customer-provided hosting.
+- Enterprise dedicated hosting.
+
+Hosting entitlements must be separated from application feature
+entitlements.
+
+A store must retain its Store ID/Tenant ID when hosting changes.
+
+
+51. HOSTING MIGRATION
+--------------------------------------------------------------------
+Migration workflow:
+
+Plan
+→ Provision Target
+→ Replicate Data
+→ Validate
+→ Freeze/Controlled Cutover
+→ DNS/Domain Update
+→ Verify
+→ Monitor
+→ Decommission Source
+
+Migration must preserve:
+
+- Store ID.
+- Tenant ID.
+- Domain mapping.
+- Products.
+- Orders.
+- Customers.
+- Inventory.
+- Theme.
+- Content.
+- Subscription.
+
+No accidental tenant duplication.
+
+
+52. PLATFORM MAINTENANCE
+--------------------------------------------------------------------
+Support controlled maintenance modes:
+
+- Platform maintenance.
+- Store maintenance.
+- Infrastructure maintenance.
+
+Maintenance pages must:
+
+- Be tenant-aware.
+- Be configurable.
+- Avoid leaking infrastructure details.
+- Respect SEO policy from Module 16.
+
+
+53. DEPENDENCY MANAGEMENT
+--------------------------------------------------------------------
+Infrastructure dependencies must be:
+
+- Versioned.
+- Scanned.
+- Updated regularly.
+- Tested before production.
+- Pinned where appropriate.
+
+Critical security updates should follow an expedited process.
+
+
+54. RESOURCE LIMIT FAILURE POLICY
+--------------------------------------------------------------------
+When a tenant reaches an infrastructure safety limit:
+
+- Do not crash the entire platform.
+- Return a controlled error.
+- Queue non-critical work where possible.
+- Explain retry behavior.
+- Record usage event.
+- Alert according to severity.
+
+Commercial limits remain governed by Module 04.
+
+
+55. API GATEWAY / EDGE CONTROLS
+--------------------------------------------------------------------
+Where appropriate, the edge layer may provide:
+
+- TLS termination.
+- Rate limiting.
+- Request size limits.
+- WAF integration.
+- Bot protection.
+- Compression.
+- CDN.
+- Routing.
+
+Business authorization remains inside the application.
+
+
+56. SECURITY ARCHITECTURE
+--------------------------------------------------------------------
+Mandatory:
+
+- TLS.
+- Firewall.
+- Least privilege.
+- Secret management.
+- Network segmentation.
+- Secure deployment.
+- Dependency scanning.
+- Image scanning.
+- WAF foundation.
+- Rate limiting.
+- Audit logging.
+- Backup encryption.
+- Access logging.
+- Admin MFA foundation.
+- Restricted infrastructure access.
+
+Module 32 remains authoritative for security/compliance policy.
+
+
+57. INFRASTRUCTURE ACCESS
+--------------------------------------------------------------------
+Administrative access must use:
+
+- Named identities.
+- MFA.
+- Least privilege.
+- Short-lived credentials where possible.
+- SSH key/certificate controls where applicable.
+- Access logging.
+- Break-glass procedure.
+
+Shared administrator passwords are prohibited.
+
+
+58. INFRASTRUCTURE API
+--------------------------------------------------------------------
+Future platform APIs may expose safe infrastructure metadata such as:
+
+/api/platform/infrastructure/health
+/api/platform/infrastructure/usage
+/api/platform/infrastructure/deployments
+/api/platform/infrastructure/providers
+
+Tenant administrators must not receive raw infrastructure
+credentials or sensitive internal topology.
+
+
+59. DATA MODEL — HIGH LEVEL
+--------------------------------------------------------------------
+Core infrastructure entities may include:
+
+Environment
+InfrastructureProvider
+InfrastructureProviderAccount
+ComputeResource
+DatabaseResource
+CacheResource
+QueueResource
+StorageResource
+CdnResource
+SearchResource
+WorkerPool
+ScheduledJob
+Deployment
+DeploymentArtifact
+DeploymentEnvironment
+HealthCheck
+InfrastructureAlert
+ResourceUsage
+ResourceQuota
+SecretReference
+InfrastructureConfig
+MaintenanceWindow
+MigrationJob
+DisasterRecoveryPlan
+BackupResourceReference
+
+Tenant-specific resource attribution must contain tenant context where
+applicable.
+
+
+60. DATA INTEGRITY RULES
+--------------------------------------------------------------------
+1. Production resources must belong to the correct environment.
+2. Secrets must never be stored as plaintext application data.
+3. Tenant resource usage must retain tenant identity where applicable.
+4. Infrastructure records must not expose provider secrets.
+5. Deployment artifacts must be immutable.
+6. Production deployment must reference a known artifact.
+7. Infrastructure changes must be auditable.
+8. Resource quotas must not bypass commercial entitlement rules.
+9. Commercial entitlements must not bypass infrastructure safety.
+10. Persistent tenant data must not depend on ephemeral instances.
+11. Domain changes must integrate with Module 19.
+12. Backup/restore must preserve tenant boundaries.
+
+
+61. OBSERVABILITY & AUDIT
+--------------------------------------------------------------------
+Audit:
+
+- Deployment.
+- Rollback.
+- Infrastructure configuration change.
+- Provider change.
+- Secret rotation.
+- Resource quota change.
+- Scaling policy change.
+- Maintenance mode.
+- Infrastructure access.
+- Migration.
+- Disaster recovery operation.
+
+Audit records should include:
+
+- Actor/system identity.
+- Environment.
+- Resource.
+- Action.
+- Timestamp.
+- Result.
+- Correlation ID.
+
+
+62. TESTING REQUIREMENTS
+--------------------------------------------------------------------
+Infrastructure tests:
+
+- Environment isolation.
+- Configuration loading.
+- Secret injection.
+- Database connectivity.
+- Cache connectivity.
+- Queue connectivity.
+- Storage connectivity.
+- CDN behavior.
+- Search connectivity.
+
+Deployment tests:
+
+- Build.
+- Artifact integrity.
+- Staging deployment.
+- Smoke tests.
+- Rollback.
+- Zero-downtime strategy where supported.
+- Migration compatibility.
+
+Security tests:
+
+- Secret leakage.
+- Public database exposure.
+- Host/network exposure.
+- Privilege escalation.
+- Container security.
+- Dependency vulnerabilities.
+- Credential misuse.
+
+Tenant tests:
+
+- Resource attribution.
+- Rate limiting.
+- Queue fairness.
+- Cache isolation.
+- Storage isolation.
+- Search isolation.
+
+Failure tests:
+
+- Database outage.
+- Cache outage.
+- Queue outage.
+- Storage outage.
+- Worker failure.
+- Deployment failure.
+- DNS/SSL dependency failure.
+- Provider outage.
+- Disk exhaustion.
+- Resource exhaustion.
+
+Disaster recovery tests:
+
+- Database restore.
+- Object storage restore.
+- Application redeployment.
+- Configuration recovery.
+- Tenant integrity verification.
+
+
+63. ACCEPTANCE CRITERIA
+--------------------------------------------------------------------
+Module 20 is complete only when:
+
+1. Development/staging/production environments are separated.
+2. Secure runtime configuration works.
+3. Database infrastructure is defined.
+4. Object storage is defined.
+5. CDN integration is defined.
+6. Cache infrastructure works.
+7. Queue infrastructure works.
+8. Workers work.
+9. Scheduler works.
+10. Search infrastructure foundation works.
+11. Secrets management works.
+12. Network security works.
+13. Health checks work.
+14. Monitoring works.
+15. Alerting works.
+16. CI/CD works.
+17. Deployment artifacts are versioned.
+18. Rollback works.
+19. Resource quotas work.
+20. Noisy-neighbor protection works.
+21. Usage metering works.
+22. Backup integration works.
+23. Disaster recovery foundation works.
+24. Tenant isolation is verified.
+25. Infrastructure access is secured.
+26. Security tests pass.
+27. Failure tests pass.
+28. Production deployment checks pass.
+29. Future provider migration remains feasible.
+30. Repository checkpoint is recorded.
+
+
+64. REQUIRED FOLLOW-UP ARTIFACTS
+--------------------------------------------------------------------
+After implementation, create and maintain:
+
+1. Module 20 implementation checklist.
+2. Production infrastructure architecture.
+3. Environment matrix.
+4. Hosting provider abstraction specification.
+5. Network architecture diagram.
+6. Database infrastructure specification.
+7. Object storage specification.
+8. CDN specification.
+9. Cache architecture specification.
+10. Queue/worker specification.
+11. Scheduler specification.
+12. Search infrastructure specification.
+13. Secrets management specification.
+14. CI/CD pipeline specification.
+15. Deployment/rollback runbook.
+16. Infrastructure-as-code specification.
+17. Resource quota specification.
+18. Noisy-neighbor protection specification.
+19. Monitoring/alerting specification.
+20. Backup/DR infrastructure specification.
+21. Hosting migration runbook.
+22. Security hardening checklist.
+23. Infrastructure permission matrix.
+24. Cost/resource monitoring specification.
+25. Disaster recovery test plan.
+26. Automated infrastructure test matrix.
+27. Production launch checklist.
+28. Module 20 completion report.
+29. Repository checkpoint/progress note.
+
+
+65. CLAUDE DEVELOPMENT REQUIREMENTS
+--------------------------------------------------------------------
+Claude must:
+
+1. Read the Project Bible and all finalized module blueprints.
+2. Treat Module 20 as authoritative for infrastructure responsibilities.
+3. Inspect the existing repository and deployment environment first.
+4. Reuse existing infrastructure patterns where safe.
+5. Never hard-code provider-specific architecture unnecessarily.
+6. Never commit secrets.
+7. Never expose production credentials.
+8. Never perform destructive production operations without explicit
+   authorization.
+9. Create safe migrations.
+10. Add deployment and infrastructure tests.
+11. Validate environment separation.
+12. Validate database connectivity.
+13. Validate storage/cache/queue.
+14. Validate worker and scheduler behavior.
+15. Validate tenant resource isolation.
+16. Validate rate limits and noisy-neighbor controls.
+17. Validate deployment and rollback.
+18. Validate backups and restore procedures.
+19. Validate monitoring and alerts.
+20. Run security checks.
+21. Record all fixes.
+22. Commit only after validation.
+23. Push only according to the established workflow.
+24. Preserve a concise repository checkpoint after the module.
+
+
+66. PRODUCTION READINESS
+--------------------------------------------------------------------
+Before production:
+
+- Confirm environment separation.
+- Confirm secrets management.
+- Confirm database firewall.
+- Confirm application network rules.
+- Confirm object storage security.
+- Confirm CDN configuration.
+- Confirm cache isolation.
+- Confirm queue reliability.
+- Confirm worker scaling.
+- Confirm scheduler locking.
+- Confirm monitoring.
+- Confirm alerting.
+- Confirm backups.
+- Confirm restore verification.
+- Confirm deployment pipeline.
+- Confirm rollback.
+- Confirm rate limiting.
+- Confirm tenant resource limits.
+- Confirm noisy-neighbor protection.
+- Confirm infrastructure access controls.
+- Confirm TLS.
+- Confirm domain/SSL integration.
+- Confirm disaster recovery procedure.
+- Confirm representative production load behavior.
+
+
+67. FINAL ARCHITECTURAL RULES
+--------------------------------------------------------------------
+RULE 01:
+Module 20 owns infrastructure execution and runtime architecture.
+
+RULE 02:
+Business data ownership remains with the relevant business modules.
+
+RULE 03:
+One core platform serves all tenants.
+
+RULE 04:
+Development, staging, and production must be isolated.
+
+RULE 05:
+Production secrets must never exist in source control.
+
+RULE 06:
+Infrastructure provider dependencies should use abstraction where
+practical.
+
+RULE 07:
+Tenant isolation must extend to storage, cache, search, queues,
+logs, and infrastructure usage.
+
+RULE 08:
+Commercial quotas come from Module 04.
+
+RULE 09:
+Infrastructure safety limits remain independent from commercial
+entitlements.
+
+RULE 10:
+Noisy-neighbor protection is mandatory for shared infrastructure.
+
+RULE 11:
+Persistent tenant data must never depend on an ephemeral
+application instance.
+
+RULE 12:
+Production database access must not be publicly exposed.
+
+RULE 13:
+Application instances should be stateless where practical.
+
+RULE 14:
+Deployment artifacts must be versioned and traceable.
+
+RULE 15:
+Production deployment must be repeatable and auditable.
+
+RULE 16:
+Database migrations must favor backward compatibility.
+
+RULE 17:
+Destructive production database operations require explicit
+authorization.
+
+RULE 18:
+Secrets must be encrypted, access-controlled, and rotated.
+
+RULE 19:
+Infrastructure access must use named identities and MFA.
+
+RULE 20:
+Monitoring and alerting are production requirements.
+
+RULE 21:
+Health checks must distinguish liveness from readiness.
+
+RULE 22:
+Queues and workers must support retry, idempotency, and failure
+handling.
+
+RULE 23:
+Scheduled jobs must be idempotent and distributed-lock safe.
+
+RULE 24:
+Cache keys must preserve tenant identity where required.
+
+RULE 25:
+CDN/public caching must never expose private tenant data.
+
+RULE 26:
+Domain execution integrates with Module 19; infrastructure does not
+own domain business policy.
+
+RULE 27:
+Backup policy belongs to Module 23, while Module 20 provides the
+infrastructure capabilities.
+
+RULE 28:
+Store/platform health reporting belongs to Module 24, while Module 20
+provides infrastructure telemetry.
+
+RULE 29:
+Security/compliance policy belongs to Module 32, while Module 20
+implements infrastructure security controls.
+
+RULE 30:
+The infrastructure architecture must remain scalable, observable,
+recoverable, and replaceable without changing Store ID or Tenant ID.
+
+====================================================================
+END OF MODULE 20 — HOSTING & INFRASTRUCTURE MANAGEMENT
+====================================================================

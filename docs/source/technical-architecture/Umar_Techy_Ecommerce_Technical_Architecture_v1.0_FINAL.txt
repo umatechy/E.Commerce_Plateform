@@ -1,0 +1,2074 @@
+====================================================================
+                         UMAR TECHY
+                  E-COMMERCE PLATFORM
+                 TECHNICAL ARCHITECTURE
+                         VERSION 1.0
+====================================================================
+
+DOCUMENT STATUS
+---------------
+Project: Umar Techy E-Commerce Platform
+Document: Technical Architecture
+Version: 1.0
+Language: English
+Architecture Model: Core Multi-Tenant E-Commerce SaaS
+Primary References:
+- Project Bible v1.0
+- SRS v1.0
+- Module Blueprints 01-35
+
+ARCHITECTURAL PRINCIPLE
+-----------------------
+One Core Platform + Many Isolated Stores + Central Entitlement System +
+Provider Adapters + Versioned APIs + Controlled Extension Framework.
+
+This document defines the logical technical architecture. Exact framework,
+runtime and infrastructure choices shall be confirmed against the existing
+repository during the repository inspection phase. The architecture must
+avoid unnecessary technology changes merely for preference.
+
+====================================================================
+1. ARCHITECTURE OBJECTIVES
+====================================================================
+
+The architecture shall optimize for:
+
+1. Strict multi-tenant isolation.
+2. Security by default.
+3. Server-authoritative business rules.
+4. Modular maintainability.
+5. Reliable commerce transactions.
+6. Provider independence.
+7. Configuration-driven storefronts and themes.
+8. Testability.
+9. Observability.
+10. Safe deployment and recovery.
+11. API-first integration capability.
+12. Future scalability.
+13. Future marketplace/plugin extensibility.
+14. Controlled AI integration.
+15. Portable infrastructure.
+
+====================================================================
+2. LOGICAL SYSTEM TOPOLOGY
+====================================================================
+
+                         INTERNET / CLIENTS
+                                |
+                +---------------+----------------+
+                |               |                |
+             Customer        Store Admin      Developer
+            Storefront        Console          Clients
+                |               |                |
+                +---------------+----------------+
+                                |
+                       CDN / Edge / WAF
+                                |
+                         API / Web Layer
+                                |
+                +---------------+----------------+
+                |       Identity / Session       |
+                |       Tenant Resolution       |
+                |       Authorization            |
+                |       Entitlement Engine       |
+                +---------------+----------------+
+                                |
+                       Application Domains
+                                |
+     +------------+-------------+-------------+-------------+
+     |            |             |             |             |
+   Catalog     Commerce     Customers     Platform       Growth
+     |            |             |             |             |
+ Inventory      Orders      Profiles      Billing        Marketing
+ Products       Checkout    Segments      Domains        SEO
+ Categories     Payments    Accounts      Hosting        AI
+ Attributes     Shipping                 Support         Apps
+ Promotions                              Analytics       Affiliates
+                                |
+                 +--------------+--------------+
+                 |              |              |
+              Database        Cache          Queue
+                 |              |              |
+                 +--------------+--------------+
+                                |
+                  Object Storage / Search /
+                  External Providers / APIs
+                                |
+              Payments / Shipping / Messaging /
+              AI / Domains / Analytics / Other
+              Integrations
+
+====================================================================
+3. ARCHITECTURAL STYLE
+====================================================================
+
+Recommended baseline:
+
+- Modular monolith initially where practical.
+- Clear domain/service boundaries.
+- API-first contracts.
+- Background workers for asynchronous processing.
+- Provider adapter pattern for external services.
+- Event-driven extension points.
+- Outbox/inbox patterns where reliability requires them.
+- Centralized authentication and authorization.
+- Centralized entitlement evaluation.
+- Tenant-aware repositories/services.
+- Configuration registry.
+- Observability infrastructure.
+
+The system should NOT prematurely become a distributed microservice system.
+Services may be extracted later when scale, ownership, reliability or
+operational requirements justify extraction.
+
+====================================================================
+4. LAYERED APPLICATION ARCHITECTURE
+====================================================================
+
+Presentation Layer
+------------------
+- Storefront
+- Store Admin
+- Super Admin
+- Developer Portal
+- Support interfaces
+- PWA/mobile presentation
+
+API Layer
+---------
+- Public APIs
+- Store APIs
+- Admin APIs
+- Super Admin APIs
+- Developer APIs
+- Webhook endpoints
+- Authentication endpoints
+
+Application Layer
+-----------------
+- Use cases
+- Commands
+- Queries
+- Workflows
+- Authorization orchestration
+- Entitlement checks
+- Transaction boundaries
+- Integration orchestration
+
+Domain Layer
+------------
+- Business entities
+- Value objects
+- Domain rules
+- State machines
+- Domain events
+- Policies
+
+Infrastructure Layer
+--------------------
+- Database
+- Cache
+- Queue
+- Object storage
+- Search
+- External providers
+- Email/SMS/WhatsApp/Push
+- Payment gateways
+- Shipping providers
+- AI providers
+
+Cross-Cutting Layer
+-------------------
+- Authentication
+- Authorization
+- Tenant context
+- Configuration
+- Feature flags
+- Entitlements
+- Audit
+- Logging
+- Metrics
+- Tracing
+- Security
+- Validation
+- Idempotency
+
+====================================================================
+5. DOMAIN BOUNDARIES
+====================================================================
+
+Core domains:
+
+IDENTITY
+- Users
+- Authentication
+- Sessions
+- MFA
+- Verification
+- Recovery
+
+TENANCY
+- Tenants
+- Stores
+- Store membership
+- Store lifecycle
+- Tenant context
+
+ENTITLEMENTS
+- Packages
+- Features
+- Limits
+- Usage
+- Feature flags
+
+CATALOG
+- Products
+- Variants
+- SKUs
+- Categories
+- Brands
+- Attributes
+- Media
+- SEO metadata
+
+INVENTORY
+- Stock
+- Reservations
+- Adjustments
+- Inventory history
+
+COMMERCE
+- Cart
+- Checkout
+- Orders
+- Returns
+- Refund orchestration
+
+CUSTOMERS
+- Customer profiles
+- Addresses
+- Customer preferences
+- Customer history
+
+PAYMENTS
+- Payment intents/attempts
+- Gateway adapters
+- Payment webhooks
+- Refunds
+
+SHIPPING
+- Zones
+- Methods
+- Rates
+- Tracking
+- Provider adapters
+
+PROMOTIONS
+- Coupons
+- Campaigns
+- Discount rules
+
+MARKETING
+- Campaigns
+- Segments
+- Engagement
+
+CONTENT
+- Pages
+- Navigation
+- SEO
+- Store content
+
+PRESENTATION
+- Themes
+- Branding
+- Layouts
+- Animation profiles
+
+DOMAINS
+- Platform domains
+- Custom domains
+- Verification
+- SSL state
+
+HOSTING
+- Provisioning
+- Infrastructure state
+- Resource configuration
+
+NOTIFICATIONS
+- Templates
+- Providers
+- Delivery jobs
+- Preferences
+
+ANALYTICS
+- Events
+- Metrics
+- Reports
+- Exports
+
+BACKUP
+- Backup jobs
+- Retention
+- Restore workflows
+
+HEALTH
+- Health checks
+- Resource usage
+- Alerts
+
+PWA
+- Manifest
+- Caching
+- Push
+
+AI
+- AI providers
+- AI capabilities
+- Tool permissions
+- Usage
+
+MARKETPLACE
+- Apps
+- Plugins
+- Installations
+- Permissions
+- Integrations
+
+AFFILIATE
+- Partners
+- Referrals
+- Attribution
+- Commissions
+
+BILLING
+- Plans
+- Subscriptions
+- Invoices
+- Transactions
+- Credits/refunds
+- Renewals
+
+SUPER ADMIN
+- Platform administration
+- Governance
+- Operations
+
+DEVELOPER PLATFORM
+- Apps
+- API keys/tokens
+- OAuth
+- Scopes
+- Webhooks
+- API usage
+
+SECURITY
+- Audit
+- Security events
+- Sessions
+- Policies
+- Incident support
+
+CONFIGURATION
+- Platform settings
+- Store settings
+- User settings
+- Provider settings
+- Feature flags
+
+SUPPORT
+- Documentation
+- Tickets
+- Diagnostics
+- Escalation
+
+EXTENSION FRAMEWORK
+- Events
+- Contracts
+- Adapters
+- Providers
+- Plugin interfaces
+
+====================================================================
+6. MULTI-TENANT ARCHITECTURE
+====================================================================
+
+Tenant resolution shall occur before tenant-owned application operations.
+
+Recommended request flow:
+
+Request
+ -> Edge/WAF
+ -> Authentication
+ -> Tenant Resolution
+ -> Tenant Membership/Context Validation
+ -> Authorization
+ -> Entitlement Check
+ -> Application Use Case
+ -> Tenant-Aware Domain Operation
+ -> Data Access
+ -> Audit/Telemetry
+ -> Response
+
+Tenant context must be immutable for the duration of a sensitive operation.
+
+Every repository/query that can access tenant data must receive or derive
+validated tenant context.
+
+Defense in depth should include:
+
+- Application-level tenant filters
+- Repository-level safeguards
+- Database constraints/policies where practical
+- Tenant-aware cache keys
+- Tenant-aware queues
+- Tenant-aware object storage
+- Tenant-aware search
+- Tenant-aware analytics
+
+====================================================================
+7. TENANT DATA ISOLATION MODEL
+====================================================================
+
+Preferred logical model:
+
+Most tenant-owned tables contain a tenant/store ownership key.
+
+Examples:
+- tenant_id
+- store_id
+- created_by
+- updated_by
+
+Exact schema naming must be confirmed during database design.
+
+Tenant-scoped unique constraints must use the appropriate tenant key.
+
+Examples:
+UNIQUE(store_id, sku)
+UNIQUE(store_id, slug)
+UNIQUE(store_id, coupon_code)
+
+Global entities such as platform packages may remain platform-scoped.
+
+====================================================================
+8. REQUEST CONTEXT
+====================================================================
+
+A request context should contain, as applicable:
+
+- Request ID
+- Correlation ID
+- User ID
+- Tenant ID
+- Store ID
+- Role/permission context
+- Package/entitlement context
+- Locale
+- Currency
+- Time zone
+- Client/application ID
+- Authentication method
+- Security classification
+
+Sensitive context must not be exposed unnecessarily.
+
+====================================================================
+9. AUTHENTICATION ARCHITECTURE
+====================================================================
+
+Supported mechanisms may include:
+
+- Session authentication for web applications
+- JWT where appropriate
+- OAuth 2.0/OpenID Connect integration where required
+- API keys
+- Service credentials
+- Webhook signatures
+
+Authentication must be separated from authorization.
+
+Authentication answers:
+"Who are you?"
+
+Authorization answers:
+"What may you do, and to which object/store?"
+
+====================================================================
+10. AUTHORIZATION ARCHITECTURE
+====================================================================
+
+Authorization layers:
+
+1. Authentication
+2. Platform role
+3. Tenant membership
+4. Store membership
+5. Permission
+6. Object ownership
+7. Field-level restriction
+8. Package entitlement
+9. Resource/usage limit
+10. Security policy
+
+Example:
+
+Authenticated User
+ -> Member of Store A
+ -> Has Order.Read
+ -> Order belongs to Store A
+ -> Package allows required capability
+ -> Request permitted
+
+Never authorize solely because a user is authenticated.
+
+====================================================================
+11. ENTITLEMENT ENGINE
+====================================================================
+
+The entitlement engine shall provide a single authoritative decision service.
+
+Inputs may include:
+
+- Tenant/store
+- Current package
+- Subscription state
+- Feature key
+- Usage
+- Limit
+- Feature flag
+- Environment
+- Platform policy
+
+Output should provide:
+
+- Allowed/denied
+- Reason
+- Limit information where appropriate
+- Effective configuration
+- Traceability information
+
+The engine must not be implemented as scattered hard-coded package checks.
+
+====================================================================
+12. CONFIGURATION ARCHITECTURE
+====================================================================
+
+Configuration registry scopes:
+
+- System
+- Environment
+- Package
+- Tenant
+- Store
+- User
+- Integration/provider
+
+Configuration pipeline:
+
+Load
+ -> Resolve scope
+ -> Apply defaults
+ -> Validate
+ -> Apply entitlement
+ -> Apply feature flag
+ -> Cache safely
+ -> Expose effective configuration
+
+Secrets must be stored separately from ordinary configuration.
+
+====================================================================
+13. DATABASE ARCHITECTURE
+====================================================================
+
+The database must provide:
+
+- Strong relational integrity
+- Foreign keys
+- Correct indexes
+- Transaction support
+- Concurrency controls
+- Safe migrations
+- Tenant-scoped uniqueness
+- Audit metadata
+- Soft deletion where justified
+- Immutable historical records where required
+
+Transactions are required for critical workflows such as:
+
+- Order creation
+- Inventory reservation
+- Payment state transitions
+- Subscription changes
+- Invoice creation
+- Refund orchestration
+- Critical configuration changes
+
+====================================================================
+14. DATABASE DOMAIN GROUPS
+====================================================================
+
+Suggested logical table groups:
+
+identity_*
+tenant_*
+store_*
+membership_*
+role_*
+permission_*
+package_*
+entitlement_*
+usage_*
+product_*
+category_*
+brand_*
+attribute_*
+inventory_*
+customer_*
+cart_*
+wishlist_*
+checkout_*
+order_*
+payment_*
+shipping_*
+promotion_*
+marketing_*
+content_*
+theme_*
+domain_*
+hosting_*
+notification_*
+analytics_*
+backup_*
+health_*
+pwa_*
+ai_*
+app_*
+affiliate_*
+billing_*
+audit_*
+configuration_*
+support_*
+developer_*
+webhook_*
+
+Exact table names are implementation decisions and must be normalized
+against the selected framework/database.
+
+====================================================================
+15. TRANSACTIONAL COMMERCE FLOW
+====================================================================
+
+Recommended checkout flow:
+
+1. Load cart.
+2. Validate tenant/store.
+3. Authenticate customer where required.
+4. Re-read products.
+5. Re-check product status.
+6. Re-check inventory.
+7. Recalculate prices.
+8. Evaluate promotions.
+9. Calculate shipping.
+10. Calculate tax if applicable.
+11. Calculate final total.
+12. Create/reserve inventory.
+13. Create payment intent/attempt.
+14. Persist order in correct state.
+15. Commit transaction boundaries safely.
+16. Process provider interaction according to adapter design.
+17. Confirm payment through trusted provider signal.
+18. Update order/payment state.
+19. Trigger asynchronous notifications/events.
+
+Browser redirects must not be treated as authoritative payment confirmation.
+
+====================================================================
+16. ORDER STATE MACHINE
+====================================================================
+
+Order states should be explicit.
+
+Illustrative lifecycle:
+
+Draft
+ -> PendingPayment
+ -> PaymentProcessing
+ -> Paid
+ -> Processing
+ -> Shipped
+ -> Delivered
+
+Alternative paths may include:
+
+PaymentFailed
+Cancelled
+Returned
+RefundPending
+PartiallyRefunded
+Refunded
+
+Actual states must be defined by Module 09 and payment/shipping rules.
+
+Invalid state transitions must be rejected.
+
+====================================================================
+17. INVENTORY CONCURRENCY
+====================================================================
+
+Inventory reservation should use safe concurrency control.
+
+Potential approach:
+
+Available = OnHand - Reserved
+
+Checkout:
+- Lock or atomically update inventory.
+- Verify availability.
+- Create reservation.
+- Associate reservation with cart/order.
+- Expire/release reservation safely.
+- Convert reservation into final stock movement after successful order state.
+
+The implementation must be tested under concurrent checkout scenarios.
+
+====================================================================
+18. PAYMENT ARCHITECTURE
+====================================================================
+
+Payment abstraction:
+
+Payment Service
+      |
+Payment Provider Interface
+      |
++-----+------+----------------+
+|            |                |
+Gateway A   Gateway B      COD/Manual
+|            |                |
+Provider   Provider       Internal Flow
+
+Each adapter handles provider-specific:
+
+- Credentials
+- API requests
+- Payment initiation
+- Status mapping
+- Webhooks
+- Refunds
+- Error translation
+
+Core commerce logic must remain provider-neutral.
+
+====================================================================
+19. WEBHOOK ARCHITECTURE
+====================================================================
+
+Webhook pipeline:
+
+Provider
+ -> Webhook Endpoint
+ -> Signature Verification
+ -> Replay Check
+ -> Idempotency Check
+ -> Parse/Validate
+ -> Identify Tenant/Integration
+ -> Persist Event
+ -> Process
+ -> Update State
+ -> Audit
+ -> Respond
+
+Webhook event records should support:
+
+- Provider
+- Event ID
+- Tenant/integration
+- Received time
+- Signature status
+- Processing state
+- Retry count
+- Error details
+- Processed time
+
+Duplicate events must not create duplicate business effects.
+
+====================================================================
+20. SHIPPING ARCHITECTURE
+====================================================================
+
+Shipping Service
+      |
+Provider Interface
+      |
++-----+------+------+
+|            |      |
+Courier A  Courier B Internal
+Provider   Provider Rules
+
+Shipping rates should be calculated through a normalized internal contract.
+
+Tracking updates may arrive asynchronously through webhooks or polling.
+
+====================================================================
+21. NOTIFICATION ARCHITECTURE
+====================================================================
+
+Application Event
+      |
+Notification Dispatcher
+      |
+Template Resolver
+      |
+Preference Resolver
+      |
+Provider Adapter
+      |
+Delivery Job
+      |
+Provider
+      |
+Delivery Status
+
+Channels may include:
+
+- Email
+- SMS
+- WhatsApp
+- Push
+- In-app
+
+Notification delivery must be asynchronous for non-critical flows.
+
+====================================================================
+22. EVENT ARCHITECTURE
+====================================================================
+
+Use domain/application events for decoupled actions.
+
+Examples:
+
+StoreCreated
+UserAddedToStore
+ProductCreated
+StockChanged
+OrderCreated
+OrderPaid
+OrderShipped
+OrderDelivered
+PaymentFailed
+SubscriptionChanged
+InvoiceCreated
+DomainVerified
+BackupCompleted
+
+Events should contain only necessary data and should avoid leaking sensitive
+information.
+
+For reliable event publication, use an outbox pattern where required.
+
+====================================================================
+23. QUEUE & BACKGROUND JOB ARCHITECTURE
+====================================================================
+
+Background jobs should handle:
+
+- Emails
+- Notifications
+- Webhook delivery
+- Webhook retries
+- Report generation
+- Exports
+- Imports
+- Image processing
+- Search indexing
+- Analytics aggregation
+- Backups
+- Domain checks
+- Health checks
+- AI jobs
+- Billing renewals
+- Subscription processing
+
+Every job must be:
+
+- Tenant-aware where applicable
+- Idempotency-aware
+- Observable
+- Retry-controlled
+- Timeout-controlled
+- Safe against duplicate execution
+
+====================================================================
+24. CACHE ARCHITECTURE
+====================================================================
+
+Cache candidates:
+
+- Configuration
+- Entitlements
+- Product/catalog read models
+- Session data where appropriate
+- Rate-limit counters
+- Short-lived domain/integration state
+
+Every tenant-sensitive cache key must include sufficient tenant/store context.
+
+Never use a global cache key for tenant-specific data.
+
+Cache invalidation must be tied to domain changes where required.
+
+====================================================================
+25. SEARCH ARCHITECTURE
+====================================================================
+
+Search should support:
+
+- Products
+- Categories
+- Content
+- Customers/admin search where authorized
+
+Search index documents must contain tenant/store identity.
+
+Queries must enforce tenant scope before returning results.
+
+Search indexing may be asynchronous.
+
+A failed search index must not corrupt transactional catalog data.
+
+====================================================================
+26. OBJECT STORAGE & MEDIA
+====================================================================
+
+Media architecture:
+
+Application
+ -> Upload Authorization
+ -> Signed Upload/Controlled Endpoint
+ -> Validation
+ -> Processing
+ -> Tenant-Scoped Storage
+ -> Metadata
+ -> CDN/Public or Private Delivery
+
+Requirements:
+
+- MIME/type validation
+- Size limits
+- Filename sanitization
+- Malware/security scanning where appropriate
+- Tenant isolation
+- Access control
+- Image optimization
+- Safe deletion
+- No uncontrolled executable uploads
+
+====================================================================
+27. API ARCHITECTURE
+====================================================================
+
+API categories:
+
+1. Public Storefront API
+2. Customer API
+3. Store Admin API
+4. Super Admin API
+5. Developer/Public API
+6. Internal Service API
+7. Partner/Integration API
+8. Webhook API
+
+API principles:
+
+- Versioning
+- Authentication
+- Authorization
+- Tenant context
+- Rate limits
+- Validation
+- Pagination
+- Filtering
+- Sorting
+- Idempotency
+- Structured errors
+- Request IDs
+- Audit where required
+- OpenAPI documentation
+
+====================================================================
+28. API VERSIONING
+====================================================================
+
+Recommended model:
+
+/api/v1/...
+
+Future versions:
+/api/v2/...
+
+Breaking changes require:
+
+- New version, or
+- Explicit migration strategy
+
+Deprecation must include:
+
+- Announcement
+- Documentation
+- Migration path
+- Sunset timeline
+- Monitoring
+- Removal decision
+
+====================================================================
+29. API ERROR CONTRACT
+====================================================================
+
+Recommended structured error:
+
+{
+  "code": "STABLE_ERROR_CODE",
+  "message": "Safe user-facing message",
+  "details": {},
+  "requestId": "correlation/request identifier"
+}
+
+Internal stack traces must not be returned to customers.
+
+Validation errors should identify safe fields and actionable corrections.
+
+====================================================================
+30. IDEMPOTENCY
+====================================================================
+
+Idempotency is required for retry-sensitive operations including, where
+applicable:
+
+- Checkout submission
+- Order creation
+- Payment initiation
+- Refund requests
+- Subscription changes
+- Invoice creation
+- Webhook processing
+- External provisioning
+- Bulk operations
+
+Idempotency keys must be scoped appropriately and stored with sufficient
+state to safely detect duplicates.
+
+====================================================================
+31. RATE LIMITING
+====================================================================
+
+Rate limiting may be applied at:
+
+- IP
+- User
+- Tenant
+- Store
+- API key
+- Application
+- Endpoint
+- Provider/integration
+
+Limits may depend on:
+
+- Package
+- API plan
+- Risk
+- Endpoint sensitivity
+- Current usage
+
+Rate-limit decisions must not bypass authorization.
+
+====================================================================
+32. DEVELOPER PLATFORM
+====================================================================
+
+Developer architecture:
+
+Developer Organization
+ -> Application
+ -> Credentials
+ -> Scopes
+ -> API Access
+ -> Webhooks
+ -> Usage
+ -> Logs
+ -> Revocation
+
+Support:
+
+- API keys
+- OAuth where required
+- Scoped access
+- Sandbox
+- Production credentials
+- Webhook registration
+- API documentation
+- SDK generation
+- Usage metrics
+
+====================================================================
+33. MARKETPLACE ARCHITECTURE
+====================================================================
+
+Marketplace components:
+
+- App registry
+- Developer
+- App listing
+- Version
+- Permissions
+- Compatibility
+- Installation
+- Configuration
+- Billing
+- Revocation
+- Review/moderation where applicable
+
+App execution/access must remain permission-scoped.
+
+The marketplace must not turn third-party code into unrestricted platform
+authority.
+
+====================================================================
+34. AI ARCHITECTURE
+====================================================================
+
+AI Gateway
+   |
+Provider Adapter
+   |
+Model/Capability Policy
+   |
+Prompt/Context Builder
+   |
+Tool Authorization
+   |
+AI Execution
+   |
+Output Validation
+   |
+Audit/Usage
+   |
+Response
+
+AI tools must use least privilege.
+
+Examples of controlled tools:
+
+- Product content generation
+- SEO generation
+- Report summarization
+- Search assistance
+- Support knowledge retrieval
+- Recommendation generation
+
+Sensitive actions require explicit authorization and normal server-side
+business rules.
+
+====================================================================
+35. BILLING ARCHITECTURE
+====================================================================
+
+Subscription flow:
+
+Package
+ -> Subscription
+ -> Billing Schedule
+ -> Invoice
+ -> Payment Attempt
+ -> Provider
+ -> Verified Result
+ -> Subscription State
+ -> Entitlements
+
+Billing must be independent enough to support multiple payment providers.
+
+Historical invoices and financial records must remain accurate.
+
+====================================================================
+36. DOMAIN ARCHITECTURE
+====================================================================
+
+Domain lifecycle:
+
+Requested
+ -> Ownership Verification
+ -> DNS Verification
+ -> SSL Provisioning
+ -> Active
+ -> Monitoring
+ -> Renewal/Change
+ -> Suspended/Removed
+
+Custom domain resolution must map safely to exactly one authorized store.
+
+Host-header/domain-based tenant resolution must include anti-host-header-
+poisoning and domain verification controls.
+
+====================================================================
+37. SUPER ADMIN ARCHITECTURE
+====================================================================
+
+Super Admin should be a separate privileged application area or strongly
+isolated route/API boundary.
+
+Security controls may include:
+
+- MFA
+- Re-authentication
+- IP/risk controls where appropriate
+- Strong session policy
+- Detailed audit logs
+- Confirmation for destructive/high-impact actions
+- Break-glass procedures
+
+Platform operations must support safe mass-action safeguards.
+
+====================================================================
+38. AUDIT ARCHITECTURE
+====================================================================
+
+Audit events should capture:
+
+- Event ID
+- Timestamp
+- Actor
+- Actor type
+- Tenant/store
+- Action
+- Resource type
+- Resource ID
+- Result
+- Request/correlation ID
+- Security metadata where appropriate
+
+Audit data must not become a secondary uncontrolled data leak.
+
+====================================================================
+39. OBSERVABILITY ARCHITECTURE
+====================================================================
+
+Three pillars:
+
+Logs
+- Structured
+- Correlated
+- Redacted
+
+Metrics
+- Request rate
+- Error rate
+- Latency
+- Queue health
+- Provider failures
+- Resource usage
+- Business metrics where appropriate
+
+Traces
+- Request propagation
+- External calls
+- Database timing
+- Queue processing
+
+Critical operations should have correlation identifiers.
+
+====================================================================
+40. SECURITY ARCHITECTURE
+====================================================================
+
+Security layers:
+
+Edge
+ -> WAF/rate limiting
+ -> TLS
+ -> Authentication
+ -> Tenant resolution
+ -> Authorization
+ -> Input validation
+ -> Business rules
+ -> Database authorization/isolation
+ -> Secure storage
+ -> Audit
+ -> Monitoring
+
+Additional controls:
+
+- CSRF where relevant
+- CORS allowlisting
+- Secure cookies
+- Content security policy where applicable
+- Security headers
+- Dependency scanning
+- Secret scanning
+- SAST
+- DAST where appropriate
+- Vulnerability management
+- Incident response
+
+====================================================================
+41. SECRETS ARCHITECTURE
+====================================================================
+
+Secrets include:
+
+- Database credentials
+- JWT/signing secrets
+- API keys
+- Payment credentials
+- SMTP credentials
+- Cloud credentials
+- OAuth secrets
+- AI provider keys
+- Webhook secrets
+
+Rules:
+
+- Never commit secrets.
+- Never place secrets in frontend bundles.
+- Never log secrets.
+- Use environment/secret manager facilities.
+- Support rotation.
+- Revoke compromised credentials.
+
+====================================================================
+42. FRONTEND ARCHITECTURE
+====================================================================
+
+The frontend should use reusable components and feature modules.
+
+Suggested areas:
+
+- Authentication
+- Store selection/context
+- Dashboard
+- Catalog
+- Inventory
+- Orders
+- Customers
+- Promotions
+- Marketing
+- Content/SEO
+- Theme/Branding
+- Domains
+- Billing
+- Analytics
+- Notifications
+- Settings
+- Support
+
+Storefront should use a separate presentation shell from administrative
+screens while consuming the same secure backend contracts.
+
+====================================================================
+43. THEME ARCHITECTURE
+====================================================================
+
+Theme engine:
+
+Store Configuration
+ -> Theme Selection
+ -> Theme Tokens
+ -> Layout Configuration
+ -> Component Variants
+ -> Content Blocks
+ -> Animation Profile
+ -> Rendered Storefront
+
+Business logic remains outside themes.
+
+Themes must use validated configuration schemas.
+
+====================================================================
+44. PWA ARCHITECTURE
+====================================================================
+
+PWA components:
+
+- Web App Manifest
+- Service Worker
+- Cache strategy
+- Push subscription
+- Installability
+- Offline-safe read experience
+
+Never cache sensitive customer/admin data without a deliberate security
+model.
+
+Offline mutations must be limited to explicitly safe workflows.
+
+====================================================================
+45. ANALYTICS ARCHITECTURE
+====================================================================
+
+Commerce transaction
+ -> Domain Event
+ -> Event/Analytics Pipeline
+ -> Aggregation
+ -> Tenant Report Model
+ -> Dashboard/Export
+
+Analytics must not become the source of truth for transactional state.
+
+Critical revenue/order data should originate from transactional records.
+
+====================================================================
+46. BACKUP & DISASTER RECOVERY ARCHITECTURE
+====================================================================
+
+Backup layers:
+
+- Database backup
+- Object/media backup
+- Configuration backup
+- Infrastructure configuration backup where applicable
+
+Recovery must support:
+
+- Restore validation
+- Integrity checks
+- Recovery runbook
+- Access controls
+- Audit
+- Defined RTO/RPO targets when formally established
+
+====================================================================
+47. DEPLOYMENT ARCHITECTURE
+====================================================================
+
+Environment flow:
+
+Developer
+   |
+Local Development
+   |
+CI Validation
+   |
+Staging/Test
+   |
+Acceptance
+   |
+Production
+
+Production deployment should perform:
+
+1. Preflight
+2. Backup where required
+3. Build validation
+4. Migration validation
+5. Migration execution
+6. Application deployment
+7. Cache/config refresh
+8. Health checks
+9. Smoke tests
+10. Monitoring
+11. Rollback if required
+
+====================================================================
+48. INITIAL HOSTING STRATEGY
+====================================================================
+
+The architecture may initially run on managed hosting such as Hostinger
+Business where the workload and platform capabilities permit.
+
+The application must remain portable enough to migrate to:
+
+- VPS
+- Dedicated server
+- Cloud VM
+- Managed database
+- Object storage
+- CDN
+- Containerized infrastructure
+
+Do not couple core business logic to one hosting vendor.
+
+====================================================================
+49. SCALING PATH
+====================================================================
+
+Stage 1:
+Single application + relational database + cache/queue as needed.
+
+Stage 2:
+Separate worker processes + object storage + CDN.
+
+Stage 3:
+Dedicated search + stronger cache + database optimization/read scaling.
+
+Stage 4:
+Multiple application instances + load balancing.
+
+Stage 5:
+Service extraction for proven bottlenecks.
+
+Stage 6:
+Multi-region architecture where business scale justifies it.
+
+Scaling decisions must be evidence-driven.
+
+====================================================================
+50. REPOSITORY ARCHITECTURE
+====================================================================
+
+The final repository structure shall be derived from the existing repository
+after inspection. A recommended conceptual structure is:
+
+/src
+  /Platform
+  /Identity
+  /Tenancy
+  /Entitlements
+  /Catalog
+  /Inventory
+  /Commerce
+  /Customers
+  /Payments
+  /Shipping
+  /Promotions
+  /Marketing
+  /Content
+  /Themes
+  /Domains
+  /Hosting
+  /Notifications
+  /Analytics
+  /Backups
+  /Health
+  /PWA
+  /AI
+  /Marketplace
+  /Affiliates
+  /Billing
+  /SuperAdmin
+  /Developer
+  /Security
+  /Configuration
+  /Support
+  /Extensions
+
+/tests
+  /Unit
+  /Integration
+  /Security
+  /E2E
+  /Regression
+
+/docs
+  /Bible
+  /URS
+  /SRS
+  /Modules
+  /Architecture
+  /API
+  /Database
+  /Security
+  /Operations
+  /Support
+  /Decisions
+
+/scripts
+/config
+/deploy
+/infra
+
+This is a conceptual structure, not an instruction to reorganize an existing
+repository blindly.
+
+====================================================================
+51. CODE ORGANIZATION RULES
+====================================================================
+
+Each domain should have clear separation between:
+
+- Entities
+- Value objects
+- DTOs/contracts
+- Commands
+- Queries
+- Services/use cases
+- Policies
+- Repositories
+- Controllers/endpoints
+- Validators
+- Events
+- Integration adapters
+- Tests
+
+Avoid a single giant service/controller containing unrelated domains.
+
+====================================================================
+52. INTEGRATION ADAPTER RULE
+====================================================================
+
+External providers must be hidden behind internal contracts.
+
+Example:
+
+IPaymentProvider
+IShippingProvider
+INotificationProvider
+IAIProvider
+IDomainProvider
+IStorageProvider
+
+Business logic calls the internal interface.
+
+Provider-specific code remains inside an adapter.
+
+This permits provider replacement without rewriting core commerce logic.
+
+====================================================================
+53. DATA MIGRATION ARCHITECTURE
+====================================================================
+
+Every schema change must have:
+
+- Versioned migration
+- Forward path
+- Compatibility analysis
+- Rollback/recovery consideration
+- Test migration
+- Production migration plan
+
+For large datasets, migrations should be designed to minimize locking and
+downtime.
+
+====================================================================
+54. IMPORT / EXPORT ARCHITECTURE
+====================================================================
+
+Import:
+
+Upload
+ -> Validate
+ -> Parse
+ -> Preview
+ -> Validate business rules
+ -> Approve/execute
+ -> Transactional chunks
+ -> Report results
+
+Export:
+
+Authorize
+ -> Create export job
+ -> Tenant-scoped query
+ -> Generate file
+ -> Secure storage
+ -> Expiring access
+ -> Audit
+
+Large operations should be asynchronous.
+
+====================================================================
+55. RESOURCE GOVERNANCE
+====================================================================
+
+Usage controls may apply to:
+
+- Products
+- Orders
+- Customers
+- Storage
+- API requests
+- Notifications
+- AI usage
+- Reports
+- Domains
+- Staff accounts
+- Integrations
+
+Limits must be centrally defined and enforced.
+
+A limit check must not be implemented only in frontend UI.
+
+====================================================================
+56. FAILURE HANDLING
+====================================================================
+
+External failures shall use:
+
+- Timeouts
+- Retries where safe
+- Exponential backoff where appropriate
+- Circuit-breaker concepts where useful
+- Dead-letter handling
+- Fallbacks
+- Clear user state
+- Monitoring
+
+Never retry a financial operation blindly without idempotency protection.
+
+====================================================================
+57. SECURITY TEST ARCHITECTURE
+====================================================================
+
+Dedicated security test categories:
+
+- Authentication bypass
+- Authorization bypass
+- Tenant isolation
+- IDOR/object access
+- Privilege escalation
+- Session security
+- CSRF
+- CORS
+- XSS
+- Injection
+- File upload
+- Webhook forgery/replay
+- Rate-limit bypass
+- Secret exposure
+- Sensitive logging
+- API abuse
+- Payment manipulation
+- Price manipulation
+- Inventory manipulation
+- Package/entitlement bypass
+
+====================================================================
+58. PERFORMANCE TEST ARCHITECTURE
+====================================================================
+
+Test scenarios should include:
+
+- Storefront browsing
+- Product search
+- Catalog loading
+- Checkout
+- Order creation
+- Admin dashboard
+- Concurrent inventory
+- API rate limits
+- Background jobs
+- Large exports
+- Large imports
+- High webhook volume
+
+Measure:
+
+- Latency
+- Throughput
+- Error rate
+- CPU/memory
+- Database load
+- Queue latency
+- Cache performance
+
+====================================================================
+59. TEST PYRAMID
+====================================================================
+
+                    E2E
+                   /   \
+               Integration
+              /          \
+             Unit / Domain
+            /              \
+       Validation / Security
+
+Use the cheapest reliable test at the lowest suitable level.
+
+Critical workflows require integration/E2E coverage in addition to unit tests.
+
+====================================================================
+60. CI/CD ARCHITECTURE
+====================================================================
+
+Recommended pipeline:
+
+Commit
+ -> Secret Scan
+ -> Dependency Scan
+ -> Format/Lint
+ -> Static Analysis
+ -> Unit Tests
+ -> Integration Tests
+ -> Security Tests
+ -> Build
+ -> Package
+ -> Staging Deploy
+ -> Smoke Tests
+ -> Approval
+ -> Production Deploy
+ -> Health Checks
+ -> Monitoring
+
+Exact CI provider is implementation-specific.
+
+====================================================================
+61. PRODUCTION READINESS GATES
+====================================================================
+
+Before production:
+
+- Build passes
+- Tests pass
+- Security checks pass
+- Migration reviewed
+- Secrets verified
+- Backup verified
+- Environment verified
+- Domain/SSL verified
+- Payment sandbox/live configuration verified
+- Shipping provider verified
+- Notifications verified
+- Monitoring enabled
+- Rollback documented
+- Smoke tests defined
+- Support documentation ready
+
+====================================================================
+62. ARCHITECTURAL DECISION GOVERNANCE
+====================================================================
+
+Long-term decisions should be documented as ADRs.
+
+An ADR should include:
+
+- Context
+- Problem
+- Options
+- Decision
+- Consequences
+- Security impact
+- Migration impact
+- Reversal strategy
+
+Architecture must not drift through undocumented ad-hoc changes.
+
+====================================================================
+63. ACTUAL REPOSITORY INSPECTION REQUIREMENT
+====================================================================
+
+Before implementation, Claude must inspect:
+
+- Repository root
+- Framework/runtime
+- Frontend
+- Backend
+- Database
+- Existing migrations
+- Authentication
+- Authorization
+- Configuration
+- Environment files
+- Existing APIs
+- Existing tests
+- Build scripts
+- Deployment configuration
+- Dependencies
+- Git status/history
+- Existing documentation
+
+Claude must then produce a gap report.
+
+No major rewrite shall occur before this inspection.
+
+====================================================================
+64. IMPLEMENTATION STRATEGY
+====================================================================
+
+Recommended foundation order:
+
+1. Repository understanding
+2. Configuration foundation
+3. Database foundation
+4. Identity
+5. Tenant context
+6. Authorization
+7. Entitlements
+8. Audit/observability
+9. Catalog
+10. Inventory
+11. Customers
+12. Cart/checkout
+13. Orders
+14. Payments
+15. Shipping
+16. Promotions
+17. Storefront
+18. Themes/branding
+19. Notifications
+20. Billing
+21. Domains
+22. Analytics
+23. Backup/health
+24. PWA
+25. APIs/developer platform
+26. Super Admin
+27. AI
+28. Marketplace
+29. Affiliate/reseller
+30. Full security hardening
+31. Production readiness
+
+Actual order may change after repository dependency analysis.
+
+====================================================================
+65. MASTER DATA FLOW
+====================================================================
+
+Customer Request
+ -> Edge
+ -> Authentication
+ -> Tenant Resolution
+ -> Authorization
+ -> Entitlement
+ -> Controller/API
+ -> Application Use Case
+ -> Domain Rules
+ -> Repository
+ -> Database
+ -> Domain Event
+ -> Outbox/Queue
+ -> Background Worker
+ -> Provider/Integration
+ -> Audit/Telemetry
+ -> Response
+
+====================================================================
+66. MASTER ADMIN DATA FLOW
+====================================================================
+
+Super Admin Request
+ -> Strong Authentication
+ -> Privileged Authorization
+ -> Platform Scope Validation
+ -> Confirmation for High Impact Action
+ -> Application Service
+ -> Transaction
+ -> Audit
+ -> Monitoring
+ -> Response
+
+====================================================================
+67. MASTER ORDER DATA FLOW
+====================================================================
+
+Storefront
+ -> Cart
+ -> Checkout
+ -> Server Validation
+ -> Price Calculation
+ -> Promotion
+ -> Shipping
+ -> Tax
+ -> Inventory Reservation
+ -> Payment
+ -> Order
+ -> Payment Verification
+ -> Order State
+ -> Inventory Movement
+ -> Notifications
+ -> Analytics Event
+ -> Audit
+
+====================================================================
+68. MASTER SUBSCRIPTION DATA FLOW
+====================================================================
+
+Package
+ -> Subscription
+ -> Billing
+ -> Payment Provider
+ -> Verified Payment
+ -> Subscription State
+ -> Entitlement Evaluation
+ -> Store Feature Access
+ -> Usage Tracking
+ -> Renewal/Suspension
+
+====================================================================
+69. ARCHITECTURAL NON-NEGOTIABLES
+====================================================================
+
+1. Never bypass tenant isolation.
+2. Never trust client-authoritative financial values.
+3. Never trust client-authoritative permissions.
+4. Never trust client-authoritative inventory state.
+5. Never use package UI hiding as authorization.
+6. Never expose secrets.
+7. Never silently cross tenant boundaries.
+8. Never allow third-party apps unrestricted access.
+9. Never treat browser payment redirect as final payment truth.
+10. Never process duplicate webhooks as duplicate business actions.
+11. Never perform destructive production operations casually.
+12. Never make a major rewrite before repository inspection.
+13. Never hide test failures.
+14. Never suppress security findings without documented justification.
+15. Never let themes contain privileged business logic.
+16. Never let AI bypass server-side authorization.
+17. Never let support tools bypass security controls.
+18. Never allow predictable object IDs to substitute for authorization.
+19. Never let analytics become transactional truth.
+20. Never allow cache/search/export systems to bypass tenant authorization.
+21. Never commit credentials.
+22. Never log sensitive credentials.
+23. Never create financial records without traceability.
+24. Never mutate historical invoices/orders without explicit policy.
+25. Never introduce provider-specific logic into core domain rules.
+26. Never create package-specific code forks.
+27. Never remove data during downgrade unless documented and authorized.
+28. Never expose private media through uncontrolled public URLs.
+29. Never retry payment/refund operations without idempotency.
+30. Never call an architectural change complete without verification evidence.
+
+====================================================================
+70. DEFINITION OF ARCHITECTURE READY
+====================================================================
+
+Architecture is considered ready for implementation when:
+
+[ ] Project Bible reviewed
+[ ] SRS reviewed
+[ ] Modules 01-35 reviewed
+[ ] Repository inspected
+[ ] Existing stack documented
+[ ] Dependency map documented
+[ ] Database strategy approved
+[ ] Tenant isolation model defined
+[ ] Authentication model defined
+[ ] Authorization model defined
+[ ] Entitlement model defined
+[ ] API model defined
+[ ] Provider adapter model defined
+[ ] Event/queue strategy defined
+[ ] Cache strategy defined
+[ ] File/media strategy defined
+[ ] Security model defined
+[ ] Observability model defined
+[ ] Backup/recovery model defined
+[ ] Deployment model defined
+[ ] Testing strategy defined
+[ ] Migration strategy defined
+[ ] Scaling path defined
+[ ] Major ADRs recorded
+[ ] Claude implementation plan prepared
+
+====================================================================
+71. FINAL ARCHITECTURAL STATEMENT
+====================================================================
+
+The Umar Techy E-Commerce Platform shall be implemented as one coherent,
+secure, modular, tenant-isolated SaaS platform.
+
+The architecture deliberately starts with strong modular boundaries rather
+than unnecessary microservice complexity. Provider adapters, APIs, events,
+configuration, entitlements and extension points provide controlled paths
+for future growth.
+
+All implementation agents, including Claude Code, must use this architecture
+together with the Project Bible, SRS and Module Blueprints. Repository-specific
+facts discovered during inspection may refine implementation details, but
+must not silently weaken the core architectural principles.
+
+====================================================================
+END OF TECHNICAL ARCHITECTURE v1.0
+====================================================================

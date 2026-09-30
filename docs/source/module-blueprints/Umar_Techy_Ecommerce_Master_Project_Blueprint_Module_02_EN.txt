@@ -1,0 +1,1340 @@
+UMAR TECHY
+E-COMMERCE PLATFORM
+MASTER PROJECT BLUEPRINT
+
+MODULE 02 — AUTHENTICATION, USERS, ROLES & PERMISSIONS
+Version: 1.0
+Status: Planning / Blueprint
+
+============================================================
+1. MODULE PURPOSE
+============================================================
+
+This module defines the complete authentication, user
+management, role management, and permission architecture for
+the Umar Techy E-Commerce Platform.
+
+The system is a Multi-Tenant SaaS platform. Therefore,
+authentication and authorization must be designed together
+with strict tenant isolation.
+
+The module must support:
+
+- Umar Techy platform-level users
+- Store owners
+- Store staff
+- Store administrators
+- Store managers
+- Storefront customers
+- Guest shoppers
+- Future partner / reseller users
+- Future marketplace / integration identities where required
+
+The goal is to provide secure, scalable, configurable, and
+easy-to-manage identity and access control without creating
+separate authentication systems for every store.
+
+============================================================
+2. CORE PRINCIPLES
+============================================================
+
+1. ONE CENTRAL IDENTITY SYSTEM
+
+The platform should use one consistent identity architecture
+rather than implementing unrelated login systems for every
+module.
+
+2. TENANT-AWARE AUTHORIZATION
+
+Authentication proves who the user is.
+
+Authorization determines:
+
+- What the user can access
+- Which store(s) the user can access
+- Which records the user can access
+- Which actions the user can perform
+
+3. STRICT TENANT ISOLATION
+
+A store-level user must never access another store's private
+data, even if an identifier, URL, API request, or client-side
+parameter is manipulated.
+
+4. LEAST PRIVILEGE
+
+Every user receives only the permissions necessary for their
+role.
+
+5. CONFIGURABLE ROLE SYSTEM
+
+The platform should support predefined roles and controlled
+custom roles without hard-coding permissions throughout the
+application.
+
+6. CENTRALIZED PERMISSION DEFINITIONS
+
+Permissions should be defined centrally and referenced by
+modules.
+
+7. AUDITABILITY
+
+Important authentication and authorization events must be
+recorded for security and operational investigation.
+
+8. FUTURE EXTENSIBILITY
+
+The identity architecture should support future:
+
+- Resellers
+- Affiliates
+- Staff expansion
+- API users
+- App integrations
+- Marketplace applications
+- Multiple stores per account where appropriate
+
+============================================================
+3. USER DOMAIN MODEL
+============================================================
+
+The platform should distinguish between:
+
+A. PLATFORM USERS
+
+Users who operate Umar Techy's central platform.
+
+Examples:
+
+- Super Admin
+- Platform Admin
+- Support Staff
+- Finance Staff
+- Technical / Operations Staff
+
+B. STORE USERS
+
+Users who manage a specific store.
+
+Examples:
+
+- Store Owner
+- Store Administrator
+- Manager
+- Staff
+- Order Manager
+- Inventory Manager
+- Content / Marketing Staff
+
+C. STOREFRONT CUSTOMERS
+
+Customers who purchase products from stores.
+
+Examples:
+
+- Guest Customer
+- Registered Customer
+
+D. FUTURE PARTNER USERS
+
+Potential future identities:
+
+- Affiliate
+- Reseller
+- Integration Developer
+- App Developer
+
+These should be architecturally possible without weakening
+the main authorization model.
+
+============================================================
+4. ACCOUNT VS STORE MEMBERSHIP
+============================================================
+
+A critical distinction must be maintained between:
+
+USER ACCOUNT
+
+and
+
+STORE MEMBERSHIP.
+
+A user account identifies a person or login identity.
+
+A store membership defines:
+
+- Which store the user belongs to
+- Which role they have in that store
+- Which permissions they receive
+- Whether the membership is active
+- When the membership was created
+- Who granted or revoked access
+
+This allows future support for one user managing multiple
+stores without duplicating the underlying identity.
+
+Example:
+
+User A
+|
++-- Store 001 → Owner
++-- Store 002 → Manager
++-- Store 003 → Staff
+
+The initial commercial workflow may normally create one
+primary store for a customer, but the architecture should not
+prevent future multi-store access.
+
+============================================================
+5. PLATFORM ROLE HIERARCHY
+============================================================
+
+Platform-level roles may include:
+
+1. SUPER ADMIN
+2. PLATFORM ADMIN
+3. SUPPORT STAFF
+4. FINANCE STAFF
+5. TECHNICAL / OPERATIONS STAFF
+
+SUPER ADMIN
+
+Highest platform-level authority.
+
+Potential capabilities:
+
+- Manage platform
+- Manage platform administrators
+- Manage stores
+- Manage packages
+- Manage subscriptions
+- Manage billing
+- Manage infrastructure settings
+- Manage themes
+- Manage integrations
+- Manage system configuration
+- Review audit logs
+- Manage security controls
+
+Platform permissions must still be explicit and auditable.
+
+No feature should rely only on a hidden "isSuperAdmin" check
+without proper authorization architecture.
+
+============================================================
+6. STORE ROLE HIERARCHY
+============================================================
+
+Recommended initial predefined store roles:
+
+1. STORE OWNER
+2. STORE ADMINISTRATOR
+3. MANAGER
+4. STAFF
+5. ORDER MANAGER
+6. INVENTORY MANAGER
+7. CONTENT / MARKETING STAFF
+
+STORE OWNER
+
+Primary business owner of the store.
+
+Potential capabilities:
+
+- Store settings
+- Store users
+- Products
+- Orders
+- Customers
+- Inventory
+- Payments
+- Shipping
+- Reports
+- Branding
+- Theme
+- Subscription visibility
+- Domain configuration
+- Business settings
+
+STORE ADMINISTRATOR
+
+Operational administrator with broad store management
+permissions.
+
+MANAGER
+
+General business operations without sensitive platform or
+ownership-level controls.
+
+STAFF
+
+Restricted operational access.
+
+ORDER MANAGER
+
+Order-focused access.
+
+INVENTORY MANAGER
+
+Inventory and stock-focused access.
+
+CONTENT / MARKETING STAFF
+
+Content, catalog presentation, promotions, and marketing
+permissions as assigned.
+
+Exact permissions will be finalized in the Permission Matrix.
+
+============================================================
+7. STOREFRONT CUSTOMER MODEL
+============================================================
+
+Storefront users may be:
+
+A. GUEST
+
+Can:
+
+- Browse products
+- Search
+- View product details
+- Add products to cart
+- Start checkout
+- Place orders using permitted guest checkout
+
+B. REGISTERED CUSTOMER
+
+Can additionally:
+
+- Manage profile
+- Manage addresses
+- View order history
+- Track orders
+- Manage wishlist
+- Manage saved preferences
+- Receive notifications
+- Manage account security
+
+Customer identities should be associated with the appropriate
+Store/Tenant context.
+
+A customer account created for Store A must not automatically
+expose private customer information from Store B.
+
+============================================================
+8. AUTHENTICATION METHODS
+============================================================
+
+The initial authentication system should support:
+
+- Email + Password
+- Secure Password Reset
+- Email Verification
+- Session Management
+- Logout
+- Optional Remember Me where secure
+
+Future authentication methods may include:
+
+- Phone Number / OTP
+- Social Login
+- Passkeys
+- Two-Factor Authentication
+- Single Sign-On
+- Enterprise Identity Providers
+
+The architecture should allow these methods to be added
+without rewriting the complete identity system.
+
+============================================================
+9. PASSWORD SECURITY
+============================================================
+
+Passwords must never be stored in plain text.
+
+Requirements:
+
+- Strong password hashing
+- Secure password verification
+- Password reset tokens with expiration
+- One-time reset tokens
+- Protection against token reuse
+- Password change invalidation where appropriate
+- Rate limiting for login attempts
+- Secure password policy
+- No password disclosure in logs
+
+The exact hashing algorithm and framework implementation
+will be specified in the Security Blueprint.
+
+============================================================
+10. EMAIL VERIFICATION
+============================================================
+
+For accounts where email verification is required:
+
+1. User registers.
+2. Verification token is generated.
+3. Token is sent to the verified destination.
+4. User confirms verification.
+5. Account becomes verified.
+
+Verification tokens must:
+
+- Expire
+- Be single-use
+- Be securely generated
+- Not reveal sensitive account information
+
+Resend functionality must be rate-limited.
+
+============================================================
+11. PASSWORD RESET
+============================================================
+
+Password reset workflow:
+
+1. User requests reset.
+2. System responds without exposing whether an account exists
+   where appropriate.
+3. Secure reset token is generated.
+4. Token is delivered through an approved channel.
+5. User sets a new password.
+6. Token is invalidated.
+7. Relevant sessions may be revoked.
+
+Reset links must expire and must not be reusable.
+
+============================================================
+12. SESSION MANAGEMENT
+============================================================
+
+The system must manage authenticated sessions securely.
+
+Capabilities may include:
+
+- Login
+- Logout
+- Session expiration
+- Refresh where applicable
+- Device/session tracking
+- Revoke session
+- Revoke all sessions
+- Suspicious session detection
+- Session invalidation after sensitive account changes
+
+Users should be able to view and manage active sessions where
+appropriate.
+
+============================================================
+13. TWO-FACTOR AUTHENTICATION
+============================================================
+
+Two-Factor Authentication should be designed as an
+extensible security layer.
+
+Potential methods:
+
+- Authenticator App
+- Email OTP
+- SMS OTP
+- Passkeys / Security Keys
+
+Priority should be given to stronger methods for high-risk
+platform accounts.
+
+Super Admin accounts should have stronger security requirements
+than ordinary storefront customers.
+
+============================================================
+14. ROLE-BASED ACCESS CONTROL
+============================================================
+
+The platform should use Role-Based Access Control (RBAC).
+
+Basic relationship:
+
+User
+  ↓
+Membership
+  ↓
+Role
+  ↓
+Permissions
+
+Permissions should be action-oriented.
+
+Examples:
+
+- products.view
+- products.create
+- products.update
+- products.delete
+- orders.view
+- orders.update
+- customers.view
+- inventory.view
+- inventory.update
+- reports.view
+- settings.update
+- users.manage
+- theme.manage
+- domain.manage
+
+Permission names must follow a consistent naming convention.
+
+============================================================
+15. PERMISSION CATEGORIES
+============================================================
+
+Potential permission groups:
+
+A. Dashboard
+B. Products
+C. Categories
+D. Brands
+E. Attributes
+F. Inventory
+G. Orders
+H. Customers
+I. Cart / Checkout Settings
+J. Payments
+K. Shipping
+L. Discounts
+M. Promotions
+N. Marketing
+O. Content
+P. SEO
+Q. Theme
+R. Branding
+S. Animation
+T. Domain
+U. Hosting / Infrastructure
+V. Reports
+W. Analytics
+X. Notifications
+Y. Staff / Users
+Z. Store Settings
+AA. Subscription
+AB. Billing
+AC. Integrations
+AD. API
+AE. Backup / Restore
+AF. Support
+
+Exact permission inventory will be defined in a later
+Permission Matrix.
+
+============================================================
+16. ROLE PERMISSION MATRIX
+============================================================
+
+A formal matrix must be created.
+
+Example structure:
+
+Permission                  Owner   Admin   Manager   Staff
+----------------------------------------------------------------
+products.view                 YES     YES      YES      YES
+products.create               YES     YES      YES      NO
+products.update               YES     YES      YES      NO
+products.delete               YES     YES      NO       NO
+orders.view                   YES     YES      YES      YES
+orders.update                 YES     YES      YES      YES
+customers.view                YES     YES      YES      LIMITED
+inventory.view                YES     YES      YES      NO
+inventory.update              YES     YES      YES      NO
+theme.manage                  YES     YES      NO       NO
+users.manage                  YES     YES      NO       NO
+billing.manage                YES     LIMITED  NO       NO
+subscription.manage           YES     LIMITED  NO       NO
+
+This table is illustrative only.
+
+The final matrix must be defined after all modules are
+completed so that every permission corresponds to a real
+platform capability.
+
+============================================================
+17. CUSTOM ROLES
+============================================================
+
+The platform should support controlled custom roles for
+Business and Premium stores where appropriate.
+
+Example:
+
+A store may create:
+
+"Warehouse Supervisor"
+
+with:
+
+- Inventory View
+- Inventory Update
+- Stock Transfer
+- Purchase View
+
+but without:
+
+- Billing
+- Users
+- Theme
+- Domain
+- Subscription
+
+Custom roles must:
+
+- Belong to a specific tenant
+- Be permission-based
+- Be auditable
+- Be protected from privilege escalation
+- Respect package entitlements
+
+Basic package may have restricted or no custom-role support.
+
+============================================================
+18. INVITATION SYSTEM
+============================================================
+
+Store Owners / authorized administrators should be able to
+invite staff.
+
+Invitation workflow:
+
+1. Authorized user enters email.
+2. Role is selected.
+3. Invitation is generated.
+4. Invitation is sent.
+5. Recipient accepts.
+6. Account is created or linked.
+7. Store membership becomes active.
+
+Invitation tokens must:
+
+- Expire
+- Be single-use
+- Be tenant-scoped
+- Be role-scoped
+- Be revocable
+
+The inviter must not be able to grant permissions beyond
+their own allowed authority.
+
+============================================================
+19. USER ACTIVATION & DEACTIVATION
+============================================================
+
+Authorized administrators should be able to:
+
+- Activate user
+- Deactivate user
+- Suspend membership
+- Re-enable membership
+- Revoke invitations
+- Remove store membership
+
+Deactivation should not necessarily delete historical data.
+
+Historical records must retain appropriate references to
+users who performed actions.
+
+============================================================
+20. USER DELETION & DATA RETENTION
+============================================================
+
+User deletion must be carefully separated from:
+
+- Account deactivation
+- Store membership removal
+- Data anonymization
+- Permanent deletion
+
+The system should avoid destructive deletion of records
+required for financial, operational, or audit history.
+
+Where applicable, personal information may be anonymized
+according to defined retention rules.
+
+Exact retention and deletion policies will be defined later.
+
+============================================================
+21. STORE OWNER PROTECTION
+============================================================
+
+The Store Owner role is sensitive.
+
+The platform should prevent ordinary staff from:
+
+- Removing the owner
+- Transferring ownership
+- Changing ownership permissions
+- Disabling the owner's security controls
+- Accessing owner-only billing data
+
+Ownership transfer, if supported, must use a dedicated,
+high-security workflow.
+
+============================================================
+22. PLATFORM ADMIN VS STORE ADMIN
+============================================================
+
+A critical security boundary must exist between:
+
+PLATFORM ADMINISTRATION
+
+and
+
+STORE ADMINISTRATION.
+
+Platform users may manage platform resources.
+
+Store users may manage only their authorized store resources.
+
+Store administrators must never gain platform-level authority
+through:
+
+- Role manipulation
+- API requests
+- Tenant IDs
+- Hidden endpoints
+- Client-side changes
+- Custom role configuration
+
+============================================================
+23. TENANT CONTEXT RESOLUTION
+============================================================
+
+Every authenticated store request must resolve a trusted
+tenant context.
+
+Tenant context must NOT be trusted solely from:
+
+- URL parameters
+- Request body
+- Client-side storage
+- Hidden form fields
+- Query parameters
+
+The server must derive and validate tenant access from the
+authenticated identity and authorized membership.
+
+Every relevant database query must enforce tenant scope.
+
+============================================================
+24. API AUTHORIZATION
+============================================================
+
+The same authorization rules must apply to:
+
+- Web UI
+- REST APIs
+- GraphQL if introduced
+- Background jobs
+- Webhooks
+- Scheduled tasks
+- Imports
+- Exports
+- Integrations
+- Mobile / PWA clients
+
+A hidden UI button is NOT a security control.
+
+Every protected operation must be authorized server-side.
+
+============================================================
+25. BACKGROUND JOB SECURITY
+============================================================
+
+Background processes must preserve tenant context.
+
+Examples:
+
+- Order notifications
+- Email jobs
+- Inventory jobs
+- Scheduled reports
+- Backup jobs
+- Subscription jobs
+- Domain reminders
+- AI processing
+
+A background job must never accidentally process data from
+the wrong tenant.
+
+============================================================
+26. LOGIN SECURITY
+============================================================
+
+The system should protect login endpoints against:
+
+- Brute-force attacks
+- Credential stuffing
+- Excessive requests
+- Automated abuse
+- Suspicious login patterns
+
+Potential controls:
+
+- Rate limiting
+- Temporary lockout / throttling
+- Device / session controls
+- Security alerts
+- CAPTCHA or equivalent where appropriate
+
+Responses should avoid unnecessary account enumeration.
+
+============================================================
+27. AUDIT LOGGING
+============================================================
+
+Security-sensitive events should be recorded.
+
+Examples:
+
+- Login
+- Logout
+- Failed login
+- Password change
+- Password reset
+- Email verification
+- Two-factor changes
+- Role assignment
+- Permission changes
+- User invitation
+- User suspension
+- User removal
+- Ownership change
+- Sensitive settings changes
+- API credential creation / revocation
+
+Audit records should include appropriate:
+
+- Actor
+- Action
+- Target
+- Tenant Context
+- Timestamp
+- Result
+- Request / correlation identifier
+- Security-relevant metadata
+
+Sensitive secrets must never be written to logs.
+
+============================================================
+28. API KEYS & SERVICE IDENTITIES
+============================================================
+
+Future API integrations may require:
+
+- API Keys
+- Access Tokens
+- Service Accounts
+- Webhook Secrets
+
+These identities must be separate from ordinary human
+password authentication.
+
+They should support:
+
+- Scoped permissions
+- Tenant association
+- Expiration where appropriate
+- Rotation
+- Revocation
+- Audit logging
+
+============================================================
+29. PACKAGE-BASED ACCESS
+============================================================
+
+Authentication and authorization must integrate with the
+Package Entitlement System.
+
+Example:
+
+A user may have the permission:
+
+"reports.advanced.view"
+
+but if the store's package does not include advanced reports,
+the feature must remain unavailable.
+
+Therefore access evaluation may consider:
+
+User
++
+Membership
++
+Role
++
+Permission
++
+Store Status
++
+Package Entitlement
++
+Feature Availability
+
+This must be implemented centrally rather than duplicated
+throughout individual screens.
+
+============================================================
+30. TRIAL ACCOUNT ACCESS
+============================================================
+
+Trial stores should use the same identity and authorization
+architecture.
+
+During trial:
+
+- Store Owner has access to permitted trial features.
+- Trial limits are enforced.
+- Trial expiry changes store entitlement state.
+- Expired trials may enter a grace period.
+- Access can be restricted without deleting the store.
+
+Trial logic must be separate from authentication logic.
+
+============================================================
+31. SUBSCRIPTION EXPIRY AND ACCESS
+============================================================
+
+When a subscription expires:
+
+The system should not simply delete or disable the user.
+
+Instead, store access should transition through defined states,
+for example:
+
+ACTIVE
+TRIAL
+GRACE_PERIOD
+SUSPENDED
+CANCELLED
+ARCHIVED
+
+The exact lifecycle will be defined in the Subscription and
+Billing Blueprint.
+
+============================================================
+32. ACCOUNT RECOVERY
+============================================================
+
+The platform should provide safe account recovery.
+
+Potential recovery channels:
+
+- Verified Email
+- Verified Phone
+- Recovery Codes
+- Support-assisted recovery
+
+Support-assisted recovery must use identity verification
+procedures and audit logging.
+
+Support staff must not have access to customer passwords.
+
+============================================================
+33. STORE ACCESS WHEN OWNER IS UNAVAILABLE
+============================================================
+
+A future operational recovery process should allow Umar Techy
+authorized support personnel to assist with store access
+without directly taking ownership of customer credentials.
+
+Any elevated support access must be:
+
+- Explicitly authorized
+- Time-limited where possible
+- Audited
+- Tenant-scoped
+- Reversible
+
+============================================================
+34. MULTI-STORE USER SUPPORT
+============================================================
+
+The architecture should support a user belonging to multiple
+stores.
+
+Example:
+
+Account
+|
++-- Store A → Owner
++-- Store B → Manager
++-- Store C → Staff
+
+The user interface should provide a secure store switcher
+where multiple-store access is permitted.
+
+Every store switch must trigger proper authorization validation.
+
+============================================================
+35. CUSTOMER IDENTITY SCOPE
+============================================================
+
+Storefront customer identity should initially be tenant-aware.
+
+The platform should avoid assuming that a customer's account
+in one independent store automatically grants access to another
+store.
+
+A future global customer identity system may be introduced
+only if business requirements justify it and privacy/security
+requirements are clearly defined.
+
+============================================================
+36. ACCOUNT SETTINGS
+============================================================
+
+Users should eventually be able to manage:
+
+- Name
+- Email
+- Phone
+- Profile Image where supported
+- Password
+- Two-Factor Authentication
+- Active Sessions
+- Notification Preferences
+- Language
+- Time Zone
+- Security Preferences
+
+Store-specific settings should remain separate from global
+account settings.
+
+============================================================
+37. USER STATUS MODEL
+============================================================
+
+Potential user statuses:
+
+- Pending
+- Active
+- Suspended
+- Deactivated
+- Locked
+- Deleted / Anonymized
+
+Membership statuses should be separate where necessary:
+
+- Invited
+- Active
+- Suspended
+- Revoked
+
+This avoids mixing account state with store membership state.
+
+============================================================
+38. SECURITY NOTIFICATIONS
+============================================================
+
+The platform may notify users about security events such as:
+
+- New login
+- Password change
+- Password reset
+- Two-factor changes
+- New staff membership
+- Role changes
+- Account suspension
+- API credential changes
+
+Notification channels should follow the Notification
+Framework.
+
+============================================================
+39. ADMIN IMPERSONATION / SUPPORT ACCESS
+============================================================
+
+If a support impersonation capability is introduced, it must
+be treated as a high-risk feature.
+
+Requirements should include:
+
+- Explicit authorization
+- Strong audit logging
+- Clear impersonation indicators
+- Limited permissions
+- Time-limited sessions
+- No password access
+- No silent privilege escalation
+- Ability to terminate immediately
+
+This capability should not be included casually in the Basic
+package.
+
+============================================================
+40. AUTHENTICATION ARCHITECTURE REQUIREMENTS
+============================================================
+
+The final technical architecture should separate:
+
+- Identity
+- Authentication
+- Authorization
+- Tenant Membership
+- Roles
+- Permissions
+- Sessions
+- Security Events
+- Package Entitlements
+
+This separation is essential for maintainability.
+
+============================================================
+41. DATA MODEL — HIGH-LEVEL ENTITIES
+============================================================
+
+Potential entities:
+
+- User
+- UserProfile
+- Credential
+- EmailVerificationToken
+- PasswordResetToken
+- Session
+- StoreMembership
+- Role
+- Permission
+- RolePermission
+- UserRole / MembershipRole
+- Invitation
+- SecurityEvent
+- AuditLog
+- ApiCredential
+- RecoveryCode
+- TwoFactorMethod
+- UserNotificationPreference
+
+Exact table structure, keys, relationships, indexes,
+constraints, and tenant columns will be defined in the
+Database Blueprint.
+
+============================================================
+42. HIGH-LEVEL AUTHORIZATION FLOW
+============================================================
+
+Example Store Request:
+
+Client
+  ↓
+Authentication
+  ↓
+Identify User
+  ↓
+Resolve Store Membership
+  ↓
+Validate Store Status
+  ↓
+Resolve Role
+  ↓
+Resolve Permission
+  ↓
+Check Package Entitlement
+  ↓
+Authorize Action
+  ↓
+Execute Tenant-Scoped Operation
+  ↓
+Audit if Required
+  ↓
+Return Response
+
+No client-side value should be sufficient to bypass this flow.
+
+============================================================
+43. SECURITY NON-NEGOTIABLES
+============================================================
+
+The following are mandatory principles:
+
+- Never store plaintext passwords.
+- Never trust client-provided tenant IDs without server
+  authorization.
+- Never rely on hidden UI controls for security.
+- Never allow cross-tenant data access.
+- Never expose secrets in logs.
+- Never allow staff to grant unauthorized privileges.
+- Never allow package restrictions to be bypassed through APIs.
+- Never use predictable reset or invitation tokens.
+- Never allow expired tokens to remain valid.
+- Never expose sensitive account existence information
+  unnecessarily.
+- Never permit unauthorized ownership transfer.
+- Never allow background jobs to lose tenant context.
+
+============================================================
+44. TESTING REQUIREMENTS
+============================================================
+
+Module 02 must include comprehensive tests for:
+
+Authentication:
+
+- Valid login
+- Invalid login
+- Logout
+- Session expiry
+- Password reset
+- Email verification
+- Password change
+- Account lock / throttling
+
+Authorization:
+
+- Valid permission
+- Missing permission
+- Wrong role
+- Suspended user
+- Deactivated user
+- Expired invitation
+- Revoked membership
+
+Tenant Isolation:
+
+- Store A cannot access Store B
+- Store A cannot modify Store B
+- Store A cannot search Store B
+- Store A cannot export Store B
+- Store A cannot access Store B media
+- API tenant manipulation attempts fail
+- Background job tenant isolation
+
+Privilege Escalation:
+
+- Staff cannot become Owner
+- Manager cannot assign Owner permissions
+- Store Admin cannot become Platform Admin
+- Customer cannot access Store Admin APIs
+
+Package Enforcement:
+
+- Restricted feature blocked
+- Upgrade enables feature
+- Downgrade removes access safely
+- API also respects entitlement
+
+============================================================
+45. PERFORMANCE REQUIREMENTS
+============================================================
+
+Authentication and authorization must be efficient enough for
+high-volume SaaS usage.
+
+Avoid unnecessary database queries for every operation where
+safe caching or token claims can be used.
+
+However, cached authorization data must have safe invalidation
+behavior.
+
+Security must never be weakened solely for performance.
+
+============================================================
+46. UX REQUIREMENTS
+============================================================
+
+Authentication screens should be:
+
+- Clean
+- Mobile-friendly
+- Responsive
+- Accessible
+- Clear
+- Fast
+- Consistent with Umar Techy branding where appropriate
+
+Errors should be understandable without exposing sensitive
+security information.
+
+Examples:
+
+- Invalid credentials
+- Verification required
+- Session expired
+- Access denied
+- Account suspended
+- Store access unavailable
+
+============================================================
+47. FUTURE EXTENSION POINTS
+============================================================
+
+The architecture should leave room for:
+
+- Phone OTP
+- Social Login
+- Passkeys
+- Single Sign-On
+- Enterprise Identity
+- Advanced MFA
+- Global Account
+- Multi-Store Accounts
+- Partner Accounts
+- Affiliate Accounts
+- Reseller Accounts
+- API Service Accounts
+- App Marketplace Identities
+
+These should be added through controlled extensions rather than
+rewriting the authentication foundation.
+
+============================================================
+48. DEPENDENCIES
+============================================================
+
+Module 02 depends conceptually on:
+
+- Module 01 — Complete Platform Structure
+
+Module 02 will be required by almost every subsequent module,
+especially:
+
+- Module 03 — Multi-Tenant & Store Management
+- Module 04 — Subscription & Feature Entitlements
+- Module 30 — Umar Techy Super Admin
+- Module 31 — API & Developer Platform
+- Module 32 — Security, Audit & Compliance
+
+============================================================
+49. REQUIRED FOLLOW-UP ARTIFACTS
+============================================================
+
+After this module, the following detailed artifacts should be
+created during the overall planning phase:
+
+1. Authentication Architecture Blueprint
+2. Complete Role List
+3. Complete Permission Catalog
+4. Role-Permission Matrix
+5. User / Membership Lifecycle
+6. Authentication State Diagram
+7. Authorization Flow Diagram
+8. Tenant Authorization Rules
+9. Security Event Catalog
+10. Database Entity Blueprint for Identity
+11. API Authorization Standards
+12. Authentication Test Matrix
+
+============================================================
+50. STATUS
+============================================================
+
+Module 02 Status:
+AUTHENTICATION & AUTHORIZATION FOUNDATION — INITIALIZED
+
+Version:
+1.0
+
+This module defines the high-level requirements and structure.
+Exact implementation technologies, database schema, API
+contracts, security algorithms, UI screens, and detailed
+permission matrices will be finalized in their respective
+technical blueprints.
+
+============================================================
+END OF MODULE 02
+============================================================

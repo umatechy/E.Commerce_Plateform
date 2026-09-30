@@ -1,0 +1,383 @@
+UMAR TECHY E-COMMERCE PLATFORM
+USER REQUIREMENTS SPECIFICATION (URS)
+Version 1.0
+Status: Approved Planning Baseline
+
+1. PURPOSE
+This URS defines the approved business, functional, security, operational,
+quality, and future-readiness requirements for the Umar Techy E-Commerce
+Platform. The platform is one Core Multi-Tenant E-Commerce SaaS serving
+multiple independent stores from one shared codebase. Basic, Business and
+Premium are entitlement tiers, not separate codebases.
+
+2. CORE PRINCIPLES
+- One shared core platform.
+- Strict tenant isolation across database, API, files, media, cache, jobs,
+  events, webhooks, exports, reports, search, analytics, notifications and
+  backups.
+- Store/Tenant identity survives package upgrades and downgrades.
+- Server-side authority for permissions, pricing, inventory, payments,
+  promotions, subscriptions and entitlements.
+- Reuse authoritative domain services; do not create competing engines.
+- Privileged changes are auditable.
+- Runtime execution must never be claimed unless actually performed.
+
+3. ACTORS
+- Umar Techy Super Admin: platform-wide control and operations.
+- Store Owner: owns and administers a store.
+- Store Staff: authorized operational users.
+- Customer: storefront/customer-account user.
+- Developer/Integration Consumer: uses approved APIs/webhooks.
+- Affiliate/Reseller: future Module 28 actor.
+- Infrastructure Operator: authorized hosting/infrastructure operator.
+
+4. PLATFORM SURFACES
+- Public storefront
+- Customer account
+- Store Admin
+- Umar Techy Super Admin
+- Developer/API platform
+- Background jobs/workers
+- Webhook endpoints
+- Notification channels
+- Backup/restore operations
+- Hosting/infrastructure operations
+- Future PWA and Flutter clients
+
+5. MULTI-TENANCY
+MT-001 Stable Store/Tenant identity.
+MT-002 Server-authoritative tenant context.
+MT-003 Client tenant_id is never sufficient authorization.
+MT-004 Route parameters, cache keys, file paths, jobs, events, webhook
+references and exports cannot become tenant authorization sources.
+MT-005 Tenant isolation applies across every data-processing layer.
+MT-006 Authorized platform/system operations use explicit platform context.
+
+6. AUTHENTICATION / AUTHORIZATION
+AUTH-001 Staff/admin authentication uses the approved boundary.
+AUTH-002 Laravel Sanctum is canonical; JWT/OAuth require separate approval.
+AUTH-003 Customer and staff authentication remain separate.
+AUTH-004 RBAC, permissions and policies are server-side and tenant-aware.
+AUTH-005 Super Admin operations require explicit platform authorization.
+AUTH-006 Authentication errors must not disclose sensitive information.
+
+7. STORE MANAGEMENT
+STORE-001 Store has a tenant-scoped identity/configuration.
+STORE-002 Authorized owners manage store configuration.
+STORE-003 Staff membership and roles are supported.
+STORE-004 Store lifecycle states are server-controlled.
+STORE-005 Sensitive administrative actions are auditable.
+
+8. PACKAGES / SUBSCRIPTIONS / ENTITLEMENTS
+PKG-001 Packages are configuration/entitlement driven.
+PKG-002 Subscription lifecycle supports all approved states.
+PKG-003 Entitlements are evaluated server-side.
+PKG-004 Hard limits block unauthorized usage.
+PKG-005 Soft limits warn/report according to approved rules.
+PKG-006 Usage counters are tenant-scoped and concurrency-safe.
+PKG-007 Undefined commercial limits must not be invented.
+PKG-008 Package changes preserve store identity/data unless explicitly
+specified otherwise.
+
+9. STOREFRONT
+SF-001 Every store has a customer-facing storefront.
+SF-002 Presentation is theme/configuration driven.
+SF-003 Business decisions remain server-authoritative.
+SF-004 Responsive layouts are required.
+SF-005 Accessibility and reduced-motion support are required.
+SF-006 Loading, empty, error and success states are supported.
+
+10. CATALOG
+CAT-001 Products/categories are tenant-scoped.
+CAT-002 Category hierarchy prevents self-parenting and cycles.
+CAT-003 Brands/attributes are tenant-scoped.
+CAT-004 Simple and variable products are supported.
+CAT-005 Variants belong to authorized products/tenants.
+CAT-006 Sensitive product fields are permission protected.
+
+11. INVENTORY
+INV-001 Inventory is tenant-scoped.
+INV-002 Warehouses/inventory records are supported.
+INV-003 Stock ledger is append-only.
+INV-004 Approved stock movement types are supported.
+INV-005 Stock updates are concurrency-safe.
+INV-006 Reservation/release/expiry integrates with orders.
+INV-007 Overselling is prevented by authoritative stock controls.
+
+12. ORDERS
+ORD-001 Orders are tenant-scoped.
+ORD-002 Order, payment and fulfillment states are distinct.
+ORD-003 Order numbers are safely unique.
+ORD-004 Order pricing is server-authoritative.
+ORD-005 Order creation calls the authoritative inventory service.
+ORD-006 Cancellation releases applicable reservations.
+ORD-007 Retry-prone order operations support idempotency.
+ORD-008 Important order lifecycle events are traceable.
+
+13. CUSTOMERS / CART / WISHLIST / CHECKOUT
+CUS-001 Customers are tenant-scoped.
+CUS-002 Customer authentication is separate from staff authentication.
+CHK-001 Guest and registered carts are supported as specified.
+CHK-002 Guest cart tokens are cryptographically generated server-side.
+CHK-003 Cart pricing is provisional and revalidated.
+CHK-004 Checkout calls authoritative OrderService.
+CHK-005 Client amount is never the final order amount.
+CHK-006 Wishlist follows the approved authenticated/guest model.
+
+14. PAYMENTS
+PAY-001 Payment amount comes from authoritative order data.
+PAY-002 Payment state is distinct from order state.
+PAY-003 Gateway adapters isolate provider-specific behavior.
+PAY-004 Webhook signatures are verified.
+PAY-005 Webhooks are replay-safe/idempotent.
+PAY-006 Browser callbacks are not trusted as payment confirmation alone.
+PAY-007 Refunds use authoritative payment/order state.
+
+15. SHIPPING
+SHIP-001 Support methods, zones, rates, addresses, shipments and tracking.
+SHIP-002 Shipping calculations are server-authoritative.
+SHIP-003 Fulfillment integrates with order state.
+SHIP-004 External shipping callbacks are authenticated/replay-safe.
+
+16. PROMOTIONS
+PROMO-001 Approved coupons/discount/promotion types are supported.
+PROMO-002 Eligibility is server-side.
+PROMO-003 Usage limits are concurrency-safe.
+PROMO-004 Applied discounts are snapshotted in orders.
+PROMO-005 Client-provided discount amounts are never authoritative.
+
+17. MARKETING
+MKT-001 Marketing is tenant-scoped.
+MKT-002 Segmentation/audiences respect authorization.
+MKT-003 Delivery uses the Notification architecture.
+MKT-004 Scheduled campaigns/jobs are retry-safe.
+
+18. SEO / CONTENT
+SEO-001 Supported metadata is manageable per store.
+SEO-002 Canonical URLs use verified storefront domains.
+SEO-003 Slugs obey tenant/route uniqueness.
+SEO-004 Sitemap/robots/indexing/noindex are supported as specified.
+SEO-005 Structured/social metadata follows approved scope.
+
+19. THEME / BRANDING
+THEME-001 One shared theme engine; store-specific configuration.
+THEME-002 Theme never owns business logic.
+THEME-003 Design tokens are validated.
+THEME-004 Branding assets are tenant-scoped.
+THEME-005 Preview/published states are controlled.
+THEME-006 Custom code is allowed only if explicitly and safely supported.
+
+20. ANIMATION
+ANIM-001 Animation is presentation-layer behavior.
+ANIM-002 Animation profiles are configurable where required.
+ANIM-003 Reduced-motion preferences are respected.
+ANIM-004 Animation must not materially damage performance.
+
+21. DOMAIN MANAGEMENT
+DOM-001 Domain records map safely to stores.
+DOM-002 Customer-owned/Umar Techy-managed ownership is explicit.
+DOM-003 Hostnames are normalized and validated.
+DOM-004 Only verified/active domains become authoritative.
+DOM-005 Host resolution is protected from poisoning.
+DOM-006 SEO canonical URLs use the verified domain.
+
+22. HOSTING / INFRASTRUCTURE
+HOST-001 Infrastructure management is a distinct boundary.
+HOST-002 Managed and customer-provided hosting are distinguishable.
+HOST-003 Supported infrastructure may include Nginx, PHP, MySQL, Redis,
+queues, scheduler, object storage, DNS, SSL and Cloudflare.
+HOST-004 No live health claim without real telemetry.
+HOST-005 Infrastructure health is distinct from store health.
+
+23. NOTIFICATIONS
+NOTIF-001 Business events flow through the approved outbox/dispatch model.
+NOTIF-002 Email/SMS/WhatsApp/push/in-app channels may be supported.
+NOTIF-003 Preferences are respected.
+NOTIF-004 Transactional and marketing communication are distinguished.
+NOTIF-005 Provider callbacks are authenticated/replay-safe.
+
+24. REPORTS / ANALYTICS
+AN-001 Reports use authoritative data.
+AN-002 Reporting is tenant-isolated.
+AN-003 Timezone handling is explicit.
+AN-004 Large exports are asynchronous where needed.
+AN-005 Export files are access-controlled and tenant-safe.
+AN-006 Reporting is not a second source of truth.
+
+25. BACKUP / RESTORE
+BKP-001 Tenant-aware backup architecture.
+BKP-002 Platform-global and tenant-owned data are classified.
+BKP-003 Database and media backup strategies are defined.
+BKP-004 Backup artifacts use suitable encryption/integrity/access controls.
+BKP-005 Restore requires authorization and preflight.
+BKP-006 Restore is auditable and failure-aware.
+BKP-007 Cross-tenant backup access is prohibited.
+BKP-008 Retention is configurable under approved policy.
+
+26. STORE HEALTH
+HEALTH-001 Store/tenant health visibility is provided.
+HEALTH-002 Health consumes authoritative signals from other modules.
+HEALTH-003 No duplicate infrastructure-monitoring system.
+HEALTH-004 Warnings identify their source/scope.
+
+27. PWA / MOBILE
+PWA-001 Future PWA/mobile experience follows Module 25.
+PWA-002 PWA/mobile uses the same authoritative APIs.
+PWA-003 Offline behavior never bypasses server authority.
+
+28. AI
+AI-001 AI is a controlled platform module.
+AI-002 AI features have explicit entitlements.
+AI-003 AI respects tenant isolation/authorization.
+AI-004 Protected data is sent to providers only when explicitly permitted.
+AI-005 AI output does not silently become authoritative business data.
+AI-006 Provider/model selection is configurable through approved mechanisms.
+
+29. APP / PLUGIN MARKETPLACE
+APP-001 Extensible integration boundary.
+APP-002 Apps/plugins have explicit scopes/permissions.
+APP-003 Integrations cannot bypass tenant authorization.
+APP-004 Webhooks/callbacks are signed/replay-safe where applicable.
+APP-005 Third-party code does not receive unrestricted DB access.
+
+30. AFFILIATE / RESELLER
+AFF-001 Module 28 defines affiliate/reseller capabilities.
+AFF-002 Referrals, commissions and payouts are auditable.
+AFF-003 Fraud controls are server-enforced.
+AFF-004 Platform reseller relationships are distinct from ordinary
+customer referral behavior.
+
+31. BILLING
+BILL-001 Subscription billing and renewal lifecycle.
+BILL-002 Invoices are authoritative billing records.
+BILL-003 Billing events are idempotent.
+BILL-004 Billing ownership is platform/tenant scoped as appropriate.
+
+32. SUPER ADMIN
+SA-001 Super Admin is a platform control plane.
+SA-002 It is not an unrestricted tenant-admin bypass.
+SA-003 Privileged actions are authorized and audited.
+SA-004 Secrets are never exposed in normal UI/API/logs/audit.
+SA-005 Super Admin uses authoritative domain services.
+
+33. DEVELOPER API
+API-001 Core API: /api/v1/...
+API-002 Developer API: /api/dev/v1/...
+API-003 Public storefront API: /api/v1/public/...
+API-004 Breaking changes require a new major version.
+API-005 Additive non-breaking changes remain in the current major.
+API-006 Credentials/scopes/rate limits are server-enforced.
+API-007 Clients cannot override tenant context.
+API-008 Stable API error/resource contracts are required.
+
+34. SECURITY / AUDIT
+SEC-001 Defense-in-depth security.
+SEC-002 All tenant access is authorized server-side.
+SEC-003 Secrets are securely stored and never logged.
+SEC-004 Signed/replay-safe webhooks.
+SEC-005 Tenant-safe file/media access.
+SEC-006 Tenant-safe cache.
+SEC-007 Safe tenant context in jobs/events/outbox.
+SEC-008 Authorized exports.
+SEC-009 Privileged mutations audited.
+SEC-010 Appropriate validation, encoding, CSRF, rate limiting, IDOR,
+SSRF, path traversal and payload controls.
+
+35. CONFIGURATION
+CFG-001 Distinguish environment, platform, tenant, user preferences,
+secrets and module-owned business data.
+CFG-002 Do not create an arbitrary untyped settings database.
+CFG-003 Settings have scope, owner, defaults, validation, sensitivity,
+permissions and lifecycle.
+CFG-004 Secrets are specially protected.
+CFG-005 Module business configuration remains module-owned.
+
+36. NON-FUNCTIONAL REQUIREMENTS
+NFR-001 Security first.
+NFR-002 Performance through indexes, caching, queues and pagination.
+NFR-003 Reliable transactional/idempotent critical operations.
+NFR-004 Scalability across tenants and commerce volume.
+NFR-005 Maintainable modular architecture.
+NFR-006 Appropriate observability without secret leakage.
+NFR-007 Accessibility.
+NFR-008 Localization readiness.
+NFR-009 Safe failure/recovery.
+NFR-010 Data protection.
+
+37. TESTING
+TEST-001 Unit, feature, integration, security and regression testing.
+TEST-002 Explicit cross-tenant negative tests.
+TEST-003 Concurrency tests where practical.
+TEST-004 Payment, webhook, inventory, entitlement, backup, API credential
+and authorization negative paths.
+TEST-005 Only executed tests may be reported as PASS.
+TEST-006 Static inspection/planned tests must be labeled honestly.
+
+38. DEPLOYMENT
+DEP-001 Laravel/PHP deployment.
+DEP-002 Hostinger-compatible where practical, with Ubuntu 24.04 VPS path.
+DEP-003 Production secrets use secure environment/configuration.
+DEP-004 Deployment includes migrations, workers, scheduler, storage,
+cache, health checks and rollback planning.
+
+39. DEVELOPMENT GOVERNANCE
+DEV-001 READ -> INSPECT -> UNDERSTAND -> GAP ANALYSIS ->
+DEPENDENCY ANALYSIS -> PLAN -> CHECKPOINT -> IMPLEMENT -> TEST ->
+SECURITY REVIEW -> REGRESSION -> DOCUMENT -> COMMIT -> VERIFY ->
+CHECKPOINT.
+DEV-002 Do not replace authoritative domain services.
+DEV-003 Record significant architecture decisions as ADRs.
+DEV-004 Git repository is implementation source of truth.
+DEV-005 Planning documents must be committed to the repository.
+
+40. APPROVED 35-MODULE SCOPE
+01 Complete Platform Structure
+02 Authentication, Users, Roles & Permissions
+03 Multi-Tenant & Store Management
+04 Subscription, Packages & Feature Entitlements
+05 Storefront / Customer Website
+06 Product & Catalog Management
+07 Category, Brand & Attribute Management
+08 Inventory & Stock Management
+09 Order Management
+10 Customer Management
+11 Cart, Wishlist & Checkout
+12 Payment Management & Gateways
+13 Shipping & Delivery Management
+14 Discounts, Coupons & Promotions
+15 Marketing & Customer Engagement
+16 SEO & Content Management
+17 Theme, Branding & Design System
+18 Animation & Interaction System
+19 Domain Management
+20 Hosting & Infrastructure Management
+21 Notifications & Communication
+22 Reports, Analytics & Dashboard
+23 Backup, Restore & Data Protection
+24 Store Health, Monitoring & Resource Usage
+25 PWA / Mobile Experience
+26 AI Features
+27 App / Plugin Marketplace & Integrations
+28 Affiliate & Reseller Program
+29 Billing, Invoices & Renewals
+30 Umar Techy Super Admin
+31 API & Developer Platform
+32 Security, Audit & Compliance
+33 System Settings & Configuration
+34 Help, Support & Documentation
+35 Future Expansion Framework
+
+41. TRACEABILITY
+Requirement families: MT, AUTH, RBAC, STORE, PKG, SF, CAT, TAX, INV, ORD,
+CUS, CHK, PAY, SHIP, PROMO, MKT, SEO, THEME, ANIM, DOM, HOST, NOTIF, AN,
+BKP, HEALTH, PWA, AI, APP, AFF, BILL, SA, API, SEC, CFG, SUP, DATA, NFR,
+PERF, REL, LOC, A11Y, AUD, DEV, DEP, TEST.
+
+DOCUMENT CONTROL
+Document: Umar Techy E-Commerce Platform User Requirements Specification
+Version: 1.0
+Status: Approved Planning Baseline
+Companions: Project Bible, Master Index, Technical Architecture,
+Module Blueprints 01-35, Claude Master Development Prompt, ADRs.
+This document defines requirements; it does not claim all requirements
+are already implemented.

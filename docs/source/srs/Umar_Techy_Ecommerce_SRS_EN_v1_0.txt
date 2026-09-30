@@ -1,0 +1,1190 @@
+====================================================================
+                         UMAR TECHY
+                  E-COMMERCE PLATFORM
+          SOFTWARE REQUIREMENTS SPECIFICATION (SRS)
+                         VERSION 1.0
+====================================================================
+
+DOCUMENT STATUS
+---------------
+Project: Umar Techy E-Commerce Platform
+Document: Software Requirements Specification
+Version: 1.0
+Language: English
+Architecture: Core Multi-Tenant E-Commerce SaaS
+Primary Reference: Project Bible v1.0
+Detailed References: Module Blueprints 01-35
+
+====================================================================
+1. DOCUMENT PURPOSE
+====================================================================
+
+This SRS defines the functional, non-functional, security, data, API,
+integration, operational and quality requirements of the Umar Techy
+E-Commerce Platform.
+
+It converts the product vision and Project Bible into implementable system
+requirements.
+
+This document is authoritative for system behavior. Detailed module
+implementation must follow the corresponding Module Blueprint while
+remaining consistent with this SRS and the Project Bible.
+
+====================================================================
+2. SYSTEM SCOPE
+====================================================================
+
+The system is a multi-tenant SaaS platform through which independent
+businesses can create, configure, operate and grow e-commerce stores.
+
+The platform shall provide:
+
+- Account and identity management
+- Multi-tenant store management
+- Roles and permissions
+- Packages and entitlements
+- Storefronts
+- Catalog
+- Categories, brands and attributes
+- Inventory
+- Orders
+- Customers
+- Cart, wishlist and checkout
+- Payments
+- Shipping
+- Promotions
+- Marketing
+- SEO and content
+- Themes and branding
+- Animation
+- Domains
+- Hosting/infrastructure controls
+- Notifications
+- Analytics and reporting
+- Backup and restore
+- Store health monitoring
+- PWA/mobile experience
+- AI services
+- Marketplace and integrations
+- Affiliate/reseller functionality
+- Billing/subscriptions
+- Super Admin
+- Developer APIs
+- Security/audit/compliance
+- System configuration
+- Help/support/documentation
+- Future extension framework
+
+====================================================================
+3. SYSTEM ACTORS
+====================================================================
+
+3.1 Platform Super Admin
+Manages platform-wide configuration, tenants, packages, security,
+integrations, billing, monitoring, support and governance.
+
+3.2 Platform Operations/Security Staff
+Performs explicitly authorized operational and security tasks.
+
+3.3 Store Owner
+Owns or administers a store and controls permitted business operations.
+
+3.4 Store Administrator/Manager
+Manages permitted store operations according to assigned permissions.
+
+3.5 Store Staff
+Performs assigned operational tasks such as orders, catalog or inventory.
+
+3.6 Marketing User
+Manages marketing, promotions, content and permitted analytics.
+
+3.7 Finance/Accounts User
+Manages permitted billing, invoices and financial workflows.
+
+3.8 Customer
+Browses stores, creates accounts, manages cart, checks out and manages
+their own permitted customer data and orders.
+
+3.9 Developer/Integration Partner
+Uses authorized APIs, webhooks, SDKs and integrations.
+
+3.10 Affiliate/Reseller
+Uses authorized referral, attribution and reseller capabilities.
+
+====================================================================
+4. MULTI-TENANT REQUIREMENTS
+====================================================================
+
+MT-001 The system shall support multiple independent tenants.
+
+MT-002 Every tenant shall have a stable unique Tenant ID.
+
+MT-003 Every store shall have a stable Store ID.
+
+MT-004 Tenant ownership and store ownership shall be explicit.
+
+MT-005 Tenant-owned records shall be associated with the correct tenant.
+
+MT-006 API requests shall resolve and validate tenant context.
+
+MT-007 Background jobs shall carry validated tenant context.
+
+MT-008 Cache keys shall prevent cross-tenant collisions and leakage.
+
+MT-009 Search indexes shall enforce tenant isolation.
+
+MT-010 File storage paths and access policies shall be tenant-aware.
+
+MT-011 Exports shall contain only authorized tenant data.
+
+MT-012 Analytics shall respect tenant authorization.
+
+MT-013 Webhooks shall resolve the correct tenant context.
+
+MT-014 Cross-tenant access shall require explicit platform-level authority.
+
+MT-015 Store upgrades/downgrades shall preserve Tenant ID, Store ID and
+existing data unless an explicit documented retention policy applies.
+
+MT-016 A tenant suspension shall not silently delete tenant data.
+
+MT-017 Tenant deletion shall follow an explicit lifecycle and retention policy.
+
+MT-018 Tenant isolation shall be tested as a dedicated security category.
+
+====================================================================
+5. IDENTITY & AUTHENTICATION REQUIREMENTS
+====================================================================
+
+AUTH-001 Users shall be able to register using supported identity methods.
+
+AUTH-002 Email verification shall be supported where configured.
+
+AUTH-003 Password authentication shall use secure password hashing.
+
+AUTH-004 Password reset shall use secure expiring tokens.
+
+AUTH-005 Sessions shall be securely managed and invalidatable.
+
+AUTH-006 MFA shall be supported for eligible accounts.
+
+AUTH-007 MFA recovery shall use protected recovery procedures.
+
+AUTH-008 Login attempts shall be protected against brute-force abuse.
+
+AUTH-009 Authentication events shall be observable and auditable where
+security-relevant.
+
+AUTH-010 Sensitive authentication data shall never be logged in plaintext.
+
+AUTH-011 API authentication shall support the mechanisms defined by the
+Developer Platform specification.
+
+AUTH-012 Super Admin authentication shall have stronger security controls.
+
+====================================================================
+6. ROLES & AUTHORIZATION REQUIREMENTS
+====================================================================
+
+RBAC-001 The system shall support roles.
+
+RBAC-002 Permissions shall be explicit and granular.
+
+RBAC-003 Authorization shall be enforced server-side.
+
+RBAC-004 Object-level authorization shall be enforced.
+
+RBAC-005 Field-level restrictions shall be supported where required.
+
+RBAC-006 A valid login shall not imply permission to every store.
+
+RBAC-007 Store context shall be validated before store operations.
+
+RBAC-008 Package entitlements shall not replace authorization.
+
+RBAC-009 Feature flags shall not replace authorization.
+
+RBAC-010 Privileged actions shall generate appropriate audit records.
+
+====================================================================
+7. STORE MANAGEMENT REQUIREMENTS
+====================================================================
+
+STORE-001 An authorized user shall be able to create a store.
+
+STORE-002 Store provisioning shall create required isolated resources.
+
+STORE-003 Store status shall be lifecycle-controlled.
+
+STORE-004 Store profile shall support business identity information.
+
+STORE-005 Store configuration shall be tenant-scoped.
+
+STORE-006 Store owners shall be able to configure permitted storefront
+settings.
+
+STORE-007 Store users shall be assignable to permitted roles.
+
+STORE-008 Multi-store users shall have explicit store context.
+
+STORE-009 Store closure shall follow controlled lifecycle rules.
+
+====================================================================
+8. PACKAGE & ENTITLEMENT REQUIREMENTS
+====================================================================
+
+PKG-001 The system shall support Basic, Business and Premium packages.
+
+PKG-002 Packages shall be centrally defined.
+
+PKG-003 Package features shall be represented through entitlements.
+
+PKG-004 Usage limits shall be enforceable.
+
+PKG-005 Entitlements shall be evaluated server-side.
+
+PKG-006 Package changes shall preserve tenant identity and business data.
+
+PKG-007 Downgrades shall enforce future limits without corrupting existing
+historical records.
+
+PKG-008 Trials shall have explicit start/end states.
+
+PKG-009 Subscription suspension shall follow defined policy.
+
+PKG-010 Entitlement decisions shall be observable for troubleshooting.
+
+====================================================================
+9. STOREFRONT REQUIREMENTS
+====================================================================
+
+SF-001 Each active store shall have an isolated storefront.
+
+SF-002 Storefront requests shall resolve the correct tenant/store.
+
+SF-003 Storefront shall support responsive layouts.
+
+SF-004 Storefront shall support mobile-first interaction.
+
+SF-005 Storefront shall support product discovery.
+
+SF-006 Storefront shall support category browsing.
+
+SF-007 Storefront shall support product detail pages.
+
+SF-008 Storefront shall support search where enabled.
+
+SF-009 Storefront shall support cart and checkout.
+
+SF-010 Storefront shall support customer accounts where enabled.
+
+SF-011 Storefront shall support SEO metadata.
+
+SF-012 Storefront shall support configurable branding.
+
+SF-013 Storefront shall support themes.
+
+SF-014 Storefront shall respect accessibility requirements.
+
+SF-015 Storefront shall fail safely when optional integrations are unavailable.
+
+====================================================================
+10. PRODUCT & CATALOG REQUIREMENTS
+====================================================================
+
+CAT-001 Authorized users shall create, update and archive products.
+
+CAT-002 Products shall support identifiers/SKUs.
+
+CAT-003 Products shall support pricing.
+
+CAT-004 Products shall support media.
+
+CAT-005 Products shall support variants where enabled.
+
+CAT-006 Products shall support categories.
+
+CAT-007 Products shall support brands where enabled.
+
+CAT-008 Products shall support attributes.
+
+CAT-009 Product status shall control storefront visibility.
+
+CAT-010 Product data shall remain tenant-scoped.
+
+CAT-011 Product slugs shall have collision-safe rules.
+
+CAT-012 Product updates shall not corrupt historical order information.
+
+====================================================================
+11. CATEGORY, BRAND & ATTRIBUTE REQUIREMENTS
+====================================================================
+
+TAX-001 Authorized users shall manage categories.
+
+TAX-002 Categories may support hierarchy.
+
+TAX-003 Category slugs shall be validated and scoped correctly.
+
+TAX-004 Authorized users shall manage brands where enabled.
+
+TAX-005 Authorized users shall define reusable attributes.
+
+TAX-006 Attribute values shall be validated.
+
+TAX-007 Taxonomy changes shall preserve references safely.
+
+====================================================================
+12. INVENTORY REQUIREMENTS
+====================================================================
+
+INV-001 The system shall track stock where inventory is enabled.
+
+INV-002 The system shall support available/reserved/on-hand concepts as
+defined by the inventory blueprint.
+
+INV-003 Stock adjustments shall be authorized.
+
+INV-004 Stock changes shall be auditable.
+
+INV-005 Checkout shall not trust client stock values.
+
+INV-006 Concurrent stock changes shall be handled safely.
+
+INV-007 Low-stock thresholds shall be configurable.
+
+INV-008 Inventory operations shall remain tenant-isolated.
+
+INV-009 Inventory failures shall not silently create false stock state.
+
+====================================================================
+13. ORDER REQUIREMENTS
+====================================================================
+
+ORD-001 Customers shall be able to place orders through supported checkout.
+
+ORD-002 Order totals shall be calculated server-side.
+
+ORD-003 Orders shall contain sufficient historical information to preserve
+commercial truth.
+
+ORD-004 Order status transitions shall be validated.
+
+ORD-005 Order history shall be accessible only to authorized actors.
+
+ORD-006 Store staff shall see only permitted store orders.
+
+ORD-007 Order events shall be observable.
+
+ORD-008 Refund/return operations shall require appropriate authorization.
+
+ORD-009 Duplicate submissions shall be safely handled.
+
+ORD-010 Order creation shall coordinate payment, inventory and customer
+operations safely.
+
+====================================================================
+14. CUSTOMER REQUIREMENTS
+====================================================================
+
+CUS-001 Customers shall be store-scoped.
+
+CUS-002 Customers shall be able to register where enabled.
+
+CUS-003 Customers shall manage permitted profile information.
+
+CUS-004 Customers shall view only their own authorized orders.
+
+CUS-005 Store staff shall access only permitted customer information.
+
+CUS-006 Customer deletion/export workflows shall respect retention rules.
+
+CUS-007 Sensitive customer information shall be protected.
+
+====================================================================
+15. CART, WISHLIST & CHECKOUT
+====================================================================
+
+CHK-001 Customers shall add eligible products to cart.
+
+CHK-002 Cart quantities shall be validated server-side.
+
+CHK-003 Product availability shall be revalidated during checkout.
+
+CHK-004 Prices shall be revalidated during checkout.
+
+CHK-005 Promotions shall be revalidated during checkout.
+
+CHK-006 Shipping costs shall be calculated according to active rules.
+
+CHK-007 Applicable taxes shall be calculated according to configured rules.
+
+CHK-008 Final order totals shall be server-authoritative.
+
+CHK-009 Checkout shall prevent unauthorized negative/invalid totals.
+
+CHK-010 Payment confirmation shall not depend solely on browser redirects.
+
+CHK-011 Retry-sensitive checkout actions shall support idempotency.
+
+CHK-012 Wishlist operations shall remain customer/store scoped.
+
+====================================================================
+16. PAYMENT REQUIREMENTS
+====================================================================
+
+PAY-001 Payment gateways shall use provider adapters.
+
+PAY-002 The platform shall support multiple payment providers over time.
+
+PAY-003 Cash-on-delivery workflows may be supported.
+
+PAY-004 Payment initiation shall create a traceable payment attempt.
+
+PAY-005 Payment status shall be provider-verified.
+
+PAY-006 Payment webhooks shall be authenticated and verified.
+
+PAY-007 Payment webhooks shall be idempotent.
+
+PAY-008 Replay protection shall be implemented.
+
+PAY-009 Raw card data shall not be stored by the platform unless a specific
+compliance architecture explicitly permits it.
+
+PAY-010 Payment failures shall not create false paid orders.
+
+PAY-011 Refunds shall require authorization.
+
+====================================================================
+17. SHIPPING REQUIREMENTS
+====================================================================
+
+SHIP-001 Stores shall be able to configure supported shipping methods.
+
+SHIP-002 Shipping zones shall be supported.
+
+SHIP-003 Shipping rates shall be configurable.
+
+SHIP-004 Shipping calculations shall be server-authoritative.
+
+SHIP-005 Free-shipping rules shall be supported where configured.
+
+SHIP-006 Tracking information shall be supported where available.
+
+SHIP-007 Provider integrations shall use adapters.
+
+SHIP-008 Delivery status changes shall be auditable where required.
+
+====================================================================
+18. PROMOTION REQUIREMENTS
+====================================================================
+
+PROMO-001 Authorized users shall create promotions.
+
+PROMO-002 Coupon codes shall support validation.
+
+PROMO-003 Coupons shall support configured usage constraints.
+
+PROMO-004 Promotions shall be evaluated server-side.
+
+PROMO-005 Promotions shall not bypass entitlement or authorization rules.
+
+PROMO-006 Promotion stacking rules shall be explicit.
+
+PROMO-007 Expired promotions shall not apply.
+
+====================================================================
+19. MARKETING REQUIREMENTS
+====================================================================
+
+MKT-001 Authorized users shall manage permitted marketing campaigns.
+
+MKT-002 Marketing features shall respect customer communication preferences.
+
+MKT-003 Abandoned-cart workflows may be supported.
+
+MKT-004 Customer segmentation may be supported.
+
+MKT-005 Marketing events shall be tenant-scoped.
+
+====================================================================
+20. SEO & CONTENT REQUIREMENTS
+====================================================================
+
+SEO-001 Stores shall support configurable SEO metadata.
+
+SEO-002 Product/category/content pages shall support metadata where applicable.
+
+SEO-003 Slugs shall be collision-safe.
+
+SEO-004 Sitemap generation shall be tenant-aware.
+
+SEO-005 Robots configuration shall be tenant-aware.
+
+SEO-006 Content shall be sanitized before rendering.
+
+SEO-007 Rich content shall not bypass security controls.
+
+====================================================================
+21. THEME & BRANDING REQUIREMENTS
+====================================================================
+
+THEME-001 Stores shall be able to select supported themes.
+
+THEME-002 Theme configuration shall be store-scoped.
+
+THEME-003 Branding shall be configurable.
+
+THEME-004 Themes shall not contain duplicated core business logic.
+
+THEME-005 Theme configuration shall be validated.
+
+THEME-006 Theme rendering shall respect accessibility and performance.
+
+====================================================================
+22. ANIMATION REQUIREMENTS
+====================================================================
+
+ANIM-001 Animation profiles shall be configurable.
+
+ANIM-002 Reduced-motion preferences shall be respected.
+
+ANIM-003 Animation shall not block core commerce workflows.
+
+ANIM-004 Resource-heavy effects shall be limited on constrained devices.
+
+====================================================================
+23. DOMAIN REQUIREMENTS
+====================================================================
+
+DOM-001 Stores shall support platform subdomains.
+
+DOM-002 Stores shall support custom domains where enabled.
+
+DOM-003 Domain ownership/verification shall be tracked.
+
+DOM-004 Unauthorized domain claiming shall be prevented.
+
+DOM-005 SSL/TLS status shall be monitored where infrastructure permits.
+
+DOM-006 Domain changes shall be auditable.
+
+====================================================================
+24. HOSTING & INFRASTRUCTURE REQUIREMENTS
+====================================================================
+
+HOST-001 The system shall support managed deployment architecture.
+
+HOST-002 Infrastructure settings shall be environment-aware.
+
+HOST-003 Production secrets shall not be stored in source code.
+
+HOST-004 Infrastructure actions shall require authorization.
+
+HOST-005 Architecture shall remain portable toward VPS/cloud scaling.
+
+====================================================================
+25. NOTIFICATION REQUIREMENTS
+====================================================================
+
+NOTIF-001 The platform shall support notification providers through adapters.
+
+NOTIF-002 Email notifications shall be supported where configured.
+
+NOTIF-003 Push notifications shall be supported where configured.
+
+NOTIF-004 WhatsApp/SMS integrations may be supported through providers.
+
+NOTIF-005 Notification templates shall be configurable.
+
+NOTIF-006 Notifications shall respect customer preferences.
+
+NOTIF-007 Delivery failures shall be retryable where safe.
+
+NOTIF-008 Notification jobs shall be observable.
+
+====================================================================
+26. REPORTING & ANALYTICS REQUIREMENTS
+====================================================================
+
+AN-001 Stores shall have authorized reports.
+
+AN-002 Reports shall be tenant-scoped.
+
+AN-003 Platform analytics shall require platform-level authorization.
+
+AN-004 Metrics shall have defined calculation rules.
+
+AN-005 Analytics processing shall not corrupt transactional data.
+
+AN-006 Long-running reports may run asynchronously.
+
+AN-007 Exported reports shall be access-controlled.
+
+====================================================================
+27. BACKUP & RESTORE REQUIREMENTS
+====================================================================
+
+BKP-001 Automated backups shall be supported.
+
+BKP-002 Backup retention shall be configurable.
+
+BKP-003 Backup integrity shall be checked.
+
+BKP-004 Backup access shall be restricted.
+
+BKP-005 Restore workflows shall be protected.
+
+BKP-006 Restore procedures shall be documented.
+
+BKP-007 Restore testing shall be performed periodically where operationally
+supported.
+
+====================================================================
+28. STORE HEALTH & MONITORING
+====================================================================
+
+HEALTH-001 The platform shall monitor application health.
+
+HEALTH-002 The platform shall monitor database/queue health where applicable.
+
+HEALTH-003 Store resource usage shall be measurable where supported.
+
+HEALTH-004 Integration failures shall be observable.
+
+HEALTH-005 Critical health conditions shall generate appropriate alerts.
+
+HEALTH-006 Monitoring data shall respect privacy and authorization.
+
+====================================================================
+29. PWA / MOBILE REQUIREMENTS
+====================================================================
+
+PWA-001 Storefront shall support installability where enabled.
+
+PWA-002 Responsive behavior shall support common mobile devices.
+
+PWA-003 Safe caching shall be used where appropriate.
+
+PWA-004 Offline behavior shall never falsely confirm financial transactions.
+
+PWA-005 Offline behavior shall not create unsafe inventory mutations.
+
+====================================================================
+30. AI REQUIREMENTS
+====================================================================
+
+AI-001 AI functionality shall use controlled services/tools.
+
+AI-002 AI access shall be permission-scoped.
+
+AI-003 AI shall not be authoritative for payment state.
+
+AI-004 AI shall not be authoritative for permissions.
+
+AI-005 AI shall not be authoritative for inventory truth.
+
+AI-006 AI shall not be authoritative for tenant identity.
+
+AI-007 AI-generated content shall be reviewable where appropriate.
+
+AI-008 AI tool execution shall be auditable for security-sensitive actions.
+
+====================================================================
+31. MARKETPLACE & INTEGRATION REQUIREMENTS
+====================================================================
+
+APP-001 Developers shall be able to register authorized applications.
+
+APP-002 Applications shall have explicit scopes/permissions.
+
+APP-003 Apps shall not receive unrestricted tenant access.
+
+APP-004 Provider integrations shall use defined contracts.
+
+APP-005 Marketplace installation shall validate compatibility and permissions.
+
+APP-006 Apps shall be revocable.
+
+APP-007 API/webhook access shall be auditable.
+
+====================================================================
+32. AFFILIATE & RESELLER REQUIREMENTS
+====================================================================
+
+AFF-001 Referral attribution shall be supported where enabled.
+
+AFF-002 Commission rules shall be configurable.
+
+AFF-003 Commission records shall be auditable.
+
+AFF-004 Reseller provisioning shall use authorized workflows.
+
+AFF-005 Partner access shall be isolated from unrelated tenant data.
+
+====================================================================
+33. BILLING & SUBSCRIPTION REQUIREMENTS
+====================================================================
+
+BILL-001 Subscription state shall be explicit.
+
+BILL-002 Billing plans shall map to package entitlements.
+
+BILL-003 Invoices shall preserve historical accuracy.
+
+BILL-004 Renewal processing shall be retry-safe.
+
+BILL-005 Billing webhooks shall be verified.
+
+BILL-006 Credits/refunds shall require authorization.
+
+BILL-007 Failed payments shall follow configured recovery policy.
+
+BILL-008 Package change shall update entitlements without changing tenant
+identity.
+
+====================================================================
+34. SUPER ADMIN REQUIREMENTS
+====================================================================
+
+SA-001 Super Admin shall provide platform-level management.
+
+SA-002 Super Admin functions shall require privileged authorization.
+
+SA-003 Super Admin actions shall be audited.
+
+SA-004 Sensitive actions shall require confirmation/re-authentication where
+appropriate.
+
+SA-005 Platform-wide operations shall have safeguards against accidental
+mass impact.
+
+SA-006 Break-glass operations, if implemented, shall be explicitly controlled
+and fully audited.
+
+====================================================================
+35. API & DEVELOPER PLATFORM REQUIREMENTS
+====================================================================
+
+API-001 Public APIs shall be versioned.
+
+API-002 Private/internal APIs shall use appropriate authentication.
+
+API-003 API requests shall enforce authorization.
+
+API-004 APIs shall enforce tenant boundaries.
+
+API-005 Rate limits shall be enforceable.
+
+API-006 Quotas shall be enforceable where package/API plans require them.
+
+API-007 Idempotency shall be supported for retry-sensitive operations.
+
+API-008 Pagination shall be deterministic.
+
+API-009 Filtering/sorting inputs shall be validated/allowlisted.
+
+API-010 Errors shall use a consistent structured format.
+
+API-011 Request/correlation IDs shall be supported.
+
+API-012 OpenAPI/schema documentation shall be maintained.
+
+API-013 Webhooks shall support signing/verification.
+
+API-014 Webhooks shall support retries and duplicate handling.
+
+API-015 Failed webhook delivery shall have appropriate dead-letter handling.
+
+API-016 Developer applications shall support key/token rotation and revocation.
+
+API-017 Sandbox and production environments shall remain separated where
+provided.
+
+====================================================================
+36. SECURITY REQUIREMENTS
+====================================================================
+
+SEC-001 All security-sensitive operations shall be server-authoritative.
+
+SEC-002 Tenant isolation shall be treated as a security boundary.
+
+SEC-003 Secrets shall be securely managed.
+
+SEC-004 Sensitive data shall be encrypted in transit.
+
+SEC-005 Sensitive stored data shall be protected according to classification.
+
+SEC-006 File uploads shall be validated and access-controlled.
+
+SEC-007 Private files shall not become publicly accessible accidentally.
+
+SEC-008 API endpoints shall be protected against abuse.
+
+SEC-009 Authentication shall be protected against brute force.
+
+SEC-010 Authorization checks shall occur on every sensitive object access.
+
+SEC-011 Audit logs shall capture important security-sensitive actions.
+
+SEC-012 Logs shall minimize sensitive information.
+
+SEC-013 Dependencies shall be monitored for security issues.
+
+SEC-014 CI/CD shall include appropriate security gates.
+
+SEC-015 Security incidents shall have documented response procedures.
+
+====================================================================
+37. SYSTEM SETTINGS & CONFIGURATION REQUIREMENTS
+====================================================================
+
+CFG-001 Configuration shall have defined scopes.
+
+CFG-002 Configuration shall be validated.
+
+CFG-003 Secrets shall be separated from ordinary configuration.
+
+CFG-004 Configuration changes shall be auditable where appropriate.
+
+CFG-005 Feature flags shall have ownership and lifecycle.
+
+CFG-006 Entitlements shall be centrally resolvable.
+
+CFG-007 Configuration caching shall not leak tenant data.
+
+CFG-008 Environment-specific configuration shall remain isolated.
+
+CFG-009 Safe defaults shall be defined.
+
+====================================================================
+38. HELP, SUPPORT & DOCUMENTATION REQUIREMENTS
+====================================================================
+
+SUP-001 The platform shall provide documentation/help architecture.
+
+SUP-002 Support tickets shall be tenant-aware.
+
+SUP-003 Support access shall use least privilege.
+
+SUP-004 Diagnostics shall avoid exposing unnecessary sensitive data.
+
+SUP-005 Knowledge base content shall be version-aware.
+
+SUP-006 Release notes shall document important changes.
+
+SUP-007 Troubleshooting information shall reflect actual system behavior.
+
+====================================================================
+39. DATA REQUIREMENTS
+====================================================================
+
+DATA-001 Every major domain entity shall have defined ownership.
+
+DATA-002 Required audit fields shall be consistent.
+
+DATA-003 Historical financial/order records shall preserve required facts.
+
+DATA-004 Foreign keys/references shall be protected.
+
+DATA-005 Data deletion shall respect retention requirements.
+
+DATA-006 Export workflows shall be authorized.
+
+DATA-007 Import workflows shall validate input before committing.
+
+DATA-008 Data migrations shall be versioned and repeatable.
+
+DATA-009 Database uniqueness shall reflect business scope.
+
+DATA-010 Time zones and currency precision shall be explicitly handled.
+
+====================================================================
+40. NON-FUNCTIONAL REQUIREMENTS
+====================================================================
+
+NFR-001 The system shall be maintainable.
+
+NFR-002 The system shall be modular.
+
+NFR-003 The system shall be testable.
+
+NFR-004 The system shall support horizontal scaling where architecture permits.
+
+NFR-005 Critical operations shall be observable.
+
+NFR-006 APIs shall provide predictable response/error contracts.
+
+NFR-007 Storefront performance shall be optimized.
+
+NFR-008 Background work shall not block critical synchronous requests when
+asynchronous processing is appropriate.
+
+NFR-009 The system shall support secure deployment separation.
+
+NFR-010 The system shall support controlled configuration.
+
+NFR-011 The system shall support graceful failure for optional providers.
+
+NFR-012 The system shall support recovery procedures.
+
+====================================================================
+41. PERFORMANCE REQUIREMENTS
+====================================================================
+
+PERF-001 Database queries shall be reviewed for inefficient patterns.
+
+PERF-002 N+1 query patterns shall be avoided.
+
+PERF-003 Large datasets shall use pagination or streaming where appropriate.
+
+PERF-004 Media shall support optimization/lazy loading where appropriate.
+
+PERF-005 Caching shall be used where justified.
+
+PERF-006 Long-running operations shall use background processing where
+appropriate.
+
+PERF-007 Tenant resource usage shall be measurable where supported.
+
+PERF-008 Performance monitoring shall identify critical latency/error areas.
+
+====================================================================
+42. RELIABILITY REQUIREMENTS
+====================================================================
+
+REL-001 Critical workflows shall be transactional where required.
+
+REL-002 Retry-sensitive workflows shall be idempotent.
+
+REL-003 External provider failures shall not corrupt core records.
+
+REL-004 Background jobs shall support controlled retries.
+
+REL-005 Dead-letter handling shall exist for critical asynchronous workflows.
+
+REL-006 Health checks shall detect meaningful failures.
+
+REL-007 Recovery procedures shall be documented.
+
+====================================================================
+43. LOCALIZATION REQUIREMENTS
+====================================================================
+
+LOC-001 The architecture shall support multiple languages.
+
+LOC-002 Store/customer-facing content may be localized.
+
+LOC-003 System UI translations shall not alter business identifiers.
+
+LOC-004 Date/time formatting shall respect locale and store configuration.
+
+LOC-005 Currency display shall respect configured currency.
+
+LOC-006 RTL languages shall be supported where included in product scope.
+
+====================================================================
+44. ACCESSIBILITY REQUIREMENTS
+====================================================================
+
+A11Y-001 Storefront UI shall target recognized accessibility best practices.
+
+A11Y-002 Keyboard navigation shall be supported where applicable.
+
+A11Y-003 Form controls shall have meaningful labels.
+
+A11Y-004 Images shall support appropriate alternative text.
+
+A11Y-005 Reduced-motion preference shall be respected.
+
+A11Y-006 Color contrast shall be considered.
+
+====================================================================
+45. AUDIT & COMPLIANCE REQUIREMENTS
+====================================================================
+
+AUD-001 Important administrative actions shall be auditable.
+
+AUD-002 Security-sensitive events shall be auditable.
+
+AUD-003 Financial changes shall have appropriate audit history.
+
+AUD-004 Audit timestamps shall be reliable.
+
+AUD-005 Audit data shall be protected against unauthorized modification.
+
+AUD-006 Compliance claims shall be evidence-based.
+
+====================================================================
+46. DEVELOPMENT & DELIVERY REQUIREMENTS
+====================================================================
+
+DEV-001 Development shall follow blueprint-first implementation.
+
+DEV-002 Repository inspection shall precede major changes.
+
+DEV-003 Existing behavior shall be understood before refactoring.
+
+DEV-004 Implementation shall be incremental.
+
+DEV-005 Tests shall be updated with behavior changes.
+
+DEV-006 Static analysis/build checks shall be run where applicable.
+
+DEV-007 Security review shall accompany security-sensitive changes.
+
+DEV-008 Migrations shall be documented.
+
+DEV-009 Checkpoints shall record exact progress.
+
+DEV-010 Git commits shall represent verified coherent milestones.
+
+====================================================================
+47. DEPLOYMENT REQUIREMENTS
+====================================================================
+
+DEP-001 Development, test/staging and production environments shall be
+separated.
+
+DEP-002 Production secrets shall be environment-managed.
+
+DEP-003 Production deployment shall include preflight checks.
+
+DEP-004 Database migrations shall be reviewed before production execution.
+
+DEP-005 Health checks shall be run after deployment.
+
+DEP-006 Rollback/recovery plans shall exist for important releases.
+
+DEP-007 Production monitoring shall be enabled.
+
+DEP-008 Backup status shall be verified.
+
+====================================================================
+48. TESTING & ACCEPTANCE REQUIREMENTS
+====================================================================
+
+TEST-001 Unit tests shall cover important domain logic.
+
+TEST-002 Integration tests shall cover important service boundaries.
+
+TEST-003 API tests shall cover authentication/authorization.
+
+TEST-004 Tenant-isolation tests shall be mandatory.
+
+TEST-005 Checkout/payment tests shall cover failure paths.
+
+TEST-006 Inventory tests shall cover concurrency-sensitive scenarios.
+
+TEST-007 Webhook tests shall cover duplicate/replay/failure scenarios.
+
+TEST-008 Regression tests shall be run after major milestones.
+
+TEST-009 End-to-end tests shall cover critical customer journeys.
+
+TEST-010 Security testing shall be performed before production release.
+
+TEST-011 Backup/restore testing shall be performed according to operational
+policy.
+
+TEST-012 Acceptance criteria shall be documented per milestone.
+
+====================================================================
+49. TRACEABILITY MODEL
+====================================================================
+
+Every major implementation item should be traceable through:
+
+Business Need
+    ->
+URS Requirement
+    ->
+SRS Requirement
+    ->
+Module Blueprint
+    ->
+Architecture Component
+    ->
+Implementation Task
+    ->
+Test Case
+    ->
+Acceptance Evidence
+    ->
+Release/Checkpoint
+
+Requirement IDs in this SRS should remain stable unless there is a documented
+reason to revise them.
+
+====================================================================
+50. SYSTEM-WIDE ACCEPTANCE CRITERIA
+====================================================================
+
+The system shall not be considered production-ready until, as applicable:
+
+[ ] Identity/authentication verified
+[ ] Authorization verified
+[ ] Tenant isolation verified
+[ ] Package/entitlement enforcement verified
+[ ] Catalog verified
+[ ] Inventory verified
+[ ] Customer workflows verified
+[ ] Cart/checkout verified
+[ ] Payment integrations verified
+[ ] Shipping verified
+[ ] Promotions verified
+[ ] Storefront verified
+[ ] Theme/branding verified
+[ ] Domain workflows verified
+[ ] Notifications verified
+[ ] Billing verified
+[ ] API security verified
+[ ] Webhooks verified
+[ ] Super Admin controls verified
+[ ] Backup/restore verified
+[ ] Monitoring verified
+[ ] Security review completed
+[ ] Regression suite passed
+[ ] Production build passed
+[ ] No critical unresolved defects
+[ ] Secrets audit passed
+[ ] Documentation updated
+[ ] Deployment/rollback procedure verified
+
+====================================================================
+51. REQUIREMENT PRIORITY MODEL
+====================================================================
+
+P0 — Mandatory for safe operation / security / core commerce.
+P1 — Required for production commercial operation.
+P2 — Important capability with controlled rollout.
+P3 — Future/optional enhancement.
+
+Security, tenant isolation, authorization, financial correctness, data
+integrity and safe deployment are always treated as P0 regardless of package.
+
+====================================================================
+52. FINAL REQUIREMENT PRINCIPLE
+====================================================================
+
+The platform must be implemented as one coherent multi-tenant SaaS product.
+
+No individual module may weaken:
+
+- Tenant isolation
+- Security
+- Authorization
+- Financial correctness
+- Data integrity
+- Auditability
+- Maintainability
+- Future extensibility
+
+When a requirement is ambiguous, implementation must stop at the relevant
+decision point, document the ambiguity and resolve it through the project's
+governance process rather than silently inventing behavior.
+
+====================================================================
+END OF SRS v1.0
+====================================================================

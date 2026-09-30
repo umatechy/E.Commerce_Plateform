@@ -1,0 +1,1560 @@
+====================================================================
+UMAR TECHY E-COMMERCE PLATFORM
+MASTER PROJECT BLUEPRINT — MODULE 27
+APP / PLUGIN MARKETPLACE & INTEGRATIONS
+Technical Specification — English Only
+Version 1.0
+====================================================================
+
+1. MODULE PURPOSE
+--------------------------------------------------------------------
+Module 27 provides the Core App Marketplace, Plugin Marketplace,
+Integration Framework, Extension Registry, Connector Architecture,
+Installation, Configuration, Permissions, Versioning, Billing,
+Compatibility, Security, and Lifecycle foundation for the Umar Techy
+Multi-Tenant E-Commerce Platform.
+
+The objective is to allow the Core Platform to expand through safe,
+tenant-aware extensions without modifying the core business engine
+for every integration.
+
+Core principle:
+
+CORE PLATFORM
+        +
+STANDARD EXTENSION CONTRACT
+        +
+APP / PLUGIN REGISTRY
+        +
+TENANT-SCOPED INSTALLATION
+        +
+PERMISSION CONTROL
+        +
+SECURITY SANDBOXING
+        +
+VERSION COMPATIBILITY
+        +
+AUDITABILITY
+
+
+2. PRIMARY OBJECTIVES
+--------------------------------------------------------------------
+The module shall:
+
+1. Provide an app marketplace foundation.
+2. Provide a plugin marketplace foundation.
+3. Provide integration adapters.
+4. Provide extension registration.
+5. Provide tenant-scoped installation.
+6. Provide platform-managed extensions.
+7. Provide third-party extension foundations.
+8. Provide extension permissions.
+9. Provide extension configuration.
+10. Provide extension versioning.
+11. Provide compatibility checking.
+12. Provide extension lifecycle management.
+13. Provide installation/uninstallation.
+14. Provide extension updates.
+15. Provide rollback foundations.
+16. Provide extension billing foundations.
+17. Provide package entitlement integration.
+18. Provide extension usage metering.
+19. Provide extension event subscriptions.
+20. Provide extension APIs.
+21. Provide webhooks.
+22. Provide OAuth/integration credentials foundations.
+23. Provide secret management.
+24. Provide extension health monitoring.
+25. Provide extension security controls.
+26. Prevent cross-tenant extension access.
+27. Support future marketplace monetization.
+28. Support developer ecosystem foundations.
+
+
+3. ARCHITECTURAL POSITION
+--------------------------------------------------------------------
+Module 27 owns:
+
+- App/plugin registry.
+- Extension metadata.
+- Extension versions.
+- Installation lifecycle.
+- Extension configuration.
+- Extension permissions.
+- Compatibility checks.
+- Extension marketplace catalog.
+- Extension billing metadata.
+- Extension usage metadata.
+- Integration contracts.
+- Connector lifecycle.
+- Extension health signals.
+- Extension event subscriptions.
+- Extension API credentials metadata.
+- Extension audit.
+
+Module 27 does NOT own:
+
+- Core commerce business truth.
+- Payments — Module 12.
+- Shipping — Module 13.
+- Marketing — Module 15.
+- Notifications delivery — Module 21.
+- Infrastructure — Module 20.
+- Security policy — Module 32.
+- Billing authority — Module 29.
+- Package entitlements — Module 04.
+
+
+4. EXTENSION TERMINOLOGY
+--------------------------------------------------------------------
+APP:
+A packaged integration or feature extension distributed through the
+marketplace.
+
+PLUGIN:
+An extension that adds functionality to the platform through defined
+extension contracts.
+
+CONNECTOR:
+An integration adapter connecting an external service.
+
+INTEGRATION:
+A configured connection between a tenant and an external service.
+
+EXTENSION:
+General term covering apps, plugins, and approved integration
+packages.
+
+
+5. CORE EXTENSION PRINCIPLE
+--------------------------------------------------------------------
+Extensions must integrate through documented contracts.
+
+Extensions must not directly modify core database tables without an
+approved platform extension mechanism.
+
+Extensions must not bypass:
+
+- Authorization.
+- Tenant isolation.
+- Entitlements.
+- Security.
+- Financial controls.
+
+
+6. EXTENSION TYPES
+--------------------------------------------------------------------
+Possible types:
+
+INTEGRATION
+PAYMENT
+SHIPPING
+MARKETING
+CRM
+ACCOUNTING
+ANALYTICS
+SEARCH
+AI
+COMMUNICATION
+TAX
+ERP
+POS
+SOCIAL_COMMERCE
+MARKETPLACE
+LOYALTY
+REVIEWS
+SEO
+PRODUCTIVITY
+THEME
+CONTENT
+CUSTOMER_SUPPORT
+DEVELOPER_TOOL
+
+
+7. PLATFORM VS THIRD-PARTY EXTENSIONS
+--------------------------------------------------------------------
+Extension ownership may be:
+
+PLATFORM_NATIVE
+UMAR_TECHY
+PARTNER
+THIRD_PARTY
+PRIVATE_TENANT
+
+Ownership determines trust, review, permissions, support, and
+distribution rules.
+
+
+8. EXTENSION REGISTRY
+--------------------------------------------------------------------
+Each extension should have:
+
+- Extension ID.
+- Developer/Publisher ID.
+- Name.
+- Slug.
+- Type.
+- Description.
+- Logo.
+- Version.
+- Supported platform versions.
+- Supported package levels.
+- Permissions.
+- Required scopes.
+- Dependencies.
+- Configuration schema.
+- API requirements.
+- Webhook requirements.
+- Pricing.
+- Privacy policy reference.
+- Support information.
+- Status.
+
+
+9. EXTENSION LIFECYCLE
+--------------------------------------------------------------------
+Suggested states:
+
+DRAFT
+SUBMITTED
+UNDER_REVIEW
+APPROVED
+PUBLISHED
+DEPRECATED
+SUSPENDED
+REJECTED
+ARCHIVED
+REMOVED
+
+
+10. INSTALLATION LIFECYCLE
+--------------------------------------------------------------------
+Suggested states:
+
+AVAILABLE
+INSTALL_REQUESTED
+VALIDATING
+APPROVAL_REQUIRED
+INSTALLING
+CONFIGURATION_REQUIRED
+ACTIVE
+DISABLED
+UPDATING
+FAILED
+UNINSTALLING
+UNINSTALLED
+
+
+11. TENANT-SCOPED INSTALLATION
+--------------------------------------------------------------------
+Every extension installation belongs to a tenant/store.
+
+Installation must include:
+
+- Tenant ID.
+- Extension ID.
+- Version.
+- Configuration.
+- Permission grants.
+- Installation timestamp.
+- Status.
+
+
+12. CROSS-TENANT ISOLATION
+--------------------------------------------------------------------
+An extension installed in Store A must never automatically access:
+
+- Store B data.
+- Store B files.
+- Store B cache.
+- Store B events.
+- Store B customers.
+- Store B orders.
+
+Cross-tenant extension access requires explicit platform-level
+authorization and is not the default.
+
+
+13. EXTENSION PERMISSIONS
+--------------------------------------------------------------------
+Examples:
+
+products.read
+products.write
+orders.read
+orders.write
+customers.read
+inventory.read
+inventory.write
+marketing.read
+marketing.write
+analytics.read
+payments.read
+shipping.read
+content.read
+content.write
+webhooks.manage
+settings.read
+settings.write
+
+Sensitive permissions require stronger review.
+
+
+14. PERMISSION SCOPING
+--------------------------------------------------------------------
+Permissions should be scoped by:
+
+- Tenant.
+- Resource.
+- Action.
+- User.
+- Extension.
+
+An extension must receive only the scopes it needs.
+
+
+15. HIGH-RISK PERMISSIONS
+--------------------------------------------------------------------
+High-risk capabilities include:
+
+- Payment data.
+- Refund operations.
+- Customer personal data.
+- Permission management.
+- Domain management.
+- Secret management.
+- Bulk communication.
+- Financial records.
+- Order cancellation.
+- Inventory modification.
+
+
+16. EXTENSION APPROVAL
+--------------------------------------------------------------------
+Marketplace review may inspect:
+
+- Security.
+- Permissions.
+- Data handling.
+- API usage.
+- External services.
+- Performance.
+- Privacy.
+- Reliability.
+- Malicious behavior.
+
+
+17. EXTENSION VERSIONING
+--------------------------------------------------------------------
+Every release should have:
+
+- Version number.
+- Release notes.
+- Compatibility range.
+- Dependency versions.
+- Migration requirements.
+- Security notes.
+
+
+18. SEMANTIC VERSIONING FOUNDATION
+--------------------------------------------------------------------
+Use semantic versioning where practical:
+
+MAJOR
+MINOR
+PATCH
+
+Breaking extension contract changes require explicit compatibility
+handling.
+
+
+19. COMPATIBILITY
+--------------------------------------------------------------------
+Before installation/update, validate:
+
+- Platform version.
+- Module API version.
+- Extension dependencies.
+- Database/API contract.
+- Package entitlement.
+- Required permissions.
+- Runtime requirements.
+
+
+20. DEPENDENCY MANAGEMENT
+--------------------------------------------------------------------
+Extensions may depend on:
+
+- Core platform capabilities.
+- Other approved extensions.
+- External services.
+
+Dependency cycles must be prevented.
+
+
+21. INSTALLATION SAFETY
+--------------------------------------------------------------------
+Installation must validate:
+
+- Extension authenticity.
+- Signature/integrity where supported.
+- Version compatibility.
+- Permissions.
+- Dependencies.
+- Configuration schema.
+- Package entitlement.
+- Tenant status.
+
+
+22. EXTENSION SIGNING
+--------------------------------------------------------------------
+Where supported, marketplace packages should use signed artifacts.
+
+Validate:
+
+- Publisher identity.
+- Package hash.
+- Signature.
+- Version.
+- Artifact integrity.
+
+
+23. UNINSTALLATION
+--------------------------------------------------------------------
+Uninstallation must define:
+
+- Data retention.
+- Configuration removal.
+- Webhook removal.
+- OAuth revocation.
+- Scheduled-job removal.
+- Event subscription removal.
+- Cache cleanup.
+
+
+24. EXTENSION DATA
+--------------------------------------------------------------------
+Extension data must be:
+
+- Tenant-scoped.
+- Versioned where required.
+- Backed up according to Module 23 policy.
+- Deleted/retained according to documented lifecycle.
+
+
+25. EXTENSION DATA OWNERSHIP
+--------------------------------------------------------------------
+Installation does not transfer ownership of tenant business data to
+the extension developer.
+
+Data access must remain controlled by platform policy.
+
+
+26. EXTENSION STORAGE
+--------------------------------------------------------------------
+Extensions should use an isolated extension storage namespace.
+
+Example:
+
+tenant/{tenantId}/extensions/{extensionId}/...
+
+
+27. EXTENSION DATABASE
+--------------------------------------------------------------------
+Preferred architecture:
+
+Extension-owned schema/storage abstraction.
+
+Avoid uncontrolled modifications to core tables.
+
+Core APIs should expose approved domain operations.
+
+
+28. API CONTRACTS
+--------------------------------------------------------------------
+The platform should provide stable extension APIs.
+
+Example areas:
+
+- Products.
+- Categories.
+- Customers.
+- Orders.
+- Inventory.
+- Payments metadata.
+- Shipping.
+- Promotions.
+- Marketing.
+- Analytics.
+- Notifications.
+- Store settings.
+
+
+29. API VERSIONING
+--------------------------------------------------------------------
+Extension APIs must be versioned.
+
+Breaking changes require:
+
+- New API version.
+- Migration period.
+- Deprecation notice.
+- Compatibility handling.
+
+
+30. API RATE LIMITING
+--------------------------------------------------------------------
+Extensions must be rate-limited.
+
+Limits may vary by:
+
+- Extension.
+- Tenant.
+- Endpoint.
+- Package.
+- Plan.
+- Integration type.
+
+
+31. WEBHOOKS
+--------------------------------------------------------------------
+Support outbound events such as:
+
+- Product created.
+- Product updated.
+- Order created.
+- Order status changed.
+- Payment status changed.
+- Shipment updated.
+- Customer created.
+- Inventory changed.
+- Promotion activated.
+
+
+32. WEBHOOK SECURITY
+--------------------------------------------------------------------
+Webhooks must support:
+
+- Signed payloads.
+- Timestamp.
+- Replay protection.
+- Event ID.
+- Idempotency.
+- Retry.
+- Delivery logs.
+
+
+33. INBOUND WEBHOOKS
+--------------------------------------------------------------------
+Inbound provider webhooks must:
+
+- Authenticate source.
+- Validate signature.
+- Validate tenant context.
+- Deduplicate.
+- Validate payload.
+- Record event.
+- Process safely.
+
+
+34. OAUTH INTEGRATIONS
+--------------------------------------------------------------------
+Support OAuth foundations.
+
+Store:
+
+- Provider.
+- Tenant.
+- External account ID.
+- Token reference.
+- Scopes.
+- Expiry.
+- Status.
+
+Tokens must be stored through secure secret management.
+
+
+35. API KEY INTEGRATIONS
+--------------------------------------------------------------------
+Support API key references.
+
+Never expose full keys to:
+
+- Browser.
+- Tenant users without authorization.
+- Logs.
+- Analytics.
+- AI.
+
+
+36. INTEGRATION CREDENTIALS
+--------------------------------------------------------------------
+Credentials must be:
+
+- Tenant-scoped.
+- Encrypted/secret-managed.
+- Rotatable.
+- Revocable.
+- Audited.
+
+
+37. COMMON INTEGRATION CATEGORIES
+--------------------------------------------------------------------
+Potential integrations:
+
+Payment:
+JazzCash, Easypaisa, future gateways.
+
+Shipping:
+Courier providers.
+
+Communication:
+Email, SMS, WhatsApp, Push providers.
+
+Accounting:
+Accounting platforms.
+
+CRM:
+Customer platforms.
+
+Marketing:
+Email/CRM/advertising platforms.
+
+Analytics:
+External analytics platforms.
+
+Social:
+Social commerce channels.
+
+Marketplace:
+External marketplaces.
+
+AI:
+AI providers.
+
+Search:
+External search providers.
+
+
+38. PAYMENT INTEGRATION SAFETY
+--------------------------------------------------------------------
+Payment extensions must use Module 12 contracts.
+
+They must not independently decide:
+
+- Payment amount.
+- Payment state.
+- Refund amount.
+- Order financial truth.
+
+
+39. SHIPPING INTEGRATION SAFETY
+--------------------------------------------------------------------
+Shipping extensions must use Module 13 contracts.
+
+They must not independently determine:
+
+- Order fulfillment truth.
+- Inventory truth.
+- Final shipping authority.
+
+
+40. ACCOUNTING INTEGRATION
+--------------------------------------------------------------------
+Accounting integration may export:
+
+- Orders.
+- Payments.
+- Refunds.
+- Fees.
+- Taxes.
+- Customer references.
+
+Accounting systems must not rewrite core order/payment history through
+an extension.
+
+
+41. CRM INTEGRATION
+--------------------------------------------------------------------
+CRM integrations may synchronize:
+
+- Customers.
+- Contacts.
+- Orders.
+- Segments.
+- Events.
+
+Consent and privacy remain authoritative.
+
+
+42. MARKETING INTEGRATION
+--------------------------------------------------------------------
+Marketing integrations must respect:
+
+- Customer consent.
+- Suppression.
+- Frequency caps.
+- Campaign authorization.
+
+Module 15 remains marketing strategy authority.
+
+
+43. ANALYTICS INTEGRATION
+--------------------------------------------------------------------
+External analytics integrations may receive approved events.
+
+Module 22 remains internal analytics authority.
+
+
+44. AI INTEGRATION
+--------------------------------------------------------------------
+AI integrations must follow Module 26:
+
+- Tenant isolation.
+- Provider policy.
+- Data minimization.
+- Usage limits.
+- Cost controls.
+- Safety.
+
+
+45. EXTENSION CONFIGURATION
+--------------------------------------------------------------------
+Configuration should use schema-driven forms.
+
+Support:
+
+- Text.
+- Number.
+- Boolean.
+- Select.
+- Secret reference.
+- URL.
+- OAuth.
+- JSON only where safe and schema-constrained.
+
+
+46. CONFIGURATION VALIDATION
+--------------------------------------------------------------------
+Validate:
+
+- Required fields.
+- Type.
+- Range.
+- Format.
+- Allowed values.
+- Dependency requirements.
+
+
+47. CONFIGURATION VERSIONING
+--------------------------------------------------------------------
+Configuration changes should be versioned where necessary.
+
+Sensitive changes should be audited.
+
+
+48. EXTENSION UI
+--------------------------------------------------------------------
+Extensions may provide:
+
+- Admin settings.
+- Dashboard widgets.
+- Storefront components.
+- Checkout extensions.
+- Product tools.
+- Customer tools.
+
+UI extensions must use approved extension contracts.
+
+
+49. STOREFRONT EXTENSIONS
+--------------------------------------------------------------------
+Storefront extensions may add:
+
+- Widgets.
+- Product badges.
+- Recommendations.
+- Reviews.
+- Chat.
+- Social proof.
+
+They must not bypass theme/accessibility/security rules.
+
+
+50. CHECKOUT EXTENSIONS
+--------------------------------------------------------------------
+Checkout extensions are highly sensitive.
+
+They must not bypass:
+
+- Price validation.
+- Tax.
+- Shipping.
+- Inventory.
+- Payment authorization.
+- Order validation.
+
+
+51. ADMIN EXTENSIONS
+--------------------------------------------------------------------
+Admin extensions may provide:
+
+- Reports.
+- Tools.
+- Bulk operations.
+- Settings.
+
+All operations require RBAC and extension scopes.
+
+
+52. EVENT SUBSCRIPTIONS
+--------------------------------------------------------------------
+Extensions may subscribe to approved events.
+
+Subscription must specify:
+
+- Event type.
+- Tenant.
+- Extension.
+- Endpoint.
+- Filters.
+- Status.
+
+
+53. EXTENSION JOBS
+--------------------------------------------------------------------
+Extensions may schedule background work through controlled platform
+jobs.
+
+Jobs require:
+
+- Tenant context.
+- Extension ID.
+- Idempotency.
+- Timeout.
+- Retry.
+- Resource limits.
+
+
+54. EXTENSION RESOURCE LIMITS
+--------------------------------------------------------------------
+Limit:
+
+- CPU.
+- Memory.
+- Runtime.
+- API calls.
+- Storage.
+- Webhook volume.
+- Job frequency.
+- Queue usage.
+
+
+55. EXTENSION PERFORMANCE
+--------------------------------------------------------------------
+Extensions must not block critical commerce operations.
+
+Use asynchronous execution for heavy work.
+
+
+56. EXTENSION HEALTH
+--------------------------------------------------------------------
+Monitor:
+
+- API latency.
+- Error rate.
+- Webhook failures.
+- Job failures.
+- Resource usage.
+- Provider availability.
+- Authentication failures.
+
+
+57. EXTENSION HEALTH STATES
+--------------------------------------------------------------------
+Suggested:
+
+HEALTHY
+DEGRADED
+WARNING
+CRITICAL
+UNKNOWN
+DISABLED
+
+
+58. EXTENSION SUSPENSION
+--------------------------------------------------------------------
+Extensions may be suspended for:
+
+- Security risk.
+- Abuse.
+- Provider outage.
+- Incompatibility.
+- Excessive resource usage.
+- Marketplace policy violation.
+
+
+59. SUSPENSION SAFETY
+--------------------------------------------------------------------
+Suspending an extension must not corrupt core business data.
+
+Where possible:
+
+- Stop new extension actions.
+- Preserve existing core transactions.
+- Disable external callbacks.
+- Preserve recovery information.
+
+
+60. EXTENSION FAILURE ISOLATION
+--------------------------------------------------------------------
+An extension failure must not unnecessarily stop:
+
+- Storefront.
+- Cart.
+- Checkout.
+- Orders.
+- Payments.
+- Inventory.
+
+
+61. EXTENSION BILLING
+--------------------------------------------------------------------
+Marketplace billing foundation may support:
+
+- Free.
+- One-time.
+- Monthly.
+- Annual.
+- Usage-based.
+- Trial.
+- Add-on.
+
+
+62. BILLING AUTHORITY
+--------------------------------------------------------------------
+Module 29 remains billing authority.
+
+Module 27 provides extension pricing and subscription metadata.
+
+
+63. PACKAGE ENTITLEMENTS
+--------------------------------------------------------------------
+Module 04 remains authoritative.
+
+Possible entitlement keys:
+
+marketplace.access
+marketplace.apps
+marketplace.plugins
+marketplace.integrations
+marketplace.premium_apps
+marketplace.custom_integrations
+marketplace.developer_api
+marketplace.advanced_webhooks
+
+
+64. EXTENSION USAGE METERING
+--------------------------------------------------------------------
+Track:
+
+- API calls.
+- Webhooks.
+- Jobs.
+- Storage.
+- External service requests.
+- Usage-based actions.
+
+Module 24 measures infrastructure/resource usage.
+
+
+65. MARKETPLACE SEARCH
+--------------------------------------------------------------------
+Support:
+
+- Categories.
+- Search.
+- Publisher.
+- Rating foundation.
+- Pricing.
+- Compatibility.
+- Package availability.
+- Supported modules.
+
+
+66. MARKETPLACE LISTING
+--------------------------------------------------------------------
+Listing may include:
+
+- Name.
+- Description.
+- Screenshots.
+- Features.
+- Permissions.
+- Pricing.
+- Compatibility.
+- Privacy policy.
+- Terms.
+- Support.
+- Version history.
+- Publisher.
+
+
+67. MARKETPLACE REVIEWS
+--------------------------------------------------------------------
+Future review system may support:
+
+- Rating.
+- Review.
+- Version.
+- Tenant eligibility.
+- Moderation.
+
+Reviews must not be used to bypass security review.
+
+
+68. MARKETPLACE PUBLISHER
+--------------------------------------------------------------------
+Publisher profile may include:
+
+- Publisher ID.
+- Name.
+- Verification status.
+- Contact.
+- Support.
+- Compliance/security status.
+
+
+69. DEVELOPER PORTAL FOUNDATION
+--------------------------------------------------------------------
+Future developer portal may provide:
+
+- App registration.
+- API keys.
+- OAuth clients.
+- Webhook configuration.
+- Test tenants.
+- Logs.
+- Documentation.
+- Usage.
+- Version publishing.
+
+
+70. SANDBOX TENANT
+--------------------------------------------------------------------
+Provide a future isolated developer sandbox.
+
+It must:
+
+- Contain test data.
+- Not access production tenants.
+- Not process real payments.
+- Not send production notifications.
+- Have clear environment identity.
+
+
+71. MARKETPLACE REVIEW PIPELINE
+--------------------------------------------------------------------
+Conceptual flow:
+
+Developer Submission
+→ Automated Validation
+→ Security Scan
+→ Permission Review
+→ Functional Review
+→ Privacy Review
+→ Compatibility Review
+→ Approval
+→ Publication
+→ Monitoring
+
+
+72. SECURITY SCANNING
+--------------------------------------------------------------------
+Review may include:
+
+- Package integrity.
+- Dependency vulnerabilities.
+- Dangerous permissions.
+- Secret detection.
+- Malicious code patterns.
+- Unsafe URLs.
+- Excessive resource requests.
+
+
+73. EXTENSION TRUST LEVEL
+--------------------------------------------------------------------
+Possible trust levels:
+
+PLATFORM
+VERIFIED
+REVIEWED
+PARTNER
+UNVERIFIED
+
+Trust level must not override technical permission enforcement.
+
+
+74. EXTENSION SECRETS
+--------------------------------------------------------------------
+Extensions must never access unrelated secrets.
+
+Secrets must be scoped by:
+
+- Tenant.
+- Extension.
+- Provider.
+- Environment.
+
+
+75. ENVIRONMENT SEPARATION
+--------------------------------------------------------------------
+Extension configurations must distinguish:
+
+- Development.
+- Staging.
+- Production.
+
+Production credentials must never be used in sandbox by default.
+
+
+76. UPDATE STRATEGY
+--------------------------------------------------------------------
+Extension updates must support:
+
+- Compatibility check.
+- Backup/checkpoint where necessary.
+- Migration.
+- Installation.
+- Health validation.
+- Rollback foundation.
+
+
+77. ROLLBACK
+--------------------------------------------------------------------
+Rollback must be possible when safe.
+
+Do not automatically roll back irreversible external side effects.
+
+
+78. MIGRATIONS
+--------------------------------------------------------------------
+Extension data migrations must:
+
+- Be versioned.
+- Be idempotent.
+- Be tested.
+- Support rollback strategy where possible.
+
+
+79. UNINSTALL DATA POLICY
+--------------------------------------------------------------------
+On uninstall:
+
+- Preserve data where required.
+- Allow controlled deletion where permitted.
+- Respect retention.
+- Provide export foundation.
+- Remove active credentials/webhooks.
+
+
+80. DATA EXPORT
+--------------------------------------------------------------------
+Extension data export must be:
+
+- Tenant-scoped.
+- Secure.
+- Audited.
+- Version-aware.
+
+
+81. BACKUP INTEGRATION
+--------------------------------------------------------------------
+Module 23 should include:
+
+- Extension configuration.
+- Installation state.
+- Extension data where appropriate.
+- Integration metadata.
+
+Secrets follow separate secure secret-management policy.
+
+
+82. ANALYTICS INTEGRATION
+--------------------------------------------------------------------
+Module 22 may track:
+
+- Installation.
+- Activation.
+- Usage.
+- Errors.
+- Conversion impact where applicable.
+
+Tenant analytics remain isolated.
+
+
+83. MONITORING INTEGRATION
+--------------------------------------------------------------------
+Module 24 monitors:
+
+- Extension health.
+- Resource usage.
+- Error rate.
+- Provider failures.
+- Queue usage.
+
+
+84. AUDIT
+--------------------------------------------------------------------
+Audit:
+
+- Install.
+- Uninstall.
+- Enable.
+- Disable.
+- Update.
+- Rollback.
+- Permission changes.
+- Credential changes.
+- Configuration changes.
+- Extension actions.
+
+
+85. SECURITY INCIDENT RESPONSE
+--------------------------------------------------------------------
+If an extension becomes compromised:
+
+1. Disable extension.
+2. Revoke credentials.
+3. Stop webhooks/jobs.
+4. Preserve forensic metadata.
+5. Notify affected authorized parties.
+6. Review extension access.
+7. Assess tenant impact.
+8. Restore safe configuration where required.
+
+
+86. EXTENSION KILL SWITCH
+--------------------------------------------------------------------
+Platform must support emergency disablement of an extension.
+
+Kill switch must be:
+
+- Permission-controlled.
+- Audited.
+- Fast.
+- Tenant-aware.
+
+
+87. API SECURITY
+--------------------------------------------------------------------
+Extension APIs must use:
+
+- Authentication.
+- Authorization.
+- Tenant validation.
+- Rate limiting.
+- Input validation.
+- Output filtering.
+- Audit.
+
+
+88. WEBHOOK DELIVERY SECURITY
+--------------------------------------------------------------------
+Webhook delivery must support:
+
+- HTTPS.
+- Signature.
+- Timestamp.
+- Replay protection.
+- Idempotency.
+- Retry/backoff.
+- Delivery status.
+
+
+89. PRIVACY
+--------------------------------------------------------------------
+Extensions must disclose:
+
+- Data accessed.
+- Purpose.
+- Storage.
+- External sharing.
+- Retention.
+
+Tenant consent/configuration may be required.
+
+
+90. DATA MINIMIZATION
+--------------------------------------------------------------------
+Extensions should receive only data necessary for their declared
+function.
+
+
+91. EXTENSION QUALITY
+--------------------------------------------------------------------
+Track:
+
+- Install success.
+- Update success.
+- Crash/error rate.
+- Performance.
+- Uninstall rate.
+- Support issues.
+- Version adoption.
+
+
+92. ACCEPTANCE CRITERIA
+--------------------------------------------------------------------
+Module 27 is complete only when:
+
+1. Extension registry exists.
+2. Marketplace catalog exists.
+3. Tenant installation works.
+4. Tenant isolation is verified.
+5. Extension permissions work.
+6. Installation validation works.
+7. Version compatibility works.
+8. Configuration schema works.
+9. OAuth foundation works.
+10. API-key integration works.
+11. Webhooks work securely.
+12. Event subscriptions work.
+13. Extension jobs work safely.
+14. Resource limits work.
+15. Extension health monitoring works.
+16. Extension suspension works.
+17. Marketplace review foundation works.
+18. Extension billing foundation works.
+19. Package entitlements work.
+20. Extension usage metering works.
+21. Developer sandbox foundation exists.
+22. Extension update works.
+23. Rollback foundation works.
+24. Uninstall/data lifecycle works.
+25. Backup integration works.
+26. Analytics integration works.
+27. Security incident response works.
+28. Kill switch works.
+29. Security/performance tests pass.
+30. Production marketplace readiness validation passes.
+
+
+93. REQUIRED FOLLOW-UP ARTIFACTS
+--------------------------------------------------------------------
+After implementation, create and maintain:
+
+1. Module 27 implementation checklist.
+2. Extension architecture specification.
+3. Marketplace specification.
+4. Extension registry specification.
+5. Extension lifecycle specification.
+6. Installation specification.
+7. Permission/scopes specification.
+8. API contract specification.
+9. Webhook specification.
+10. OAuth specification.
+11. Credential/secret specification.
+12. Extension configuration schema.
+13. Extension UI contract.
+14. Extension job specification.
+15. Extension resource-limit specification.
+16. Compatibility/versioning specification.
+17. Marketplace review checklist.
+18. Extension security review checklist.
+19. Developer portal specification.
+20. Sandbox specification.
+21. Billing/pricing specification.
+22. Usage metering specification.
+23. Extension health specification.
+24. Incident response specification.
+25. Kill-switch specification.
+26. Data lifecycle specification.
+27. Backup specification.
+28. Permission matrix.
+29. Package entitlement matrix.
+30. Automated test matrix.
+31. Production marketplace readiness checklist.
+32. Repository checkpoint/progress note.
+
+
+94. CLAUDE DEVELOPMENT REQUIREMENTS
+--------------------------------------------------------------------
+Claude must:
+
+1. Read the Project Bible and all finalized modules.
+2. Treat Module 27 as authoritative for extension/marketplace
+   orchestration.
+3. Inspect existing APIs and event infrastructure.
+4. Reuse Module 02 authorization.
+5. Reuse Module 03 tenant isolation.
+6. Reuse Module 04 entitlements.
+7. Reuse Module 20 infrastructure.
+8. Reuse Module 21 communication.
+9. Reuse Module 22 analytics.
+10. Reuse Module 23 backup/recovery.
+11. Reuse Module 24 monitoring.
+12. Reuse Module 26 AI controls where AI extensions are involved.
+13. Preserve core business authority.
+14. Implement extension permission scopes.
+15. Implement tenant isolation.
+16. Implement secure credential storage.
+17. Implement webhook signatures and replay protection.
+18. Implement rate limits.
+19. Implement resource limits.
+20. Implement extension health monitoring.
+21. Implement kill switch.
+22. Add cross-tenant security tests.
+23. Add extension failure-isolation tests.
+24. Add update/rollback tests.
+25. Add uninstall/data-lifecycle tests.
+26. Add API/webhook security tests.
+27. Run builds, static analysis, and automated tests.
+28. Record all fixes and validation results.
+29. Commit only after successful validation.
+30. Preserve a concise repository checkpoint.
+
+
+95. PRODUCTION READINESS
+--------------------------------------------------------------------
+Before production:
+
+- Confirm extension registry.
+- Confirm marketplace review.
+- Confirm publisher verification.
+- Confirm permissions.
+- Confirm tenant isolation.
+- Confirm API versioning.
+- Confirm webhooks.
+- Confirm OAuth.
+- Confirm secret management.
+- Confirm resource limits.
+- Confirm extension health.
+- Confirm kill switch.
+- Confirm suspension.
+- Confirm billing integration.
+- Confirm package entitlements.
+- Confirm usage metering.
+- Confirm backup.
+- Confirm data lifecycle.
+- Confirm privacy.
+- Confirm security scanning.
+- Confirm developer sandbox.
+- Confirm update/rollback.
+- Confirm incident response.
+
+
+96. FINAL ARCHITECTURAL RULES
+--------------------------------------------------------------------
+RULE 01:
+Module 27 owns the extension and marketplace framework.
+
+RULE 02:
+Core business modules remain authoritative for business truth.
+
+RULE 03:
+Extensions must use approved platform contracts.
+
+RULE 04:
+Extensions must never bypass tenant isolation.
+
+RULE 05:
+Every extension installation is tenant-scoped.
+
+RULE 06:
+Extensions receive only explicitly granted permissions.
+
+RULE 07:
+High-risk permissions require enhanced review/control.
+
+RULE 08:
+Extensions must not directly modify core business data outside
+approved APIs/contracts.
+
+RULE 09:
+Extension credentials must be securely managed.
+
+RULE 10:
+Provider secrets must never be exposed to clients or logs.
+
+RULE 11:
+Webhook payloads must be authenticated and replay-protected.
+
+RULE 12:
+Inbound webhooks must be tenant-validated.
+
+RULE 13:
+Extension jobs must be idempotent and resource-limited.
+
+RULE 14:
+Extensions must not block critical commerce workflows.
+
+RULE 15:
+Extension failures must be isolated from core commerce.
+
+RULE 16:
+Extension versions must declare compatibility.
+
+RULE 17:
+Breaking API changes require versioning and migration.
+
+RULE 18:
+Extension updates must be validated before activation.
+
+RULE 19:
+Rollback must not duplicate irreversible external side effects.
+
+RULE 20:
+Uninstallation must explicitly define data retention/deletion.
+
+RULE 21:
+Extension data must follow Module 23 backup/lifecycle policies.
+
+RULE 22:
+Marketplace billing is coordinated with Module 29.
+
+RULE 23:
+Commercial entitlements are controlled by Module 04.
+
+RULE 24:
+Infrastructure/resource monitoring is coordinated with Module 24.
+
+RULE 25:
+Security policy remains authoritative in Module 32.
+
+RULE 26:
+Payment extensions must use Module 12 contracts.
+
+RULE 27:
+Shipping extensions must use Module 13 contracts.
+
+RULE 28:
+Marketing extensions must respect Modules 15 and 21.
+
+RULE 29:
+AI extensions must respect Module 26 safety controls.
+
+RULE 30:
+Analytics integrations must respect Module 22.
+
+RULE 31:
+Platform sandbox environments must never access production tenants
+by default.
+
+RULE 32:
+Extension marketplace review does not replace runtime authorization.
+
+RULE 33:
+Platform must have an emergency extension kill switch.
+
+RULE 34:
+A compromised extension must be revocable without corrupting core
+business data.
+
+RULE 35:
+Module 27 must enable a secure ecosystem without turning third-party
+extensions into an uncontrolled second platform authority.
+
+====================================================================
+END OF MODULE 27 — APP / PLUGIN MARKETPLACE & INTEGRATIONS
+====================================================================

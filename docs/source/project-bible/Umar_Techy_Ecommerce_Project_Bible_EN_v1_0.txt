@@ -1,0 +1,1690 @@
+====================================================================
+                         UMAR TECHY
+                  E-COMMERCE PLATFORM
+                      PROJECT BIBLE
+                         VERSION 1.0
+====================================================================
+
+DOCUMENT STATUS
+---------------
+Document: Project Bible
+Version: 1.0
+Language: English
+Project: Umar Techy E-Commerce Platform
+Architecture: Core Multi-Tenant E-Commerce SaaS
+Authority: Master project-level reference document
+
+====================================================================
+1. PURPOSE
+====================================================================
+
+This Project Bible defines the permanent product, business, architectural,
+technical, security, design, development, testing, operational and future-
+expansion principles for the Umar Techy E-Commerce Platform.
+
+It is the central project reference that connects the URS, SRS, technical
+architecture, 35 Module Blueprints, implementation plans, QA strategy,
+deployment strategy and future expansion framework.
+
+The Bible must be read before major architectural or implementation decisions.
+If a lower-level document conflicts with this Bible, the conflict must be
+identified and resolved explicitly rather than silently choosing one rule.
+
+====================================================================
+2. PRODUCT IDENTITY
+====================================================================
+
+Product Name:
+Umar Techy E-Commerce Platform
+
+Product Type:
+Multi-Tenant E-Commerce SaaS Platform
+
+Platform Owner:
+Umar Techy
+
+Primary Business Model:
+Software-as-a-Service for independent e-commerce stores and businesses.
+
+Core Concept:
+One shared, continuously evolving platform serves many independent stores.
+Each store operates as an isolated tenant while using the same core software,
+platform infrastructure, security model and feature architecture.
+
+Commercial Packages:
+- Basic
+- Business
+- Premium
+
+Packages are entitlement configurations on the same core platform.
+They must never become separate codebases or forks.
+
+====================================================================
+3. PRODUCT VISION
+====================================================================
+
+Build a scalable, secure, modern and commercially deployable e-commerce SaaS
+platform that allows a business owner to launch and operate an online store
+without requiring a separate custom software project.
+
+The platform should provide:
+
+- Store creation and management
+- Product and catalog management
+- Inventory management
+- Orders and customers
+- Cart, wishlist and checkout
+- Payment gateways
+- Shipping and delivery
+- Discounts and promotions
+- Marketing and customer engagement
+- SEO and content management
+- Themes and branding
+- Animation and interaction profiles
+- Custom domains
+- Hosting/infrastructure integration
+- Notifications
+- Reports and analytics
+- Backup and restore
+- Store health monitoring
+- PWA/mobile experience
+- AI-assisted features
+- App/plugin integrations
+- Affiliate/reseller capabilities
+- Subscription billing
+- Super Admin controls
+- Developer APIs and webhooks
+- Security, audit and compliance foundations
+- Help, support and documentation
+- Future extension capabilities
+
+====================================================================
+4. CORE BUSINESS PRINCIPLES
+====================================================================
+
+4.1 One Platform
+The platform is one product and one core architecture.
+
+4.2 Many Tenants
+Multiple independent stores operate on the same platform.
+
+4.3 Isolation by Default
+Tenant isolation is a mandatory security property, not an optional feature.
+
+4.4 Stable Store Identity
+Upgrading or downgrading a package must preserve Store ID/Tenant ID and
+existing business data.
+
+4.5 Entitlement-Driven Packaging
+Package differences are implemented through feature entitlements, quotas,
+limits, usage policies and configuration.
+
+4.6 Server Authority
+The server is authoritative for permissions, pricing, entitlements, stock,
+order totals, payment state, financial state and security-sensitive actions.
+
+4.7 Configuration Over Forking
+Branding, themes, layouts, animation profiles and configurable behavior must
+prefer configuration and reusable components over copied code.
+
+4.8 Safe Evolution
+The platform must evolve without unnecessary breaking changes or destructive
+operations.
+
+====================================================================
+5. TARGET USERS
+====================================================================
+
+Primary:
+- Store owners
+- Small and medium businesses
+- Online retailers
+- Brand owners
+- Local businesses moving online
+- Businesses operating multiple stores
+
+Secondary:
+- Store staff
+- Managers
+- Accountants
+- Marketing users
+- Customer support staff
+- Developers
+- Integration partners
+- Affiliates
+- Resellers
+
+Platform-level:
+- Umar Techy Super Admin
+- Platform support and operations personnel
+- Security/operations personnel
+
+Storefront users:
+- Anonymous visitors
+- Registered customers
+- Returning customers
+
+====================================================================
+6. TENANT MODEL
+====================================================================
+
+A Tenant represents an independent business/store environment.
+
+A tenant must have:
+
+- Unique Tenant ID
+- Store ID
+- Owner/account relationship
+- Package/subscription
+- Feature entitlements
+- Usage limits
+- Store settings
+- Branding
+- Theme configuration
+- Domain configuration
+- Catalog
+- Inventory
+- Orders
+- Customers
+- Payments configuration
+- Shipping configuration
+- Marketing configuration
+- SEO/content configuration
+- Notification configuration
+- Analytics
+- Audit history where applicable
+
+Every tenant-owned entity must have a reliable tenant boundary.
+
+No request, background job, export, webhook, search operation, cache entry,
+file path or analytics record may accidentally cross tenant boundaries.
+
+====================================================================
+7. PACKAGE MODEL
+====================================================================
+
+The platform provides commercial packages:
+
+BASIC
+- Entry-level capabilities
+- Controlled usage limits
+- Core storefront and store management
+
+BUSINESS
+- Expanded operational capabilities
+- Higher limits
+- More automation, analytics and integrations
+
+PREMIUM
+- Highest commercial entitlement tier
+- Advanced capabilities
+- Highest supported limits within the commercial model
+- Access to advanced platform services where enabled
+
+The exact feature matrix belongs in the Subscription and Entitlement
+documentation and must remain centrally configurable.
+
+Rules:
+- Package is not a code branch.
+- Package is not a separate application.
+- Package changes do not create a new tenant.
+- Package changes do not delete business data.
+- Entitlement checks occur server-side.
+- UI hiding alone is never considered authorization.
+
+====================================================================
+8. STORE LIFECYCLE
+====================================================================
+
+Recommended lifecycle:
+
+1. Registration
+2. Account verification
+3. Store creation
+4. Trial or package selection
+5. Store provisioning
+6. Theme/branding setup
+7. Catalog setup
+8. Domain setup
+9. Payment/shipping configuration
+10. Store publication
+11. Active operation
+12. Upgrade/downgrade
+13. Suspension where justified
+14. Renewal or recovery
+15. Closure/deactivation
+16. Controlled retention/deletion according to policy
+
+Lifecycle transitions must be explicit, auditable and reversible where
+technically and legally appropriate.
+
+====================================================================
+9. PLATFORM MODULE MAP
+====================================================================
+
+01. Complete Platform Structure
+02. Authentication, Users, Roles & Permissions
+03. Multi-Tenant & Store Management
+04. Subscription, Packages & Feature Entitlements
+05. Storefront / Customer-Facing Website
+06. Product & Catalog Management
+07. Category, Brand & Attribute Management
+08. Inventory & Stock Management
+09. Order Management
+10. Customer Management
+11. Cart, Wishlist & Checkout
+12. Payment Management & Gateways
+13. Shipping & Delivery Management
+14. Discounts, Coupons & Promotions
+15. Marketing & Customer Engagement
+16. SEO & Content Management
+17. Theme, Branding & Design System
+18. Animation & Interaction System
+19. Domain Management
+20. Hosting & Infrastructure Management
+21. Notifications & Communication
+22. Reports, Analytics & Dashboard
+23. Backup, Restore & Data Protection
+24. Store Health, Monitoring & Resource Usage
+25. PWA / Mobile Experience
+26. AI Features
+27. App / Plugin Marketplace & Integrations
+28. Affiliate & Reseller Program
+29. Billing, Invoices & Renewals
+30. Umar Techy Super Admin
+31. API & Developer Platform
+32. Security, Audit & Compliance
+33. System Settings & Configuration
+34. Help, Support & Documentation
+35. Future Expansion Framework
+
+====================================================================
+10. SYSTEM ARCHITECTURE PRINCIPLES
+====================================================================
+
+The implementation must support a modular architecture with clear boundaries
+between:
+
+- Identity
+- Tenant/store management
+- Entitlements
+- Catalog
+- Inventory
+- Commerce/order processing
+- Customers
+- Checkout
+- Payments
+- Shipping
+- Marketing
+- Content/SEO
+- Themes
+- Domains
+- Hosting/infrastructure
+- Notifications
+- Analytics
+- Backups
+- Monitoring
+- AI
+- Marketplace/integrations
+- Billing
+- Super Admin
+- APIs
+- Security
+- Configuration
+- Support
+- Future extensions
+
+Architecture must favor:
+- Clear domain boundaries
+- Reusable services
+- Explicit contracts
+- Versioned APIs
+- Event-driven extension points where useful
+- Idempotent operations
+- Background jobs for appropriate asynchronous work
+- Centralized authorization
+- Centralized entitlement evaluation
+- Centralized configuration governance
+- Strong observability
+- Testability
+- Safe migrations
+
+====================================================================
+11. DATA ARCHITECTURE
+====================================================================
+
+The database architecture must support:
+
+- Tenant-aware data ownership
+- Referential integrity
+- Appropriate indexes
+- Unique constraints scoped correctly
+- Audit fields
+- Soft deletion where justified
+- Immutable historical records where required
+- Safe migrations
+- Transactional integrity
+- Concurrency control
+- Idempotency support
+- Data retention policies
+- Backup and restore
+- Reporting and analytics needs
+
+Never assume a globally unique value when the business rule is tenant-scoped.
+
+Examples of potentially tenant-scoped uniqueness:
+- Product SKU
+- Category slug
+- Product slug
+- Customer identifiers
+- Coupon codes
+- Store configuration keys
+
+====================================================================
+12. API PRINCIPLES
+====================================================================
+
+APIs must be:
+
+- Tenant-aware
+- Authenticated where required
+- Authorized
+- Versioned
+- Documented
+- Observable
+- Rate-limited
+- Idempotency-aware where needed
+- Consistent in error handling
+- Safe against replay and abuse
+
+API clients must never be trusted to provide authoritative:
+
+- Prices
+- Discounts
+- Taxes
+- Stock availability
+- Package entitlements
+- Permissions
+- Payment state
+- Order totals
+
+The API layer must enforce object-level and tenant-level authorization.
+
+====================================================================
+13. STOREFRONT PRINCIPLES
+====================================================================
+
+The storefront must be:
+
+- Fast
+- Responsive
+- Mobile-friendly
+- Accessible
+- SEO-friendly
+- Theme-driven
+- Brand-configurable
+- Secure
+- Conversion-oriented without deceptive patterns
+- Compatible with supported PWA capabilities
+
+Core storefront areas may include:
+
+- Home
+- Categories
+- Product listing
+- Product detail
+- Search
+- Cart
+- Wishlist
+- Checkout
+- Customer account
+- Orders
+- Content pages
+- Contact/support
+- Policies
+
+Storefront behavior must be tenant-aware and must never expose another store's
+data.
+
+====================================================================
+14. CATALOG PRINCIPLES
+====================================================================
+
+The catalog system must support:
+
+- Products
+- Variants
+- SKUs
+- Pricing
+- Images/media
+- Categories
+- Brands
+- Attributes
+- Options
+- Product metadata
+- SEO metadata
+- Availability
+- Inventory linkage
+- Status/lifecycle
+- Search/indexing
+
+Product data must support future expansion without breaking existing stores.
+
+====================================================================
+15. INVENTORY PRINCIPLES
+====================================================================
+
+Inventory must support controlled stock operations including:
+
+- Stock on hand
+- Reserved stock
+- Available stock
+- Adjustments
+- Purchases where implemented
+- Sales
+- Returns
+- Transfers where implemented
+- Low-stock thresholds
+- Stock history
+- Audit trails
+
+Concurrent stock updates must be handled safely.
+
+Stock changes must not be accepted solely from client-provided values.
+
+====================================================================
+16. ORDER PRINCIPLES
+====================================================================
+
+Orders must preserve historical truth.
+
+Once an order is placed, critical historical information must remain available
+even if the underlying product, customer profile, shipping settings or store
+configuration later changes.
+
+Order totals must be server-calculated.
+
+Order state transitions must be explicit and validated.
+
+Important order events should be auditable and observable.
+
+====================================================================
+17. PAYMENT PRINCIPLES
+====================================================================
+
+Payment architecture must use provider adapters.
+
+The core platform must not become tightly coupled to one gateway.
+
+The design must support future providers such as:
+
+- Local Pakistani gateways
+- Bank/payment integrations
+- International gateways where legally and technically supported
+- Cash on delivery
+- Manual payment workflows where appropriate
+
+Never store raw card data unless the entire architecture and compliance model
+explicitly supports it. Prefer provider-hosted/tokenized payment flows.
+
+Payment webhooks must be authenticated, verified, idempotent and replay-aware.
+
+====================================================================
+18. SHIPPING PRINCIPLES
+====================================================================
+
+Shipping must support configurable:
+
+- Zones
+- Methods
+- Rates
+- Delivery estimates
+- Free-shipping rules
+- Weight/price-based rules
+- Provider integrations
+- Tracking
+- Delivery statuses
+
+Shipping calculation must remain server-authoritative.
+
+====================================================================
+19. DISCOUNTS & MARKETING
+====================================================================
+
+Promotions must be rule-driven and safely evaluated.
+
+The system may support:
+
+- Coupon codes
+- Percentage discounts
+- Fixed discounts
+- Product discounts
+- Category discounts
+- Cart thresholds
+- Free shipping
+- Campaigns
+- Customer segments
+- Promotional banners
+- Abandoned-cart engagement
+- Loyalty/engagement features in future versions
+
+Promotions must never produce unauthorized negative totals or bypass payment
+controls.
+
+====================================================================
+20. THEME & BRANDING SYSTEM
+====================================================================
+
+Themes are reusable presentation configurations/components.
+
+A store may configure:
+
+- Logo
+- Favicon
+- Colors
+- Typography
+- Layout preferences
+- Homepage sections
+- Product card style
+- Header/footer
+- Navigation
+- Buttons
+- Forms
+- Visual density
+- Content blocks
+- Animation profile
+
+Theme changes must not duplicate business logic.
+
+A theme must not be allowed to bypass security, authorization, pricing or
+tenant isolation.
+
+====================================================================
+21. ANIMATION & PERFORMANCE
+====================================================================
+
+Animations are configurable and must be performance-aware.
+
+The platform must support:
+
+- Animation profiles
+- Reduced-motion preference
+- Mobile performance safeguards
+- Lazy loading
+- Deferred/non-critical effects
+- Safe fallback behavior
+
+Animation must never compromise usability, accessibility or core commerce
+functionality.
+
+====================================================================
+22. DOMAIN & HOSTING
+====================================================================
+
+The platform should support:
+
+- Platform subdomains
+- Customer-owned custom domains
+- Umar Techy-managed domains
+- Domain verification
+- DNS guidance
+- SSL/TLS lifecycle
+- Domain status monitoring
+
+Domain ownership must be clearly represented.
+
+Hosting architecture must support managed infrastructure and future migration
+to stronger VPS/cloud infrastructure without forcing a rewrite of the
+application.
+
+====================================================================
+23. NOTIFICATIONS
+====================================================================
+
+Notification architecture should support provider adapters for:
+
+- Email
+- SMS where available
+- WhatsApp where supported
+- Push notifications
+- In-app notifications
+
+Notifications must support:
+
+- Templates
+- Localization
+- Event triggers
+- Delivery status
+- Retry policy
+- Preference management
+- Abuse/rate controls
+
+Sensitive information must not be unnecessarily exposed in notifications.
+
+====================================================================
+24. REPORTING & ANALYTICS
+====================================================================
+
+Reporting should support:
+
+- Sales
+- Orders
+- Revenue
+- Customers
+- Products
+- Inventory
+- Conversion-related metrics
+- Marketing metrics
+- Store health
+- Package usage
+
+Tenant reports must remain tenant-isolated.
+
+Platform-level analytics require explicit platform-level authorization.
+
+Analytics architecture should be extensible toward a dedicated warehouse or
+event pipeline in future.
+
+====================================================================
+25. BACKUP & DATA PROTECTION
+====================================================================
+
+Backup architecture must support:
+
+- Automated backups
+- Retention policies
+- Backup integrity checks
+- Encryption
+- Restore workflows
+- Tenant-aware restore planning
+- Disaster recovery planning
+- Recovery testing
+
+A backup that cannot be restored is not considered sufficient protection.
+
+Restore operations must be protected by strong authorization and safeguards.
+
+====================================================================
+26. STORE HEALTH & OBSERVABILITY
+====================================================================
+
+The platform should monitor:
+
+- Application health
+- API health
+- Database health
+- Queue/job health
+- Storage usage
+- Traffic/usage
+- Error rates
+- Latency
+- Resource consumption
+- Integration failures
+- Domain/SSL health
+- Backup status
+
+Observability data must itself respect security and privacy boundaries.
+
+====================================================================
+27. PWA / MOBILE EXPERIENCE
+====================================================================
+
+The storefront should be designed to progressively support:
+
+- Installability
+- Offline-safe static experiences where appropriate
+- Caching
+- Push notifications
+- Responsive layouts
+- Mobile-first interactions
+
+Offline behavior must never create unsafe financial or inventory mutations.
+
+====================================================================
+28. AI FOUNDATION
+====================================================================
+
+AI features may support:
+
+- Product descriptions
+- SEO content
+- Marketing copy
+- Recommendations
+- Search assistance
+- Customer support
+- Store analytics assistance
+- Administrative assistance
+- Future AI agents
+
+AI must not be treated as an authority for:
+
+- Authentication
+- Authorization
+- Payment confirmation
+- Financial state
+- Stock truth
+- Tenant identity
+- Security policy
+
+AI actions must use controlled tools and explicit permissions.
+
+====================================================================
+29. MARKETPLACE & INTEGRATIONS
+====================================================================
+
+The platform must be extensible through:
+
+- Apps
+- Plugins
+- Provider adapters
+- Webhooks
+- Events
+- APIs
+- SDKs
+- Integration contracts
+
+Third-party extensions must operate inside explicit permission boundaries.
+
+An extension must never gain unrestricted access merely because it is installed.
+
+====================================================================
+30. AFFILIATE & RESELLER MODEL
+====================================================================
+
+Future affiliate/reseller capabilities may include:
+
+- Referral links
+- Attribution
+- Commission rules
+- Partner dashboards
+- Payout records
+- Reseller store provisioning
+- Partner packages
+
+Attribution and commission calculations must be auditable.
+
+====================================================================
+31. BILLING & SUBSCRIPTIONS
+====================================================================
+
+Billing must support:
+
+- Subscriptions
+- Trials
+- Package changes
+- Renewals
+- Invoices
+- Payment records
+- Credits/refunds where authorized
+- Failed payments
+- Grace periods
+- Suspension rules
+- Usage metering where required
+
+Invoice history must remain historically accurate.
+
+Client-side requests must never directly mutate authoritative financial records.
+
+====================================================================
+32. SUPER ADMIN
+====================================================================
+
+Umar Techy Super Admin is a privileged platform-level environment.
+
+It may manage:
+
+- Tenants
+- Users
+- Packages
+- Entitlements
+- Platform settings
+- Domains
+- Infrastructure
+- Integrations
+- Marketplace
+- Billing
+- Support
+- Monitoring
+- Security
+- Audit
+- Platform analytics
+
+Super Admin actions must be strongly protected and audited.
+
+Break-glass capabilities, if implemented, require explicit controls,
+justification and comprehensive audit logging.
+
+====================================================================
+33. SECURITY FOUNDATION
+====================================================================
+
+Security is a cross-cutting platform requirement.
+
+Mandatory areas include:
+
+- Strong authentication
+- MFA support
+- Secure sessions
+- Role-based access control
+- Object-level authorization
+- Field-level restrictions where required
+- Tenant isolation
+- Secure secrets management
+- Encryption in transit
+- Encryption at rest where appropriate
+- Secure file handling
+- API security
+- Webhook verification
+- Rate limiting
+- Abuse protection
+- Audit logging
+- Security monitoring
+- Backup protection
+- Incident response
+- Dependency security
+- CI/CD security gates
+- Vulnerability management
+
+Security controls must be enforced server-side.
+
+====================================================================
+34. PRIVACY & DATA GOVERNANCE
+====================================================================
+
+The architecture should support:
+
+- Data minimization
+- Purpose limitation
+- Retention policies
+- Consent where applicable
+- Export workflows
+- Deletion workflows
+- Account closure
+- Auditability
+- Privacy-safe logs
+- Sensitive-data classification
+
+The platform should be compliance-ready and adaptable to applicable
+jurisdictional requirements.
+
+====================================================================
+35. CONFIGURATION GOVERNANCE
+====================================================================
+
+Configuration must have clear scopes:
+
+- Platform
+- Package
+- Tenant/store
+- User
+- Environment
+- Integration/provider
+
+Configuration must support:
+
+- Validation
+- Defaults
+- Secrets handling
+- Versioning
+- Audit
+- Safe updates
+- Rollback where appropriate
+- Feature flags
+- Entitlement checks
+- Cache invalidation
+- Environment separation
+
+Configuration values must not be scattered arbitrarily throughout code.
+
+====================================================================
+36. DEVELOPMENT PHILOSOPHY
+====================================================================
+
+Development must follow:
+
+BLUEPRINT FIRST
+→ REPOSITORY INSPECTION
+→ GAP ANALYSIS
+→ IMPLEMENTATION PLAN
+→ INCREMENTAL DEVELOPMENT
+→ TESTING
+→ SECURITY REVIEW
+→ REGRESSION
+→ DOCUMENTATION
+→ CHECKPOINT
+→ COMMIT
+→ PRODUCTION VERIFICATION
+
+Claude Code is expected to perform the majority of development analysis,
+implementation, testing and documentation work.
+
+VS Code/local development is primarily used for repository access, local
+verification, real-world testing, environment checks and deployment steps
+where required.
+
+====================================================================
+37. CLAUDE DEVELOPMENT RULES
+====================================================================
+
+Claude must:
+
+1. Read the Project Bible.
+2. Read URS and SRS.
+3. Read all applicable Module Blueprints.
+4. Inspect the repository before changing it.
+5. Never assume the current implementation is correct.
+6. Preserve working behavior unless change is required.
+7. Avoid unnecessary rewrites.
+8. Never silently ignore specification conflicts.
+9. Plan before implementing.
+10. Keep changes modular.
+11. Run relevant tests after changes.
+12. Run builds/static analysis where applicable.
+13. Fix failures instead of hiding them.
+14. Keep security and tenant isolation in every implementation decision.
+15. Maintain checkpoints.
+16. Document migrations.
+17. Document environment changes.
+18. Avoid committing secrets.
+19. Avoid destructive commands without explicit authorization.
+20. Never claim a task is complete without verification evidence.
+
+====================================================================
+38. DATABASE SAFETY
+====================================================================
+
+Forbidden by default:
+
+- Dropping production databases
+- Dropping production tables
+- Truncating production data
+- Destructive schema replacement
+- Unverified mass deletes
+- Arbitrary production data mutation
+
+Required:
+
+- Migration review
+- Backup/rollback consideration
+- Safe deployment order
+- Data compatibility checks
+- Verification after migration
+
+====================================================================
+39. TESTING STRATEGY
+====================================================================
+
+Testing must cover appropriate combinations of:
+
+- Unit tests
+- Integration tests
+- API tests
+- Authorization tests
+- Tenant-isolation tests
+- Database tests
+- Frontend tests
+- Storefront tests
+- Checkout tests
+- Payment webhook tests
+- Inventory concurrency tests
+- Regression tests
+- End-to-end tests
+- Security tests
+- Performance tests
+- Migration tests
+- Backup/restore tests
+- Failure/retry tests
+
+Critical security and financial paths require stronger verification.
+
+====================================================================
+40. OBSERVABILITY & AUDIT
+====================================================================
+
+Every important system boundary should provide enough information to answer:
+
+- What happened?
+- When?
+- For which tenant?
+- Which user/service initiated it?
+- What was the operation?
+- Did it succeed or fail?
+- What request/job/event identified it?
+- What security-sensitive action occurred?
+
+Logs must avoid unnecessary sensitive data.
+
+Audit records must be tamper-resistant to the extent practical.
+
+====================================================================
+41. ERROR HANDLING
+====================================================================
+
+Errors must be:
+
+- Consistent
+- Safe
+- Actionable
+- Observable
+- User-appropriate
+- Developer-diagnosable
+
+Internal details, secrets, database traces and security-sensitive information
+must not be exposed to customers.
+
+API errors should use a stable structured format with request/correlation IDs
+where appropriate.
+
+====================================================================
+42. PERFORMANCE PRINCIPLES
+====================================================================
+
+Performance priorities:
+
+- Fast storefront response
+- Efficient database queries
+- Proper indexes
+- Pagination
+- Caching where justified
+- Background processing
+- Lazy loading
+- Optimized media
+- Efficient search
+- Avoiding N+1 queries
+- Resource-aware tenant controls
+
+Performance optimization must not weaken security or correctness.
+
+====================================================================
+43. SCALABILITY PRINCIPLES
+====================================================================
+
+The platform should evolve from a modest deployment to larger infrastructure.
+
+Future-ready areas:
+
+- Horizontal application scaling
+- Queue workers
+- Distributed cache
+- Object storage
+- CDN
+- Database scaling
+- Read replicas
+- Search infrastructure
+- Event pipelines
+- Analytics warehouse
+- Multi-region deployment
+- Regional data residency
+
+Do not prematurely introduce complexity without a justified need, but avoid
+architectural decisions that make future scaling unnecessarily difficult.
+
+====================================================================
+44. DOCUMENTATION SYSTEM
+====================================================================
+
+Required documentation categories include:
+
+- Project Bible
+- URS
+- SRS
+- Module Blueprints
+- Architecture documentation
+- API documentation
+- Database documentation
+- Security documentation
+- Deployment runbooks
+- Operations runbooks
+- Support documentation
+- Troubleshooting guides
+- Release notes
+- Migration notes
+- ADRs/RFCs where appropriate
+- Developer guides
+- Customer help documentation
+
+Documentation must evolve with the system.
+
+====================================================================
+45. SUPPORT & OPERATIONS
+====================================================================
+
+The platform should provide a controlled support system covering:
+
+- Help center
+- Knowledge base
+- Support tickets
+- Diagnostics
+- Safe support actions
+- Escalation
+- SLA concepts
+- Incident communication
+- Known issues
+- Release notes
+- Troubleshooting
+
+Support staff must not receive unrestricted access to customer data.
+
+====================================================================
+46. DEPLOYMENT PRINCIPLES
+====================================================================
+
+Deployment must use controlled environments:
+
+- Local/development
+- Test/staging
+- Production
+
+Production deployment should include:
+
+- Environment validation
+- Secret validation
+- Database migration review
+- Build verification
+- Test verification
+- Health checks
+- Rollback planning
+- Post-deployment monitoring
+
+Hostinger Business may be used for an initial deployment where appropriate,
+with architecture kept portable toward VPS/cloud infrastructure.
+
+====================================================================
+47. VERSION CONTROL
+====================================================================
+
+Git is the source-of-truth mechanism for code.
+
+Commits should be:
+
+- Atomic where practical
+- Descriptive
+- Related to a verified milestone
+- Free of secrets
+- Reproducible
+
+Major milestones should have explicit checkpoint notes.
+
+====================================================================
+48. CHANGE MANAGEMENT
+====================================================================
+
+Major architectural changes require:
+
+- Reason
+- Impact analysis
+- Affected modules
+- Migration considerations
+- Security impact
+- Testing impact
+- Rollback strategy
+- Documentation update
+
+Use ADR/RFC mechanisms for decisions with long-term architectural impact.
+
+====================================================================
+49. FUTURE EXPANSION
+====================================================================
+
+The platform must remain open to:
+
+- New payment gateways
+- New shipping providers
+- New notification channels
+- New countries/currencies
+- New tax systems
+- New themes
+- Theme marketplace
+- App marketplace
+- AI agents
+- Enterprise identity
+- Advanced analytics
+- Multi-region
+- Data residency
+- Headless commerce
+- Mobile applications
+- Advanced automation
+- External developer ecosystem
+- Reseller networks
+- White-label capabilities where commercially appropriate
+
+Future expansion must use controlled extension points rather than uncontrolled
+core modifications.
+
+====================================================================
+50. PRODUCT QUALITY STANDARD
+====================================================================
+
+A feature is not complete merely because it works in the happy path.
+
+Completion requires, where applicable:
+
+- Functional correctness
+- Authorization
+- Tenant isolation
+- Validation
+- Error handling
+- Edge cases
+- Tests
+- Regression verification
+- Observability
+- Auditability
+- Documentation
+- Performance consideration
+- Security review
+- Migration safety
+- Production readiness
+
+====================================================================
+51. DEFINITION OF DONE
+====================================================================
+
+A module/task may be considered Done only when:
+
+[ ] Specification reviewed
+[ ] Dependencies understood
+[ ] Repository inspected
+[ ] Implementation completed
+[ ] Database changes safely implemented
+[ ] Authorization implemented
+[ ] Tenant isolation verified
+[ ] Validation implemented
+[ ] Error handling implemented
+[ ] Tests added/updated
+[ ] Regression tests passed
+[ ] Build/static analysis passed where applicable
+[ ] Security review completed
+[ ] Documentation updated
+[ ] Migration notes recorded
+[ ] Checkpoint recorded
+[ ] Git commit created
+[ ] No known critical blocker remains
+
+====================================================================
+52. NON-NEGOTIABLE ARCHITECTURAL RULES
+====================================================================
+
+1. One core platform.
+2. Many isolated tenants.
+3. Tenant isolation everywhere.
+4. Stable tenant identity.
+5. Packages are entitlements, not code forks.
+6. Server authority over sensitive state.
+7. Centralized authorization.
+8. Centralized entitlement evaluation.
+9. Secure configuration management.
+10. Versioned APIs.
+11. Idempotent retry-sensitive operations.
+12. Verified webhooks.
+13. Safe database migrations.
+14. No secrets in source control.
+15. No client-authoritative financial values.
+16. No client-authoritative permissions.
+17. No client-authoritative stock truth.
+18. No unrestricted Super Admin access without audit.
+19. No silent specification conflicts.
+20. No destructive production actions by default.
+21. Tests are part of implementation.
+22. Documentation is part of implementation.
+23. Observability is part of implementation.
+24. Security is part of implementation.
+25. Future extension points must remain controlled.
+26. Themes cannot bypass business/security logic.
+27. AI cannot become an uncontrolled authority.
+28. Third-party apps receive only explicit permissions.
+29. Historical order/financial truth must be preserved.
+30. Backups must be restorable.
+31. Restore operations must be protected.
+32. Production environments must be isolated from development.
+33. Environment secrets must be externally managed.
+34. Customer data must be privacy-aware.
+35. Logs must minimize sensitive information.
+36. API rate limits must be enforceable.
+37. Background jobs must be tenant-aware.
+38. Caches must be tenant-safe.
+39. Search indexes must be tenant-safe.
+40. Exports must be tenant-safe.
+41. Analytics must respect authorization boundaries.
+42. File storage must be tenant-safe.
+43. Webhooks must prevent replay and duplication.
+44. Payment state must be provider-verified.
+45. Inventory mutations must be concurrency-safe.
+46. Checkout totals must be server-calculated.
+47. Promotions must be server-evaluated.
+48. Domain ownership must be explicit.
+49. SSL/TLS must be protected.
+50. Support access must be controlled.
+51. Audit trails must be meaningful.
+52. Error messages must not leak secrets.
+53. Performance must be monitored.
+54. Resource limits must be enforceable.
+55. Feature flags must not replace authorization.
+56. Package entitlements must not replace authorization.
+57. Migrations must be backward-aware where required.
+58. API breaking changes require versioning or migration.
+59. Deprecated capabilities require a lifecycle.
+60. Extension points require contracts.
+61. Provider integrations require adapters.
+62. External calls require timeouts and failure handling.
+63. Retries require idempotency consideration.
+64. Async jobs require observability.
+65. Critical workflows require correlation identifiers.
+66. Security-sensitive events require audit logging.
+67. Configuration changes require validation.
+68. Sensitive settings require stronger authorization.
+69. Secrets must never be rendered in normal logs.
+70. User uploads require validation and access controls.
+71. Generated files require safe storage.
+72. Imports require validation and limits.
+73. Bulk operations require safeguards.
+74. Search requires authorization-aware filtering.
+75. Reporting requires tenant-aware queries.
+76. Multi-store accounts require explicit store context.
+77. Cross-store access requires explicit authorization.
+78. Store suspension must be controlled and auditable.
+79. Package downgrade must preserve data unless policy explicitly states otherwise.
+80. Trial expiration must not silently destroy data.
+81. Billing history must remain accurate.
+82. Invoice history must be immutable where required.
+83. Refunds require authorization.
+84. Credits require authorization.
+85. Payment credentials require secure handling.
+86. OAuth tokens require secure storage.
+87. API keys require rotation/revocation.
+88. Sessions require secure invalidation.
+89. MFA recovery requires protected workflows.
+90. Password resets require secure tokens.
+91. Account verification requires secure workflows.
+92. CSRF protections apply where relevant.
+93. CORS must be explicit.
+94. Rate limiting must consider tenant and identity context.
+95. Abuse controls must be measurable.
+96. Security alerts must be actionable.
+97. Dependency updates must be reviewed.
+98. CI/CD must include security checks.
+99. Production releases require verification.
+100. Rollbacks require preparation.
+101. Disaster recovery must be tested.
+102. Monitoring must include critical integrations.
+103. Health checks must be meaningful.
+104. Support diagnostics must be safe.
+105. AI tools must use least privilege.
+106. AI-generated changes require normal engineering verification.
+107. Marketplace extensions must be permission-scoped.
+108. Webhook consumers must be authenticated.
+109. Event processing must tolerate duplicate delivery.
+110. Outbox/event publishing must preserve reliability where used.
+111. Data exports require authorization.
+112. Data deletion requires authorization and retention checks.
+113. Privacy requests require auditable handling.
+114. Localization must not corrupt business data.
+115. Currency handling must use correct precision rules.
+116. Tax calculations must be explicit and auditable.
+117. Time zones must be explicit.
+118. Dates must not be interpreted ambiguously.
+119. Slugs and identifiers require collision handling.
+120. Media processing must be resource-limited.
+121. Large jobs belong in asynchronous processing.
+122. Pagination must be deterministic.
+123. API filters must be validated.
+124. Sorting must use allowlisted fields.
+125. Database queries must avoid unsafe dynamic SQL.
+126. ORM usage must remain tenant-aware.
+127. Raw SQL requires careful parameterization and authorization context.
+128. Cache invalidation must be deliberate.
+129. Configuration cache must not leak tenant values.
+130. Queue payloads must not contain unnecessary sensitive data.
+131. Job retries must be bounded.
+132. Dead-letter handling must exist where needed.
+133. Integration failures must not corrupt core records.
+134. External provider outages require graceful handling.
+135. Checkout failure must not create false paid orders.
+136. Payment confirmation must not rely solely on browser redirect.
+137. Order status transitions must be validated.
+138. Return/refund flows must preserve history.
+139. Inventory reservation must expire safely.
+140. Race conditions must be considered in stock and checkout.
+141. Customer data must not be exposed through predictable IDs alone.
+142. Authorization must be checked on every sensitive object access.
+143. File download authorization must be enforced.
+144. Private media must not use public URLs without justification.
+145. Admin endpoints require stronger controls.
+146. Internal endpoints must not be publicly exposed unnecessarily.
+147. Service-to-service authentication must be explicit.
+148. Secrets rotation must be supported.
+149. API version deprecation must be communicated.
+150. SDKs must match API contracts.
+151. OpenAPI definitions must remain synchronized.
+152. Documentation must reflect implemented behavior.
+153. Support documentation must reflect actual UI.
+154. Release notes must identify important changes.
+155. Migration notes must accompany breaking data changes.
+156. Feature flags require ownership.
+157. Feature flags require lifecycle management.
+158. Temporary flags must be removed after stabilization.
+159. Experiments must not bypass security.
+160. Package limits must be enforced at the service boundary.
+161. Usage metering must be reliable.
+162. Usage records must be auditable where billing depends on them.
+163. Subscription changes must be transactionally safe.
+164. Renewal processing must tolerate retries.
+165. Billing webhooks require verification.
+166. Domain verification must prevent unauthorized claims.
+167. SSL status must be monitored.
+168. DNS instructions must be accurate.
+169. Hosting operations require environment awareness.
+170. Infrastructure actions require authorization.
+171. Backups require encryption and retention.
+172. Restore testing must be scheduled.
+173. Disaster recovery must have documented RTO/RPO targets when defined.
+174. Incident response must be documented.
+175. Security incidents require controlled communication.
+176. Audit logs must have reliable timestamps.
+177. Time synchronization must be considered.
+178. Sensitive audit data requires protection.
+179. Compliance claims must not be made without evidence.
+180. Third-party dependencies require license/security awareness.
+181. Open-source license obligations must be tracked.
+182. Production debugging must avoid sensitive-data exposure.
+183. Error tracking must redact sensitive values.
+184. Metrics must not accidentally identify customers unnecessarily.
+185. Analytics collection must respect privacy settings.
+186. Customer consent must be honored where applicable.
+187. Data retention must be configurable where required.
+188. Tenant closure must follow documented lifecycle rules.
+189. Deletion must account for legal/financial retention.
+190. Imported data must be validated before commit.
+191. Bulk imports must be safely resumable where possible.
+192. Export jobs must be isolated and access-controlled.
+193. Generated reports must have controlled access.
+194. Public storefront content must be sanitized.
+195. Rich content must be safely rendered.
+196. User-generated content requires abuse controls where relevant.
+197. Search input must be safely handled.
+198. Public endpoints require abuse protection.
+199. Platform-wide changes require impact analysis.
+200. Every architectural change must preserve the principles of this Bible
+     unless an explicit, documented decision supersedes them.
+
+====================================================================
+53. MASTER DOCUMENT RELATIONSHIP
+====================================================================
+
+Authority structure:
+
+PROJECT BIBLE
+     |
+     +-- URS
+     |
+     +-- SRS
+     |
+     +-- Technical Architecture
+     |
+     +-- 35 Module Blueprints
+     |
+     +-- API/Database/Security Specifications
+     |
+     +-- Development Plans
+     |
+     +-- QA/Test Plans
+     |
+     +-- Deployment/Operations Runbooks
+     |
+     +-- Release & Migration Documentation
+     |
+     +-- Future Expansion RFCs/ADRs
+
+The Bible defines enduring principles.
+The URS defines user/business requirements.
+The SRS defines detailed system behavior.
+Module Blueprints define module-level implementation requirements.
+
+====================================================================
+54. MASTER DEVELOPMENT SEQUENCE
+====================================================================
+
+Recommended sequence:
+
+PHASE 1
+Project Bible + URS + SRS + Architecture validation
+
+PHASE 2
+Repository inspection and technical gap analysis
+
+PHASE 3
+Foundation:
+- Configuration
+- Database
+- Identity
+- Tenant context
+- Authorization
+- Entitlements
+- Audit
+- Observability
+
+PHASE 4
+Commerce core:
+- Catalog
+- Categories/attributes
+- Inventory
+- Customers
+- Cart
+- Checkout
+- Orders
+
+PHASE 5
+Commercial operations:
+- Payments
+- Shipping
+- Promotions
+- Billing
+
+PHASE 6
+Store experience:
+- Storefront
+- Theme
+- Branding
+- Animation
+- SEO/content
+- PWA
+
+PHASE 7
+Platform services:
+- Notifications
+- Analytics
+- Backup
+- Health monitoring
+- Domains
+- Hosting
+
+PHASE 8
+Advanced platform:
+- AI
+- Marketplace
+- Affiliate/reseller
+- Super Admin
+- Developer APIs
+
+PHASE 9
+Security hardening
+- Full audit
+- Abuse controls
+- Dependency review
+- Penetration/security testing
+- Recovery testing
+
+PHASE 10
+Production readiness
+- Staging validation
+- Real integration testing
+- Deployment
+- Monitoring
+- Backup verification
+- Final regression
+
+====================================================================
+55. MASTER ACCEPTANCE CRITERIA
+====================================================================
+
+The platform is architecturally ready for production when:
+
+[ ] All 35 Module Blueprints are incorporated.
+[ ] URS and SRS are finalized.
+[ ] Core architecture is documented.
+[ ] Tenant isolation is verified.
+[ ] Authentication and authorization are verified.
+[ ] Entitlements are server-enforced.
+[ ] Core commerce workflows are tested.
+[ ] Payment integrations are verified.
+[ ] Shipping workflows are verified.
+[ ] Billing workflows are verified.
+[ ] Storefront is production-ready.
+[ ] Themes/branding are verified.
+[ ] APIs are secured and documented.
+[ ] Webhooks are verified and idempotent.
+[ ] Backup and restore are tested.
+[ ] Monitoring and alerting are functional.
+[ ] Security review is complete.
+[ ] No critical known vulnerabilities remain.
+[ ] Production deployment is repeatable.
+[ ] Rollback/recovery procedures are documented.
+[ ] Support documentation exists.
+[ ] Release documentation exists.
+[ ] Performance is acceptable for the target deployment.
+[ ] Realistic multi-tenant tests pass.
+[ ] Final regression passes.
+[ ] Secrets are clean.
+[ ] Production environment is validated.
+
+====================================================================
+56. FINAL PROJECT STATEMENT
+====================================================================
+
+Umar Techy E-Commerce Platform is intended to be a long-lived commercial
+software platform, not a one-off website.
+
+Its architecture must therefore optimize for:
+
+- Security
+- Correctness
+- Tenant isolation
+- Maintainability
+- Scalability
+- Extensibility
+- Commercial flexibility
+- Operational reliability
+- Developer productivity
+- Customer experience
+- Future evolution
+
+The 35 Module Blueprints define the detailed functional architecture.
+This Project Bible defines the principles that keep those modules coherent
+as one platform.
+
+Any future development agent must treat this Bible as a primary project
+authority and must not bypass its non-negotiable architectural principles
+without an explicit, documented architecture decision.
+
+====================================================================
+END OF PROJECT BIBLE
+====================================================================

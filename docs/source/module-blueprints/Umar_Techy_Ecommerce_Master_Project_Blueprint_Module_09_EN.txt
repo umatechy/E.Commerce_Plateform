@@ -1,0 +1,2058 @@
+UMAR TECHY
+E-COMMERCE PLATFORM
+MASTER PROJECT BLUEPRINT
+
+MODULE 09 — ORDER MANAGEMENT
+Version: 1.0
+Status: Planning / Blueprint
+
+============================================================
+1. MODULE PURPOSE
+============================================================
+
+This module defines the centralized Order Management architecture
+for the Umar Techy multi-tenant E-Commerce Platform.
+
+The Order Management system is the authoritative business
+workflow connecting:
+
+- Storefront
+- Customers
+- Cart
+- Checkout
+- Inventory
+- Payments
+- Shipping
+- Notifications
+- Returns
+- Refunds
+- Reports
+- Analytics
+- Billing integrations
+- POS
+- External integrations
+
+The module defines order creation, validation, lifecycle,
+fulfillment, cancellation, returns, refunds, order history,
+order communication, administrative workflows, APIs, events,
+security, auditability, and future extensibility.
+
+============================================================
+2. CORE ORDER PRINCIPLE
+============================================================
+
+ONE CORE ORDER ENGINE
++
+TENANT-SCOPED ORDERS
++
+IMMUTABLE FINANCIAL/HISTORICAL SNAPSHOTS
++
+EXPLICIT ORDER STATE MACHINE
++
+INTEGRATION EVENTS
+
+must serve all stores.
+
+Basic, Business, and Premium stores use the same Order Engine.
+
+Package differences are enforced through Module 04.
+
+============================================================
+3. TENANT ISOLATION
+============================================================
+
+Every order belongs to exactly one Store/Tenant.
+
+Store A must never be able to access:
+
+- Store B orders
+- Store B customers
+- Store B addresses
+- Store B payment details
+- Store B shipping details
+- Store B order notes
+- Store B refunds
+- Store B fulfillment data
+- Store B order exports
+
+Tenant context must be enforced at API, database, cache, search,
+background job, event, notification, and reporting layers.
+
+============================================================
+4. ORDER ENTITY
+============================================================
+
+An Order represents a confirmed or attempted commercial
+transaction.
+
+Potential core fields:
+
+- Order ID
+- Store/Tenant ID
+- Order Number
+- Customer ID
+- Order Status
+- Payment Status
+- Fulfillment Status
+- Currency
+- Subtotal
+- Discount Total
+- Shipping Total
+- Tax Total
+- Grand Total
+- Customer Snapshot
+- Billing Address Snapshot
+- Shipping Address Snapshot
+- Notes
+- Source
+- Created At
+- Updated At
+- Completed At
+- Cancelled At
+
+Exact schema will be defined in the Database Blueprint.
+
+============================================================
+5. INTERNAL ORDER ID VS ORDER NUMBER
+============================================================
+
+The system should distinguish:
+
+INTERNAL ORDER ID:
+Stable technical identifier.
+
+ORDER NUMBER:
+Customer-facing identifier.
+
+Example:
+
+Internal:
+UUID/ID
+
+Customer-facing:
+UT-2026-000123
+
+Order number should be unique within the appropriate store or
+platform scope according to the final design.
+
+============================================================
+6. ORDER SOURCES
+============================================================
+
+Orders may originate from:
+
+- Web Storefront
+- PWA
+- Mobile App
+- Admin Panel
+- POS
+- API
+- Marketplace Integration
+- Social Commerce
+- Future Sales Channels
+
+Every order should record its source.
+
+============================================================
+7. ORDER TYPES
+============================================================
+
+The architecture may support:
+
+- Standard Order
+- Guest Order
+- Customer Order
+- Admin-Created Order
+- POS Order
+- Marketplace Order
+- Replacement Order
+- Subscription-related Order in future
+
+============================================================
+8. GUEST ORDERS
+============================================================
+
+Guest customers may place orders if the store allows guest
+checkout.
+
+Guest order data should retain the information required for:
+
+- Fulfillment
+- Customer communication
+- Returns
+- Refunds
+- Legal/business records
+
+Guest orders should not require a permanent customer account.
+
+============================================================
+9. CUSTOMER ORDERS
+============================================================
+
+Registered customers should have orders linked to their
+store-scoped customer identity.
+
+Customers may view only their own permitted orders.
+
+============================================================
+10. ORDER SNAPSHOT PRINCIPLE
+============================================================
+
+Orders must preserve historical information.
+
+At order creation, capture appropriate snapshots of:
+
+- Product Name
+- SKU
+- Variant
+- Unit Price
+- Discount
+- Tax
+- Quantity
+- Product image/reference where appropriate
+- Customer details
+- Shipping address
+- Billing address
+- Applied promotion details
+
+Later catalog changes must not rewrite historical order
+information.
+
+============================================================
+11. ORDER LINE ITEM
+============================================================
+
+Each order contains one or more line items.
+
+Potential fields:
+
+- Order Line ID
+- Product ID reference
+- Variant ID reference
+- Product Name Snapshot
+- SKU Snapshot
+- Variant Snapshot
+- Quantity
+- Unit Price
+- Discount
+- Tax
+- Line Total
+- Fulfillment Status
+
+Internal product references may be retained while snapshots
+protect historical integrity.
+
+============================================================
+12. ORDER TOTALS
+============================================================
+
+Order totals should be calculated from authoritative server-side
+data.
+
+Conceptual:
+
+Subtotal
+- Discounts
++ Tax
++ Shipping
++ Additional Charges
+= Grand Total
+
+The final calculation engine must be centralized.
+
+============================================================
+13. MONEY REPRESENTATION
+============================================================
+
+Financial values must use a safe decimal/money representation.
+
+Do not use binary floating-point arithmetic for authoritative
+financial calculations.
+
+Each order should store the relevant currency.
+
+============================================================
+14. ORDER CURRENCY
+============================================================
+
+The order must preserve the currency used at the time of
+purchase.
+
+Future store currency changes must not alter historical order
+currency.
+
+============================================================
+15. ORDER STATE MACHINE
+============================================================
+
+The order lifecycle must use explicit states.
+
+Suggested core states:
+
+DRAFT
+PENDING_CONFIRMATION
+CONFIRMED
+PROCESSING
+READY_TO_FULFILL
+FULFILLING
+SHIPPED
+DELIVERED
+COMPLETED
+CANCELLED
+RETURN_REQUESTED
+PARTIALLY_RETURNED
+RETURNED
+REFUND_PENDING
+PARTIALLY_REFUNDED
+REFUNDED
+FAILED
+
+The final state model should be refined with Payment and
+Shipping modules.
+
+============================================================
+16. ORDER STATUS VS PAYMENT STATUS
+============================================================
+
+These must remain separate.
+
+ORDER STATUS:
+Commercial/fulfillment lifecycle.
+
+PAYMENT STATUS:
+Financial transaction lifecycle.
+
+Example:
+
+Order:
+PROCESSING
+
+Payment:
+PAID
+
+Another example:
+
+Order:
+CANCELLED
+
+Payment:
+REFUND_PENDING
+
+============================================================
+17. FULFILLMENT STATUS
+============================================================
+
+Fulfillment may have its own state:
+
+UNFULFILLED
+PARTIALLY_FULFILLED
+FULFILLED
+CANCELLED
+
+This allows partial fulfillment.
+
+============================================================
+18. PAYMENT STATUS
+============================================================
+
+Potential states:
+
+UNPAID
+PENDING
+AUTHORIZED
+PAID
+PARTIALLY_PAID
+FAILED
+CANCELLED
+REFUND_PENDING
+PARTIALLY_REFUNDED
+REFUNDED
+
+Detailed payment architecture belongs to Module 12.
+
+============================================================
+19. ORDER CREATION FLOW
+============================================================
+
+Conceptual flow:
+
+Customer
+↓
+Cart
+↓
+Checkout
+↓
+Server Validation
+↓
+Price Recalculation
+↓
+Inventory Check/Reservation
+↓
+Payment Processing if applicable
+↓
+Order Creation
+↓
+Inventory Commitment
+↓
+Order Event
+↓
+Notifications
+↓
+Fulfillment
+
+Critical steps must be transactional or use reliable event
+coordination.
+
+============================================================
+20. SERVER-SIDE VALIDATION
+============================================================
+
+Before creating an order, validate:
+
+- Store is active
+- Customer/guest data valid
+- Products exist
+- Variants valid
+- Products purchasable
+- Prices current
+- Discounts valid
+- Stock available
+- Shipping available
+- Payment method available
+- Currency valid
+- Package/store restrictions
+- Fraud/abuse controls where enabled
+
+============================================================
+21. CLIENT DATA TRUST
+============================================================
+
+Never trust client-submitted:
+
+- Product Price
+- Discount Amount
+- Tax Amount
+- Shipping Amount
+- Order Total
+- Payment Status
+- Inventory Availability
+- Store ID
+
+The server must derive authoritative values.
+
+============================================================
+22. ORDER NUMBER GENERATION
+============================================================
+
+Order number generation should be:
+
+- Unique
+- Collision-safe
+- Tenant-aware where configured
+- Human-readable
+- Stable
+- Non-guessable enough to avoid exposing sensitive sequencing
+  where necessary
+
+The internal ID remains the authoritative technical key.
+
+============================================================
+23. ORDER DEDUPLICATION
+============================================================
+
+Duplicate order creation must be prevented.
+
+Potential causes:
+
+- Double click
+- Browser retry
+- Network retry
+- Payment gateway callback retry
+- POS retry
+- Offline sync retry
+
+Use idempotency keys and server-side duplicate detection.
+
+============================================================
+24. IDEMPOTENCY
+============================================================
+
+Order creation APIs should support idempotency.
+
+Example:
+
+Client sends:
+Idempotency-Key = ABC123
+
+Request times out.
+
+Client retries with:
+Idempotency-Key = ABC123
+
+The server must not create a second order.
+
+============================================================
+25. PAYMENT-ORDER COORDINATION
+============================================================
+
+Order and payment workflows must be coordinated carefully.
+
+Possible online payment flow:
+
+Checkout
+→ Create Pending Order / Payment Intent
+→ Payment Gateway
+→ Gateway Confirmation
+→ Verify Payment Server-to-Server
+→ Mark Payment Paid
+→ Confirm Order
+→ Commit Inventory
+
+Exact implementation belongs to Module 12.
+
+============================================================
+26. COD ORDER FLOW
+============================================================
+
+For Cash on Delivery:
+
+Checkout
+→ Validate
+→ Confirm Order
+→ Reserve/Commit Inventory according to store policy
+→ Fulfillment
+→ Delivery
+→ Payment Collection
+→ Mark Paid
+
+The exact inventory and payment transition must be explicit.
+
+============================================================
+27. BANK TRANSFER FLOW
+============================================================
+
+Possible workflow:
+
+Order Created
+→ Payment Pending
+→ Customer Receives Bank Details
+→ Customer Uploads/Provides Proof if enabled
+→ Admin Verification
+→ Payment Confirmed
+→ Order Confirmed
+
+Payment proof must be securely stored and permission-controlled.
+
+============================================================
+28. PAYMENT FAILURE
+============================================================
+
+If payment fails:
+
+- Order should not become falsely paid.
+- Inventory reservation should be released according to policy.
+- Customer should receive actionable information.
+- Payment failure should be recorded.
+- Retry may create a new payment attempt without duplicating
+  the order unnecessarily.
+
+============================================================
+29. PAYMENT CALLBACK SECURITY
+============================================================
+
+Gateway callbacks/webhooks must be:
+
+- Authenticated
+- Signature verified
+- Idempotent
+- Tenant-aware
+- Validated
+- Logged
+- Replay-resistant where possible
+
+Never trust a client-side payment success page as proof of
+payment.
+
+============================================================
+30. ORDER TIMELINE
+============================================================
+
+Each order should have a timeline.
+
+Example:
+
+Order Created
+Payment Confirmed
+Order Confirmed
+Packed
+Shipped
+Delivered
+
+Timeline events may include:
+
+- Actor
+- System
+- Timestamp
+- Status
+- Note
+- Reference
+
+Customer-visible and internal timeline entries should be
+distinguished.
+
+============================================================
+31. ORDER NOTES
+============================================================
+
+Support:
+
+- Customer Note
+- Internal Note
+- Fulfillment Note
+- Delivery Note
+
+Internal notes must never be exposed to customers.
+
+============================================================
+32. ORDER TAGS
+============================================================
+
+Orders may support tags.
+
+Examples:
+
+- VIP
+- Urgent
+- Fragile
+- Wholesale
+- Review Required
+
+Tags must be tenant-scoped.
+
+============================================================
+33. ORDER PRIORITY
+============================================================
+
+Stores may optionally define priority:
+
+- Normal
+- High
+- Urgent
+
+Priority should influence admin workflows but must not bypass
+security or financial validation.
+
+============================================================
+34. ORDER SEARCH
+============================================================
+
+Admin search may support:
+
+- Order Number
+- Customer Name
+- Customer Phone
+- Customer Email
+- SKU
+- Product Name
+- Tracking Number
+- External Order ID
+
+Search must remain tenant-scoped.
+
+============================================================
+35. ORDER FILTERING
+============================================================
+
+Admin filters may include:
+
+- Order Status
+- Payment Status
+- Fulfillment Status
+- Date
+- Customer
+- Warehouse
+- Shipping Method
+- Payment Method
+- Order Source
+- Total Range
+- Tags
+
+============================================================
+36. CUSTOMER ORDER HISTORY
+============================================================
+
+Customers should see:
+
+- Order Number
+- Date
+- Total
+- Status
+- Payment Status
+- Fulfillment Status
+- Items
+- Tracking
+- Invoice where available
+
+Customers must only see their own permitted orders.
+
+============================================================
+37. ADMIN ORDER VIEW
+============================================================
+
+Authorized staff may see:
+
+- Customer
+- Items
+- Pricing
+- Discounts
+- Taxes
+- Payment status
+- Fulfillment
+- Shipping
+- Timeline
+- Notes
+- Inventory allocation
+- Refunds
+- Returns
+- Audit references
+
+Sensitive information must be permission-controlled.
+
+============================================================
+38. ORDER EDITING
+============================================================
+
+Order editing after confirmation is high-risk.
+
+Potentially editable fields may include:
+
+- Internal Notes
+- Shipping Address before fulfillment
+- Customer contact information where authorized
+- Certain non-financial metadata
+
+Financial changes must use controlled adjustment workflows.
+
+============================================================
+39. ORDER ITEM MODIFICATION
+============================================================
+
+Changing confirmed order items may affect:
+
+- Inventory
+- Pricing
+- Tax
+- Discounts
+- Payment
+- Shipping
+
+Therefore, direct mutation should be restricted.
+
+Use explicit adjustment workflows.
+
+============================================================
+40. ORDER ADJUSTMENTS
+============================================================
+
+Potential adjustments:
+
+- Add item
+- Remove item
+- Change quantity
+- Price adjustment
+- Shipping adjustment
+- Discount adjustment
+
+Every adjustment must record:
+
+- Reason
+- Actor
+- Previous value
+- New value
+- Financial impact
+- Inventory impact
+
+============================================================
+41. ORDER CANCELLATION
+============================================================
+
+Cancellation may be requested by:
+
+- Customer
+- Store staff
+- System
+- Payment failure
+- Fraud/abuse workflow
+
+Cancellation rules should depend on order state.
+
+============================================================
+42. CANCELLATION RULES
+============================================================
+
+Example:
+
+PENDING:
+Can cancel.
+
+CONFIRMED:
+May cancel according to policy.
+
+PROCESSING:
+May require staff approval.
+
+SHIPPED:
+Normally requires return workflow.
+
+DELIVERED:
+Use return/cancellation policy.
+
+The exact rules must be configurable.
+
+============================================================
+43. CANCELLATION REASON
+============================================================
+
+Cancellation should capture:
+
+- Reason Code
+- Optional Note
+- Actor
+- Timestamp
+
+Examples:
+
+- Customer Request
+- Out of Stock
+- Payment Failed
+- Address Issue
+- Fraud Review
+- Store Cancellation
+
+============================================================
+44. INVENTORY ON CANCELLATION
+============================================================
+
+If inventory was reserved or committed, cancellation must
+trigger the appropriate inventory operation.
+
+Example:
+
+Reserved
+→ Release
+
+Committed but not shipped
+→ Return to available stock where appropriate
+
+Exact behavior belongs to Inventory and Fulfillment logic.
+
+============================================================
+45. RETURN REQUEST
+============================================================
+
+Customers may request returns where the store allows them.
+
+Return request may contain:
+
+- Order
+- Order Items
+- Quantity
+- Reason
+- Description
+- Images
+- Requested Resolution
+
+Possible resolutions:
+
+- Refund
+- Replacement
+- Exchange
+- Store Credit
+
+============================================================
+46. RETURN STATES
+============================================================
+
+Suggested states:
+
+REQUESTED
+UNDER_REVIEW
+APPROVED
+REJECTED
+IN_TRANSIT
+RECEIVED
+INSPECTED
+APPROVED_FOR_REFUND
+COMPLETED
+CANCELLED
+
+Detailed return architecture may be expanded later.
+
+============================================================
+47. PARTIAL RETURNS
+============================================================
+
+A customer may return only some items.
+
+Example:
+
+Order:
+5 products
+
+Return:
+2 products
+
+The system must support item-level quantities and return
+status.
+
+============================================================
+48. RETURN INSPECTION
+============================================================
+
+Returned physical products may require inspection.
+
+Possible result:
+
+Resalable
+→ Inventory In
+
+Damaged
+→ Damaged Stock
+
+Rejected
+→ Return to Customer / Other workflow
+
+Inventory changes must be auditable.
+
+============================================================
+49. REFUNDS
+============================================================
+
+Refunds must be represented separately from orders.
+
+Potential refund states:
+
+PENDING
+PROCESSING
+SUCCEEDED
+FAILED
+CANCELLED
+
+A refund may be:
+
+- Full
+- Partial
+
+============================================================
+50. REFUND CALCULATION
+============================================================
+
+Refund amount must account for:
+
+- Returned quantity
+- Item price
+- Discounts
+- Tax
+- Shipping policy
+- Restocking fees where legally/business appropriate
+- Previous refunds
+
+The system must prevent refunding more than the eligible
+amount.
+
+============================================================
+51. REFUND IDEMPOTENCY
+============================================================
+
+Refund operations must be idempotent.
+
+Gateway retry must not create duplicate refunds.
+
+Use provider transaction IDs and internal idempotency keys.
+
+============================================================
+52. STORE CREDIT FOUNDATION
+============================================================
+
+Future support may include store credit.
+
+Store credit should be:
+
+- Tenant-scoped
+- Auditable
+- Non-negative unless explicitly supported
+- Expiry-aware where applicable
+- Protected from unauthorized manipulation
+
+============================================================
+53. EXCHANGES
+============================================================
+
+Future exchange workflow may support:
+
+Returned Item
+→ Replacement Item
+
+The system should preserve:
+
+- Original order reference
+- Return
+- Replacement
+- Inventory movements
+- Financial adjustments
+
+============================================================
+54. REPLACEMENT ORDERS
+============================================================
+
+A replacement order may be created from a return.
+
+It should retain a relationship to the original order without
+destroying historical data.
+
+============================================================
+55. FULFILLMENT
+============================================================
+
+Fulfillment represents the process of preparing and delivering
+an order.
+
+Potential steps:
+
+- Allocate Warehouse
+- Pick
+- Pack
+- Handover
+- Ship
+- Deliver
+
+Detailed shipping execution belongs to Module 13.
+
+============================================================
+56. WAREHOUSE ALLOCATION
+============================================================
+
+Order items may be allocated to one warehouse or multiple
+warehouses.
+
+Allocation may consider:
+
+- Stock
+- Location
+- Warehouse priority
+- Shipping destination
+- Product restrictions
+
+============================================================
+57. SPLIT FULFILLMENT
+============================================================
+
+Future support:
+
+Order
+→ Fulfillment A
+→ Warehouse A
+→ Item 1
+
+Fulfillment B
+→ Warehouse B
+→ Item 2
+
+Customer should see a coherent order while the system tracks
+multiple fulfillment records.
+
+============================================================
+58. PICKING
+============================================================
+
+Future warehouse workflows may support:
+
+- Pick List
+- Picker
+- Location
+- Quantity
+- Pick Status
+
+This should integrate with Inventory.
+
+============================================================
+59. PACKING
+============================================================
+
+Packing may record:
+
+- Package
+- Weight
+- Dimensions
+- Items
+- Packing status
+- Staff member
+
+Multiple packages per order should be possible in future.
+
+============================================================
+60. SHIPMENT
+============================================================
+
+A shipment may contain:
+
+- Shipment ID
+- Order ID
+- Warehouse
+- Courier
+- Tracking Number
+- Shipping Method
+- Status
+- Shipped At
+- Delivered At
+
+Detailed shipping architecture is Module 13.
+
+============================================================
+61. DELIVERY STATUS
+============================================================
+
+Potential delivery states:
+
+LABEL_CREATED
+PICKED_UP
+IN_TRANSIT
+OUT_FOR_DELIVERY
+DELIVERED
+DELIVERY_FAILED
+RETURNED_TO_SENDER
+
+Courier-specific statuses should map into normalized platform
+statuses.
+
+============================================================
+62. DELIVERY FAILURE
+============================================================
+
+Failed delivery should record:
+
+- Reason
+- Courier status
+- Attempt count
+- Customer communication
+- Next action
+
+Potential actions:
+
+- Retry
+- Contact Customer
+- Reschedule
+- Return to Sender
+- Cancel
+
+============================================================
+63. ORDER COMMUNICATION
+============================================================
+
+Order events may trigger:
+
+- Email
+- SMS
+- WhatsApp
+- Push
+- In-App
+
+Examples:
+
+- Order Received
+- Payment Confirmed
+- Order Confirmed
+- Shipped
+- Out for Delivery
+- Delivered
+- Cancelled
+- Refund Processed
+
+Notification rules belong to Module 21.
+
+============================================================
+64. CUSTOMER PRIVACY
+============================================================
+
+Order responses must expose only necessary information.
+
+Avoid exposing:
+
+- Internal notes
+- Staff information where unnecessary
+- Payment secrets
+- Gateway credentials
+- Internal cost
+- Fraud signals
+- Security metadata
+
+============================================================
+65. ADMIN PERMISSIONS
+============================================================
+
+Permissions should distinguish:
+
+- View Orders
+- Create Orders
+- Edit Orders
+- Cancel Orders
+- Manage Fulfillment
+- Manage Returns
+- Approve Returns
+- Process Refunds
+- View Payment Details
+- Export Orders
+- View Customer Data
+- Manage Order Notes
+
+Least privilege is mandatory.
+
+============================================================
+66. ORDER EXPORT
+============================================================
+
+Authorized users may export:
+
+- Orders
+- Order Items
+- Customer data
+- Payment status
+- Fulfillment data
+- Refunds
+
+Exports must:
+
+- Be tenant-scoped
+- Be permission-controlled
+- Be audited
+- Avoid unnecessary sensitive data
+
+============================================================
+67. ORDER IMPORT
+============================================================
+
+Future migration/integration workflows may support importing
+historical orders.
+
+Imported orders must preserve:
+
+- Original order number
+- Original date
+- Customer references where possible
+- Product snapshots
+- Financial totals
+- External IDs
+
+Import must not corrupt live inventory or payment state.
+
+============================================================
+68. EXTERNAL ORDER IDS
+============================================================
+
+Orders should support external references:
+
+- External System
+- External Order ID
+- External Fulfillment ID
+- External Payment ID
+
+This supports integrations and synchronization.
+
+============================================================
+69. MARKETPLACE ORDERS
+============================================================
+
+Future marketplace integration may import orders from:
+
+- External Marketplace
+- Social Commerce
+- Other Sales Channels
+
+External order source must remain distinguishable from native
+storefront orders.
+
+============================================================
+70. POS ORDERS
+============================================================
+
+POS-created orders should use the same Core Order Engine.
+
+POS should not create a separate incompatible order model.
+
+Example:
+
+POS
+→ Order API
+→ Core Order
+→ Inventory
+→ Payment
+→ Receipt
+→ Analytics
+
+============================================================
+71. OFFLINE POS ORDERS
+============================================================
+
+Offline POS orders should be synchronized using:
+
+- Idempotency Keys
+- External Transaction IDs
+- Device ID
+- Local Sequence
+- Created At
+- Sync Status
+
+Server reconciliation must prevent duplicate orders.
+
+============================================================
+72. ORDER EVENT MODEL
+============================================================
+
+Important events may include:
+
+- OrderCreated
+- OrderValidated
+- OrderConfirmed
+- OrderCancelled
+- OrderProcessingStarted
+- OrderFulfillmentStarted
+- OrderShipped
+- OrderDelivered
+- OrderCompleted
+- ReturnRequested
+- ReturnApproved
+- ReturnReceived
+- RefundRequested
+- RefundCompleted
+- OrderAdjusted
+
+Events should be reliable and tenant-aware.
+
+============================================================
+73. OUTBOX PATTERN
+============================================================
+
+Critical order events should use a reliable event delivery
+mechanism.
+
+Conceptual:
+
+Order Transaction
+→ Write Order
+→ Write Outbox Event
+→ Commit
+→ Publish
+→ Consumers
+
+Consumers may include:
+
+- Inventory
+- Payment
+- Shipping
+- Notifications
+- Analytics
+- Integrations
+
+============================================================
+74. ORDER TIMELINE VS AUDIT LOG
+============================================================
+
+ORDER TIMELINE:
+Business/customer workflow events.
+
+AUDIT LOG:
+Security and administrative changes.
+
+They should not be treated as identical records.
+
+============================================================
+75. AUDIT LOGGING
+============================================================
+
+Audit important actions:
+
+- Order creation
+- Order cancellation
+- Order modification
+- Price adjustment
+- Refund
+- Return decision
+- Address modification
+- Fulfillment override
+- Export
+- Admin access
+- Impersonation where supported
+
+============================================================
+76. ORDER SEARCH INDEX
+============================================================
+
+Admin order search may use a dedicated index for large stores.
+
+Every indexed record must include tenant context.
+
+Customer-facing order lookup should preferably use secure
+direct queries rather than exposing broad search capabilities.
+
+============================================================
+77. ORDER CACHE
+============================================================
+
+Private order data should be cached cautiously.
+
+If cached:
+
+- Tenant context
+- User/customer context
+- Permissions
+- Order ID
+
+must all be included in cache identity.
+
+Public caching of private order data is prohibited.
+
+============================================================
+78. ORDER API
+============================================================
+
+Secure APIs should support:
+
+- Create Order
+- Get Order
+- List Orders
+- Update Allowed Metadata
+- Cancel Order
+- Fulfillment
+- Return Request
+- Return Approval
+- Refund
+- Shipment Tracking
+- Order Timeline
+- Export
+- Integration Sync
+
+Every endpoint must enforce:
+
+- Authentication
+- Authorization
+- Tenant
+- Validation
+- Entitlement
+- Rate Limit
+- Audit
+- Idempotency where applicable
+
+============================================================
+79. CUSTOMER API
+============================================================
+
+Customer-facing order APIs should allow:
+
+- View Own Orders
+- View Own Order
+- Request Cancellation where allowed
+- Request Return
+- View Shipment
+- View Refund Status
+
+Customer APIs must not expose administrative order data.
+
+============================================================
+80. WEBHOOKS
+============================================================
+
+The platform should provide tenant-aware outbound webhooks for
+events such as:
+
+- Order Created
+- Order Confirmed
+- Order Paid
+- Order Shipped
+- Order Delivered
+- Order Cancelled
+- Refund Completed
+
+Webhook delivery should support:
+
+- Signing
+- Retry
+- Idempotency
+- Delivery logs
+- Failure tracking
+
+============================================================
+81. ORDER WEBHOOK SECURITY
+============================================================
+
+Webhook payloads must:
+
+- Avoid unnecessary sensitive information
+- Be signed
+- Include event ID
+- Include timestamp
+- Include tenant/store context
+- Support replay protection where appropriate
+
+============================================================
+82. FRAUD / ABUSE FOUNDATION
+============================================================
+
+The architecture should reserve support for order risk controls.
+
+Signals may include:
+
+- Excessive failed payments
+- Repeated COD cancellations
+- Unusual order velocity
+- Repeated address patterns
+- Suspicious API behavior
+
+Risk systems must be carefully scoped and auditable.
+
+============================================================
+83. COD RISK FOUNDATION
+============================================================
+
+For COD-heavy stores, future controls may include:
+
+- COD order limits
+- Customer order history
+- Verification
+- Phone confirmation
+- WhatsApp confirmation
+- Manual approval
+
+These should be configurable and not hard-coded.
+
+============================================================
+84. ORDER LIMITS
+============================================================
+
+Package entitlements may limit:
+
+- Monthly orders
+- Order history retention
+- Staff order access
+- Advanced fulfillment
+- Returns
+- Refund automation
+- API order volume
+- Webhooks
+
+Limits come from Module 04.
+
+============================================================
+85. ORDER NUMBERING AND PRIVACY
+============================================================
+
+Customer-facing order numbers should avoid unnecessary exposure
+of total platform order volume.
+
+Stores may use tenant-scoped numbering.
+
+Internal IDs should never be treated as customer-facing order
+numbers by default.
+
+============================================================
+86. ORDER DATA RETENTION
+============================================================
+
+Order records may need long-term retention for:
+
+- Business records
+- Customer service
+- Refunds
+- Returns
+- Accounting
+- Legal requirements
+- Analytics
+
+Retention must be defined separately from active order
+visibility.
+
+============================================================
+87. ORDER DELETION
+============================================================
+
+Orders should generally not be hard-deleted merely because a
+customer or product is removed.
+
+Historical financial/business integrity must be preserved.
+
+Use:
+
+- Retention
+- Anonymization where appropriate
+- Restricted archival
+
+according to legal/business requirements.
+
+============================================================
+88. CUSTOMER DATA ANONYMIZATION
+============================================================
+
+Future privacy workflows may anonymize eligible customer
+personal data while preserving necessary order records.
+
+Example:
+
+Customer identity:
+Anonymized
+
+Order:
+Retained
+
+Financial totals:
+Retained
+
+This must be implemented carefully with legal requirements.
+
+============================================================
+89. ORDER ANALYTICS
+============================================================
+
+Order events should feed analytics:
+
+- Revenue
+- Orders
+- Average Order Value
+- Conversion
+- Cancellation Rate
+- Return Rate
+- Refund Rate
+- Fulfillment Time
+- Delivery Time
+- Customer Repeat Rate
+
+Analytics belongs to Module 22.
+
+============================================================
+90. REPORTING
+============================================================
+
+Potential reports:
+
+- Sales
+- Orders
+- Pending Orders
+- Cancelled Orders
+- Returns
+- Refunds
+- Fulfillment
+- Payment Status
+- Shipping
+- Product Sales
+- Customer Sales
+- Source/Channel
+
+============================================================
+91. ORDER DASHBOARD
+============================================================
+
+Store Admin dashboard may show:
+
+- New Orders
+- Pending Payment
+- Processing
+- Ready to Fulfill
+- Shipped
+- Delivered
+- Cancelled
+- Return Requests
+- Refund Requests
+
+Dashboard data must respect staff permissions.
+
+============================================================
+92. PERFORMANCE
+============================================================
+
+Order architecture must support:
+
+- High order volume
+- Concurrent checkouts
+- Concurrent payment callbacks
+- Large order histories
+- Large item counts
+- Large exports
+- High webhook volume
+
+Use:
+
+- Database indexing
+- Pagination
+- Background jobs
+- Event queues
+- Search indexing where justified
+- Archival
+
+============================================================
+93. DATABASE INDEXING
+============================================================
+
+Likely indexes:
+
+- Store/Tenant ID
+- Order ID
+- Order Number
+- Customer ID
+- Status
+- Payment Status
+- Fulfillment Status
+- Created At
+- External Order ID
+
+Composite indexes should reflect actual queries.
+
+============================================================
+94. TRANSACTIONAL INTEGRITY
+============================================================
+
+Critical order operations should define transaction boundaries.
+
+Examples:
+
+Order creation
++
+Inventory reservation
++
+Outbox event
+
+Payment confirmation
++
+Order confirmation
++
+Inventory commit
+
+Return approval
++
+Inventory action
++
+Refund request
+
+The final architecture must define failure recovery.
+
+============================================================
+95. FAILURE RECOVERY
+============================================================
+
+The system must handle:
+
+- Payment gateway timeout
+- Payment callback delayed
+- Inventory reservation failure
+- Inventory conflict
+- Notification failure
+- Shipping API failure
+- Webhook failure
+- Database retry
+- Network interruption
+
+No operation should silently create contradictory state.
+
+============================================================
+96. STATE RECONCILIATION
+============================================================
+
+The platform should provide reconciliation between:
+
+- Order
+- Payment
+- Inventory
+- Shipping
+- Refund
+- External systems
+
+Example:
+
+Order says PAID
+Payment provider says FAILED
+
+→ Flag for reconciliation.
+
+============================================================
+97. ORDER TESTING
+============================================================
+
+Mandatory functional tests:
+
+- Guest order
+- Registered customer order
+- COD
+- Online payment
+- Bank transfer
+- Payment failure
+- Order confirmation
+- Cancellation
+- Return
+- Partial return
+- Refund
+- Partial refund
+- Fulfillment
+- Shipment
+- Delivery
+- Order history
+- Export
+- Webhooks
+- Admin order creation
+
+============================================================
+98. CONCURRENCY TESTING
+============================================================
+
+Mandatory scenarios:
+
+- Double checkout
+- Retry order creation
+- Two purchases of final unit
+- Simultaneous payment callbacks
+- Duplicate webhook
+- Duplicate refund request
+- Concurrent order modification
+- Concurrent cancellation
+
+System must remain consistent.
+
+============================================================
+99. MULTI-TENANT SECURITY TESTING
+============================================================
+
+Test:
+
+- Store A cannot read Store B orders
+- Store A cannot modify Store B orders
+- Store A cannot cancel Store B orders
+- Store A cannot refund Store B orders
+- Store A cannot export Store B orders
+- Store A cannot view Store B customers through orders
+- Store A cannot access Store B payment data
+- Store A cannot access Store B shipment data
+- Store A cannot access Store B order cache
+- Store A cannot access Store B order search index
+
+============================================================
+100. PERMISSION TESTING
+============================================================
+
+Test every sensitive role:
+
+- Store Owner
+- Administrator
+- Manager
+- Order Manager
+- Inventory Manager
+- Staff
+- Support Staff
+
+Verify least privilege for:
+
+- View
+- Create
+- Modify
+- Cancel
+- Refund
+- Export
+- Customer data
+- Payment data
+
+============================================================
+101. PACKAGE TESTING
+============================================================
+
+Test:
+
+- Monthly order limits
+- Advanced order features
+- Return features
+- Refund features
+- API order limits
+- Webhook access
+- Trial
+- Upgrade
+- Downgrade
+- Expiry
+- Suspension
+
+============================================================
+102. HIGH-LEVEL DATA ENTITIES
+============================================================
+
+Potential entities:
+
+- Order
+- OrderItem
+- OrderCustomerSnapshot
+- OrderAddressSnapshot
+- OrderPriceSummary
+- OrderAdjustment
+- OrderAdjustmentItem
+- OrderStatusHistory
+- OrderTimelineEvent
+- OrderNote
+- OrderTag
+- OrderFulfillment
+- FulfillmentItem
+- Shipment
+- ShipmentItem
+- Return
+- ReturnItem
+- Refund
+- RefundItem
+- StoreCreditTransaction
+- OrderExternalReference
+- OrderWebhook
+- OrderWebhookDelivery
+- OrderRiskAssessment
+- OrderReconciliation
+- OrderOutboxEvent
+
+Exact schema will be finalized in the Database Blueprint.
+
+============================================================
+103. ADMIN CAPABILITIES
+============================================================
+
+Authorized store users should be able to:
+
+- View Orders
+- Search Orders
+- Filter Orders
+- Create Orders
+- Manage Allowed Changes
+- Cancel Orders
+- Manage Fulfillment
+- Manage Returns
+- Process Refunds
+- Add Notes
+- Manage Tags
+- Export Orders
+- View Timeline
+- Resolve Reconciliation Issues
+
+Permissions must come from Module 02.
+
+============================================================
+104. SUPER ADMIN CAPABILITIES
+============================================================
+
+Umar Techy Super Admin should manage platform-level:
+
+- Order feature definitions
+- Package limits
+- Global safety rules
+- Operational monitoring
+- Integration diagnostics
+- Webhook infrastructure
+- Reconciliation tools
+
+Tenant order data access must be explicitly authorized and
+audited.
+
+============================================================
+105. MODULE DEPENDENCIES
+============================================================
+
+Module 09 depends on:
+
+- Module 01 — Complete Platform Structure
+- Module 02 — Authentication, Users, Roles & Permissions
+- Module 03 — Multi-Tenant & Store Management
+- Module 04 — Subscription, Packages & Feature Entitlements
+- Module 05 — Storefront / Customer-Facing Website
+- Module 06 — Product & Catalog Management
+- Module 07 — Category, Brand & Attribute Management
+- Module 08 — Inventory & Stock Management
+
+Strong integration with:
+
+- Module 10 — Customer Management
+- Module 11 — Cart, Wishlist & Checkout
+- Module 12 — Payment Management & Gateways
+- Module 13 — Shipping & Delivery
+- Module 14 — Discounts, Coupons & Promotions
+- Module 21 — Notifications & Communication
+- Module 22 — Reports & Analytics
+- Module 27 — App / Plugin Marketplace
+- Module 31 — API & Developer Platform
+- Module 32 — Security
+
+============================================================
+106. REQUIRED FOLLOW-UP ARTIFACTS
+============================================================
+
+1. Order Database Blueprint
+2. Order State Machine
+3. Payment-Order Coordination Blueprint
+4. Order Pricing Snapshot Blueprint
+5. Order Cancellation Blueprint
+6. Return Management Blueprint
+7. Refund Blueprint
+8. Fulfillment Blueprint
+9. Shipment Integration Blueprint
+10. Order Adjustment Blueprint
+11. Order Timeline Blueprint
+12. Order API Contract
+13. Order Webhook Blueprint
+14. Order Event / Outbox Blueprint
+15. Order Reconciliation Blueprint
+16. Order Security Test Matrix
+17. Order Concurrency Test Plan
+18. Order Performance Test Plan
+19. Order Data Retention Blueprint
+20. Order Integration/Sync Blueprint
+
+============================================================
+107. FINAL ARCHITECTURAL RULES
+============================================================
+
+1. One Core Order Engine.
+2. Every order must be tenant-scoped.
+3. Customer-facing order numbers are distinct from internal IDs.
+4. Historical order snapshots must be preserved.
+5. Order, payment, and fulfillment statuses must remain distinct.
+6. Client-side financial values are never authoritative.
+7. Order creation must be server-validated.
+8. Idempotency is mandatory for retry-sensitive order operations.
+9. Payment callbacks must be verified and idempotent.
+10. Inventory coordination must prevent overselling.
+11. Confirmed orders must not be casually mutated.
+12. Financial adjustments require controlled workflows.
+13. Cancellation rules must be state-aware.
+14. Returns must support partial quantities.
+15. Refunds must support partial refunds.
+16. Refund totals must never exceed eligible amounts.
+17. Fulfillment must support future multi-warehouse allocation.
+18. POS and offline orders must use the same Core Order Engine.
+19. External order IDs must be supported.
+20. Webhooks must be signed, retryable, and auditable.
+21. Order events should use reliable delivery mechanisms.
+22. Private order data must never be publicly cached.
+23. Order exports must be tenant-scoped and audited.
+24. Historical order integrity must survive product/customer changes.
+25. All critical order workflows must support reconciliation.
+
+============================================================
+108. STATUS
+============================================================
+
+Module 09 Status:
+ORDER MANAGEMENT — INITIALIZED
+
+Version:
+1.0
+
+This module establishes the reusable multi-tenant Order Engine
+for order creation, validation, payment coordination,
+fulfillment, cancellation, returns, refunds, customer history,
+POS/offline synchronization, webhooks, reconciliation,
+analytics integration, security, and scale.
+
+The next modules will define Customer Management, Cart/Wishlist/
+Checkout, Payments, Shipping, Promotions, Marketing, SEO,
+Themes, Notifications, Analytics, Backup, Monitoring, PWA, AI,
+Integrations, Billing, Super Admin, API, Security, and the
+remaining platform capabilities.
+
+============================================================
+END OF MODULE 09
+============================================================

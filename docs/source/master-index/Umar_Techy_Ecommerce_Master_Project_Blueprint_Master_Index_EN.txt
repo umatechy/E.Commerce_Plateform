@@ -1,0 +1,162 @@
+====================================================================
+                         UMAR TECHY
+              E-COMMERCE PLATFORM MASTER PACKAGE
+                         VERSION 1.0
+====================================================================
+
+Package Type:
+Core Multi-Tenant E-Commerce SaaS Platform
+
+Prepared:
+2026-09-18 12:22:30
+
+STATUS
+------
+35 / 35 Module Blueprints Verified and Included.
+
+IMPORTANT ARCHITECTURAL PRINCIPLE
+---------------------------------
+This project is one Core Multi-Tenant E-Commerce SaaS platform.
+Basic, Business, and Premium are commercial packages/entitlements
+within the same core platform. They are NOT separate codebases.
+
+NON-NEGOTIABLE PRINCIPLES
+-------------------------
+1. Strict tenant isolation across database, API, files, cache, jobs,
+   webhooks, search, analytics, exports, logs, and background workers.
+2. Store/Tenant ID remains stable through package upgrades/downgrades.
+3. Feature access is controlled by entitlements and usage limits.
+4. Theme and branding are configuration-driven, not separate code copies.
+5. Financial, security, authorization, and tenant-boundary operations
+   must be server-authoritative.
+6. No destructive database or production operation without explicit,
+   verified authorization and a safe rollback/backup strategy.
+7. Every implementation must include validation, testing, observability,
+   auditability, and production-readiness checks.
+8. Future expansion must be supported through stable extension points,
+   adapters, events, versioned APIs, feature flags, and documented
+   compatibility rules.
+
+MODULE READING ORDER
+--------------------
+01. Module 01 — Complete Platform Structure
+02. Module 02 — Authentication, Users, Roles & Permissions
+03. Module 03 — Multi-Tenant & Store Management
+04. Module 04 — Subscription, Packages & Feature Entitlements
+05. Module 05 — Storefront / Customer-Facing Website
+06. Module 06 — Product & Catalog Management
+07. Module 07 — Category, Brand & Attribute Management
+08. Module 08 — Inventory & Stock Management
+09. Module 09 — Order Management
+10. Module 10 — Customer Management
+11. Module 11 — Cart, Wishlist & Checkout
+12. Module 12 — Payment Management & Gateways
+13. Module 13 — Shipping & Delivery Management
+14. Module 14 — Discounts, Coupons & Promotions
+15. Module 15 — Marketing & Customer Engagement
+16. Module 16 — SEO & Content Management
+17. Module 17 — Theme, Branding & Design System
+18. Module 18 — Animation & Interaction System
+19. Module 19 — Domain Management
+20. Module 20 — Hosting & Infrastructure Management
+21. Module 21 — Notifications & Communication
+22. Module 22 — Reports, Analytics & Dashboard
+23. Module 23 — Backup, Restore & Data Protection
+24. Module 24 — Store Health, Monitoring & Resource Usage
+25. Module 25 — PWA / Mobile Experience
+26. Module 26 — AI Features
+27. Module 27 — App / Plugin Marketplace & Integrations
+28. Module 28 — Affiliate & Reseller Program
+29. Module 29 — Billing, Invoices & Renewals
+30. Module 30 — Umar Techy Super Admin
+31. Module 31 — API & Developer Platform
+32. Module 32 — Security, Audit & Compliance
+33. Module 33 — System Settings & Configuration
+34. Module 34 — Help, Support & Documentation
+35. Module 35 — Future Expansion Framework
+
+MASTER PACKAGE CONTENTS
+-----------------------
+01_Module_Blueprints/
+   Module_01 through Module_35 — complete English technical blueprints
+
+02_Master_Project_Index/
+   This index and package manifest
+
+03_Claude/
+   Reserved for the final Claude Master Development Prompt
+
+04_Project_Documents/
+   Reserved for Project Bible, URS, SRS, architecture and governance docs
+
+05_Development/
+   Reserved for implementation plans, checkpoints, QA and release artifacts
+
+06_Operations/
+   Reserved for deployment, monitoring, backup, incident and support runbooks
+
+CLAUDE WORKFLOW
+---------------
+Phase A — Read:
+- Read the complete Project Bible, URS, SRS and all 35 Module Blueprints.
+- Treat them as the authoritative project specification.
+
+Phase B — Inspect:
+- Inspect the existing repository before modifying anything.
+- Identify current stack, structure, dependencies, environment configuration,
+  database schema, authentication, APIs, frontend/storefront, tests and
+  deployment configuration.
+
+Phase C — Reconcile:
+- Detect conflicts, missing requirements, duplication and implementation gaps.
+- Do not silently invent requirements.
+- Document ambiguities and propose safe resolutions before implementation.
+
+Phase D — Plan:
+- Produce a dependency-aware implementation plan.
+- Break work into milestones and atomic tasks.
+- Define database, API, UI, background-job, security and test impacts.
+
+Phase E — Implement:
+- Implement incrementally.
+- Preserve existing working functionality unless the specification requires
+  a controlled change.
+- Follow tenant isolation and server-authoritative rules everywhere.
+
+Phase F — Verify:
+- Run appropriate unit, integration, API, frontend, security, migration,
+  regression and end-to-end tests.
+- Run build, lint/static analysis and production-readiness checks.
+- Fix failures rather than suppressing them.
+
+Phase G — Checkpoint:
+- Record completed work, files changed, migrations, tests, known issues,
+  risks and exact next stopping point.
+- Commit only coherent, verified work.
+- Never claim completion without evidence.
+
+PRODUCTION SAFETY
+-----------------
+- Never expose secrets in source control, logs, prompts, screenshots or
+  generated documentation.
+- Never bypass authorization or tenant checks for convenience.
+- Never trust client-supplied prices, permissions, package entitlements,
+  stock values or payment state.
+- Use idempotency for retry-sensitive operations.
+- Protect webhooks against forgery, replay and duplicate processing.
+- Treat uploads, exports, imports and generated files as security-sensitive.
+- Use safe migrations and explicit rollback planning.
+- Financial and administrative operations require elevated authorization,
+  audit trails and server-side validation.
+
+PACKAGE USAGE
+-------------
+This ZIP is the architecture/reference package for the Umar Techy
+E-Commerce Platform. It is intended to be supplied to Claude Code together
+with the repository and any finalized Project Bible / URS / SRS documents.
+
+The module files are intentionally English-only because they are technical
+project artifacts. Normal project discussion may remain in Urdu.
+
+END OF MASTER PACKAGE INDEX
+====================================================================

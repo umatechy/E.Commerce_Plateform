@@ -1,0 +1,2402 @@
+UMAR TECHY
+E-COMMERCE PLATFORM
+MASTER PROJECT BLUEPRINT
+
+MODULE 05 — STOREFRONT / CUSTOMER-FACING WEBSITE
+Version: 1.0
+Status: Planning / Blueprint
+
+============================================================
+1. MODULE PURPOSE
+============================================================
+
+This module defines the architecture, behavior, configuration,
+visual system, page structure, navigation, shopping experience,
+responsive behavior, performance, accessibility, SEO, and
+tenant-aware rendering requirements for the customer-facing
+e-commerce storefront.
+
+The storefront is the public-facing website through which
+customers discover products, browse categories, search, view
+product details, add products to cart, checkout, create or use
+their customer account, track orders, and interact with the
+store.
+
+The storefront must be generated from the ONE Core E-Commerce
+Platform while allowing each Store/Tenant to have its own:
+
+- Brand Identity
+- Logo
+- Colors
+- Typography Configuration
+- Theme
+- Layout
+- Animation Profile
+- Content
+- Products
+- Categories
+- Navigation
+- Domain
+- Policies
+- Contact Information
+- Marketing Content
+
+============================================================
+2. CORE PRINCIPLE
+============================================================
+
+ONE STOREFRONT ENGINE
++
+STORE CONFIGURATION
++
+THEME
++
+BRANDING
++
+CONTENT
++
+CATALOG
++
+ENTITLEMENTS
+
+must produce the storefront for each tenant.
+
+Example:
+
+store-a.com → Store A configuration
+store-b.com → Store B configuration
+store-c.com → Store C configuration
+
+All stores use the same Core Storefront Engine.
+
+No customer should require a separate storefront codebase.
+
+============================================================
+3. TENANT-AWARE STOREFRONT
+============================================================
+
+Every storefront request must resolve the correct Store/Tenant
+before loading tenant-owned content.
+
+Conceptual flow:
+
+Incoming Request
+      ↓
+Domain / Host Resolution
+      ↓
+Store Resolution
+      ↓
+Store Status Check
+      ↓
+Store Configuration
+      ↓
+Theme
+      ↓
+Branding
+      ↓
+Catalog
+      ↓
+Content
+      ↓
+Render Storefront
+
+The storefront must never accidentally display another tenant's
+products, orders, customers, branding, or configuration.
+
+============================================================
+4. DOMAIN-AWARE RENDERING
+============================================================
+
+Supported storefront access may include:
+
+- Umar Techy managed subdomain
+- Customer custom domain
+- Customer-owned domain
+- Temporary onboarding URL
+
+Example:
+
+store-name.umartechy.com
+
+or:
+
+www.customer-domain.com
+
+The domain resolver must map the host to exactly one valid
+Store/Tenant.
+
+Unknown or unconfigured domains must not expose arbitrary store
+data.
+
+============================================================
+5. STOREFRONT LIFECYCLE BEHAVIOR
+============================================================
+
+Storefront availability must respect the store lifecycle
+defined in Module 03.
+
+Potential behavior:
+
+PROVISIONING:
+Show controlled setup/provisioning state.
+
+ONBOARDING:
+Show setup/launch state if public access is enabled.
+
+TRIAL:
+Storefront available according to trial entitlements.
+
+ACTIVE:
+Normal public storefront.
+
+GRACE_PERIOD:
+Normal or restricted storefront according to business rules.
+
+SUSPENDED:
+Show controlled suspension page.
+
+CANCELLED:
+Follow configured cancellation behavior.
+
+ARCHIVED:
+Public storefront unavailable.
+
+DELETING:
+Public storefront unavailable.
+
+No lifecycle state should accidentally expose private
+administrative information.
+
+============================================================
+6. STOREFRONT PAGE ARCHITECTURE
+============================================================
+
+The Core Storefront Engine should support configurable pages.
+
+Core pages:
+
+1. Home
+2. Shop / All Products
+3. Category
+4. Collection
+5. Product Details
+6. Search Results
+7. Cart
+8. Checkout
+9. Order Confirmation
+10. Customer Login
+11. Customer Registration
+12. Customer Account
+13. Order History
+14. Order Details
+15. Wishlist
+16. Contact
+17. About
+18. FAQ
+19. Privacy Policy
+20. Terms & Conditions
+21. Shipping Policy
+22. Return / Refund Policy
+23. Custom Content Pages
+24. 404 / Not Found
+25. Store Unavailable / Suspended
+
+The exact page availability may depend on package and store
+configuration.
+
+============================================================
+7. HOME PAGE
+============================================================
+
+The home page should be modular and configurable.
+
+Possible sections:
+
+- Announcement Bar
+- Header
+- Hero Banner
+- Featured Categories
+- Featured Products
+- New Arrivals
+- Best Sellers
+- Promotional Banner
+- Product Collections
+- Brand Story
+- Benefits / Trust Section
+- Testimonials
+- Promotional Cards
+- Blog / Content Preview
+- Newsletter Signup
+- Social Links
+- Footer
+
+Store Owners should be able to enable, disable, reorder, and
+configure supported sections through the Admin Panel.
+
+============================================================
+8. HEADER
+============================================================
+
+The header should support:
+
+- Store Logo
+- Store Name
+- Main Navigation
+- Search
+- Cart
+- Customer Account
+- Wishlist where enabled
+- Announcement Bar
+- Mobile Menu
+- Optional CTA
+- Language Selector where enabled
+- Currency Selector where enabled
+
+Header behavior should be controlled by the selected theme.
+
+============================================================
+9. NAVIGATION
+============================================================
+
+Navigation should support:
+
+- Main Menu
+- Category Menu
+- Collections
+- Custom Pages
+- External Links
+- Nested Menus
+- Mega Menu where supported
+- Mobile Navigation
+
+Menu items must be tenant-scoped.
+
+The system should allow administrators to configure menu
+ordering without code changes.
+
+============================================================
+10. MOBILE NAVIGATION
+============================================================
+
+Mobile navigation must be designed specifically for small
+screens.
+
+Requirements:
+
+- Touch-friendly controls
+- Clear hierarchy
+- Fast open/close
+- Search access
+- Cart access
+- Account access
+- Category navigation
+- Nested menu support
+- Keyboard accessibility where applicable
+
+The mobile menu must not simply be a scaled desktop menu.
+
+============================================================
+11. PRODUCT CATALOG
+============================================================
+
+The storefront must consume the centralized catalog system.
+
+Products may contain:
+
+- Product Name
+- Slug
+- SKU
+- Description
+- Short Description
+- Images
+- Videos where supported
+- Categories
+- Collections
+- Brand
+- Tags
+- Variants
+- Options
+- Attributes
+- Pricing
+- Sale Pricing
+- Inventory Status
+- Stock Quantity where exposed
+- Shipping Information
+- SEO Metadata
+- Related Products
+- Cross-sell Products
+- Up-sell Products
+
+The detailed product/catalog architecture will be defined in
+the Catalog Module.
+
+============================================================
+12. PRODUCT CARD
+============================================================
+
+Product cards should support configurable layouts.
+
+Possible elements:
+
+- Product Image
+- Product Name
+- Price
+- Compare-at Price
+- Discount Indicator
+- Rating
+- Stock Status
+- Quick View
+- Add to Cart
+- Wishlist
+- Product Badge
+- Variant Indicator
+
+Themes may provide different product card styles without
+changing the underlying product logic.
+
+============================================================
+13. PRODUCT DETAILS PAGE
+============================================================
+
+The product page should support:
+
+- Image Gallery
+- Product Name
+- Price
+- Discount
+- SKU
+- Availability
+- Variant Selection
+- Quantity
+- Add to Cart
+- Buy Now
+- Wishlist
+- Product Description
+- Specifications
+- Shipping Information
+- Return Information
+- Reviews
+- Related Products
+- Frequently Bought Together
+- Cross-sell
+- Up-sell
+- Social Sharing where enabled
+
+The page should clearly communicate purchase availability.
+
+============================================================
+14. PRODUCT VARIANTS
+============================================================
+
+Variant selection may include:
+
+- Size
+- Color
+- Material
+- Weight
+- Pack Size
+- Custom Attributes
+
+Variant selection must update relevant:
+
+- Price
+- Stock
+- SKU
+- Images
+- Availability
+- Shipping information where applicable
+
+Invalid variant combinations must not be purchasable.
+
+============================================================
+15. CATEGORY PAGE
+============================================================
+
+Category pages should support:
+
+- Category Title
+- Description
+- Banner/Image
+- Product Grid
+- Sorting
+- Filtering
+- Pagination / Infinite Loading
+- Product Count
+- Subcategories
+- Breadcrumbs
+
+The exact filtering capabilities may depend on package and
+catalog configuration.
+
+============================================================
+16. COLLECTIONS
+============================================================
+
+Stores should support curated collections.
+
+Examples:
+
+- New Arrivals
+- Summer Collection
+- Best Sellers
+- Sale
+- Eid Collection
+- Featured Collection
+
+Collections may be:
+
+- Manual
+- Rule-based
+- Scheduled
+
+The collection engine must remain tenant-scoped.
+
+============================================================
+17. SEARCH
+============================================================
+
+Storefront search should support:
+
+- Product Name
+- SKU
+- Category
+- Brand
+- Tags
+- Attributes
+- Relevant searchable content
+
+Possible advanced capabilities:
+
+- Typo tolerance
+- Search suggestions
+- Popular searches
+- Recent searches
+- Search filters
+- Search analytics
+- AI-assisted search in eligible packages
+
+Search must never return another tenant's data.
+
+============================================================
+18. FILTERING
+============================================================
+
+Product filtering may include:
+
+- Category
+- Price
+- Brand
+- Availability
+- Attributes
+- Variants
+- Rating
+- Tags
+- Collection
+
+Filters should be dynamically generated where appropriate
+from the tenant's catalog.
+
+============================================================
+19. SORTING
+============================================================
+
+Supported sorting options may include:
+
+- Relevance
+- Newest
+- Price Low to High
+- Price High to Low
+- Popularity
+- Best Selling
+- Rating
+- Featured
+
+The store should be able to configure default sorting.
+
+============================================================
+20. CART
+============================================================
+
+Cart must support:
+
+- Add Product
+- Remove Product
+- Update Quantity
+- Variant Selection
+- Price Recalculation
+- Discount Codes
+- Shipping Estimate where applicable
+- Tax Estimate where applicable
+- Cart Notes where enabled
+- Save Cart where supported
+
+Cart data must be isolated per store.
+
+============================================================
+21. CART VALIDATION
+============================================================
+
+Before checkout, the system must validate:
+
+- Product Exists
+- Product Is Active
+- Variant Is Valid
+- Price Is Current
+- Stock Is Available
+- Store Is Active
+- Applicable Discounts
+- Shipping Rules
+- Package Rules
+- Cart Limits
+
+The client must never be trusted for final cart values.
+
+============================================================
+22. CHECKOUT
+============================================================
+
+Checkout should support a configurable flow.
+
+Core information:
+
+- Customer Name
+- Phone
+- Email where applicable
+- Shipping Address
+- Billing Address
+- Shipping Method
+- Payment Method
+- Order Notes
+- Coupon / Discount
+- Order Summary
+
+Guest checkout may be supported.
+
+Registered customer checkout should reuse customer identity
+from the Customer Account system.
+
+============================================================
+23. GUEST CHECKOUT
+============================================================
+
+Guest checkout should allow customers to purchase without
+creating an account when the store enables it.
+
+The system should still create the required customer/order
+records securely.
+
+Guest customers may later be invited to create an account.
+
+============================================================
+24. CUSTOMER ACCOUNT
+============================================================
+
+Customer accounts should support:
+
+- Profile
+- Contact Details
+- Saved Addresses
+- Order History
+- Order Details
+- Wishlist
+- Saved Preferences
+- Password Management
+- Notifications
+- Logout
+- Account Deactivation where supported
+
+Customer identity must be scoped correctly to the store.
+
+============================================================
+25. MULTI-STORE CUSTOMER IDENTITY
+============================================================
+
+A platform user may potentially interact with multiple stores.
+
+The storefront must not assume that a customer account in one
+store automatically grants access to another store's customer
+data.
+
+Store-level customer identity and permissions must be enforced.
+
+============================================================
+26. WISHLIST
+============================================================
+
+Wishlist may support:
+
+- Add Product
+- Remove Product
+- View Wishlist
+- Move to Cart
+- Availability Status
+
+Wishlist access may be package/configuration dependent.
+
+============================================================
+27. PRODUCT REVIEWS
+============================================================
+
+Where enabled, reviews may support:
+
+- Rating
+- Review Text
+- Customer Name
+- Verified Purchase Indicator
+- Images where supported
+- Moderation
+- Review Status
+
+Store administrators must control moderation.
+
+Review content must be tenant-scoped.
+
+============================================================
+28. COUPONS AND DISCOUNTS
+============================================================
+
+The storefront should display applicable discounts.
+
+Potential discount types:
+
+- Percentage
+- Fixed Amount
+- Product Discount
+- Category Discount
+- Collection Discount
+- Minimum Order Discount
+- Buy X Get Y
+- Free Shipping
+- Customer-specific
+- Time-limited Promotion
+
+The detailed discount engine will be defined separately.
+
+============================================================
+29. SHIPPING DISPLAY
+============================================================
+
+The storefront should display available shipping methods based
+on:
+
+- Customer location
+- Shipping zone
+- Cart contents
+- Product restrictions
+- Order value
+- Shipping rules
+
+Examples:
+
+- Standard Delivery
+- Express Delivery
+- Local Delivery
+- Store Pickup
+- Free Shipping
+
+============================================================
+30. PAYMENT DISPLAY
+============================================================
+
+The storefront should show only valid payment methods for the
+current store and order.
+
+Potential methods:
+
+- Cash on Delivery
+- Bank Transfer
+- JazzCash
+- Easypaisa
+- Online Payment Gateway
+- Store-specific payment methods
+
+The payment architecture must remain gateway-agnostic.
+
+============================================================
+31. ORDER CONFIRMATION
+============================================================
+
+After successful order creation, the customer should receive:
+
+- Order Number
+- Order Status
+- Items
+- Quantities
+- Pricing
+- Shipping
+- Payment Method
+- Total
+- Delivery Information
+- Customer Support Information
+
+Order confirmation should not expose internal administrative
+data.
+
+============================================================
+32. ORDER TRACKING
+============================================================
+
+Where enabled, customers should be able to view:
+
+- Order Placed
+- Order Confirmed
+- Processing
+- Packed
+- Shipped
+- Out for Delivery
+- Delivered
+- Cancelled
+- Returned
+- Refunded
+
+Courier tracking may be integrated where supported.
+
+============================================================
+33. NOTIFICATIONS
+============================================================
+
+Storefront events may trigger:
+
+- Email
+- SMS
+- WhatsApp
+- In-App
+- Browser/PWA notifications
+
+Potential events:
+
+- Order Confirmation
+- Payment Confirmation
+- Order Status Change
+- Shipment
+- Delivery
+- Cancellation
+- Refund
+- Account Verification
+- Password Reset
+- Promotional Messages
+
+The notification engine is defined in the relevant platform
+module.
+
+============================================================
+34. WHATSAPP-FIRST EXPERIENCE
+============================================================
+
+For Pakistan-focused stores, WhatsApp may be a prominent
+customer communication channel.
+
+Possible storefront functions:
+
+- WhatsApp Contact Button
+- Order Confirmation
+- Order Status Updates
+- Customer Support
+- Abandoned Cart communication where legally and technically
+  permitted
+- Product inquiry
+
+Exact implementation will be defined in the Notifications and
+Integration modules.
+
+============================================================
+35. THEME SYSTEM
+============================================================
+
+The storefront must use a centralized theme framework.
+
+A Theme should control:
+
+- Color System
+- Typography
+- Spacing
+- Border Radius
+- Shadows
+- Buttons
+- Cards
+- Header
+- Footer
+- Product Cards
+- Product Page Layout
+- Category Layout
+- Checkout Presentation
+- Forms
+- Badges
+- Banners
+- Sections
+- Responsive behavior
+- Visual tokens
+
+Theme configuration must be tenant-scoped.
+
+============================================================
+36. READY-MADE THEMES
+============================================================
+
+Umar Techy should provide a library of ready-made themes.
+
+Example categories:
+
+- Fashion
+- Electronics
+- Cosmetics
+- Grocery
+- Restaurant
+- Jewelry
+- General Store
+- Furniture
+- Sports
+- Luxury
+- Minimal
+- Modern
+
+The exact initial theme library will be defined in Module 17.
+
+============================================================
+37. THEME CUSTOMIZATION
+============================================================
+
+Store owners may customize supported theme settings.
+
+Potential controls:
+
+- Primary Color
+- Secondary Color
+- Accent Color
+- Background
+- Text Color
+- Button Style
+- Card Style
+- Border Radius
+- Font Selection
+- Header Style
+- Footer Style
+- Product Card Style
+- Layout Density
+
+Customization must use validated configuration rather than
+allowing unsafe arbitrary code injection.
+
+============================================================
+38. BRANDING
+============================================================
+
+Store branding should support:
+
+- Logo
+- Favicon
+- Store Name
+- Tagline
+- Brand Colors
+- Social Links
+- Contact Information
+- Business Address
+- Support Information
+- Footer Copyright
+- Brand Images
+
+Brand assets must be tenant-isolated.
+
+============================================================
+39. TYPOGRAPHY
+============================================================
+
+Typography should be configurable through approved font
+definitions.
+
+The platform should support:
+
+- Heading Font
+- Body Font
+- Button Font
+- Price Font
+- Optional Accent Font
+
+Font loading must consider performance.
+
+For multilingual stores, typography must support appropriate
+Unicode and script rendering.
+
+============================================================
+40. RTL / LTR SUPPORT
+============================================================
+
+The storefront architecture should support:
+
+- LTR
+- RTL
+
+This is important for Urdu and Arabic-oriented stores.
+
+Layout logic must not depend on hard-coded left/right values
+where logical CSS properties can be used.
+
+============================================================
+41. LANGUAGE SUPPORT
+============================================================
+
+The platform should support multilingual storefronts.
+
+Potential languages:
+
+- English
+- Urdu
+- Arabic
+- Other languages in future
+
+Store-specific language availability should be configurable.
+
+Translated content should be stored and rendered safely.
+
+============================================================
+42. CURRENCY
+============================================================
+
+Storefront pricing must support configurable currencies.
+
+Potential requirements:
+
+- Currency Code
+- Currency Symbol
+- Decimal Precision
+- Thousand Separator
+- Decimal Separator
+- Currency Position
+
+Pakistan-focused stores should support PKR.
+
+The currency configuration must be tenant-scoped.
+
+============================================================
+43. TAX DISPLAY
+============================================================
+
+Where tax functionality is enabled, storefront should support:
+
+- Tax-inclusive pricing
+- Tax-exclusive pricing
+- Tax line display
+- Tax breakdown
+- Tax rules based on location where applicable
+
+Final tax architecture will be defined in the Tax/Billing
+modules.
+
+============================================================
+44. RESPONSIVE DESIGN
+============================================================
+
+The storefront must support:
+
+- Mobile
+- Tablet
+- Laptop
+- Desktop
+- Large Desktop
+
+Core interactions must remain usable across supported
+screen sizes.
+
+No critical checkout or purchasing function should depend on
+desktop-only behavior.
+
+============================================================
+45. MOBILE-FIRST CONSIDERATION
+============================================================
+
+The storefront should be designed with mobile commerce as a
+first-class use case.
+
+Priorities:
+
+- Fast page load
+- Touch-friendly controls
+- Simple navigation
+- Easy product browsing
+- Fast cart access
+- Fast checkout
+- Sticky purchase controls where appropriate
+- Optimized images
+- Minimal unnecessary scripts
+
+============================================================
+46. ACCESSIBILITY
+============================================================
+
+The storefront should follow modern accessibility principles.
+
+Requirements include:
+
+- Semantic HTML
+- Keyboard navigation
+- Focus visibility
+- Accessible labels
+- Form error messages
+- Alt text
+- Sufficient contrast
+- Screen-reader compatibility
+- Reduced motion support
+- Accessible buttons and links
+
+Accessibility must be considered during component design, not
+added only at the end.
+
+============================================================
+47. ANIMATION SYSTEM
+============================================================
+
+Animation must be independent from business logic.
+
+The storefront should support configurable animation profiles.
+
+Example:
+
+SIMPLE
+- Minimal transitions
+
+SMOOTH
+- Subtle hover and reveal effects
+
+MODERN
+- More interactive transitions
+
+PREMIUM
+- Advanced visual interactions
+
+The final animation system is defined in Module 18.
+
+============================================================
+48. REDUCED MOTION
+============================================================
+
+The storefront must respect user accessibility preferences.
+
+When reduced motion is requested:
+
+- Disable unnecessary animation
+- Reduce transition duration
+- Avoid distracting movement
+- Preserve usability
+
+============================================================
+49. PERFORMANCE
+============================================================
+
+Performance is a core storefront requirement.
+
+The system should prioritize:
+
+- Fast initial rendering
+- Image optimization
+- Lazy loading
+- Responsive images
+- Efficient CSS
+- Minimal JavaScript
+- Code splitting
+- Caching
+- CDN support
+- Server-side rendering or equivalent strategy where
+  appropriate
+- Efficient API calls
+
+============================================================
+50. IMAGE OPTIMIZATION
+============================================================
+
+Storefront images should support:
+
+- Multiple sizes
+- Responsive images
+- Compression
+- Modern image formats where supported
+- Lazy loading
+- Proper dimensions
+- Thumbnail generation
+- CDN delivery where available
+
+Original media should remain protected from unauthorized
+cross-tenant access.
+
+============================================================
+51. SEO FOUNDATION
+============================================================
+
+The storefront should support:
+
+- SEO-friendly URLs
+- Page Titles
+- Meta Descriptions
+- Canonical URLs
+- Open Graph metadata
+- Social sharing metadata
+- Structured Data
+- XML Sitemap
+- Robots configuration
+- Breadcrumb structured data
+- Product structured data
+- Organization / LocalBusiness data where applicable
+
+SEO configuration must be tenant-scoped.
+
+============================================================
+52. SEO-FRIENDLY URLS
+============================================================
+
+Examples:
+
+/products/product-name
+/category/category-name
+/collection/collection-name
+/pages/about
+
+Slugs must be:
+
+- Unique within appropriate tenant scope
+- Stable where possible
+- Validated
+- Safe
+- Search-engine friendly
+
+Slug changes should support redirect handling where appropriate.
+
+============================================================
+53. STRUCTURED DATA
+============================================================
+
+Where applicable, the storefront may generate structured data
+for:
+
+- Product
+- Offer
+- Aggregate Rating
+- Breadcrumb
+- Organization
+- Local Business
+- Website
+- Search Action
+
+Generated structured data must be based on current tenant data.
+
+============================================================
+54. SITEMAP
+============================================================
+
+Each public store should have its own sitemap strategy.
+
+The sitemap must contain only public URLs belonging to that
+store.
+
+No cross-tenant URL leakage is permitted.
+
+============================================================
+55. ROBOTS CONTROL
+============================================================
+
+The platform should support tenant-aware robots configuration.
+
+Store owners may eventually control search engine indexing for:
+
+- Entire store
+- Selected pages
+- Private/staging environments
+
+System restrictions must override unsafe configuration where
+necessary.
+
+============================================================
+56. ERROR PAGES
+============================================================
+
+The storefront should provide branded error states:
+
+- 404
+- 500
+- Product Not Found
+- Category Not Found
+- Store Unavailable
+- Subscription Restricted
+- Maintenance Mode
+- Checkout Error
+- Payment Error
+
+Error pages must not expose stack traces or sensitive
+information.
+
+============================================================
+57. MAINTENANCE MODE
+============================================================
+
+Store owners or authorized platform administrators may enable
+maintenance mode.
+
+Possible configuration:
+
+- Custom Message
+- Logo
+- Background
+- Estimated Return Time
+- Contact Information
+
+Authorized administrators should still be able to access
+management interfaces.
+
+============================================================
+58. STORE COMING SOON MODE
+============================================================
+
+Before launch, stores may use a Coming Soon page.
+
+Possible features:
+
+- Logo
+- Hero message
+- Launch date
+- Countdown
+- Contact
+- Email capture where enabled
+
+The page must not expose unfinished customer functionality.
+
+============================================================
+59. CONTENT MANAGEMENT
+============================================================
+
+The storefront should consume configurable content.
+
+Potential content types:
+
+- Pages
+- Banners
+- Sections
+- Announcements
+- FAQs
+- Testimonials
+- Blog posts
+- Promotional content
+- Footer content
+
+Content must be tenant-scoped.
+
+============================================================
+60. HOME PAGE BUILDER DIRECTION
+============================================================
+
+The architecture should support a section-based page builder.
+
+Example:
+
+Home Page
+  ↓
+Section 01 — Hero
+Section 02 — Categories
+Section 03 — Products
+Section 04 — Banner
+Section 05 — Testimonials
+Section 06 — Content
+Section 07 — Newsletter
+
+Each section may have:
+
+- Type
+- Order
+- Visibility
+- Configuration
+- Schedule
+- Theme variation
+
+The first implementation may use predefined sections before
+introducing a fully flexible visual builder.
+
+============================================================
+61. CUSTOM PAGES
+============================================================
+
+Store owners should be able to create pages such as:
+
+- About Us
+- Contact
+- FAQ
+- Size Guide
+- Shipping Information
+- Return Policy
+- Privacy Policy
+- Terms
+- Brand Story
+
+Custom page content must be sanitized and safely rendered.
+
+============================================================
+62. STORE POLICIES
+============================================================
+
+The storefront should provide configurable policy pages:
+
+- Privacy
+- Terms
+- Shipping
+- Returns
+- Refunds
+- Cancellation
+- Payment
+
+Checkout may require customer acknowledgement of selected
+policies.
+
+============================================================
+63. COOKIE / CONSENT SUPPORT
+============================================================
+
+Where required, the platform should support configurable
+cookie/consent behavior.
+
+The system should allow tenant-specific configuration while
+maintaining platform-level compliance requirements.
+
+============================================================
+64. MARKETING FEATURES
+============================================================
+
+Potential storefront marketing capabilities:
+
+- Discount banners
+- Promotional bars
+- Countdown timers
+- Featured collections
+- Product badges
+- Coupon entry
+- Newsletter signup
+- Referral links
+- Affiliate tracking
+- Social sharing
+
+Advanced marketing features may be package dependent.
+
+============================================================
+65. ABANDONED CART FOUNDATION
+============================================================
+
+The storefront should emit appropriate cart/customer events so
+that the platform can support abandoned-cart workflows.
+
+Potential channels:
+
+- Email
+- WhatsApp
+- SMS
+
+Consent, rate limits, and notification policies must be
+respected.
+
+============================================================
+66. PRODUCT RECOMMENDATIONS
+============================================================
+
+The storefront should support recommendation slots.
+
+Potential recommendation types:
+
+- Related Products
+- Similar Products
+- Frequently Bought Together
+- Recently Viewed
+- Best Sellers
+- Personalized Recommendations
+- AI Recommendations
+
+AI recommendations may be package dependent.
+
+============================================================
+67. RECENTLY VIEWED PRODUCTS
+============================================================
+
+Where enabled, storefront may maintain recently viewed products.
+
+The system should respect:
+
+- Privacy
+- Tenant isolation
+- Browser/session boundaries
+- Customer account state
+
+============================================================
+68. CART AND SESSION ISOLATION
+============================================================
+
+Cart/session state must be isolated by store.
+
+A customer shopping on Store A must never receive:
+
+- Store B cart
+- Store B pricing
+- Store B coupons
+- Store B checkout configuration
+
+Store context must be part of all relevant session operations.
+
+============================================================
+69. CACHE ISOLATION
+============================================================
+
+Caching is a major multi-tenant security boundary.
+
+Cache keys must include the correct tenant/store context.
+
+Examples:
+
+store:{tenant_id}:homepage
+store:{tenant_id}:products
+store:{tenant_id}:navigation
+store:{tenant_id}:theme
+
+Shared cache infrastructure must never cause cross-store data
+leakage.
+
+============================================================
+70. SEARCH INDEX ISOLATION
+============================================================
+
+If an external or centralized search index is used, documents
+must include tenant/store identifiers.
+
+Every search query must enforce tenant filtering.
+
+============================================================
+71. CDN AND MEDIA ISOLATION
+============================================================
+
+CDN/media URLs must prevent accidental cross-tenant exposure.
+
+Media access policy must distinguish:
+
+- Public storefront media
+- Private administrative media
+- Customer-private media
+
+============================================================
+72. SECURITY
+============================================================
+
+The storefront must protect against:
+
+- XSS
+- CSRF where applicable
+- SQL Injection
+- Injection through search/filter parameters
+- Broken access control
+- Tenant data leakage
+- Session abuse
+- Coupon manipulation
+- Price manipulation
+- Cart tampering
+- Checkout tampering
+- Open redirects
+- Unsafe file/content rendering
+- Sensitive data exposure
+
+Final security requirements will be expanded in the Security
+Blueprint.
+
+============================================================
+73. PRICE SECURITY
+============================================================
+
+Client-side displayed price must never be considered authoritative.
+
+Final order pricing must be calculated and validated by the
+server using current:
+
+- Product Price
+- Variant Price
+- Discounts
+- Taxes
+- Shipping
+- Currency Rules
+- Store Configuration
+
+============================================================
+74. INVENTORY SECURITY
+============================================================
+
+The storefront must not allow customers to directly manipulate
+inventory.
+
+Stock availability should be server-controlled.
+
+Concurrent checkout must be handled safely to reduce overselling.
+
+============================================================
+75. CHECKOUT SECURITY
+============================================================
+
+Checkout must validate all critical data server-side.
+
+Never trust:
+
+- Product ID alone
+- Price from client
+- Discount amount from client
+- Shipping amount from client
+- Tax amount from client
+- Payment status from client
+- Store ID supplied by client
+
+The server must derive authoritative values.
+
+============================================================
+76. RATE LIMITING
+============================================================
+
+Rate limits should apply to sensitive storefront operations.
+
+Examples:
+
+- Login
+- Registration
+- Password reset
+- Search
+- Coupon validation
+- Checkout
+- Order creation
+- Review submission
+- Contact forms
+- API calls
+
+Limits may vary by endpoint and risk.
+
+============================================================
+77. BOT / ABUSE PROTECTION
+============================================================
+
+The storefront should provide foundations for:
+
+- Bot detection
+- Rate limiting
+- CAPTCHA where necessary
+- Suspicious activity detection
+- Checkout abuse protection
+- Fake order protection
+
+The exact implementation may be package/infrastructure
+dependent.
+
+============================================================
+78. ANALYTICS EVENTS
+============================================================
+
+The storefront should generate structured events such as:
+
+- Page View
+- Product View
+- Search
+- Category View
+- Add to Cart
+- Remove from Cart
+- Begin Checkout
+- Payment Started
+- Order Completed
+- Wishlist Added
+- Coupon Applied
+- Review Submitted
+
+Events must include tenant context safely.
+
+============================================================
+79. ANALYTICS PRIVACY
+============================================================
+
+Analytics architecture should distinguish:
+
+- Store business analytics
+- Platform operational analytics
+- Customer personal data
+
+Only authorized store users should see store-specific business
+analytics.
+
+============================================================
+80. PWA
+============================================================
+
+Eligible stores should automatically support Progressive Web App
+capabilities.
+
+Potential features:
+
+- Installable storefront
+- App icon
+- Splash configuration
+- Offline shell
+- Cached assets
+- Push notifications where supported
+- Store-specific branding
+
+PWA configuration must remain tenant-aware.
+
+============================================================
+81. SOCIAL SHARING
+============================================================
+
+Product and content pages may support:
+
+- Facebook
+- WhatsApp
+- X
+- Other supported platforms
+
+Sharing metadata must use the correct tenant brand and URL.
+
+============================================================
+82. CUSTOMER SUPPORT
+============================================================
+
+The storefront may provide:
+
+- WhatsApp
+- Phone
+- Email
+- Contact Form
+- Live Chat
+- FAQ
+
+Support contact information must be store-specific.
+
+============================================================
+83. STOREFRONT CONFIGURATION HIERARCHY
+============================================================
+
+Configuration should conceptually follow:
+
+Platform Defaults
+      ↓
+Theme Defaults
+      ↓
+Package Defaults
+      ↓
+Store Configuration
+      ↓
+Page/Section Configuration
+      ↓
+Runtime Context
+
+The final precedence rules must be documented.
+
+============================================================
+84. PACKAGE ENTITLEMENT INTEGRATION
+============================================================
+
+Storefront capabilities must respect Module 04 entitlements.
+
+Examples:
+
+Basic:
+Core storefront features
+
+Business:
+Advanced storefront customization
+
+Premium:
+Advanced recommendations
+AI features
+Advanced analytics
+Premium themes
+Advanced integrations
+
+Exact package mapping will be defined in the Package Feature
+Matrix.
+
+============================================================
+85. THEME SWITCHING
+============================================================
+
+Store owners should eventually be able to change themes without
+losing:
+
+- Products
+- Orders
+- Customers
+- Categories
+- Domain
+- Store identity
+- Core content
+
+Theme-specific settings must be safely migrated or reset when
+required.
+
+============================================================
+86. PREVIEW MODE
+============================================================
+
+Store administrators should be able to preview storefront
+changes before publishing.
+
+Potential modes:
+
+- Draft
+- Preview
+- Published
+
+Preview must not accidentally become publicly accessible.
+
+============================================================
+87. PUBLISHING MODEL
+============================================================
+
+Where practical, storefront configuration should support:
+
+- Draft changes
+- Validation
+- Preview
+- Publish
+- Rollback
+
+This is especially useful for:
+
+- Theme changes
+- Homepage changes
+- Navigation
+- Banners
+- Content
+- Branding
+
+============================================================
+88. VERSIONING
+============================================================
+
+Important storefront configuration may support version history.
+
+Examples:
+
+- Theme Version
+- Homepage Version
+- Navigation Version
+- Content Version
+- Branding Version
+
+Versioning enables rollback and safer administration.
+
+============================================================
+89. SCHEDULED CONTENT
+============================================================
+
+The platform should support scheduled visibility for selected
+content.
+
+Examples:
+
+- Sale Banner starts Friday
+- Eid Collection starts on a specific date
+- Promotional banner ends automatically
+
+Scheduled content must use the store's configured timezone.
+
+============================================================
+90. STORE TIMEZONE
+============================================================
+
+Every store must have a configured timezone.
+
+The storefront should use the store timezone for:
+
+- Scheduled content
+- Promotions
+- Countdown timers
+- Order timestamps where appropriate
+- Business hours
+- Delivery estimates where applicable
+
+============================================================
+91. STORE LOCALE
+============================================================
+
+Store configuration should support:
+
+- Language
+- Locale
+- Currency
+- Number formatting
+- Date formatting
+- Time formatting
+- Directionality
+
+============================================================
+92. BUSINESS HOURS
+============================================================
+
+Where relevant, stores may define:
+
+- Opening hours
+- Closing hours
+- Holiday schedule
+- Delivery hours
+- Pickup hours
+
+This may affect storefront messaging and order availability.
+
+============================================================
+93. OUT-OF-STOCK EXPERIENCE
+============================================================
+
+Out-of-stock products should support configurable behavior:
+
+- Show as out of stock
+- Disable add to cart
+- Allow waitlist
+- Hide product
+- Show alternative products
+
+Store configuration determines the behavior.
+
+============================================================
+94. PRODUCT VISIBILITY
+============================================================
+
+Products may have visibility states such as:
+
+- Published
+- Draft
+- Scheduled
+- Hidden
+- Archived
+
+Only appropriate public products should appear in storefront
+search, category pages, recommendations, and sitemaps.
+
+============================================================
+95. CATEGORY VISIBILITY
+============================================================
+
+Categories may similarly be:
+
+- Published
+- Hidden
+- Scheduled
+- Archived
+
+Navigation and SEO output must respect visibility state.
+
+============================================================
+96. SEO AND STORE STATUS
+============================================================
+
+When a store is suspended, archived, or intentionally private,
+SEO behavior should be controlled to avoid misleading search
+engine indexing.
+
+Potential behavior:
+
+- Noindex
+- Controlled status page
+- Temporary removal
+- Redirect where configured
+
+Exact SEO lifecycle behavior will be defined separately.
+
+============================================================
+97. OBSERVABILITY
+============================================================
+
+The platform should monitor storefront health.
+
+Metrics may include:
+
+- Response Time
+- Error Rate
+- Availability
+- Page Performance
+- Checkout Errors
+- Payment Errors
+- Search Errors
+- API Errors
+- Traffic
+- Resource Usage
+
+Store-specific operational data must be isolated from other
+tenants.
+
+============================================================
+98. STORE HEALTH INTEGRATION
+============================================================
+
+Module 05 should expose storefront health signals to the
+Super Admin / Store Health system.
+
+Potential signals:
+
+Storefront:
+HEALTHY
+
+Storefront:
+DEGRADED
+
+Storefront:
+ERROR
+
+Storefront:
+UNAVAILABLE
+
+The exact monitoring architecture is defined separately.
+
+============================================================
+99. HIGH-LEVEL COMPONENT ARCHITECTURE
+============================================================
+
+Conceptual storefront components:
+
+- Tenant Resolver
+- Store Context Provider
+- Theme Provider
+- Branding Provider
+- Locale Provider
+- Navigation Engine
+- Content Engine
+- Catalog API
+- Search Service
+- Cart Service
+- Checkout Service
+- Customer Account Service
+- Recommendation Service
+- Notification Integration
+- SEO Engine
+- Analytics Engine
+- PWA Layer
+- Media Delivery Layer
+
+============================================================
+100. HIGH-LEVEL STOREFRONT REQUEST FLOW
+============================================================
+
+Browser
+  ↓
+Domain Resolution
+  ↓
+Tenant Resolution
+  ↓
+Store Status
+  ↓
+Store Configuration
+  ↓
+Theme / Branding
+  ↓
+Page Configuration
+  ↓
+Tenant Catalog / Content
+  ↓
+SEO Metadata
+  ↓
+Analytics Context
+  ↓
+Render
+  ↓
+Customer Interaction
+  ↓
+Tenant-Scoped API
+
+============================================================
+101. HIGH-LEVEL PRODUCT PURCHASE FLOW
+============================================================
+
+Customer
+  ↓
+Product Page
+  ↓
+Select Variant
+  ↓
+Add to Cart
+  ↓
+Server Cart Validation
+  ↓
+Cart
+  ↓
+Checkout
+  ↓
+Server Price Recalculation
+  ↓
+Shipping Selection
+  ↓
+Payment Selection
+  ↓
+Order Validation
+  ↓
+Payment Processing
+  ↓
+Order Creation
+  ↓
+Confirmation
+  ↓
+Notifications
+  ↓
+Customer Order Tracking
+
+============================================================
+102. FAILURE HANDLING
+============================================================
+
+The storefront should gracefully handle:
+
+- Product unavailable
+- Price changed
+- Stock changed
+- Coupon expired
+- Shipping unavailable
+- Payment failed
+- Session expired
+- Store suspended
+- Network failure
+- API timeout
+- Temporary service failure
+
+Errors should be:
+
+- Customer-friendly
+- Actionable
+- Non-sensitive
+- Tenant-branded where appropriate
+
+============================================================
+103. PERFORMANCE TESTING
+============================================================
+
+Testing should include:
+
+- Mobile performance
+- Desktop performance
+- Large catalog
+- Large category
+- High search volume
+- Large cart
+- Checkout load
+- Image-heavy pages
+- Theme switching
+- Cache behavior
+- CDN behavior
+- Concurrent users
+- High traffic
+- Slow network conditions
+
+============================================================
+104. SECURITY TESTING
+============================================================
+
+Mandatory tests should include:
+
+- Cross-tenant product access
+- Cross-tenant cart access
+- Cross-tenant customer access
+- Cross-tenant content access
+- Cross-tenant media access
+- Cross-tenant search
+- Cross-tenant cache poisoning
+- Domain misrouting
+- Price tampering
+- Coupon tampering
+- Checkout manipulation
+- Unauthorized preview access
+- Unauthorized draft access
+- Session isolation
+- API authorization
+- XSS
+- CSRF where applicable
+- Open redirect
+- Rate-limit bypass
+
+============================================================
+105. SEO TESTING
+============================================================
+
+Test:
+
+- Canonical URLs
+- Sitemap
+- Robots
+- Product structured data
+- Breadcrumbs
+- Metadata
+- Open Graph
+- Language metadata
+- RTL pages
+- 404 behavior
+- Redirects
+- Duplicate URL handling
+
+============================================================
+106. ACCESSIBILITY TESTING
+============================================================
+
+Test:
+
+- Keyboard navigation
+- Screen reader
+- Focus states
+- Form labels
+- Error messaging
+- Contrast
+- Reduced motion
+- Mobile touch targets
+- RTL accessibility
+
+============================================================
+107. HIGH-LEVEL DATA ENTITIES
+============================================================
+
+Potential entities:
+
+- StorefrontConfiguration
+- Theme
+- StoreTheme
+- ThemeSettings
+- BrandingSettings
+- Navigation
+- NavigationItem
+- Page
+- PageSection
+- PageVersion
+- Banner
+- Announcement
+- Collection
+- SEOConfiguration
+- StoreLocale
+- StoreCurrency
+- StoreBusinessHours
+- StorePolicy
+- StorefrontSession
+- Cart
+- CartItem
+- Wishlist
+- CustomerPreference
+- Review
+- ReviewModeration
+- SearchConfiguration
+- RecommendationConfiguration
+
+Exact database structures will be defined in the Database
+Blueprint.
+
+============================================================
+108. REQUIRED ADMIN CAPABILITIES
+============================================================
+
+Store Admin should eventually be able to manage:
+
+- Storefront Settings
+- Theme
+- Branding
+- Navigation
+- Homepage
+- Pages
+- Banners
+- Announcements
+- Product Display
+- SEO
+- Social Links
+- Policies
+- Language
+- Currency
+- Business Hours
+- Maintenance Mode
+- Coming Soon Mode
+- Preview
+- Publish
+- Scheduled Content
+
+Access must be permission-controlled through Module 02.
+
+============================================================
+109. SUPER ADMIN CAPABILITIES
+============================================================
+
+Umar Techy Super Admin should eventually be able to:
+
+- View Storefront Status
+- Preview Store
+- View Theme Assignment
+- View Domain Mapping
+- View Store Health
+- Manage Approved Themes
+- Manage Theme Availability
+- Manage Platform Storefront Defaults
+- Manage Global Safety Controls
+- Troubleshoot storefront issues
+
+Super Admin must not casually access tenant customer data
+without appropriate authorization and audit controls.
+
+============================================================
+110. DEVELOPMENT PRINCIPLE
+============================================================
+
+The storefront must be built as a reusable Core Storefront
+Engine.
+
+Do NOT create:
+
+Store A Storefront Code
+Store B Storefront Code
+Store C Storefront Code
+
+Instead:
+
+Core Storefront
++
+Tenant Configuration
++
+Theme
++
+Branding
++
+Content
++
+Catalog
++
+Entitlements
+
+This is a central architectural requirement of the Umar Techy
+E-Commerce Platform.
+
+============================================================
+111. CLAUDE DEVELOPMENT REQUIREMENT
+============================================================
+
+Claude should implement the storefront according to the
+approved Project Bible and detailed module blueprints.
+
+Claude responsibilities should include:
+
+- Architecture implementation
+- Components
+- Pages
+- Tenant resolution
+- Theme integration
+- API integration
+- Validation
+- Testing
+- Security
+- Accessibility
+- Performance optimization
+- SEO
+- Refactoring
+- Documentation
+
+VS Code should primarily be used for:
+
+- Local verification
+- Real browser testing
+- Real checkout testing
+- Visual verification
+- Device testing
+- Production troubleshooting
+- Deployment verification
+
+The same functionality should not be independently rebuilt
+manually in VS Code after Claude implementation.
+
+============================================================
+112. MODULE DEPENDENCIES
+============================================================
+
+Module 05 depends on:
+
+- Module 01 — Complete Platform Structure
+- Module 02 — Authentication, Users, Roles & Permissions
+- Module 03 — Multi-Tenant & Store Management
+- Module 04 — Subscription, Packages & Feature Entitlements
+
+It will integrate strongly with:
+
+- Catalog / Products
+- Cart
+- Checkout
+- Orders
+- Payments
+- Shipping
+- Customers
+- Theme
+- Branding
+- Animation
+- Domain
+- Notifications
+- SEO
+- Analytics
+- PWA
+- AI
+- Security
+- Billing
+
+============================================================
+113. REQUIRED FOLLOW-UP ARTIFACTS
+============================================================
+
+The following detailed artifacts should be created later:
+
+1. Storefront Information Architecture
+2. Complete Page Map
+3. Component Architecture
+4. Theme Architecture
+5. Theme Token Specification
+6. Storefront Design System
+7. Homepage Section Library
+8. Product Page Blueprint
+9. Category / Collection Blueprint
+10. Search Blueprint
+11. Cart Blueprint
+12. Checkout UX Blueprint
+13. Customer Account Blueprint
+14. SEO Blueprint
+15. PWA Blueprint
+16. Accessibility Checklist
+17. Storefront API Contract
+18. Storefront State Management Blueprint
+19. Storefront Performance Blueprint
+20. Storefront Security Test Matrix
+
+============================================================
+114. FINAL ARCHITECTURAL RULES
+============================================================
+
+1. One Core Storefront Engine.
+2. Every request must resolve a tenant.
+3. Tenant isolation is mandatory.
+4. Theme and branding must be configuration-driven.
+5. Package restrictions must be enforced server-side.
+6. Client-side prices are never authoritative.
+7. Search must be tenant-scoped.
+8. Cache must be tenant-scoped.
+9. Media must be tenant-safe.
+10. Cart must be tenant-scoped.
+11. Checkout must validate server-side.
+12. SEO must be tenant-aware.
+13. PWA must be tenant-aware.
+14. RTL/LTR must be supported architecturally.
+15. Accessibility is a first-class requirement.
+16. Performance is a first-class requirement.
+17. Store data must survive theme changes.
+18. Store data must survive package changes.
+19. Theme changes must not create a new store.
+20. Customer domains must resolve to the correct tenant.
+21. Draft/preview data must not leak publicly.
+22. Suspended stores must show controlled states.
+23. Errors must never expose sensitive internals.
+24. All privileged administration must be permission-controlled.
+25. All critical cross-tenant boundaries must be tested.
+
+============================================================
+115. STATUS
+============================================================
+
+Module 05 Status:
+STOREFRONT / CUSTOMER-FACING WEBSITE — INITIALIZED
+
+Version:
+1.0
+
+This module defines the high-level storefront architecture,
+customer experience, tenant-aware rendering, theme/branding
+integration, shopping flow, performance, accessibility, SEO,
+PWA, security, and required follow-up artifacts.
+
+Detailed catalog, cart, checkout, payment, shipping, theme,
+animation, SEO, PWA, AI, analytics, and security blueprints
+will be defined in their respective modules.
+
+============================================================
+END OF MODULE 05
+============================================================

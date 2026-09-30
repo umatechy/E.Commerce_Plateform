@@ -1,0 +1,3437 @@
+============================================================
+UMAR TECHY
+E-COMMERCE PLATFORM — MASTER PROJECT BLUEPRINT
+MODULE 29 — BILLING, INVOICES & RENEWALS
+VERSION 1.0
+============================================================
+
+DOCUMENT STATUS
+------------------------------------------------------------
+Module: 29
+Name: Billing, Invoices & Renewals
+Platform: Umar Techy E-Commerce Platform
+Architecture: Core Multi-Tenant E-Commerce SaaS
+Primary Principle: One Core Platform, Many Isolated Stores
+Document Language: English
+Implementation Target: Production-Grade, Scalable, Secure
+============================================================
+
+
+1. MODULE PURPOSE
+------------------------------------------------------------
+
+Module 29 defines the complete Billing, Subscription Billing,
+Invoices, Renewals, Charges, Credits, Refunds, Dunning, Payment
+Collection, Billing Cycles, Package Billing, Add-ons, Usage
+Billing, Reseller Billing, Hosting/Domain Billing foundations,
+Billing Notifications, Reconciliation, and Financial Document
+framework for the Umar Techy E-Commerce Platform.
+
+The module must support:
+
+- Store package subscriptions.
+- Basic, Business, Premium and future package billing.
+- Monthly, annual, and configurable billing intervals.
+- Trials and trial conversion.
+- One-time charges.
+- Recurring charges.
+- Add-ons.
+- Usage-based charges.
+- Reseller pricing.
+- Discounts and promotional billing.
+- Credits and adjustments.
+- Invoices.
+- Invoice line items.
+- Payment collection.
+- Payment retries.
+- Failed-payment handling.
+- Grace periods.
+- Suspension and reactivation.
+- Cancellation.
+- Renewal.
+- Upgrade/downgrade billing.
+- Proration foundations.
+- Refunds and credit notes.
+- Tax foundations.
+- Currency handling.
+- Billing profiles.
+- Payment method references.
+- Billing provider integration.
+- Manual payments.
+- Bank transfer verification.
+- Billing reconciliation.
+- Financial auditability.
+- Customer billing portal.
+- Store-owner billing portal.
+- Super Admin billing controls.
+- Affiliate/reseller commission integration.
+- Hosting/domain billing foundations.
+- Future marketplace/add-on billing.
+- Strict multi-tenant isolation.
+
+This module is the authoritative source for platform subscription
+billing records, invoices, billing cycles, renewals, and billing
+financial documents.
+
+It must not replace Module 12 as the authoritative source for
+customer checkout payment transactions.
+
+It must not replace Module 04 as the authoritative source for
+feature entitlements.
+
+
+2. CORE ARCHITECTURAL PRINCIPLES
+------------------------------------------------------------
+
+2.1 One Core Billing Engine
+
+All platform billing must use one Core Billing Engine.
+
+Do not create separate billing engines for:
+
+- Basic.
+- Business.
+- Premium.
+- Resellers.
+- Hosting.
+- Domains.
+- Add-ons.
+- Marketplace extensions.
+
+Commercial behavior must be configuration-driven.
+
+2.2 Multi-Tenant by Design
+
+Every tenant billing account, subscription, invoice, credit,
+payment reference, billing profile, and usage record must be
+tenant-scoped unless explicitly platform-level.
+
+Tenant resolution must occur before tenant-owned billing data is
+accessed.
+
+2.3 Server Authority
+
+The server is authoritative for:
+
+- Package price.
+- Subscription amount.
+- Billing interval.
+- Discount.
+- Tax.
+- Credit.
+- Invoice total.
+- Renewal date.
+- Proration.
+- Payment state.
+- Subscription state.
+- Usage charge.
+- Reseller price.
+- Add-on price.
+
+Client-provided financial values must never be trusted.
+
+2.4 Immutable Financial Documents
+
+Issued invoices and credit notes must be immutable.
+
+Corrections must use:
+
+- Credit notes.
+- Debit adjustments.
+- Replacement invoices.
+- Reversal records.
+- Authorized adjustment records.
+
+Do not silently rewrite historical issued documents.
+
+2.5 Separation of Subscription and Payment
+
+Subscription state describes commercial service access.
+
+Payment state describes financial collection.
+
+Invoice state describes the financial document.
+
+These must remain separate.
+
+2.6 Entitlement Separation
+
+Module 04 determines what the store is entitled to use.
+
+Module 29 determines what the store is billed for.
+
+Module 29 may trigger entitlement changes through approved
+interfaces, but must not duplicate entitlement logic.
+
+
+3. BILLING SCOPE
+------------------------------------------------------------
+
+Billing may cover:
+
+- Platform packages.
+- Package subscriptions.
+- Add-ons.
+- Premium themes where commercially configured.
+- Marketplace extensions.
+- Hosting.
+- Domain registration/renewal.
+- Additional storage.
+- Additional bandwidth.
+- Additional users.
+- Additional orders.
+- AI usage.
+- API usage.
+- Communication usage.
+- Other metered services.
+
+Each billable item must have a unique product/service definition.
+
+
+4. BILLABLE PRODUCT MODEL
+------------------------------------------------------------
+
+Billable products must support:
+
+- Product ID.
+- Product type.
+- Name.
+- Description.
+- Currency.
+- Base price.
+- Billing model.
+- Billing interval.
+- Tax behavior.
+- Status.
+- Version.
+- Effective dates.
+
+Billable product types:
+
+- SUBSCRIPTION_PACKAGE.
+- ADD_ON.
+- USAGE_METER.
+- HOSTING.
+- DOMAIN.
+- MARKETPLACE_EXTENSION.
+- SERVICE.
+- ONE_TIME_FEE.
+- SETUP_FEE.
+- CREDIT.
+- OTHER.
+
+
+5. BILLING MODELS
+------------------------------------------------------------
+
+Supported billing models:
+
+- ONE_TIME.
+- RECURRING.
+- USAGE_BASED.
+- HYBRID.
+- PREPAID.
+- POSTPAID.
+
+Future models may include:
+
+- SEAT_BASED.
+- VOLUME_BASED.
+- TIERED_USAGE.
+- FREEMIUM.
+- CONTRACT.
+- CUSTOM_ENTERPRISE.
+
+
+6. BILLING INTERVALS
+------------------------------------------------------------
+
+Supported intervals:
+
+- DAILY.
+- WEEKLY.
+- MONTHLY.
+- QUARTERLY.
+- HALF_YEARLY.
+- YEARLY.
+- CUSTOM.
+
+Billing interval rules must be explicit.
+
+Month-end behavior must be deterministic.
+
+Example:
+
+A subscription beginning on January 31 must have a documented
+February renewal behavior.
+
+Do not rely on provider-specific date behavior without normalization.
+
+
+7. SUBSCRIPTION LIFECYCLE
+------------------------------------------------------------
+
+Subscription states:
+
+- DRAFT.
+- PENDING.
+- TRIAL.
+- ACTIVE.
+- PAST_DUE.
+- GRACE_PERIOD.
+- SUSPENDED.
+- CANCEL_PENDING.
+- CANCELLED.
+- EXPIRED.
+- TERMINATED.
+- ARCHIVED.
+
+State transitions must be explicit and auditable.
+
+
+8. SUBSCRIPTION ENTITY
+------------------------------------------------------------
+
+A subscription should include:
+
+- Subscription ID.
+- Tenant ID.
+- Billing account ID.
+- Package/product ID.
+- Product version.
+- Status.
+- Billing interval.
+- Currency.
+- Base amount.
+- Discount amount.
+- Tax amount.
+- Total recurring amount.
+- Start date.
+- Trial start/end.
+- Current period start/end.
+- Next billing date.
+- Cancellation date.
+- Cancellation reason.
+- Provider subscription ID.
+- Created/updated timestamps.
+
+Historical pricing must be preserved.
+
+
+9. BILLING ACCOUNT
+------------------------------------------------------------
+
+Billing account represents the commercial billing identity for a
+store or platform customer.
+
+Fields may include:
+
+- Billing Account ID.
+- Tenant ID.
+- Legal/business name.
+- Billing email.
+- Billing phone.
+- Billing address.
+- Tax information.
+- Country.
+- Currency.
+- Default payment method reference.
+- Billing status.
+- Credit balance.
+- Account balance.
+- External billing references.
+
+Billing account must not expose sensitive payment credentials.
+
+
+10. BILLING PROFILE
+------------------------------------------------------------
+
+Billing profile may include:
+
+- Name.
+- Business name.
+- Address.
+- City.
+- Province/state.
+- Postal code.
+- Country.
+- Phone.
+- Email.
+- Tax identifier.
+- Invoice preferences.
+- Currency preference.
+
+Billing profile changes must not rewrite historical invoice snapshots.
+
+
+11. BILLING ADDRESS SNAPSHOT
+------------------------------------------------------------
+
+Every issued invoice must contain an immutable billing address
+snapshot.
+
+Later billing-profile changes must not modify historical invoices.
+
+
+12. PRICE VERSIONING
+------------------------------------------------------------
+
+Prices must be versioned.
+
+A price change creates a new price version.
+
+Existing subscriptions must follow an explicit policy:
+
+- Grandfathered.
+- Automatically updated.
+- Updated at next renewal.
+- Customer approval required.
+- Contract-specific.
+
+Historical invoices always retain the price actually billed.
+
+
+13. PACKAGE BILLING
+------------------------------------------------------------
+
+Basic, Business, Premium and future packages must use the same
+billing engine.
+
+Each package may define:
+
+- Monthly price.
+- Annual price.
+- Trial.
+- Included usage.
+- Overage rules.
+- Add-ons.
+- Setup fees.
+- Discounts.
+- Currency.
+- Regional pricing.
+
+Module 04 remains authoritative for package entitlements.
+
+
+14. PACKAGE PRICE VS ENTITLEMENT
+------------------------------------------------------------
+
+A package price must never be used as a substitute for feature
+authorization.
+
+Billing may determine that a package is paid.
+
+Module 04 determines the resulting entitlements.
+
+
+15. TRIALS
+------------------------------------------------------------
+
+Trial configuration may include:
+
+- Trial duration.
+- Trial package.
+- Trial features.
+- Trial limits.
+- Payment method requirement.
+- Auto-conversion.
+- Trial expiration behavior.
+
+Trial states must be explicit.
+
+Trial expiration must be idempotent.
+
+
+16. TRIAL WITHOUT PAYMENT METHOD
+------------------------------------------------------------
+
+The platform may support trials without requiring a payment method.
+
+At trial end:
+
+- Subscription may expire.
+- Customer may be asked to subscribe.
+- Store may enter grace period.
+- Store may be suspended.
+
+No automatic charge may occur without a valid authorized payment
+method and applicable customer agreement.
+
+
+17. TRIAL WITH PAYMENT METHOD
+------------------------------------------------------------
+
+Where supported, the system may collect a payment method reference
+during trial.
+
+The platform must clearly define:
+
+- Authorization.
+- Charge timing.
+- Renewal date.
+- Cancellation deadline.
+- Failed payment handling.
+
+Never store raw card credentials.
+
+
+18. RENEWAL ENGINE
+------------------------------------------------------------
+
+Renewal flow:
+
+1. Identify subscriptions due for renewal.
+2. Validate subscription state.
+3. Resolve current price policy.
+4. Resolve discounts.
+5. Resolve credits.
+6. Resolve tax.
+7. Resolve usage charges.
+8. Generate invoice.
+9. Attempt payment where configured.
+10. Update payment state.
+11. Update invoice state.
+12. Update subscription state.
+13. Update entitlements through Module 04.
+14. Emit events.
+15. Send notifications.
+16. Record audit trail.
+
+Renewal processing must be idempotent.
+
+
+19. RENEWAL DATE
+------------------------------------------------------------
+
+Renewal dates must use:
+
+- Subscription timezone.
+- Billing timezone.
+- Platform policy.
+
+Date calculation must handle:
+
+- Month-end.
+- Leap years.
+- Daylight-saving changes where applicable.
+- Timezone transitions.
+
+Pakistan deployments must still use explicit timezone configuration.
+
+
+20. INVOICE LIFECYCLE
+------------------------------------------------------------
+
+Invoice states:
+
+- DRAFT.
+- FINALIZED.
+- OPEN.
+- PAYMENT_PENDING.
+- PAID.
+- PARTIALLY_PAID.
+- PAST_DUE.
+- VOID.
+- UNCOLLECTIBLE.
+- REFUNDED.
+- PARTIALLY_REFUNDED.
+- CREDITED.
+- CANCELLED.
+
+An issued/finalized invoice must not be freely edited.
+
+
+21. INVOICE NUMBERING
+------------------------------------------------------------
+
+Invoice numbers must be:
+
+- Unique.
+- Sequential where required by policy.
+- Human-readable.
+- Tenant-scoped or platform-scoped according to policy.
+- Collision-resistant.
+- Immutable after issuance.
+
+Internal Invoice ID and customer-facing Invoice Number must be
+separate.
+
+
+22. INVOICE CONTENT
+------------------------------------------------------------
+
+Invoice should include:
+
+- Invoice number.
+- Invoice date.
+- Due date.
+- Billing period.
+- Seller information.
+- Customer/billing information.
+- Line items.
+- Quantity.
+- Unit price.
+- Discounts.
+- Tax.
+- Credits.
+- Subtotal.
+- Total.
+- Amount paid.
+- Amount due.
+- Currency.
+- Payment status.
+- Payment instructions.
+- Legal/business references.
+- Notes where applicable.
+
+Invoice content must be generated from server-authoritative data.
+
+
+23. INVOICE LINE ITEMS
+------------------------------------------------------------
+
+Line items may represent:
+
+- Package subscription.
+- Add-on.
+- Usage.
+- Hosting.
+- Domain.
+- Marketplace extension.
+- Setup fee.
+- Proration.
+- Discount.
+- Credit.
+- Tax.
+- Adjustment.
+
+Each line item must preserve:
+
+- Product/service reference.
+- Product version.
+- Description snapshot.
+- Quantity.
+- Unit amount.
+- Discount.
+- Tax.
+- Net amount.
+- Currency.
+- Billing period where applicable.
+
+
+24. INVOICE SNAPSHOT RULE
+------------------------------------------------------------
+
+Issued invoices must preserve historical snapshots of:
+
+- Product/service name.
+- Price.
+- Tax.
+- Discount.
+- Billing address.
+- Seller details.
+- Currency.
+- Terms where applicable.
+
+Changing current catalog data must not alter old invoices.
+
+
+25. DUE DATES
+------------------------------------------------------------
+
+Billing products may define:
+
+- Due immediately.
+- Net 7.
+- Net 15.
+- Net 30.
+- Custom due date.
+
+For automated subscriptions, payment may be due immediately unless
+the billing model explicitly supports invoicing terms.
+
+
+26. PAYMENT TERMS
+------------------------------------------------------------
+
+Payment terms must be configured per:
+
+- Billing account.
+- Product.
+- Program.
+- Reseller.
+- Contract.
+
+Do not silently change payment terms for active contracts.
+
+
+27. PAYMENT COLLECTION
+------------------------------------------------------------
+
+Module 29 integrates with Module 12 for payment collection.
+
+Supported billing payment methods may include:
+
+- Card payment provider.
+- Wallet.
+- Bank transfer.
+- Manual payment.
+- Local payment gateway.
+- Future automated payout/payment providers.
+
+Module 12 remains authoritative for payment transaction state.
+
+
+28. PAYMENT METHOD REFERENCES
+------------------------------------------------------------
+
+Billing may store a reference to a payment method.
+
+Allowed data:
+
+- Provider.
+- Method type.
+- Masked identifier.
+- Provider token/reference.
+- Expiry metadata where appropriate.
+- Status.
+
+Never store raw:
+
+- Card number.
+- CVV.
+- PIN.
+- Password.
+- Payment secret.
+
+
+29. PAYMENT ATTEMPTS
+------------------------------------------------------------
+
+A billing invoice may have multiple payment attempts.
+
+Each attempt must include:
+
+- Attempt ID.
+- Invoice ID.
+- Provider.
+- Provider transaction ID.
+- Amount.
+- Currency.
+- Status.
+- Failure code.
+- Failure message.
+- Timestamp.
+- Idempotency key.
+
+Successful payment must not be duplicated by retries.
+
+
+30. PAYMENT STATES
+------------------------------------------------------------
+
+Billing-facing payment states:
+
+- CREATED.
+- PENDING.
+- AUTHORIZED.
+- PAID.
+- FAILED.
+- CANCELLED.
+- REFUND_PENDING.
+- REFUNDED.
+- DISPUTED.
+- REVERSED.
+
+Module 12 remains the authoritative payment transaction engine.
+
+
+31. AUTOMATIC RENEWAL
+------------------------------------------------------------
+
+Subscriptions may support:
+
+- Auto-renew ON.
+- Auto-renew OFF.
+
+Auto-renew behavior must be visible to customers.
+
+Cancellation of auto-renew must not automatically erase current
+subscription access before the paid period ends unless policy says so.
+
+
+32. MANUAL RENEWAL
+------------------------------------------------------------
+
+Customers may manually renew subscriptions.
+
+Manual renewal must:
+
+- Create a valid invoice.
+- Prevent duplicate active billing periods.
+- Reuse or replace payment method as appropriate.
+- Update subscription only after successful financial confirmation.
+
+
+33. FAILED PAYMENT HANDLING
+------------------------------------------------------------
+
+When renewal payment fails:
+
+1. Mark payment attempt failed.
+2. Keep invoice unpaid/past due as applicable.
+3. Retry according to configured schedule.
+4. Notify customer.
+5. Enter grace period where configured.
+6. Restrict entitlements according to Module 04.
+7. Suspend if grace period expires.
+8. Preserve all records.
+
+Do not immediately delete customer data.
+
+
+34. DUNNING ENGINE
+------------------------------------------------------------
+
+Dunning supports:
+
+- Payment failure notifications.
+- Retry schedule.
+- Grace period.
+- Final warning.
+- Suspension.
+- Reactivation.
+
+Example configurable sequence:
+
+DAY 0 — payment failure
+DAY 1 — retry
+DAY 3 — notification
+DAY 5 — retry
+DAY 7 — warning
+DAY 10 — suspension
+
+Actual schedule must be configurable.
+
+
+35. RETRY POLICY
+------------------------------------------------------------
+
+Retry policy must support:
+
+- Maximum attempts.
+- Delay.
+- Exponential backoff.
+- Provider-specific rules.
+- Retryable vs non-retryable errors.
+- Customer notification.
+
+Never retry permanent failures indefinitely.
+
+
+36. GRACE PERIOD
+------------------------------------------------------------
+
+Grace period may be configured per package or platform policy.
+
+During grace:
+
+- Store may remain active.
+- Some entitlements may be restricted.
+- Billing notifications continue.
+- Payment retries continue.
+
+Module 04 determines actual feature access.
+
+
+37. SUSPENSION
+------------------------------------------------------------
+
+If billing remains unpaid:
+
+- Subscription may become SUSPENDED.
+- Entitlements may be reduced.
+- Store may enter limited mode.
+- Storefront may display billing suspension page.
+- Data remains preserved.
+
+Store lifecycle behavior is coordinated with Module 03.
+
+
+38. REACTIVATION
+------------------------------------------------------------
+
+Reactivation may occur after:
+
+- Successful payment.
+- Manual admin approval.
+- Valid billing arrangement.
+
+Reactivation must:
+
+- Restore subscription state.
+- Re-evaluate entitlements.
+- Preserve historical records.
+- Avoid duplicate billing.
+
+
+39. CANCELLATION
+------------------------------------------------------------
+
+Cancellation types:
+
+- Immediate.
+- End-of-period.
+- Scheduled.
+- Administrative.
+- Fraud/security.
+- Non-payment.
+
+Cancellation must capture:
+
+- Reason.
+- Actor.
+- Timestamp.
+- Effective date.
+- Refund treatment.
+
+
+40. CANCELLATION AT PERIOD END
+------------------------------------------------------------
+
+When end-of-period cancellation is selected:
+
+- Subscription remains active until period end.
+- Auto-renew stops.
+- Final paid access remains governed by entitlements.
+- Renewal invoice is not generated.
+- Subscription transitions to CANCELLED/EXPIRED at period end.
+
+
+41. IMMEDIATE CANCELLATION
+------------------------------------------------------------
+
+Immediate cancellation may trigger:
+
+- Access reduction.
+- Proration credit.
+- Refund where policy permits.
+- No refund.
+- Termination.
+
+The financial result must be explicit.
+
+
+42. REFUNDS
+------------------------------------------------------------
+
+Refunds may be:
+
+- Full.
+- Partial.
+- Invoice-level.
+- Line-item-level.
+- Payment-level.
+
+Refund must be linked to:
+
+- Invoice.
+- Payment transaction.
+- Subscription where applicable.
+- Reason.
+- Amount.
+- Currency.
+
+
+43. CREDIT NOTES
+------------------------------------------------------------
+
+Credit notes are required for correcting issued billing documents.
+
+Credit note fields:
+
+- Credit note number.
+- Original invoice.
+- Reason.
+- Line items.
+- Tax impact.
+- Amount.
+- Currency.
+- Issued date.
+- Status.
+
+Credit notes must be immutable after issuance.
+
+
+44. DEBIT ADJUSTMENTS
+------------------------------------------------------------
+
+Authorized billing adjustments may create debit records.
+
+Examples:
+
+- Missing charge.
+- Usage correction.
+- Contract adjustment.
+- Administrative fee.
+
+Adjustments must be separately auditable.
+
+
+45. ACCOUNT CREDIT
+------------------------------------------------------------
+
+Billing accounts may maintain a credit balance.
+
+Credit sources:
+
+- Refund converted to credit.
+- Promotional credit.
+- Manual authorized credit.
+- Service recovery credit.
+- Referral reward where configured.
+
+Credit usage must be recorded.
+
+
+46. CREDIT APPLICATION
+------------------------------------------------------------
+
+Credit may apply to:
+
+- Next invoice.
+- Specific product.
+- Specific service.
+- Specific tenant.
+- Specific period.
+
+Credit rules must define:
+
+- Expiration.
+- Transferability.
+- Refundability.
+- Priority.
+
+
+47. PRORATION
+------------------------------------------------------------
+
+Proration foundation must support:
+
+- Upgrade mid-cycle.
+- Downgrade mid-cycle.
+- Add-on activation.
+- Add-on removal.
+- Cancellation.
+
+Proration must calculate:
+
+- Unused value.
+- New plan value.
+- Credit.
+- Charge.
+- Net adjustment.
+
+The exact proration policy must be configurable.
+
+
+48. UPGRADE
+------------------------------------------------------------
+
+Upgrade flow:
+
+- Validate target package.
+- Check entitlements.
+- Calculate price difference/proration.
+- Generate invoice or charge.
+- Confirm payment where required.
+- Update subscription.
+- Update Module 04 entitlements.
+- Record audit.
+
+
+49. DOWNGRADE
+------------------------------------------------------------
+
+Downgrade flow must consider:
+
+- Current paid period.
+- Feature removal.
+- Usage above new limits.
+- Data preservation.
+- Proration.
+- Next renewal pricing.
+
+Downgrade must not silently delete data.
+
+Module 04 controls entitlement impact.
+
+
+50. ADD-ONS
+------------------------------------------------------------
+
+Add-ons may be:
+
+- One-time.
+- Recurring.
+- Usage-based.
+
+Examples:
+
+- Additional staff.
+- Additional storage.
+- AI credits.
+- Advanced analytics.
+- Premium theme.
+- Extra domain.
+- Additional communication quota.
+
+
+51. ADD-ON LIFECYCLE
+------------------------------------------------------------
+
+Add-on states:
+
+- AVAILABLE.
+- PENDING.
+- ACTIVE.
+- PAUSED.
+- CANCEL_PENDING.
+- CANCELLED.
+- EXPIRED.
+
+Add-ons must be linked to the parent subscription or billing account.
+
+
+52. USAGE BILLING
+------------------------------------------------------------
+
+Usage-based billing may cover:
+
+- Orders above package limit.
+- Storage.
+- Bandwidth.
+- API requests.
+- AI tokens/requests.
+- SMS.
+- WhatsApp.
+- Email.
+- PWA usage.
+- Other metered services.
+
+Module 24 provides authoritative usage metering where applicable.
+
+
+53. USAGE SNAPSHOT
+------------------------------------------------------------
+
+Each billing period must preserve usage snapshots:
+
+- Meter.
+- Period.
+- Included quantity.
+- Actual quantity.
+- Billable quantity.
+- Rate.
+- Currency.
+- Amount.
+
+Later meter changes must not silently rewrite finalized invoices.
+
+
+54. OVERAGE BILLING
+------------------------------------------------------------
+
+A package may include an allowance.
+
+Example:
+
+Included:
+- 1,000 orders/month.
+
+Overage:
+- PKR X per additional order.
+
+The engine must calculate only eligible billable usage.
+
+
+55. USAGE BILLING SAFETY
+------------------------------------------------------------
+
+Usage billing must prevent:
+
+- Duplicate metering.
+- Duplicate invoice lines.
+- Missing usage.
+- Cross-tenant usage.
+- Billing for excluded usage.
+- Billing after subscription termination unless explicitly required.
+
+
+56. METER RECONCILIATION
+------------------------------------------------------------
+
+Billing usage must reconcile with Module 24 usage records.
+
+Differences must be flagged.
+
+Do not silently choose a number when authoritative sources disagree.
+
+
+57. TAX FOUNDATION
+------------------------------------------------------------
+
+The billing engine must support:
+
+- Tax-inclusive pricing.
+- Tax-exclusive pricing.
+- Tax rate.
+- Tax amount.
+- Tax jurisdiction.
+- Tax exemption.
+- Tax identifier.
+- Tax category.
+
+Actual tax rules must be configurable by jurisdiction.
+
+Do not hard-code legal conclusions.
+
+
+58. TAX CALCULATION AUTHORITY
+------------------------------------------------------------
+
+For simple deployments, billing may apply configured tax rules.
+
+For complex jurisdictions, a dedicated tax service may become
+authoritative.
+
+Historical invoices must preserve the tax result used.
+
+
+59. CURRENCY
+------------------------------------------------------------
+
+Billing supports multiple currencies where enabled.
+
+Every monetary record must include:
+
+- Amount.
+- Currency.
+- Precision.
+
+Never silently convert currency.
+
+Cross-currency pricing requires explicit conversion policy.
+
+
+60. EXCHANGE RATE FOUNDATION
+------------------------------------------------------------
+
+Future multi-currency billing may use:
+
+- Fixed rate.
+- Daily rate.
+- Provider rate.
+- Contract rate.
+
+Invoices must preserve the rate and source used when conversion occurs.
+
+
+61. RESELLER BILLING
+------------------------------------------------------------
+
+Module 28 may provide reseller-specific commercial inputs.
+
+Module 29 must calculate:
+
+- Reseller package price.
+- Reseller discount.
+- Reseller invoice.
+- Reseller credit.
+- Reseller payment.
+- Reseller commission relationship.
+
+Reseller commission itself remains governed by Module 28.
+
+
+62. RESELLER STORE BILLING
+------------------------------------------------------------
+
+For reseller-provisioned stores, billing must define:
+
+- Who is billed.
+- Who owns subscription.
+- Who receives invoice.
+- Who pays.
+- Who receives commission.
+- Whether reseller receives discount.
+- Whether customer receives discount.
+
+These relationships must be explicit.
+
+
+63. AFFILIATE COMMISSION INTEGRATION
+------------------------------------------------------------
+
+Module 28 may receive billing events for:
+
+- Subscription conversion.
+- Renewal.
+- Upgrade.
+- Downgrade.
+- Cancellation.
+- Refund.
+
+Commission qualification remains owned by Module 28.
+
+
+64. DOMAIN BILLING
+------------------------------------------------------------
+
+Future domain billing may support:
+
+- Registration.
+- Renewal.
+- Transfer.
+- Privacy service.
+- Premium domain pricing.
+
+Module 19 remains authoritative for domain identity/status.
+
+Module 29 owns billing records for domain services.
+
+
+65. HOSTING BILLING
+------------------------------------------------------------
+
+Future hosting billing may support:
+
+- Hosting plan.
+- Server resources.
+- Storage.
+- Bandwidth.
+- Managed services.
+- Renewal.
+- Upgrade.
+- Overage.
+
+Module 20 remains authoritative for infrastructure execution.
+
+
+66. MARKETPLACE BILLING
+------------------------------------------------------------
+
+Module 27 may provide extension billing inputs.
+
+Supported models:
+
+- Free.
+- One-time.
+- Recurring.
+- Usage-based.
+- Revenue share.
+
+Module 29 records the tenant billing obligation.
+
+Module 27 remains authoritative for extension installation/lifecycle.
+
+
+67. BILLING CATALOG
+------------------------------------------------------------
+
+A centralized billing catalog must define:
+
+- Billable products.
+- Package prices.
+- Add-ons.
+- Usage rates.
+- Tax behavior.
+- Currency.
+- Billing intervals.
+- Availability.
+- Effective dates.
+
+Catalog changes must be versioned.
+
+
+68. DISCOUNTS
+------------------------------------------------------------
+
+Billing may apply:
+
+- Promotional discount.
+- Coupon.
+- Annual discount.
+- Reseller discount.
+- Partner discount.
+- Introductory price.
+- Contract discount.
+- Customer-specific discount.
+
+Module 14 remains authoritative for storefront promotions.
+
+Billing discounts must have explicit source and authorization.
+
+
+69. DISCOUNT SNAPSHOT
+------------------------------------------------------------
+
+Invoice must preserve:
+
+- Discount source.
+- Code/reference.
+- Rule/version.
+- Base amount.
+- Discount amount.
+
+Changing a promotion later must not change historical invoices.
+
+
+70. FREE PERIODS
+------------------------------------------------------------
+
+Billing may support:
+
+- Free trial.
+- Free first month.
+- Promotional free period.
+- Free add-on period.
+
+Free periods must still create a traceable subscription/billing
+record where necessary.
+
+
+71. PAYMENT METHOD FAILURE
+------------------------------------------------------------
+
+If a saved payment method expires or fails:
+
+- Mark payment method status.
+- Notify customer.
+- Request replacement.
+- Continue dunning.
+- Avoid repeated invalid attempts beyond policy.
+
+
+72. PAYMENT METHOD UPDATE
+------------------------------------------------------------
+
+Customers may update payment methods.
+
+Update must:
+
+- Re-validate provider token/reference.
+- Preserve previous transaction history.
+- Set new default only after successful validation.
+- Audit the change.
+
+
+73. BANK TRANSFER BILLING
+------------------------------------------------------------
+
+Bank transfer may use:
+
+- Invoice number.
+- Billing reference.
+- Bank account details.
+- Payment proof upload.
+- Manual verification.
+- Reconciliation.
+
+Payment proof must not itself mark an invoice as paid.
+
+Authorized verification is required.
+
+
+74. MANUAL PAYMENT
+------------------------------------------------------------
+
+Authorized staff may record manual payments.
+
+Required:
+
+- Amount.
+- Currency.
+- Method.
+- Reference.
+- Date.
+- Actor.
+- Notes.
+- Invoice.
+- Verification state.
+
+Manual payment must be audited.
+
+
+75. INVOICE PDF / DOCUMENTS
+------------------------------------------------------------
+
+The platform may generate:
+
+- Invoice PDF.
+- Credit note PDF.
+- Receipt.
+- Payment confirmation.
+- Billing statement.
+
+Generated documents must use immutable invoice snapshots.
+
+
+76. DOCUMENT VERSIONING
+------------------------------------------------------------
+
+Issued financial documents must be versioned.
+
+If formatting changes:
+
+- New rendering template may be used for future documents.
+- Historical document data remains unchanged.
+- Regeneration must reproduce the same financial values.
+
+
+77. BILLING STATEMENTS
+------------------------------------------------------------
+
+Billing statements may summarize:
+
+- Opening balance.
+- Charges.
+- Payments.
+- Credits.
+- Refunds.
+- Adjustments.
+- Closing balance.
+
+Statements must reconcile with underlying records.
+
+
+78. ACCOUNT BALANCE
+------------------------------------------------------------
+
+Billing account balance may include:
+
+- Outstanding invoices.
+- Credits.
+- Unapplied payments.
+- Adjustments.
+
+Balance calculations must be deterministic.
+
+
+79. UNAPPLIED PAYMENTS
+------------------------------------------------------------
+
+Payments received without clear invoice mapping may enter:
+
+- UNAPPLIED.
+- NEEDS_REVIEW.
+
+Authorized staff may apply them later.
+
+Application must be audited.
+
+
+80. OVERPAYMENTS
+------------------------------------------------------------
+
+Overpayments may become:
+
+- Account credit.
+- Refundable balance.
+- Unapplied payment.
+
+Policy must define default behavior.
+
+
+81. UNDERPAYMENTS
+------------------------------------------------------------
+
+Underpayments must leave an outstanding balance.
+
+Do not mark an invoice fully paid unless authoritative payment total
+meets required amount.
+
+
+82. PARTIAL PAYMENTS
+------------------------------------------------------------
+
+Support:
+
+- Partial payment.
+- Multiple payments.
+- Remaining balance.
+- Final payment.
+
+Invoice transitions:
+
+OPEN
+→ PARTIALLY_PAID
+→ PAID.
+
+
+83. PAYMENT RECONCILIATION
+------------------------------------------------------------
+
+Reconcile:
+
+Invoice
+↔ Payment
+↔ Provider transaction
+↔ Refund
+↔ Credit note
+↔ Account balance.
+
+Reconciliation states:
+
+- MATCHED.
+- PENDING.
+- MISMATCH.
+- PROVIDER_ONLY.
+- INTERNAL_ONLY.
+- RESOLVED.
+
+
+84. BILLING WEBHOOKS
+------------------------------------------------------------
+
+Supported webhook events may include:
+
+- Payment succeeded.
+- Payment failed.
+- Payment reversed.
+- Refund completed.
+- Subscription changed.
+- Subscription cancelled.
+- Provider dispute.
+
+Requirements:
+
+- Signature verification.
+- Timestamp validation.
+- Replay protection.
+- Idempotency.
+- Event versioning.
+- Tenant binding.
+
+
+85. PROVIDER ABSTRACTION
+------------------------------------------------------------
+
+Payment/billing providers must use an adapter interface.
+
+Capabilities may include:
+
+- Create customer.
+- Create payment method reference.
+- Create payment intent.
+- Charge.
+- Authorize.
+- Capture.
+- Refund.
+- Create recurring subscription.
+- Cancel subscription.
+- Update subscription.
+- Retrieve transaction.
+- Retrieve subscription.
+- Reconcile.
+
+
+86. PROVIDER ACCOUNT ISOLATION
+------------------------------------------------------------
+
+Tenant-specific provider accounts must remain isolated.
+
+Provider credentials must be:
+
+- Encrypted.
+- Access controlled.
+- Never logged.
+- Never exposed to clients.
+
+Platform provider credentials must remain separate from tenant
+credentials.
+
+
+87. SANDBOX / PRODUCTION
+------------------------------------------------------------
+
+Billing providers must distinguish:
+
+- SANDBOX.
+- PRODUCTION.
+
+Sandbox payments must never affect production billing records.
+
+
+88. BILLING PORTAL
+------------------------------------------------------------
+
+Store owners/customers should be able to view:
+
+- Current package.
+- Subscription status.
+- Renewal date.
+- Billing interval.
+- Payment method.
+- Invoices.
+- Receipts.
+- Credits.
+- Payment history.
+- Usage charges.
+- Failed payments.
+- Cancellation options.
+- Upgrade/downgrade options.
+
+
+89. SUPER ADMIN BILLING PORTAL
+------------------------------------------------------------
+
+Super Admin may manage:
+
+- Billing accounts.
+- Packages.
+- Prices.
+- Discounts.
+- Subscriptions.
+- Invoices.
+- Credits.
+- Refunds.
+- Manual payments.
+- Failed payments.
+- Dunning.
+- Reseller pricing.
+- Usage charges.
+- Reconciliation.
+- Provider health.
+
+
+90. BILLING PERMISSIONS
+------------------------------------------------------------
+
+Suggested permissions:
+
+- billing.view.
+- billing.manage_account.
+- billing.manage_subscription.
+- billing.change_plan.
+- billing.cancel_subscription.
+- billing.view_invoices.
+- billing.create_invoice.
+- billing.finalize_invoice.
+- billing.record_payment.
+- billing.refund.
+- billing.create_credit.
+- billing.adjust.
+- billing.manage_prices.
+- billing.manage_catalog.
+- billing.manage_tax.
+- billing.manage_providers.
+- billing.manage_dunning.
+- billing.reconcile.
+- billing.export.
+
+
+91. SUPPORT ACCESS
+------------------------------------------------------------
+
+Support staff may receive limited billing visibility.
+
+Support should not automatically be allowed to:
+
+- Refund money.
+- Change price.
+- Modify invoices.
+- Change payment credentials.
+- Approve large credits.
+
+High-risk financial actions require elevated permissions.
+
+
+92. FINANCIAL APPROVAL
+------------------------------------------------------------
+
+Approval may be required for:
+
+- Large refunds.
+- Large credits.
+- Manual invoice adjustments.
+- Price overrides.
+- Manual payment confirmation.
+- Subscription cancellation with refund.
+- Reseller commercial exceptions.
+
+
+93. AUDIT LOGGING
+------------------------------------------------------------
+
+Audit all:
+
+- Price changes.
+- Subscription changes.
+- Invoice finalization.
+- Manual payments.
+- Refunds.
+- Credits.
+- Debit adjustments.
+- Payment method changes.
+- Dunning changes.
+- Cancellation.
+- Reactivation.
+- Manual overrides.
+- Provider changes.
+- Reconciliation resolutions.
+
+
+94. FINANCIAL IMMUTABILITY
+------------------------------------------------------------
+
+Never silently modify:
+
+- Final invoice totals.
+- Paid invoice amounts.
+- Payment transaction amounts.
+- Credit note totals.
+- Historical price snapshots.
+
+Corrections must create compensating records.
+
+
+95. MONEY CALCULATION
+------------------------------------------------------------
+
+Use decimal-safe arithmetic.
+
+Never use binary floating-point for financial calculations.
+
+Rounding policy must be explicit:
+
+- Per line.
+- Per tax component.
+- At subtotal.
+- At invoice total.
+
+The selected policy must be consistent.
+
+
+96. TAX ROUNDING
+------------------------------------------------------------
+
+Tax rounding must be deterministic and versioned.
+
+Invoices must preserve:
+
+- Tax base.
+- Tax rate.
+- Tax amount.
+- Rounding policy.
+
+
+97. INVOICE NUMBER CONCURRENCY
+------------------------------------------------------------
+
+Invoice numbering must remain safe under concurrent issuance.
+
+Use database constraints/transactions/sequence strategy.
+
+No duplicate invoice numbers.
+
+
+98. BILLING PERIOD OVERLAP
+------------------------------------------------------------
+
+A subscription must not accidentally generate overlapping paid periods.
+
+The system must detect:
+
+- Duplicate renewal.
+- Double invoice.
+- Duplicate payment.
+- Overlapping subscription periods.
+
+
+99. IDEMPOTENCY
+------------------------------------------------------------
+
+Idempotency is mandatory for:
+
+- Invoice generation.
+- Renewal.
+- Payment attempt.
+- Payment callback.
+- Refund.
+- Credit issuance.
+- Subscription change.
+- Usage invoice generation.
+- Store provisioning billing.
+- Webhook processing.
+
+
+100. CONCURRENCY
+------------------------------------------------------------
+
+Protect against concurrent:
+
+- Renewal workers.
+- Plan changes.
+- Cancellation.
+- Payment callbacks.
+- Refunds.
+- Credits.
+- Invoice finalization.
+
+Use transactions, unique constraints, locks, and idempotency keys.
+
+
+101. BILLING JOBS
+------------------------------------------------------------
+
+Background jobs should handle:
+
+- Upcoming renewal checks.
+- Invoice generation.
+- Automatic collection.
+- Retry.
+- Dunning.
+- Trial expiration.
+- Subscription expiration.
+- Usage aggregation.
+- Usage invoice generation.
+- Credit expiration.
+- Payment reconciliation.
+- Provider synchronization.
+- Billing notifications.
+
+
+102. JOB SAFETY
+------------------------------------------------------------
+
+Jobs must be:
+
+- Idempotent.
+- Retryable.
+- Tenant-aware.
+- Observable.
+- Rate-limited.
+- Recoverable.
+
+
+103. QUEUE ISOLATION
+------------------------------------------------------------
+
+Billing jobs must not allow one tenant's billing workload to starve
+all other tenants.
+
+Use:
+
+- Queue partitioning.
+- Fair scheduling.
+- Backpressure.
+- Tenant-aware rate limits.
+
+
+104. BILLING EVENTS
+------------------------------------------------------------
+
+Important events:
+
+- BillingAccountCreated.
+- SubscriptionCreated.
+- TrialStarted.
+- TrialEndingSoon.
+- TrialExpired.
+- RenewalDue.
+- InvoiceCreated.
+- InvoiceFinalized.
+- InvoicePaymentPending.
+- InvoicePaid.
+- InvoicePartiallyPaid.
+- InvoicePastDue.
+- PaymentFailed.
+- PaymentRetryScheduled.
+- SubscriptionSuspended.
+- SubscriptionReactivated.
+- SubscriptionCancelled.
+- SubscriptionRenewed.
+- PlanUpgraded.
+- PlanDowngraded.
+- AddOnActivated.
+- AddOnCancelled.
+- CreditIssued.
+- RefundIssued.
+- CreditNoteIssued.
+- PayoutRelatedBillingEvent.
+- UsageChargeGenerated.
+
+
+105. OUTBOX PATTERN
+------------------------------------------------------------
+
+Billing events should use an outbox pattern where appropriate.
+
+Requirements:
+
+- Atomic persistence.
+- Idempotent publication.
+- Retry.
+- Dead-letter handling.
+- Event versioning.
+- Tenant context.
+- Correlation ID.
+
+
+106. NOTIFICATION INTEGRATION
+------------------------------------------------------------
+
+Module 21 may deliver:
+
+- Invoice created.
+- Invoice due.
+- Payment received.
+- Payment failed.
+- Renewal upcoming.
+- Renewal successful.
+- Trial ending.
+- Trial expired.
+- Subscription suspended.
+- Subscription reactivated.
+- Payment method expiring.
+- Refund completed.
+- Credit issued.
+
+Module 29 determines billing event and audience.
+
+Module 21 determines delivery channel/provider.
+
+
+107. EMAIL BILLING DOCUMENTS
+------------------------------------------------------------
+
+Billing emails may include secure links to:
+
+- Invoice.
+- Receipt.
+- Credit note.
+- Billing portal.
+
+Do not attach sensitive data unnecessarily.
+
+Secure links must expire where appropriate.
+
+
+108. BILLING CUSTOMER DATA
+------------------------------------------------------------
+
+Billing should use minimum necessary customer information.
+
+Do not duplicate full customer profiles unnecessarily.
+
+Module 10 remains authoritative for customer identity.
+
+
+109. PRIVACY
+------------------------------------------------------------
+
+Billing must support:
+
+- Data minimization.
+- Access control.
+- Retention.
+- Export.
+- Anonymization foundations.
+- Secure document access.
+
+Financial/legal retention may require preserving records after
+customer deletion.
+
+
+110. TAX / COMPLIANCE RECORDS
+------------------------------------------------------------
+
+Tax/compliance data must be:
+
+- Protected.
+- Versioned.
+- Audited.
+- Retained according to policy.
+
+Do not hard-code legal requirements.
+
+
+111. DATA RETENTION
+------------------------------------------------------------
+
+Retention categories:
+
+- Draft invoices.
+- Final invoices.
+- Payment records.
+- Refunds.
+- Credit notes.
+- Subscription history.
+- Billing events.
+- Usage billing snapshots.
+- Tax records.
+- Audit records.
+
+Retention must be configurable.
+
+
+112. ANONYMIZATION
+------------------------------------------------------------
+
+Where privacy deletion applies:
+
+- Remove unnecessary personal data.
+- Preserve required financial records.
+- Preserve invoice integrity.
+- Preserve reconciliation references.
+
+Anonymization must not alter financial totals.
+
+
+113. BILLING EXPORTS
+------------------------------------------------------------
+
+Authorized users may export:
+
+- Invoices.
+- Payments.
+- Subscription history.
+- Usage charges.
+- Credits.
+- Refunds.
+- Statements.
+
+Exports must enforce:
+
+- RBAC.
+- Tenant scope.
+- Secure file handling.
+- Expiration.
+- Audit logging.
+
+
+114. BILLING REPORTS
+------------------------------------------------------------
+
+Required reports:
+
+- Monthly recurring revenue.
+- Annual recurring revenue.
+- New subscriptions.
+- Renewals.
+- Churn.
+- Failed payments.
+- Past due.
+- Suspensions.
+- Refunds.
+- Credits.
+- Outstanding receivables.
+- Payments.
+- Revenue by package.
+- Revenue by add-on.
+- Usage revenue.
+- Reseller revenue.
+- Affiliate-attributed subscription revenue.
+- Tax summary foundation.
+
+
+115. BILLING METRICS
+------------------------------------------------------------
+
+Metrics include:
+
+- MRR.
+- ARR.
+- Subscription count.
+- Active subscriptions.
+- Trial count.
+- Trial conversion.
+- Renewal rate.
+- Churn rate.
+- Average revenue per account.
+- Failed payment rate.
+- Recovery rate.
+- Outstanding balance.
+- Refund rate.
+- Credit usage.
+- Usage revenue.
+- Reseller revenue.
+- Package mix.
+
+
+116. METRIC AUTHORITY
+------------------------------------------------------------
+
+Billing analytics must derive from authoritative billing records.
+
+Do not calculate financial metrics solely from frontend analytics.
+
+
+117. MRR DEFINITION
+------------------------------------------------------------
+
+MRR calculation must define treatment of:
+
+- Monthly subscriptions.
+- Annual subscriptions.
+- One-time charges.
+- Usage charges.
+- Discounts.
+- Refunds.
+- Credits.
+- Paused subscriptions.
+- Trials.
+- Cancellations.
+
+Definitions must be versioned and documented.
+
+
+118. CHURN DEFINITION
+------------------------------------------------------------
+
+Churn methodology must explicitly define:
+
+- Customer churn.
+- Revenue churn.
+- Logo churn.
+- Voluntary cancellation.
+- Involuntary churn.
+- Suspension.
+- Reactivation.
+
+Do not mix definitions silently.
+
+
+119. REVENUE RECOGNITION FOUNDATION
+------------------------------------------------------------
+
+Future accounting integration may support revenue recognition.
+
+Billing records may provide:
+
+- Invoice date.
+- Service period.
+- Amount.
+- Deferred amount.
+- Recognized amount.
+
+Do not treat invoice issuance as universal proof of recognized
+accounting revenue.
+
+
+120. ACCOUNTING INTEGRATION
+------------------------------------------------------------
+
+Future integration may support:
+
+- Accounts receivable.
+- Revenue.
+- Deferred revenue.
+- Tax payable.
+- Payment clearing.
+- Refunds.
+- Credits.
+- Affiliate/reseller liabilities.
+
+Accounting integration must use stable billing records.
+
+
+121. RECONCILIATION DASHBOARD
+------------------------------------------------------------
+
+Dashboard should identify:
+
+- Unpaid invoices.
+- Provider-only payments.
+- Internal-only payments.
+- Duplicate payments.
+- Missing refunds.
+- Mismatched amounts.
+- Failed renewals.
+- Usage discrepancies.
+- Credit discrepancies.
+
+
+122. BILLING HEALTH
+------------------------------------------------------------
+
+Module 24 may monitor:
+
+- Renewal job success.
+- Invoice generation latency.
+- Payment failure rate.
+- Provider availability.
+- Dunning backlog.
+- Reconciliation mismatch.
+- Queue depth.
+- Billing API latency.
+
+
+123. PROVIDER OUTAGE
+------------------------------------------------------------
+
+If billing payment provider is unavailable:
+
+- Do not mark payment failed unless provider response is authoritative.
+- Preserve pending/unknown state where necessary.
+- Retry safely.
+- Avoid duplicate charges.
+- Notify operations when required.
+
+
+124. UNKNOWN PAYMENT STATE
+------------------------------------------------------------
+
+If a payment request times out and provider state is unknown:
+
+- Mark as UNKNOWN/PENDING internally.
+- Reconcile provider status.
+- Do not immediately retry if duplicate charge is possible.
+- Resolve before final financial action.
+
+
+125. REFUND SAFETY
+------------------------------------------------------------
+
+Refund must validate:
+
+- Original payment.
+- Refundable balance.
+- Currency.
+- Refund amount.
+- Existing refunds.
+- Invoice relationship.
+
+Refund operation must be idempotent.
+
+
+126. CREDIT SAFETY
+------------------------------------------------------------
+
+Credits must validate:
+
+- Account.
+- Currency.
+- Amount.
+- Authorization.
+- Expiration.
+- Duplicate issuance.
+
+Credit issuance must be auditable.
+
+
+127. BILLING FRAUD PROTECTION
+------------------------------------------------------------
+
+Protect against:
+
+- Coupon abuse.
+- Trial abuse.
+- Repeated account creation.
+- Payment method abuse.
+- Refund abuse.
+- Credit abuse.
+- Reseller pricing abuse.
+- Invoice manipulation.
+- Usage manipulation.
+- Webhook spoofing.
+
+
+128. TRIAL ABUSE
+------------------------------------------------------------
+
+Potential controls:
+
+- Verified identity.
+- Verified email/phone.
+- Business verification.
+- Device/risk signals where appropriate.
+- Payment method reuse detection where lawful.
+- Rate limits.
+- Trial limits.
+
+Risk controls must be configurable.
+
+
+129. RESELLER PRICING ABUSE
+------------------------------------------------------------
+
+Prevent:
+
+- Unauthorized reseller pricing.
+- Shared reseller accounts.
+- Fake store creation.
+- Excessive provisioning.
+- Coupon stacking.
+- Commission manipulation.
+
+Module 28 remains authoritative for reseller program rules.
+
+
+130. API SECURITY
+------------------------------------------------------------
+
+Billing APIs require:
+
+- Authentication.
+- Authorization.
+- Tenant scoping.
+- Rate limiting.
+- Idempotency.
+- Input validation.
+- Audit logging.
+- Secure pagination.
+- Sensitive-field redaction.
+
+
+131. BILLING PORTAL SECURITY
+------------------------------------------------------------
+
+Billing portal must require strong authentication.
+
+Sensitive actions may require:
+
+- Re-authentication.
+- OTP/2FA.
+- Confirmation.
+- Elevated session.
+
+Never expose another tenant's invoices through predictable IDs.
+
+
+132. OBJECT-LEVEL AUTHORIZATION
+------------------------------------------------------------
+
+Every invoice, payment, subscription, credit, refund, and billing
+document request must verify:
+
+- Tenant ownership.
+- User permission.
+- Object status.
+- Action permission.
+
+
+133. SECURE DOCUMENT LINKS
+------------------------------------------------------------
+
+Invoice/document links should use:
+
+- Short-lived signed URLs.
+- Tenant-bound authorization.
+- Expiration.
+- Access logging where appropriate.
+
+Do not expose public permanent invoice URLs by default.
+
+
+134. CACHE RULES
+------------------------------------------------------------
+
+Cache keys must include:
+
+- Tenant ID.
+- Billing account ID.
+- Relevant subscription ID.
+
+Never globally cache private billing information.
+
+
+135. SEARCH RULES
+------------------------------------------------------------
+
+Billing search may support:
+
+- Invoice number.
+- Subscription.
+- Billing account.
+- Payment reference.
+- Customer/business name.
+
+Sensitive payment data must not be broadly indexed.
+
+
+136. BACKUP
+------------------------------------------------------------
+
+Module 23 must protect:
+
+- Billing accounts.
+- Subscriptions.
+- Invoice records.
+- Invoice snapshots.
+- Payment references.
+- Credits.
+- Refund records.
+- Usage billing snapshots.
+- Tax records.
+- Reconciliation records.
+
+
+137. RESTORE SAFETY
+------------------------------------------------------------
+
+Restore must not:
+
+- Re-charge customers.
+- Duplicate invoices.
+- Duplicate renewals.
+- Duplicate refunds.
+- Duplicate credits.
+- Re-send historical payment webhooks as new events.
+
+Recovery must use idempotent event handling.
+
+
+138. DISASTER RECOVERY
+------------------------------------------------------------
+
+Billing recovery priority should include:
+
+P0:
+- Active subscription state.
+- Invoice/payment integrity.
+- Billing database.
+
+P1:
+- Renewal processing.
+- Reconciliation.
+- Billing notifications.
+
+P2:
+- Historical reporting.
+- Non-critical analytics.
+
+
+139. BILLING DATA MODEL
+------------------------------------------------------------
+
+Suggested entities:
+
+- BillingAccount
+- BillingProfile
+- BillingAddressSnapshot
+- BillableProduct
+- BillableProductVersion
+- Price
+- PriceVersion
+- Subscription
+- SubscriptionItem
+- SubscriptionPeriod
+- Trial
+- AddOn
+- AddOnSubscription
+- Invoice
+- InvoiceLine
+- InvoiceTax
+- InvoiceDiscount
+- CreditNote
+- CreditNoteLine
+- DebitAdjustment
+- PaymentMethodReference
+- PaymentAttempt
+- PaymentAllocation
+- AccountCredit
+- CreditApplication
+- Refund
+- UsageMeter
+- UsageSnapshot
+- UsageCharge
+- BillingEvent
+- BillingJob
+- DunningPolicy
+- DunningAttempt
+- BillingProvider
+- BillingProviderAccount
+- ReconciliationRecord
+- BillingStatement
+- BillingAuditLog
+- OutboxEvent
+
+
+140. DATA INTEGRITY
+------------------------------------------------------------
+
+Required:
+
+- Foreign key integrity.
+- Tenant-scoped uniqueness.
+- Immutable invoice totals.
+- Immutable issued credit notes.
+- Currency consistency.
+- Decimal-safe money.
+- Subscription period constraints.
+- Invoice number uniqueness.
+- Idempotency constraints.
+- Payment allocation consistency.
+- Refund balance constraints.
+
+
+141. PAYMENT ALLOCATION
+------------------------------------------------------------
+
+A payment may be allocated across one or more invoices where policy
+allows.
+
+Allocation must preserve:
+
+- Payment ID.
+- Invoice ID.
+- Amount.
+- Currency.
+- Date.
+- Actor/system.
+- Reference.
+
+Total allocation must never exceed available payment amount.
+
+
+142. REFUND ALLOCATION
+------------------------------------------------------------
+
+Refunds may be linked to:
+
+- Payment.
+- Invoice.
+- Invoice line.
+- Subscription.
+
+Refund total must never exceed refundable amount.
+
+
+143. CREDIT NOTE ALLOCATION
+------------------------------------------------------------
+
+Credit notes may apply to:
+
+- Entire invoice.
+- Specific line items.
+- Future invoice credit.
+
+Application must preserve audit history.
+
+
+144. SUBSCRIPTION ITEM MODEL
+------------------------------------------------------------
+
+A subscription may contain:
+
+- Package.
+- Add-ons.
+- Usage components.
+
+Each subscription item should include:
+
+- Product.
+- Price version.
+- Quantity.
+- Billing model.
+- Start/end.
+- Status.
+- Recurring amount.
+
+
+145. QUANTITY / SEAT BILLING
+------------------------------------------------------------
+
+Future seat-based billing may support:
+
+- Included seats.
+- Active seats.
+- Billable seats.
+- Per-seat rate.
+
+Seat quantity must be validated against authoritative store/user
+data.
+
+
+146. CONTRACT BILLING FOUNDATION
+------------------------------------------------------------
+
+Future enterprise contracts may support:
+
+- Contract price.
+- Contract period.
+- Custom billing terms.
+- Minimum commitment.
+- Payment terms.
+- Custom discounts.
+- Approval workflow.
+
+Contract terms must override standard catalog pricing only through
+authorized configuration.
+
+
+147. PRICE CHANGE NOTIFICATIONS
+------------------------------------------------------------
+
+When pricing changes affect customers:
+
+- Notify before effective renewal where required by policy.
+- Show current vs new price.
+- Show effective date.
+- Provide cancellation/plan-change options where applicable.
+
+
+148. BILLING COMMUNICATION PREFERENCES
+------------------------------------------------------------
+
+Transactional billing notices must remain distinct from marketing.
+
+Customers may configure non-essential communication preferences,
+but required billing/security notifications must follow applicable
+service and legal policy.
+
+
+149. LOCALIZATION
+------------------------------------------------------------
+
+Billing documents must support:
+
+- Urdu.
+- English.
+- RTL/LTR.
+- Store locale.
+- Platform locale.
+
+Technical identifiers remain language-neutral.
+
+
+150. DATE/TIME DISPLAY
+------------------------------------------------------------
+
+Billing documents must display dates according to configured locale
+and timezone while storing timestamps in a normalized representation.
+
+
+151. ACCESSIBILITY
+------------------------------------------------------------
+
+Billing portal and documents should support:
+
+- Keyboard navigation.
+- Screen readers.
+- Clear invoice structure.
+- Accessible tables.
+- Accessible forms.
+- RTL layouts.
+- Mobile responsiveness.
+
+
+152. PERFORMANCE
+------------------------------------------------------------
+
+Billing must scale for:
+
+- Large tenant count.
+- Large subscription count.
+- High renewal volume.
+- High invoice volume.
+- Large usage datasets.
+
+Use:
+
+- Batch processing.
+- Async jobs.
+- Partitioning where necessary.
+- Indexed queries.
+- Aggregation.
+- Queue isolation.
+
+
+153. RENEWAL BATCHING
+------------------------------------------------------------
+
+Renewals must be processed in controlled batches.
+
+Avoid generating a massive synchronous renewal workload at one time.
+
+Use:
+
+- Scheduling.
+- Rate limiting.
+- Queue workers.
+- Provider throttling.
+- Retry queues.
+
+
+154. PROVIDER RATE LIMITS
+------------------------------------------------------------
+
+Billing provider limits must be respected.
+
+Provider throttling must not cause duplicate payment attempts.
+
+
+155. BILLING SEARCH PERFORMANCE
+------------------------------------------------------------
+
+Invoice lookup by invoice number should be highly indexed.
+
+Common indexes:
+
+- Tenant ID + invoice number.
+- Tenant ID + status.
+- Billing account ID + date.
+- Subscription ID + date.
+- Provider transaction ID.
+
+
+156. BILLING DATA ISOLATION
+------------------------------------------------------------
+
+Tenant isolation applies to:
+
+- Database.
+- API.
+- Cache.
+- Search.
+- Files.
+- Queues.
+- Events.
+- Logs.
+- Exports.
+- Analytics.
+
+No billing object may cross tenant boundaries without explicit
+platform authorization.
+
+
+157. PACKAGE DOWNGRADE BILLING
+------------------------------------------------------------
+
+Downgrade must preserve:
+
+- Historical invoices.
+- Previous subscription records.
+- Payment history.
+- Credits.
+- Usage history.
+
+Only future billing/entitlements change unless proration policy
+specifies otherwise.
+
+
+158. PACKAGE UPGRADE BILLING
+------------------------------------------------------------
+
+Upgrade must preserve:
+
+- Existing subscription identity where possible.
+- Historical invoices.
+- Previous package history.
+- Payment history.
+
+Create new billing periods/adjustments as required.
+
+
+159. STORE CANCELLATION IMPACT
+------------------------------------------------------------
+
+When a store is cancelled:
+
+- Subscription cancellation is recorded.
+- Final billing obligations are determined.
+- Outstanding invoices remain.
+- Refunds/credits follow policy.
+- Historical financial data remains preserved.
+
+
+160. STORE DELETION IMPACT
+------------------------------------------------------------
+
+Store deletion must not immediately destroy legally/financially
+required billing records.
+
+Personal data must follow privacy retention rules.
+
+Financial references must remain reconciliable.
+
+
+161. SUPER ADMIN OVERRIDES
+------------------------------------------------------------
+
+Super Admin may have controlled capabilities for:
+
+- Complimentary subscription.
+- Custom price.
+- Credit.
+- Refund.
+- Invoice adjustment.
+- Grace-period extension.
+- Suspension override.
+
+Every override must:
+
+- Require permission.
+- Record reason.
+- Record actor.
+- Record before/after.
+- Be auditable.
+
+
+162. FREE / COMPLIMENTARY ACCOUNTS
+------------------------------------------------------------
+
+The platform may support:
+
+- Free package.
+- Complimentary subscription.
+- Internal test account.
+- Partner account.
+
+Free status must still use normal subscription/entitlement
+mechanisms where appropriate.
+
+
+163. INTERNAL / TEST BILLING
+------------------------------------------------------------
+
+Test billing accounts must be clearly marked.
+
+Production financial reports must be able to exclude test accounts.
+
+Test data must never be confused with real customer financial data.
+
+
+164. BILLING ENVIRONMENTS
+------------------------------------------------------------
+
+Environments:
+
+- DEVELOPMENT.
+- TEST.
+- STAGING.
+- PRODUCTION.
+
+Billing data and provider credentials must remain environment
+isolated.
+
+
+165. SECURITY THREATS
+------------------------------------------------------------
+
+Protect against:
+
+- IDOR.
+- Privilege escalation.
+- Invoice enumeration.
+- Payment replay.
+- Webhook spoofing.
+- Duplicate charges.
+- Duplicate refunds.
+- Credit abuse.
+- Coupon abuse.
+- Pricing tampering.
+- Tenant leakage.
+- Sensitive document exposure.
+- SSRF through provider callbacks.
+- Injection attacks.
+- Credential leakage.
+
+
+166. SECURITY TESTING
+------------------------------------------------------------
+
+Test:
+
+- Cross-tenant invoice access.
+- Cross-tenant subscription access.
+- Unauthorized refunds.
+- Unauthorized credits.
+- Price tampering.
+- Invoice enumeration.
+- Webhook replay.
+- Duplicate payment.
+- Duplicate renewal.
+- Duplicate refund.
+- Payment timeout.
+- Provider outage.
+- Privilege escalation.
+- Sensitive document exposure.
+
+
+167. FUNCTIONAL TESTING
+------------------------------------------------------------
+
+Test:
+
+- Trial creation.
+- Trial expiration.
+- Subscription creation.
+- Monthly renewal.
+- Annual renewal.
+- Month-end renewal.
+- Failed payment.
+- Retry.
+- Dunning.
+- Grace period.
+- Suspension.
+- Reactivation.
+- Cancellation.
+- Upgrade.
+- Downgrade.
+- Proration.
+- Add-ons.
+- Usage billing.
+- Invoice generation.
+- Partial payment.
+- Full payment.
+- Refund.
+- Credit note.
+- Account credit.
+- Manual payment.
+- Bank transfer verification.
+- Reconciliation.
+
+
+168. CONCURRENCY TESTING
+------------------------------------------------------------
+
+Test:
+
+- Two renewal workers.
+- Two payment callbacks.
+- Simultaneous plan changes.
+- Simultaneous cancellation.
+- Simultaneous refund requests.
+- Simultaneous invoice finalization.
+- Concurrent credit issuance.
+
+
+169. FAILURE TESTING
+------------------------------------------------------------
+
+Test:
+
+- Payment provider outage.
+- Payment timeout.
+- Unknown payment state.
+- Webhook delay.
+- Duplicate webhook.
+- Queue failure.
+- Worker crash.
+- Database transient failure.
+- Usage meter outage.
+- Notification outage.
+- Cache outage.
+
+
+170. RECONCILIATION TESTING
+------------------------------------------------------------
+
+Verify:
+
+Invoice total
+↔ Payment allocations
+↔ Provider transaction
+↔ Refunds
+↔ Credits
+↔ Account balance
+↔ Subscription period.
+
+
+171. RESTORE TESTING
+------------------------------------------------------------
+
+Verify restored billing data does not cause:
+
+- Duplicate renewal.
+- Duplicate payment.
+- Duplicate invoice.
+- Duplicate refund.
+- Duplicate credit.
+- Duplicate webhook effect.
+
+
+172. PERFORMANCE TESTING
+------------------------------------------------------------
+
+Test:
+
+- Large subscription dataset.
+- High renewal volume.
+- High invoice generation volume.
+- Large usage dataset.
+- Concurrent billing portal requests.
+- Large export requests.
+
+
+173. BILLING ACCEPTANCE CRITERIA
+------------------------------------------------------------
+
+Module 29 is production-ready only when:
+
+1. Billing accounts are tenant-safe.
+2. Subscription lifecycle is deterministic.
+3. Package billing works.
+4. Trials work.
+5. Monthly billing works.
+6. Annual billing works.
+7. Renewal is idempotent.
+8. Invoice numbering is unique.
+9. Issued invoices are immutable.
+10. Payment attempts are traceable.
+11. Failed payment handling works.
+12. Dunning works.
+13. Grace periods work.
+14. Suspension/reactivation works.
+15. Cancellation works.
+16. Refunds work.
+17. Credit notes work.
+18. Account credits work.
+19. Partial payments work.
+20. Usage billing works where enabled.
+21. Reseller pricing integrates correctly.
+22. Affiliate commission events integrate correctly.
+23. Domain/hosting billing foundations exist.
+24. Provider webhooks are secure.
+25. Payment credentials are never stored raw.
+26. Reconciliation works.
+27. Financial reports reconcile.
+28. Audit logs are complete.
+29. Cross-tenant tests pass.
+30. Security tests pass.
+31. Concurrency tests pass.
+32. Failure tests pass.
+33. Restore tests pass.
+34. Documentation is complete.
+35. Production rollback/recovery is documented.
+
+
+174. REQUIRED DEVELOPMENT ARTIFACTS
+------------------------------------------------------------
+
+Claude must produce/update:
+
+- Module 29 implementation.
+- Billing database schema.
+- Safe migrations.
+- Billing entities/models.
+- Subscription engine.
+- Invoice engine.
+- Renewal engine.
+- Payment integration layer.
+- Dunning engine.
+- Credit/refund engine.
+- Usage billing integration.
+- Reseller billing integration.
+- Affiliate billing events.
+- Domain/hosting billing foundations.
+- Billing portal.
+- Super Admin billing UI.
+- Background jobs.
+- Events/outbox.
+- APIs.
+- Provider adapters.
+- Reconciliation tools.
+- Reports.
+- Invoice document generation.
+- Tests.
+- Security documentation.
+- Operational runbook.
+- Migration notes.
+- Rollback notes.
+- Billing checkpoint document.
+
+
+175. CLAUDE DEVELOPMENT REQUIREMENTS
+------------------------------------------------------------
+
+Claude must:
+
+1. Read the entire repository.
+2. Read Project Bible.
+3. Read URS/SRS.
+4. Read Modules 01–28.
+5. Identify existing billing/payment architecture.
+6. Reuse Module 12 payment authority.
+7. Reuse Module 04 entitlement authority.
+8. Reuse Module 28 reseller/affiliate authority.
+9. Reuse Module 20 infrastructure services.
+10. Reuse Module 21 notification delivery.
+11. Reuse Module 22 analytics.
+12. Reuse Module 23 backup.
+13. Reuse Module 24 usage/health.
+14. Never create duplicate payment engines.
+15. Never store raw card credentials.
+16. Never trust client financial values.
+17. Use immutable financial snapshots.
+18. Use safe migrations.
+19. Add tenant-aware authorization.
+20. Add idempotency.
+21. Add concurrency protection.
+22. Add audit logging.
+23. Add reconciliation.
+24. Add failure recovery.
+25. Add security tests.
+26. Add financial correctness tests.
+27. Run full regression.
+28. Run backend build.
+29. Run web build.
+30. Run Flutter analyze/build where applicable.
+31. Check secrets.
+32. Validate production configuration.
+33. Validate provider sandbox/production separation.
+34. Update documentation.
+35. Create checkpoint and report exact commit/migration/test status.
+
+
+176. CLAUDE IMPLEMENTATION ORDER
+------------------------------------------------------------
+
+PHASE A
+- Architecture review.
+- Billing dependency map.
+- Data model.
+- Permissions.
+- Provider abstraction.
+
+PHASE B
+- Billing account.
+- Billing profile.
+- Product/price catalog.
+- Subscription model.
+
+PHASE C
+- Trial engine.
+- Invoice engine.
+- Invoice numbering.
+- Payment integration.
+
+PHASE D
+- Renewal engine.
+- Dunning.
+- Grace period.
+- Suspension/reactivation.
+
+PHASE E
+- Upgrade/downgrade.
+- Proration.
+- Add-ons.
+- Credits.
+- Refunds.
+- Credit notes.
+
+PHASE F
+- Usage billing.
+- Reseller billing.
+- Affiliate integration.
+- Domain/hosting billing foundations.
+
+PHASE G
+- Billing portal.
+- Super Admin billing.
+- Reports.
+- Reconciliation.
+
+PHASE H
+- Security.
+- Performance.
+- Failure testing.
+- Restore testing.
+- Production hardening.
+
+
+177. PRODUCTION READINESS
+------------------------------------------------------------
+
+Before production:
+
+- No duplicate renewals.
+- No duplicate invoices.
+- No duplicate charges.
+- No duplicate refunds.
+- No unauthorized credits.
+- No cross-tenant billing access.
+- No client-authoritative financial values.
+- No raw card credentials.
+- No exposed payment secrets.
+- No insecure invoice links.
+- No webhook replay vulnerability.
+- No unresolved critical security findings.
+- All migrations tested.
+- Provider sandbox/production verified.
+- Dunning verified.
+- Renewal jobs verified.
+- Reconciliation verified.
+- Backup/restore verified.
+- Monitoring configured.
+- Alerts configured.
+- Billing notifications verified.
+- Rollback documented.
+
+
+178. REQUIRED MODULE INTEGRATIONS
+------------------------------------------------------------
+
+Module 29 integrates with:
+
+Module 02 — Authentication, Users, Roles & Permissions
+Module 03 — Multi-Tenant & Store Management
+Module 04 — Subscription, Packages & Feature Entitlements
+Module 05 — Storefront
+Module 06 — Product & Catalog
+Module 09 — Order Management
+Module 10 — Customer Management
+Module 11 — Cart, Wishlist & Checkout
+Module 12 — Payment Management & Gateways
+Module 13 — Shipping & Delivery
+Module 14 — Discounts, Coupons & Promotions
+Module 15 — Marketing & Customer Engagement
+Module 16 — SEO & Content
+Module 17 — Theme & Branding
+Module 19 — Domain Management
+Module 20 — Hosting & Infrastructure
+Module 21 — Notifications & Communication
+Module 22 — Reports, Analytics & Dashboard
+Module 23 — Backup, Restore & Data Protection
+Module 24 — Store Health, Monitoring & Resource Usage
+Module 25 — PWA / Mobile Experience
+Module 26 — AI Features
+Module 27 — App / Plugin Marketplace
+Module 28 — Affiliate & Reseller Program
+Module 30 — Umar Techy Super Admin
+Module 31 — API & Developer Platform
+Module 32 — Security, Audit & Compliance
+Module 33 — System Settings & Configuration
+Module 34 — Help, Support & Documentation
+Module 35 — Future Expansion Framework
+
+
+179. FUTURE EXPANSION
+------------------------------------------------------------
+
+The billing architecture should support future:
+
+- Usage-based SaaS billing.
+- Seat-based billing.
+- Enterprise contracts.
+- Revenue share.
+- Marketplace commissions.
+- Automated tax services.
+- Global payment providers.
+- Multi-currency settlement.
+- Subscription pauses.
+- Subscription schedules.
+- Invoice financing.
+- Purchase orders.
+- Net payment terms.
+- Accounting integrations.
+- Revenue recognition.
+- Automated domain billing.
+- Automated hosting billing.
+- AI consumption billing.
+- Communication consumption billing.
+- Partner-specific contracts.
+
+
+180. FINAL ARCHITECTURAL RULES
+------------------------------------------------------------
+
+1. One Core Billing Engine.
+2. Billing is configuration-driven.
+3. Multi-tenant isolation is mandatory.
+4. Billing account identity is separate from customer identity.
+5. Subscription and payment are separate concerns.
+6. Invoice and payment are separate concerns.
+7. Billing and entitlement are separate concerns.
+8. Module 29 owns platform subscription billing authority.
+9. Module 12 owns payment transaction authority.
+10. Module 04 owns feature entitlement authority.
+11. Module 28 owns affiliate/reseller commission authority.
+12. Module 19 owns domain authority.
+13. Module 20 owns infrastructure authority.
+14. Server is authoritative for all financial calculations.
+15. Client-provided financial values are never trusted.
+16. Issued invoices are immutable.
+17. Issued credit notes are immutable.
+18. Historical financial snapshots must be preserved.
+19. Price changes create new versions.
+20. Subscription periods must not overlap accidentally.
+21. Renewal must be idempotent.
+22. Invoice generation must be idempotent.
+23. Payment attempts must be idempotent.
+24. Refunds must be idempotent.
+25. Credits must be idempotent.
+26. Webhooks must be authenticated.
+27. Webhooks must be replay-protected.
+28. Unknown payment states must be reconciled before risky retries.
+29. Raw card credentials must never be stored.
+30. Payment secrets must never be exposed.
+31. Provider accounts must be isolated.
+32. Sandbox and production billing must be isolated.
+33. Dunning must be configurable.
+34. Grace periods must be configurable.
+35. Suspension must preserve customer data.
+36. Reactivation must not duplicate billing.
+37. Cancellation must preserve historical records.
+38. Upgrade must preserve historical records.
+39. Downgrade must preserve historical records.
+40. Proration must be deterministic.
+41. Usage billing must use authoritative metering.
+42. Usage billing must be tenant-scoped.
+43. Reseller pricing must be server-controlled.
+44. Affiliate commission must remain owned by Module 28.
+45. Domain billing must not become domain identity authority.
+46. Hosting billing must not become infrastructure authority.
+47. Marketplace billing must not become extension lifecycle authority.
+48. Tax rules must be configurable.
+49. Tax results must be snapshotted.
+50. Currency conversion must be explicit.
+51. Floating-point arithmetic must not be used for money.
+52. Rounding policy must be explicit.
+53. Invoice numbers must be unique.
+54. Financial adjustments must be compensating records.
+55. Manual payments require audit.
+56. Manual refunds require authorization.
+57. Manual credits require authorization.
+58. High-risk financial actions require elevated permissions.
+59. Support access must be limited.
+60. Billing portal object authorization is mandatory.
+61. Invoice links must be securely authorized.
+62. Cache keys must preserve tenant identity.
+63. Search indexes must preserve tenant boundaries.
+64. Exports must be permission-controlled.
+65. Financial records must remain auditable.
+66. Privacy deletion must not corrupt required financial records.
+67. Backup must protect billing records.
+68. Restore must not trigger duplicate financial effects.
+69. Billing jobs must be idempotent.
+70. Billing jobs must be observable.
+71. Queue isolation is mandatory for scale.
+72. Provider rate limits must be respected.
+73. Checkout payment authority remains separate from subscription billing.
+74. Analytics must not become financial source of truth.
+75. Financial reports must reconcile with authoritative records.
+76. Reconciliation mismatches must be visible.
+77. Test billing accounts must be clearly separated.
+78. Production financial reports must exclude test data where configured.
+79. Package downgrade must preserve historical billing data.
+80. Package cancellation must preserve financial obligations.
+81. Store deletion must follow financial retention rules.
+82. Super Admin overrides require audit.
+83. Complimentary accounts must use controlled billing states.
+84. Price overrides require authorization.
+85. Billing communication is transactional unless explicitly marketing.
+86. Billing documents must be reproducible from immutable snapshots.
+87. Localization must not change stored financial values.
+88. Accessibility is required for billing interfaces.
+89. Security testing is mandatory.
+90. Cross-tenant testing is mandatory.
+91. Concurrency testing is mandatory.
+92. Failure testing is mandatory.
+93. Reconciliation testing is mandatory.
+94. Restore testing is mandatory.
+95. Performance testing is mandatory.
+96. Documentation is mandatory.
+97. Production configuration must be validated.
+98. Rollback procedures must be documented.
+99. Database migrations must be safe and reversible where possible.
+100. The billing architecture must remain extensible for future
+    commercial models.
+
+============================================================
+END OF MODULE 29
+============================================================

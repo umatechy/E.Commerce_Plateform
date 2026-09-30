@@ -1,0 +1,1378 @@
+====================================================================
+UMAR TECHY E-COMMERCE PLATFORM
+MASTER PROJECT BLUEPRINT — MODULE 19
+DOMAIN MANAGEMENT
+Technical Specification — English Only
+Version 1.0
+====================================================================
+
+1. MODULE PURPOSE
+--------------------------------------------------------------------
+Module 19 provides the Core Domain Management Engine for the Umar
+Techy Multi-Tenant E-Commerce Platform.
+
+The module manages the relationship between stores/tenants and their
+public web domains, including:
+
+- Platform subdomains.
+- Customer-owned custom domains.
+- Umar Techy-managed domains.
+- Domain verification.
+- DNS verification foundations.
+- Domain attachment.
+- Primary domain selection.
+- Domain aliases.
+- HTTPS/SSL readiness.
+- Domain status.
+- Domain redirects.
+- Domain lifecycle.
+- Domain health.
+- Tenant-safe routing.
+- Domain migration.
+- Domain removal.
+- Domain ownership metadata.
+- Future automated domain purchasing/renewal integration.
+
+Core principle:
+
+ONE CORE MULTI-TENANT PLATFORM
+        +
+DOMAIN RESOLUTION LAYER
+        +
+TENANT-SCOPED DOMAIN RECORDS
+        +
+VERIFICATION / SSL STATE
+        +
+SAFE PUBLIC ROUTING
+
+No domain configuration may expose one tenant's storefront,
+content, files, sessions, or data to another tenant.
+
+
+2. PRIMARY OBJECTIVES
+--------------------------------------------------------------------
+The module shall:
+
+1. Resolve incoming domains to the correct tenant/store.
+2. Support platform-generated subdomains.
+3. Support customer-owned custom domains.
+4. Support Umar Techy-managed domains.
+5. Support multiple domains per store where entitled.
+6. Provide primary-domain selection.
+7. Provide domain verification workflows.
+8. Provide DNS verification foundations.
+9. Provide HTTPS/SSL lifecycle foundations.
+10. Support domain aliases and redirects.
+11. Prevent domain collisions.
+12. Prevent host-header attacks.
+13. Prevent cross-tenant routing.
+14. Support domain migration.
+15. Support domain removal.
+16. Provide domain health/status.
+17. Integrate with storefront, SEO, hosting, and infrastructure.
+18. Preserve tenant identity during domain changes.
+19. Support future automated registrar integration.
+20. Provide comprehensive security and testing.
+
+
+3. ARCHITECTURAL POSITION
+--------------------------------------------------------------------
+Module 19 owns:
+
+- Domain records.
+- Domain normalization.
+- Domain verification.
+- Domain attachment.
+- Primary-domain selection.
+- Domain aliases.
+- Domain routing metadata.
+- Domain lifecycle.
+- Domain redirect configuration.
+- Domain health metadata.
+- SSL status metadata.
+- DNS verification state.
+- Domain migration state.
+- Registrar integration foundation.
+
+Module 19 does NOT own:
+
+- Store identity/lifecycle — Module 03.
+- Subscription/package entitlement — Module 04.
+- Hosting infrastructure — Module 20.
+- SEO rules — Module 16.
+- Theme — Module 17.
+- Animation — Module 18.
+- Payment processing — Module 12.
+- Email delivery — Module 21.
+
+Those modules remain authoritative for their respective domains.
+
+
+4. DOMAIN TYPES
+--------------------------------------------------------------------
+Supported domain types:
+
+PLATFORM_SUBDOMAIN
+CUSTOMER_OWNED_DOMAIN
+UMAR_TECHY_MANAGED_DOMAIN
+DOMAIN_ALIAS
+FUTURE_MARKETPLACE_DOMAIN
+
+Examples conceptually:
+
+store-name.platform-domain.tld
+www.customer-domain.tld
+customer-domain.tld
+
+The actual platform domain must be environment-specific and must not
+be hard-coded into business logic.
+
+
+5. DOMAIN OWNERSHIP MODEL
+--------------------------------------------------------------------
+Every custom domain must have an ownership classification:
+
+CUSTOMER_OWNED
+UMAR_TECHY_MANAGED
+UNCLASSIFIED_PENDING_VERIFICATION
+
+Ownership metadata may include:
+
+- Owner type.
+- Owner reference.
+- Registration provider reference.
+- Registrar reference.
+- Expiry date where available.
+- Renewal status.
+- Transfer status.
+
+Domain ownership information must never be treated as proof of
+ownership until verification succeeds.
+
+
+6. DOMAIN NORMALIZATION
+--------------------------------------------------------------------
+Before storage or comparison, domains must be normalized.
+
+Normalization should include:
+
+- Lowercase hostname.
+- Unicode/punycode handling.
+- Removal of accidental trailing dot where appropriate.
+- Port removal.
+- Scheme removal for hostname comparison.
+- Safe whitespace handling.
+- IDN validation.
+- Label validation.
+
+The system must distinguish:
+
+Hostname
+from
+Full URL.
+
+Only valid hostnames may be registered.
+
+
+7. DOMAIN VALIDATION
+--------------------------------------------------------------------
+Validate:
+
+- Domain syntax.
+- Label length.
+- Total hostname length.
+- Allowed characters.
+- IDN/punycode rules.
+- Reserved platform domains.
+- Restricted subdomains.
+- Unsupported public suffix patterns.
+- Internal/private hostnames.
+- Localhost and loopback addresses where applicable.
+
+Reject dangerous or invalid values.
+
+
+8. PLATFORM SUBDOMAIN SYSTEM
+--------------------------------------------------------------------
+Each store may receive a platform subdomain.
+
+Requirements:
+
+- Globally unique.
+- Stable while store exists.
+- Safe slug.
+- Tenant-linked.
+- Available before custom domain configuration.
+- Suitable as fallback domain.
+
+Subdomain changes, if allowed, must use redirect/alias handling and
+preserve the old route where appropriate.
+
+
+9. CUSTOM DOMAIN ATTACHMENT
+--------------------------------------------------------------------
+Workflow:
+
+Enter Domain
+→ Normalize
+→ Validate
+→ Check Availability
+→ Create Pending Domain
+→ Generate Verification Instructions
+→ Verify Ownership
+→ Validate DNS
+→ Provision/Validate SSL
+→ Attach to Store
+→ Optional Primary Selection
+→ Activate
+
+A domain must never become an active public tenant route before
+verification and required infrastructure checks succeed.
+
+
+10. DOMAIN AVAILABILITY / COLLISION
+--------------------------------------------------------------------
+Before attachment, verify:
+
+- Domain is not attached to another tenant.
+- Domain is not reserved.
+- Domain is not a platform infrastructure domain.
+- Domain is not blocked.
+- Domain is not already pending for another store.
+- Domain does not create an unsafe wildcard collision.
+
+Concurrency controls are required so two tenants cannot claim the
+same domain simultaneously.
+
+
+11. PRIMARY DOMAIN
+--------------------------------------------------------------------
+Each store may have one primary public domain.
+
+Primary domain rules:
+
+- Must be verified.
+- Must be active.
+- Must have required HTTPS readiness.
+- Must belong to the same tenant.
+- Must be unique per store.
+
+Changing the primary domain must be transactional.
+
+The previous primary domain may become an alias/redirect according to
+store policy.
+
+
+12. DOMAIN ALIASES
+--------------------------------------------------------------------
+A store may have aliases such as:
+
+- www version.
+- Non-www version.
+- Legacy domain.
+- Previous platform subdomain.
+- Alternate verified domain.
+
+Alias behavior may be:
+
+- Redirect to primary.
+- Serve same storefront where technically appropriate.
+
+SEO-sensitive domains should normally redirect to the canonical
+primary domain rather than create duplicate indexable storefronts.
+
+
+13. WWW / NON-WWW POLICY
+--------------------------------------------------------------------
+The platform should support:
+
+- Primary apex domain.
+- Primary www hostname.
+
+The system should define a deterministic canonical policy.
+
+Example:
+
+https://example.com
+or
+https://www.example.com
+
+Only one should normally be the canonical public hostname.
+
+Redirect behavior must avoid loops.
+
+
+14. DNS VERIFICATION
+--------------------------------------------------------------------
+Support verification methods such as:
+
+- TXT record.
+- CNAME record.
+- File-based verification foundation.
+- Provider API verification where supported.
+
+Verification records should include:
+
+- Domain.
+- Method.
+- Token/challenge.
+- Created timestamp.
+- Expiry.
+- Status.
+- Attempt history.
+
+Tokens must be unpredictable and tenant-scoped.
+
+
+15. DNS CONFIGURATION GUIDANCE
+--------------------------------------------------------------------
+The admin UI should provide clear instructions for:
+
+- A record.
+- CNAME.
+- TXT verification.
+- www configuration.
+- Apex configuration.
+- Nameserver/provider-specific configuration where applicable.
+
+The platform must not assume every registrar supports identical
+record behavior.
+
+DNS instructions must be environment-aware.
+
+
+16. DNS PROPAGATION
+--------------------------------------------------------------------
+Domain state must account for propagation.
+
+Possible statuses:
+
+PENDING_DNS
+VERIFYING
+VERIFIED
+DNS_MISCONFIGURED
+PROPAGATING
+ACTIVE
+
+The UI should distinguish:
+
+- Verification not attempted.
+- Verification pending.
+- Verification failed.
+- DNS incorrect.
+- DNS verified but infrastructure pending.
+
+
+17. SSL / HTTPS
+--------------------------------------------------------------------
+Every production custom domain should support HTTPS.
+
+Domain lifecycle may include:
+
+SSL_PENDING
+SSL_PROVISIONING
+SSL_ACTIVE
+SSL_RENEWAL_PENDING
+SSL_ERROR
+SSL_EXPIRED
+
+The exact certificate provisioning mechanism belongs to Module 20,
+but Module 19 owns domain-level SSL state.
+
+HTTP requests should redirect to HTTPS when production readiness
+allows.
+
+
+18. SSL RENEWAL
+--------------------------------------------------------------------
+Support lifecycle metadata for:
+
+- Certificate issued.
+- Expiry.
+- Renewal requested.
+- Renewal successful.
+- Renewal failed.
+
+Renewal failures should trigger monitoring and administrative
+alerts through Module 21/24.
+
+
+19. DOMAIN LIFECYCLE
+--------------------------------------------------------------------
+Domain states:
+
+PENDING
+VERIFICATION_REQUIRED
+VERIFYING
+VERIFIED
+CONFIGURING
+SSL_PENDING
+ACTIVE
+SUSPENDED
+MIGRATING
+ERROR
+DISABLED
+REMOVING
+REMOVED
+
+State transitions must be explicit and audited.
+
+
+20. STORE LIFECYCLE INTEGRATION
+--------------------------------------------------------------------
+Domain availability depends on store state.
+
+Examples:
+
+PROVISIONING:
+Platform subdomain may be prepared.
+
+ONBOARDING:
+Custom domain may be configured.
+
+TRIAL:
+Allowed according to entitlement.
+
+ACTIVE:
+Normal public routing.
+
+SUSPENDED:
+Public behavior follows platform suspension policy.
+
+CANCELLED:
+Domain may redirect or become inactive according to policy.
+
+ARCHIVED:
+Public domain should not remain accidentally active.
+
+
+21. TENANT ROUTING
+--------------------------------------------------------------------
+Incoming request routing:
+
+Request Host
+→ Normalize Host
+→ Resolve Domain
+→ Resolve Store/Tenant
+→ Validate Store State
+→ Resolve Locale/Theme/Content
+→ Continue to Storefront
+
+The domain resolver must execute before tenant-owned storefront
+data is accessed.
+
+
+22. HOST HEADER SECURITY
+--------------------------------------------------------------------
+The platform must not trust arbitrary Host headers.
+
+Controls:
+
+- Allowlisted domain records.
+- Verified domain status.
+- Environment-aware host validation.
+- Proxy-aware trusted-host configuration.
+- Reject unknown hosts.
+- Prevent host-header injection.
+- Prevent password-reset poisoning.
+- Prevent absolute-URL poisoning.
+
+Never construct tenant URLs solely from untrusted Host input.
+
+
+23. CROSS-TENANT PROTECTION
+--------------------------------------------------------------------
+The following must remain isolated:
+
+- Domains.
+- Sessions.
+- Cookies.
+- Storefront cache.
+- SEO metadata.
+- Themes.
+- Content.
+- Media.
+- API context.
+- Webhooks.
+- Redirects.
+- Analytics identifiers.
+
+A domain mapped to Store A must never resolve to Store B.
+
+
+24. COOKIE & SESSION DOMAIN POLICY
+--------------------------------------------------------------------
+Domain routing must integrate with authentication safely.
+
+Requirements:
+
+- Store-specific cookie strategy.
+- Avoid overly broad cookie domains.
+- Secure flag in production.
+- HttpOnly where appropriate.
+- SameSite policy.
+- Tenant-aware session isolation.
+
+Custom-domain storefront sessions must not leak to another domain.
+
+
+25. CANONICAL URL INTEGRATION
+--------------------------------------------------------------------
+Module 16 consumes the active primary domain from Module 19.
+
+When primary domain changes:
+
+- Canonical URLs update according to SEO policy.
+- Sitemap URLs update.
+- Social URLs update.
+- Redirects may be created.
+- Cache must be invalidated.
+- Old domain handling must be preserved according to configuration.
+
+Module 19 owns domain identity; Module 16 owns SEO canonical rules.
+
+
+26. DOMAIN MIGRATION
+--------------------------------------------------------------------
+Support migration:
+
+Old Domain
+→ Verification of New Domain
+→ DNS/SSL Readiness
+→ New Domain Activation
+→ Primary Domain Switch
+→ Redirect Strategy
+→ Cache Invalidation
+→ SEO Update
+→ Monitoring
+
+Migration must preserve:
+
+- Store ID.
+- Tenant ID.
+- Products.
+- Orders.
+- Customers.
+- Inventory.
+- Theme.
+- Content.
+- Subscription.
+
+Domain migration must not clone the store.
+
+
+27. DOMAIN REMOVAL
+--------------------------------------------------------------------
+Before removing a domain:
+
+- Confirm it is not the only active domain if a store remains active.
+- Confirm replacement primary domain where necessary.
+- Confirm redirect strategy.
+- Confirm SSL cleanup.
+- Confirm cache cleanup.
+- Confirm DNS/infrastructure cleanup requirements.
+
+Removal should use a safe multi-step workflow.
+
+
+28. DOMAIN SUSPENSION
+--------------------------------------------------------------------
+A domain may be suspended because of:
+
+- Store suspension.
+- Verification failure.
+- Abuse/security action.
+- Subscription state.
+- Infrastructure failure.
+- Administrative action.
+
+Suspension must be auditable.
+
+Domain suspension must not delete tenant data.
+
+
+29. DOMAIN HEALTH
+--------------------------------------------------------------------
+Track:
+
+- DNS status.
+- Verification status.
+- SSL status.
+- Certificate expiry.
+- Routing status.
+- Last successful resolution.
+- Last health check.
+- Configuration mismatch.
+- Redirect status.
+
+Health statuses:
+
+HEALTHY
+WARNING
+ERROR
+UNKNOWN
+
+
+30. DOMAIN HEALTH CHECKS
+--------------------------------------------------------------------
+Checks may include:
+
+- DNS resolution.
+- Expected record presence.
+- HTTPS availability.
+- Certificate validity.
+- Correct tenant routing.
+- Redirect behavior.
+- Primary-domain consistency.
+- HTTP-to-HTTPS behavior.
+
+Health checks must avoid exposing private infrastructure details.
+
+
+31. DOMAIN REDIRECTS
+--------------------------------------------------------------------
+Support:
+
+- HTTP → HTTPS.
+- Alias → primary.
+- Legacy domain → primary.
+- Old hostname → new hostname.
+
+Redirect rules must prevent:
+
+- Loops.
+- Open redirects.
+- Cross-tenant destinations.
+- Infinite chains.
+
+Redirect policy must integrate with Module 16.
+
+
+32. DOMAIN-BASED LOCALE
+--------------------------------------------------------------------
+Future support may allow:
+
+- example.pk
+- example.com
+- example.co.uk
+
+to map to different locale or market configurations.
+
+This must not duplicate tenant business data.
+
+Locale selection must remain compatible with Module 16 SEO
+multilingual rules.
+
+
+33. INTERNATIONALIZED DOMAINS
+--------------------------------------------------------------------
+Support foundations for IDN domains.
+
+Requirements:
+
+- Unicode input validation.
+- Punycode normalization.
+- Safe display representation.
+- Homograph-risk awareness.
+- Certificate compatibility.
+
+Security-sensitive comparisons must use normalized canonical forms.
+
+
+34. SUBDOMAIN ROUTING
+--------------------------------------------------------------------
+Future support may include:
+
+- shop.example.com
+- blog.example.com
+- store.example.com
+
+Subdomain routing must explicitly declare ownership and purpose.
+
+Unregistered subdomains must not accidentally resolve to a tenant.
+
+
+35. WILDCARD DOMAIN POLICY
+--------------------------------------------------------------------
+If wildcard domains are supported:
+
+- Wildcard scope must be explicitly defined.
+- Tenant resolution must use a safe mapping.
+- Unknown subdomains must not expose a default tenant.
+- Reserved subdomains must be blocked.
+- Host-header validation must remain active.
+
+
+36. DOMAIN REGISTRAR INTEGRATION FOUNDATION
+--------------------------------------------------------------------
+Future integration may support:
+
+- Domain search.
+- Availability lookup.
+- Registration.
+- Renewal.
+- Transfer.
+- DNS management.
+- Contact management.
+- Privacy settings where supported.
+
+Registrar credentials must be isolated and encrypted.
+
+Module 19 should expose an adapter architecture rather than
+hard-code a single registrar.
+
+
+37. DOMAIN PURCHASE FLOW
+--------------------------------------------------------------------
+Future managed-domain purchase flow:
+
+Search
+→ Select Domain
+→ Verify Store/Customer
+→ Check Package/Eligibility
+→ Calculate Price
+→ Payment
+→ Registration
+→ DNS Setup
+→ SSL
+→ Activation
+
+Payment remains owned by Module 12/29.
+
+Registrar execution remains behind a provider adapter.
+
+
+38. DOMAIN RENEWAL
+--------------------------------------------------------------------
+Future support:
+
+- Manual renewal.
+- Automatic renewal.
+- Renewal reminders.
+- Expiry warnings.
+- Grace-period handling.
+- Registrar renewal result.
+
+Renewal state must be synchronized with authoritative registrar data
+where integrated.
+
+
+39. DOMAIN TRANSFER
+--------------------------------------------------------------------
+Future support:
+
+- Transfer request.
+- Authorization/EPP code reference.
+- Transfer pending.
+- Transfer approved.
+- Transfer rejected.
+- Transfer completed.
+
+Sensitive transfer credentials must never appear in ordinary logs.
+
+
+40. DOMAIN PACKAGE ENTITLEMENTS
+--------------------------------------------------------------------
+Module 04 remains authoritative.
+
+Possible entitlement keys:
+
+domains.platform_subdomain
+domains.custom
+domains.multiple
+domains.aliases
+domains.custom_primary
+domains.advanced_dns
+domains.managed
+domains.registrar
+domains.auto_renew
+domains.domain_transfer
+domains.multi_market
+
+Possible limits:
+
+- Custom domains.
+- Aliases.
+- Managed domains.
+- Domains per store.
+- DNS records.
+- Domain health checks.
+- Registrar services.
+
+
+41. API REQUIREMENTS
+--------------------------------------------------------------------
+Example endpoint families:
+
+/api/stores/{storeId}/domains
+/api/stores/{storeId}/domains/{domainId}
+/api/stores/{storeId}/domains/verify
+/api/stores/{storeId}/domains/{domainId}/primary
+/api/stores/{storeId}/domains/{domainId}/health
+/api/stores/{storeId}/domains/{domainId}/redirects
+/api/stores/{storeId}/domains/{domainId}/ssl
+/api/stores/{storeId}/domains/{domainId}/migration
+
+Every endpoint must verify tenant membership and permission.
+
+No client-supplied store ID may bypass tenant authorization.
+
+
+42. EVENTS & OUTBOX
+--------------------------------------------------------------------
+Important events:
+
+DomainCreated
+DomainVerificationRequested
+DomainVerificationSucceeded
+DomainVerificationFailed
+DnsConfigurationChanged
+DomainActivated
+DomainSuspended
+DomainPrimaryChanged
+DomainMigrationStarted
+DomainMigrationCompleted
+DomainRemovalStarted
+DomainRemoved
+SslProvisioningStarted
+SslActivated
+SslRenewalRequired
+SslRenewalFailed
+DomainHealthChanged
+
+Events must use the platform outbox architecture where applicable.
+
+
+43. DATA MODEL — HIGH LEVEL
+--------------------------------------------------------------------
+Core entities may include:
+
+Domain
+DomainAlias
+DomainVerification
+DomainVerificationAttempt
+DomainDnsConfiguration
+DomainSslStatus
+DomainHealth
+DomainHealthCheck
+DomainRedirect
+DomainRouting
+DomainPrimaryAssignment
+DomainMigration
+DomainOwnership
+DomainRegistrarAccount
+DomainRegistrarReference
+DomainRegistration
+DomainRenewal
+DomainTransfer
+DomainRestriction
+DomainAuditReference
+
+All tenant-owned domain records must contain or inherit tenant
+context.
+
+
+44. DATA INTEGRITY RULES
+--------------------------------------------------------------------
+1. A normalized domain can belong to only one active tenant mapping.
+2. A store can have only one primary domain.
+3. A primary domain must be verified and active.
+4. Unverified domains cannot become production-active.
+5. Domain state transitions must be valid.
+6. Domain removal must not silently delete tenant data.
+7. Domain migration must preserve Store ID/Tenant ID.
+8. Redirect destinations must be validated.
+9. Unknown hosts must not resolve to arbitrary tenants.
+10. Domain verification tokens must be unique and unpredictable.
+11. Domain records must be auditable.
+12. Registrar credentials must never be exposed in logs.
+13. DNS/SSL state must be distinguishable from ownership verification.
+14. Cross-tenant domain references must be rejected.
+
+
+45. CACHE & ROUTING PERFORMANCE
+--------------------------------------------------------------------
+Domain resolution is a high-frequency operation.
+
+Use:
+
+- In-memory caching.
+- Distributed caching.
+- Edge/CDN lookup where appropriate.
+- Efficient indexed domain lookup.
+
+Cache keys must use normalized hostname.
+
+Cache invalidation is required after:
+
+- Domain activation.
+- Primary-domain change.
+- Domain removal.
+- Domain suspension.
+- Domain migration.
+
+Never cache tenant resolution in a way that can survive an incorrect
+mapping after domain reassignment.
+
+
+46. RATE LIMITING
+--------------------------------------------------------------------
+Rate-limit:
+
+- Domain verification attempts.
+- DNS checks.
+- Health checks.
+- Domain creation.
+- Domain deletion.
+- Registrar API calls.
+- Transfer operations.
+
+Prevent automated abuse and excessive provider requests.
+
+
+47. ADMIN UI REQUIREMENTS
+--------------------------------------------------------------------
+Admin areas should include:
+
+Domains
+Add Domain
+Platform Domain
+Custom Domains
+Domain Verification
+DNS Instructions
+Primary Domain
+Aliases
+SSL Status
+Domain Health
+Redirects
+Domain Migration
+Domain Removal
+Registrar Services
+Renewal
+Transfer
+Domain History
+
+The UI must clearly display:
+
+- Domain status.
+- Verification status.
+- SSL status.
+- Primary status.
+- Ownership classification.
+- Required next action.
+
+
+48. CUSTOMER DOMAIN ONBOARDING UX
+--------------------------------------------------------------------
+Recommended flow:
+
+1. Enter domain.
+2. Explain ownership/verification.
+3. Show exact DNS records.
+4. Verify domain.
+5. Show DNS propagation status.
+6. Validate routing.
+7. Provision/validate SSL.
+8. Confirm activation.
+9. Offer primary-domain selection.
+
+The UI should distinguish technical errors from propagation delays.
+
+
+49. SECURITY REQUIREMENTS
+--------------------------------------------------------------------
+Mandatory controls:
+
+- Host-header validation.
+- Domain normalization.
+- Tenant isolation.
+- RBAC.
+- Least privilege.
+- Verification token security.
+- Open redirect prevention.
+- SSRF-safe DNS/URL handling.
+- Rate limiting.
+- Audit logging.
+- Secure registrar credentials.
+- Encryption for sensitive provider credentials.
+- No secret exposure in logs.
+- Trusted proxy configuration.
+- Safe cookie configuration.
+- DNS rebinding defenses where applicable.
+
+DNS resolution services must not be allowed to probe arbitrary
+internal infrastructure.
+
+
+50. OBSERVABILITY
+--------------------------------------------------------------------
+Track:
+
+- Domain creation.
+- Verification failures.
+- DNS failures.
+- SSL failures.
+- Routing failures.
+- Primary-domain changes.
+- Migration failures.
+- Health-check failures.
+- Registrar API failures.
+- Renewal failures.
+- Transfer failures.
+
+Metrics may include:
+
+- Active domains.
+- Verification success rate.
+- SSL provisioning time.
+- DNS propagation duration.
+- Domain resolution latency.
+- Health-check failure rate.
+
+
+51. BACKUP & RESTORE
+--------------------------------------------------------------------
+Module 23 must include:
+
+- Domain records.
+- Verification state metadata.
+- Primary-domain assignment.
+- Redirect configuration.
+- Migration metadata.
+- Registrar references without exposing secrets.
+
+Restore must preserve tenant boundaries.
+
+DNS/SSL infrastructure state may require reconciliation after
+restore rather than blind recreation.
+
+
+52. AUDIT REQUIREMENTS
+--------------------------------------------------------------------
+Audit:
+
+- Domain creation.
+- Domain verification.
+- DNS configuration changes.
+- Primary-domain changes.
+- Domain activation.
+- Suspension.
+- Migration.
+- Removal.
+- Redirect changes.
+- Registrar actions.
+- Renewal.
+- Transfer.
+- Ownership changes.
+
+Audit records should include:
+
+- Tenant.
+- Actor/system identity.
+- Action.
+- Domain.
+- Timestamp.
+- Result.
+- Relevant before/after references.
+
+
+53. TESTING REQUIREMENTS
+--------------------------------------------------------------------
+Domain tests:
+
+- Normalization.
+- Validation.
+- IDN handling.
+- Availability.
+- Collision prevention.
+- Primary-domain assignment.
+- Alias behavior.
+- Domain migration.
+- Domain removal.
+- Suspension.
+- Reactivation.
+
+Routing tests:
+
+- Correct tenant resolution.
+- Unknown host rejection.
+- Host-header attacks.
+- Cross-tenant routing.
+- Cache invalidation.
+- Domain reassignment.
+
+Verification tests:
+
+- TXT verification.
+- CNAME verification.
+- Expired token.
+- Invalid token.
+- Repeated verification.
+- Rate limiting.
+- DNS propagation state.
+
+SSL tests:
+
+- Pending.
+- Active.
+- Expired.
+- Renewal failure.
+- HTTPS redirect.
+
+Security tests:
+
+- Host-header injection.
+- Open redirect.
+- SSRF.
+- DNS rebinding.
+- Privilege escalation.
+- Cross-tenant access.
+- Secret leakage.
+- Registrar credential protection.
+
+Concurrency tests:
+
+- Two stores claiming same domain.
+- Simultaneous primary-domain changes.
+- Migration race conditions.
+- Removal vs activation.
+
+Performance tests:
+
+- High-volume domain resolution.
+- Cache hit/miss.
+- Domain reassignment invalidation.
+- Health-check workload.
+
+
+54. ACCEPTANCE CRITERIA
+--------------------------------------------------------------------
+Module 19 is complete only when:
+
+1. Platform subdomains work.
+2. Custom domains work.
+3. Domain normalization works.
+4. Domain validation works.
+5. Domain collision prevention works.
+6. Verification works.
+7. DNS state is represented correctly.
+8. SSL state is represented correctly.
+9. Primary domain works.
+10. Aliases work.
+11. Redirects work safely.
+12. Tenant routing works.
+13. Host-header protection works.
+14. Domain migration works.
+15. Domain removal works safely.
+16. Domain suspension works.
+17. Domain health checks work.
+18. Package entitlements work.
+19. API is tenant-aware.
+20. Events/outbox work.
+21. Audit logging works.
+22. Cache invalidation works.
+23. Security tests pass.
+24. Concurrency tests pass.
+25. Performance tests pass.
+26. Backup/restore compatibility works.
+27. Future registrar adapter foundation exists.
+28. Build and deployment checks pass.
+
+
+55. REQUIRED FOLLOW-UP ARTIFACTS
+--------------------------------------------------------------------
+After implementation, create and maintain:
+
+1. Module 19 implementation checklist.
+2. Domain data model blueprint.
+3. Domain lifecycle/state diagram.
+4. Domain verification specification.
+5. DNS configuration specification.
+6. SSL lifecycle specification.
+7. Tenant routing specification.
+8. Host-header security specification.
+9. Primary-domain/canonical-domain specification.
+10. Domain migration runbook.
+11. Domain removal runbook.
+12. Registrar adapter specification.
+13. Domain purchase/renewal specification.
+14. Permission matrix.
+15. Package entitlement matrix.
+16. API contract.
+17. Event/outbox specification.
+18. Health-check specification.
+19. Automated test matrix.
+20. Security audit checklist.
+21. Backup/restore reconciliation plan.
+22. Production DNS/SSL checklist.
+23. Module 19 completion report.
+24. Repository checkpoint/progress note.
+
+
+56. CLAUDE DEVELOPMENT REQUIREMENTS
+--------------------------------------------------------------------
+Claude must:
+
+1. Read the Project Bible and all finalized module blueprints.
+2. Treat Module 19 as authoritative for domain responsibilities.
+3. Inspect the repository before implementation.
+4. Reuse existing infrastructure abstractions.
+5. Preserve strict tenant isolation.
+6. Never trust arbitrary Host headers.
+7. Never perform destructive database operations without explicit
+   authorization.
+8. Implement migrations safely.
+9. Add automated tests.
+10. Test platform subdomains.
+11. Test custom domains.
+12. Test domain verification.
+13. Test primary-domain switching.
+14. Test redirects.
+15. Test tenant routing.
+16. Test cache invalidation.
+17. Test SSL lifecycle states.
+18. Test migration/removal.
+19. Test concurrent domain claims.
+20. Test security attack scenarios.
+21. Run all relevant builds and tests.
+22. Record all fixes.
+23. Commit only after validation.
+24. Push only according to the established workflow.
+25. Preserve a concise repository checkpoint after the module.
+
+
+57. PRODUCTION READINESS
+--------------------------------------------------------------------
+Before production:
+
+- Confirm DNS architecture.
+- Confirm trusted proxy configuration.
+- Confirm Host validation.
+- Confirm platform wildcard/subdomain behavior.
+- Confirm custom domain verification.
+- Confirm SSL provisioning.
+- Confirm HTTP-to-HTTPS behavior.
+- Confirm primary-domain behavior.
+- Confirm alias redirects.
+- Confirm SEO canonical integration.
+- Confirm cache invalidation.
+- Confirm tenant routing.
+- Confirm session/cookie isolation.
+- Confirm monitoring.
+- Confirm certificate renewal monitoring.
+- Confirm domain health checks.
+- Confirm backup/restore.
+- Confirm package entitlements.
+- Confirm domain migration procedure.
+- Confirm safe domain removal.
+- Confirm representative domains across environments.
+
+
+58. FINAL ARCHITECTURAL RULES
+--------------------------------------------------------------------
+RULE 01:
+Module 19 owns domain identity and domain-to-tenant routing metadata.
+
+RULE 02:
+Every active custom domain must belong to exactly one tenant.
+
+RULE 03:
+One store may have multiple domains only when permitted by
+entitlements.
+
+RULE 04:
+A store may have only one primary public domain at a time.
+
+RULE 05:
+A domain must be verified before production activation.
+
+RULE 06:
+Domain ownership verification and DNS configuration are distinct
+states.
+
+RULE 07:
+SSL state and domain ownership state are distinct states.
+
+RULE 08:
+Unknown Host headers must never resolve to an arbitrary tenant.
+
+RULE 09:
+Host headers are untrusted input.
+
+RULE 10:
+Tenant resolution must occur before tenant-owned storefront data is
+loaded.
+
+RULE 11:
+Domain mapping must never permit cross-tenant data access.
+
+RULE 12:
+Primary-domain changes must preserve Store ID and Tenant ID.
+
+RULE 13:
+Domain migration must not clone or recreate the store.
+
+RULE 14:
+Old domains should be redirected only according to explicit safe
+policy.
+
+RULE 15:
+Open redirects are prohibited.
+
+RULE 16:
+Domain verification tokens must be unpredictable and short-lived
+where applicable.
+
+RULE 17:
+Registrar credentials and transfer secrets must never appear in
+ordinary logs.
+
+RULE 18:
+DNS checking must be SSRF-safe and must not probe internal
+infrastructure.
+
+RULE 19:
+Domain resolution caches must always preserve tenant identity.
+
+RULE 20:
+Domain reassignment must invalidate all affected routing caches.
+
+RULE 21:
+Session/cookie configuration must prevent cross-domain or
+cross-tenant leakage.
+
+RULE 22:
+Module 16 owns SEO canonical policy; Module 19 provides the active
+domain identity.
+
+RULE 23:
+Module 20 owns infrastructure execution; Module 19 owns domain
+lifecycle metadata and contracts.
+
+RULE 24:
+Package entitlements control advanced domain capabilities.
+
+RULE 25:
+Domain suspension must not delete tenant business data.
+
+RULE 26:
+Domain removal must be an explicit, auditable workflow.
+
+RULE 27:
+All privileged domain changes must be audited.
+
+RULE 28:
+Domain health must distinguish DNS, SSL, routing, and verification
+problems.
+
+RULE 29:
+The architecture must support future registrar and automated domain
+services without coupling the core platform to one provider.
+
+RULE 30:
+Module 19 must integrate through explicit contracts, APIs, events,
+security controls, and authoritative ownership boundaries.
+
+====================================================================
+END OF MODULE 19 — DOMAIN MANAGEMENT
+====================================================================
