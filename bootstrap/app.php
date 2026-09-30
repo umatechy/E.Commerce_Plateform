@@ -122,6 +122,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'staff.principal' => EnsureStaffPrincipal::class,
             'customer.principal' => EnsureCustomerPrincipal::class,
             'customer.optional' => AttemptCustomerAuthentication::class,
+            'storefront.store' => \App\Domain\Storefront\Http\Middleware\ResolveStorefrontStore::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {

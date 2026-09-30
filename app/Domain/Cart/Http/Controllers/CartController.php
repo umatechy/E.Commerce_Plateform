@@ -51,8 +51,12 @@ final class CartController
 
         $carts->addItem(
             $cart,
-            productId: $request->input('product_id'),
-            productVariantId: $request->input('product_variant_id'),
+            productId: $request->filled('product')
+                ? $this->idFor(\App\Domain\Catalog\Models\Product::class, $request->string('product')->toString(), 'product')
+                : $request->input('product_id'),
+            productVariantId: $request->filled('variant')
+                ? $this->idFor(\App\Domain\Catalog\Models\ProductVariant::class, $request->string('variant')->toString(), 'variant')
+                : $request->input('product_variant_id'),
             quantity: (int) $request->input('quantity'),
         );
 
@@ -128,5 +132,22 @@ final class CartController
     private function assertOwnsCartItem(Cart $cart, CartItem $item): void
     {
         abort_unless($item->cart_id === $cart->id, 404);
+    }
+
+    /**
+     * A public id → internal id, looked up under the tenant scope, so
+     * another store's product is simply "not found".
+     *
+     * @param class-string<\Illuminate\Database\Eloquent\Model> $model
+     */
+    private function idFor(string $model, string $publicId, string $field): int
+    {
+        $id = $model::query()->where('public_id', $publicId)->value('id');
+
+        if ($id === null) {
+            throw \Illuminate\Validation\ValidationException::withMessages([$field => "This {$field} does not exist in this store."]);
+        }
+
+        return (int) $id;
     }
 }

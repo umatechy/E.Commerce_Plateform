@@ -78,6 +78,10 @@ Route::middleware(['auth:sanctum', 'staff.principal'])->group(function () {
     Route::get('/subscription', [SubscriptionController::class, 'show']);
     Route::get('/subscription/usage', [SubscriptionController::class, 'usage']);
 
+    // --- Storefront setup & launch (Module 05, Phase B24) ---
+    Route::get('/storefront/setup', [\App\Domain\Storefront\Http\Controllers\StorefrontSetupController::class, 'show']);
+    Route::post('/storefront/launch', [\App\Domain\Storefront\Http\Controllers\StorefrontSetupController::class, 'launch']);
+
     // --- Billing, Invoices & Renewals (Module 29, Phase B23) — the store's own only ---
     Route::get('/billing', [BillingController::class, 'show']);
     Route::get('/billing/invoices', [BillingController::class, 'invoices']);
@@ -88,6 +92,11 @@ Route::middleware(['auth:sanctum', 'staff.principal'])->group(function () {
 
     // --- Catalog (Modules 06-07, Phase B3) ---
     Route::apiResource('products', ProductController::class);
+    // Phase B24: storefront images of a product.
+    Route::get('/products/{product}/images', [\App\Domain\Catalog\Http\Controllers\ProductImageController::class, 'index']);
+    Route::post('/products/{product}/images', [\App\Domain\Catalog\Http\Controllers\ProductImageController::class, 'store']);
+    Route::put('/products/{product}/images/order', [\App\Domain\Catalog\Http\Controllers\ProductImageController::class, 'reorder']);
+    Route::delete('/products/{product}/images/{image}', [\App\Domain\Catalog\Http\Controllers\ProductImageController::class, 'destroy']);
     Route::apiResource('products.variants', ProductVariantController::class)
         ->except(['show']);
     Route::apiResource('categories', CategoryController::class)->except(['show']);

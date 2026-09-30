@@ -124,6 +124,20 @@ final class AppServiceProvider extends ServiceProvider
         Gate::policy(Shipment::class, ShipmentPolicy::class);
         Gate::policy(Promotion::class, PromotionPolicy::class);
 
+        // Module 05 (Phase B24): any change shoppers can see invalidates
+        // that store's storefront cache (see StorefrontCache).
+        foreach ([
+            \App\Domain\Catalog\Models\Product::class, \App\Domain\Catalog\Models\ProductVariant::class,
+            \App\Domain\Catalog\Models\ProductImage::class, \App\Domain\Catalog\Models\Category::class,
+            \App\Domain\Catalog\Models\Brand::class, \App\Domain\Inventory\Models\Inventory::class,
+            \App\Domain\Inventory\Models\Warehouse::class, \App\Domain\Seo\Models\ContentPage::class,
+            \App\Domain\Seo\Models\SeoSetting::class, \App\Domain\Theme\Models\StoreTheme::class,
+            \App\Domain\Settings\Models\StoreSetting::class, \App\Domain\Domains\Models\Domain::class,
+            Store::class,
+        ] as $model) {
+            $model::observe(\App\Domain\Storefront\Observers\StorefrontCacheObserver::class);
+        }
+
         // Seeds the default Owner/Manager/Staff roles for every new store —
         // see App\Domain\Tenancy\Observers\StoreObserver docblock.
         Store::observe(StoreObserver::class);

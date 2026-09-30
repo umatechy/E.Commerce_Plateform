@@ -69,7 +69,7 @@ final class CheckoutService
     ) {}
 
     /** Module 12 §88 "Package Entitlements" — every tier is entitled to all 3 B7 methods by default (see docs/development/b7-inspection-findings.md); the check exists so a future tier restriction is configurable without a code change. */
-    private const FEATURE_KEY_BY_METHOD = [
+    public const FEATURE_KEY_BY_METHOD = [
         'cod' => 'payment.cod',
         'bank_transfer' => 'payment.bank_transfer',
         'mock_redirect' => 'payment.online',

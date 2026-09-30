@@ -125,9 +125,13 @@ final class CartService
         [$product, $variant, $priceMinor] = $this->resolvePurchasableItem($productId, $productVariantId);
 
         return DB::transaction(function () use ($cart, $product, $variant, $quantity, $priceMinor) {
+            // Phase B24 fix: this looked up `product_id IS NULL` for a
+            // variant, never found the existing line, and the insert then
+            // hit uniq_cart_items_cart_id_product_id_product_variant_id —
+            // adding the same variant twice answered 500.
             $existing = CartItem::query()
                 ->where('cart_id', $cart->id)
-                ->where('product_id', $variant !== null ? null : $product->id)
+                ->where('product_id', $product->id)
                 ->when(
                     $variant !== null,
                     fn ($q) => $q->where('product_variant_id', $variant->id),
@@ -194,7 +198,7 @@ final class CartService
         $subtotal = 0;
         $hasIssues = false;
 
-        foreach ($cart->items()->with(['product', 'variant'])->get() as $item) {
+        foreach ($cart->items()->with(['product.images', 'variant'])->get() as $item) {
             $product = $item->product;
             $variant = $item->variant;
             $issue = null;
@@ -228,6 +232,12 @@ final class CartService
             $items[] = [
                 'cart_item_id' => $item->id,
                 'product_id' => $product?->public_id,
+                // Phase B24: what a storefront cart needs to show the line.
+                'product_name' => $product?->name,
+                'product_slug' => $product?->slug,
+                'variant_id' => $variant?->public_id,
+                'variant_options' => $variant?->option_values,
+                'image_url' => $product !== null ? $this->lineImageUrl($product, $variant) : null,
                 'quantity' => $item->quantity,
                 'price_at_add_minor' => $item->price_at_add_minor,
                 'current_price_minor' => $currentPriceMinor,
@@ -412,6 +422,15 @@ final class CartService
      * still legitimately reject or accept based on the same rules
      * OrderService already enforces).
      */
+    /** The variant's own image when it has one, else the product's first. */
+    private function lineImageUrl(Product $product, ?ProductVariant $variant): ?string
+    {
+        $images = $product->images;
+        $image = ($variant !== null ? $images->firstWhere('product_variant_id', $variant->id) : null) ?? $images->first();
+
+        return $image?->url();
+    }
+
     private function availableQuantity(Product $product, ?ProductVariant $variant): ?int
     {
         $warehouse = Warehouse::query()->where('is_default', true)->first();

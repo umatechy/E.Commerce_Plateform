@@ -65,3 +65,22 @@ Route::middleware(['customer.optional'])->group(function () {
     // customer both allowed, same as Cart/Checkout) ---
     Route::get('/shipping/quote', [ShippingQuoteController::class, 'index']);
 });
+
+// --- Storefront API (Module 05, Phase B24) ---
+// Public catalog for headless/mobile storefronts. The store comes from
+// the verified Host domain, X-Store-Slug, or the signed-in customer; a
+// closed store answers 503 (ResolveStorefrontStore).
+Route::middleware(['customer.optional', 'storefront.store:api', 'throttle:120,1'])
+    ->prefix('storefront')
+    ->group(function () {
+        $controller = \App\Domain\Storefront\Http\Controllers\StorefrontApiController::class;
+        Route::get('/', [$controller, 'show']);
+        Route::get('/products', [$controller, 'products']);
+        Route::get('/products/{slug}', [$controller, 'product']);
+        Route::get('/categories', [$controller, 'categories']);
+        Route::get('/categories/{slug}', [$controller, 'category']);
+        Route::get('/brands', [$controller, 'brands']);
+        Route::get('/brands/{slug}', [$controller, 'brand']);
+        Route::get('/pages/{slug}', [$controller, 'page']);
+        Route::get('/search/suggest', [$controller, 'suggest']);
+    });

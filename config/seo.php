@@ -7,7 +7,9 @@
 // used for EVERY canonical/sitemap/Open-Graph URL this platform
 // generates; it is NEVER derived from the request's raw Host header.
 return [
-    'storefront_base_url' => env('STOREFRONT_BASE_URL', 'http://localhost'),
+    // Phase B24: the storefront lives at {APP_URL}/shop/{slug} unless a
+    // store has a verified custom domain (which SeoResolver prefers).
+    'storefront_base_url' => env('STOREFRONT_BASE_URL', rtrim((string) env('APP_URL', 'http://localhost'), '/').'/shop'),
 
     // Module 16 §19 "Sitemap Performance" — a documented threshold
     // above which sitemap output is chunked into an index + numbered

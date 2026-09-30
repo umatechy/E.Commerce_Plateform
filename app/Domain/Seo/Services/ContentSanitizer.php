@@ -19,22 +19,13 @@ namespace App\Domain\Seo\Services;
  */
 final class ContentSanitizer
 {
-    private const ALLOWED_TAGS = '<p><br><strong><em><b><i><u><ul><ol><li><a><h2><h3><h4><blockquote><img>';
-
     public function sanitize(string $html): string
     {
-        // Pass 1: drop every tag not in the allow-list outright (this
-        // alone already removes <script>, <iframe>, <object>, <embed>,
-        // <form>, <style>, event-carrying <svg>, etc.).
-        $stripped = strip_tags($html, self::ALLOWED_TAGS);
-
-        // Pass 2: even an ALLOWED tag (e.g. <a>, <img>) could carry a
-        // dangerous attribute — strip every on*="..." event-handler
-        // attribute and neutralize javascript:/data: URLs in href/src,
-        // regardless of quoting style.
-        $stripped = preg_replace('/\s+on[a-z]+\s*=\s*(".*?"|\'.*?\'|[^\s>]+)/i', '', $stripped);
-        $stripped = preg_replace('/(href|src)\s*=\s*(["\'])\s*(javascript|data)\s*:[^"\']*\2/i', '$1=$2#$2', $stripped);
-
-        return trim($stripped);
+        // Phase B24: the regex passes this method used to run could be
+        // bypassed (unquoted `href=javascript:`, entity-encoded schemes);
+        // it now delegates to the parser-based allow-list sanitizer, which
+        // keeps the same element set (p, br, strong, em, b, i, u, ul, ol,
+        // li, a, h2-h4, blockquote, img).
+        return (new \App\Support\HtmlSanitizer())->sanitize($html);
     }
 }

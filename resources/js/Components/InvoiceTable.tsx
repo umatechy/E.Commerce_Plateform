@@ -1,4 +1,7 @@
 import EmptyState from '@/Components/EmptyState';
+import { formatMoney } from '@/lib/money';
+
+export { formatMoney };
 
 /**
  * Module 29 (Phase B23) — a store's platform invoices. Amounts arrive in
@@ -17,13 +20,6 @@ export type Invoice = {
   period_end: string;
   due_at: string;
 };
-
-export function formatMoney(minor: number, currency: string): string {
-  const format = new Intl.NumberFormat(undefined, { style: 'currency', currency });
-  const digits = format.resolvedOptions().maximumFractionDigits ?? 2;
-
-  return format.format(minor / 10 ** digits);
-}
 
 function formatDate(iso: string): string {
   return new Date(iso).toLocaleDateString();

@@ -78,6 +78,12 @@ final class Product extends Model
         return $this->hasMany(ProductVariant::class);
     }
 
+    /** @return HasMany<ProductImage, $this> Phase B24: storefront images, in display order. */
+    public function images(): HasMany
+    {
+        return $this->hasMany(ProductImage::class)->orderBy('position')->orderBy('id');
+    }
+
     /** Module 06 §28: "Only appropriate active products should appear publicly." */
     public function isPubliclyVisible(): bool
     {
