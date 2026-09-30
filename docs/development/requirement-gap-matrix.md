@@ -32,8 +32,8 @@ probed the code (domains, models, 94 migrations, route files, schedules, UI
 pages). It is a document-level and code-probe review. It is not a
 section-by-section audit of every blueprint's 80–120 sections. That audit
 belongs to the Step-1 inspection of each future phase. URS v1.0 and Technical
-Architecture v1.0 were not available, so the traceability chain (SRS §49) is
-missing its URS link.
+Architecture v1.0 arrived after this review was written and are now in
+`docs/source/`. §5 records the owner's answers.
 
 ---
 
@@ -419,19 +419,22 @@ existing pattern: feature tests plus tenant-isolation tests for every endpoint.
 | G21 | Billing depth: proration, refunds/credit notes, add-ons, PDF, card gateway | BILL-006, M29 §42–54, §75 | Manual finance work | Extend B23 | P2 | G9 |
 | G22 | Feature flags + Module 35 extension points | CFG-005, M33 §16–17, M35 §5, §10 | Risky rollouts | Feature-flag service distinct from entitlements | P2 | — |
 
-## 5. Decisions needed from the project owner
+## 5. Owner decisions (answered 2026-09-30)
 
-These cannot be settled by code. The SRS §52 says to stop and ask rather than invent.
+The owner answered every question the same day. The full text is in
+[`docs/source/decisions/2026-09-30-project-decisions.txt`](../source/decisions/2026-09-30-project-decisions.txt).
 
-1. **URS v1.0 and Technical Architecture v1.0.** Where are they? They are needed for the SRS §49 traceability chain.
-2. **Tax policy** for G3: does tax apply, is it inclusive or exclusive, and at which rates and regions?
-3. **Payment providers** (JazzCash, Easypaisa, card) and a **courier** choice, with sandbox credentials (G9).
-4. **SMS/WhatsApp/push provider** (G10).
-5. **Alert channel** for critical health and backups (email, WhatsApp or Slack) (G4).
-6. **Retention periods** for cancelled stores and backups, and RPO/RTO targets (G4, G14).
-7. **Inventory costing method** (FIFO, average or none). Deferred since B4 as an open decision.
-8. **AI provider** for Module 26 (G18).
-9. **Priorities**: confirm or change the proposed P0–P3 labels in this document.
+| # | Question | Answer | Effect |
+|---|---|---|---|
+| 1 | URS and Technical Architecture | Supplied; stored in `docs/source/urs/` and `docs/source/technical-architecture/` | Traceability chain complete |
+| 2 | Tax policy (G3) | Configurable per store and jurisdiction: inclusive/exclusive pricing, tax classes, rates, regions. **No hardcoded rate.** Pakistan rates are configured later, once confirmed legally | G3 builds the engine with **no seeded rates** |
+| 3 | Payment and courier (G9) | JazzCash, Easypaisa, and a card provider, all behind adapters. No fake credentials; sandbox credentials come from the providers and stay outside Git. Courier chosen during implementation from real API/sandbox availability | G9 waits for sandbox credentials |
+| 4 | SMS/WhatsApp (G10) | WhatsApp: Meta WhatsApp Business Cloud API. SMS: abstraction; Twilio or a Pakistan-local provider after verification | G10 can build the Meta adapter shape; no live calls without credentials |
+| 5 | Alert channel (G4) | Email mandatory; WhatsApp configurable; Slack future-ready | G4 builds email alerts + channel abstraction |
+| 6 | Retention, RPO/RTO (G4, G14) | Closed/suspended stores: 90 days. Backups: daily 30 days, monthly 12 months, plus pre-change backups. RPO 24 h, RTO 4 h are **targets** until tested | G4 retention policy; G14 closure workflow |
+| 7 | Inventory costing | **None** in the initial system; FIFO/WAC only via a future approved requirement | B4's open decision closed; nothing to build |
+| 8 | AI provider (G18) | OpenAI behind a provider abstraction; Module 26 must first define features, models, privacy, entitlements, limits, costs, audit, fallback | G18 starts with that definition |
+| 9 | Priorities | **Approved** as proposed | — |
 
 ## 6. Recommended order
 

@@ -6,15 +6,18 @@ Premium are entitlement tiers of one codebase.
 ## Specifications come first
 
 - The authoritative specs live in [`docs/source/`](docs/source/README.md): Project
-  Bible, SRS, Master Index, Master Development Prompt, and Module Blueprints 01–35.
+  Bible, URS, SRS, Technical Architecture, Master Index, Master Development Prompt,
+  Module Blueprints 01–35, and the owner's decisions (`docs/source/decisions/`).
   Read the relevant module blueprint **before** planning or building a phase.
   Do not rely on second-hand summaries in checkpoints.
 - The scope is **35 modules** (see the module map in `docs/source/README.md`). A
   module missing from the code is unbuilt scope, not unknown scope.
 - Never edit files under `docs/source/`. They are stored byte-for-byte and checked
   by `docs/source/SHA256SUMS`.
-- URS v1.0 and Technical Architecture v1.0 have **not** been received yet. Say so
-  instead of inventing their content.
+- Owner decisions (tax configurable/no hardcoded rates, provider adapters with no
+  fake credentials, alerts, retention/RPO/RTO, no inventory costing, OpenAI behind
+  an abstraction) are in `docs/source/decisions/`. Never invent credentials, tax
+  rates or provider capabilities.
 - Order of authority: Project Bible > SRS/URS > Technical Architecture > Module
   Blueprints > ADRs (`docs/adr/`) > existing code. Report conflicts; do not
   silently resolve them.

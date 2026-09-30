@@ -1,0 +1,106 @@
+PROJECT DECISIONS — CLARIFICATION BASELINE
+
+1. TAX POLICY
+Tax must be configurable per store and jurisdiction.
+The platform must support tax-inclusive and tax-exclusive pricing,
+tax classes, configurable tax rates, and applicable regions.
+No tax rate may be hardcoded into the core platform.
+For the initial Pakistan launch, actual tax rules/rates will be
+configured only after applicable current legal/tax requirements are
+confirmed.
+
+2. PAYMENT / SHIPPING PROVIDERS
+Initial payment gateway architecture shall support:
+- JazzCash
+- Easypaisa
+- Card payments through a suitable card gateway/provider
+
+Use a provider adapter architecture.
+
+No real production credentials exist yet and no fake credentials may be
+created. Sandbox/test credentials must be supplied separately by the
+providers and stored securely outside Git.
+
+Shipping/courier must also use a provider adapter. The first Pakistan
+courier provider will be selected during implementation based on actual
+API and sandbox availability. Do not hardcode a courier provider into the
+core architecture before this verification.
+
+3. SMS / WHATSAPP
+Initial WhatsApp provider:
+- Meta WhatsApp Business Cloud API
+
+SMS:
+- Provider abstraction from day one.
+- Initial provider may be Twilio or a suitable Pakistan-local SMS
+  provider after API, sender-ID, delivery and pricing verification.
+
+The Notification domain must remain provider-agnostic.
+
+4. CRITICAL ALERTS
+Initial critical operational alert channels:
+- Email: mandatory
+- WhatsApp: configurable for critical alerts
+- Slack: future-ready, not required for initial implementation
+
+Critical alerts may include:
+- backup failure
+- restore failure
+- severe store-health problems
+- infrastructure failure
+- important security events
+- other explicitly configured critical conditions
+
+5. RETENTION / RPO / RTO
+Closed/suspended store retention baseline:
+- 90 days after permanent closure/suspension, unless legal/contractual
+  requirements require longer retention.
+
+Backup retention baseline:
+- Daily backups: 30 days
+- Monthly backups: 12 months
+- Additional pre-change/critical backups according to backup policy
+
+Initial recovery targets:
+- RPO: 24 hours
+- RTO: 4 hours
+
+These are TARGETS, not claims of achieved production capability.
+Actual RPO/RTO must be verified through real backup/restore testing.
+
+6. INVENTORY COSTING
+Initial inventory module does NOT implement accounting valuation.
+
+Do not implement:
+- FIFO
+- Weighted Average Cost
+- another accounting costing method
+
+The initial inventory system maintains stock quantities, movements,
+reservations and the stock ledger.
+
+Future FIFO or Weighted Average Cost may be added through a separately
+approved accounting/costing requirement.
+
+7. AI PROVIDER
+Initial AI provider:
+- OpenAI API
+
+However, Module 26 must use a provider abstraction so other providers
+can be added later.
+
+AI credentials must remain in secure environment/configuration and never
+be committed to Git.
+
+Before implementing individual AI features, Module 26 must define:
+- feature list
+- provider/model selection
+- data/privacy rules
+- entitlement requirements
+- rate limits
+- usage/cost controls
+- audit requirements
+- failure/fallback behavior
+
+Do not invent production credentials, live provider access, sandbox
+credentials, tax rates, or provider capabilities.

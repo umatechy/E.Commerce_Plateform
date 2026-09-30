@@ -30,7 +30,7 @@ references in checkpoints.
 
 ## Inventory
 
-Received on 2026-09-30 from the project owner. The files were taken from the
+First batch received on 2026-09-30 from the project owner. The files were taken from the
 owner's local folder `E.Commerce Platform Blue prints` and are identical to
 `umartechy-ecommerce-blueprints.zip`, which also has 39 files with matching
 SHA-256 checksums. The 20 files also pasted into chat that day match them too.
@@ -42,8 +42,11 @@ SHA-256 checksums. The 20 files also pasted into chat that day match them too.
 | Master Project Blueprint — Master Index | [`master-index/`](master-index/) | ✅ Received |
 | Claude Master Development Prompt v1.0 | [`master-development-prompt/`](master-development-prompt/) | ✅ Received |
 | Module Blueprints 01–35 (all 35) | [`module-blueprints/`](module-blueprints/) | ✅ Received |
-| **URS v1.0** | — | ❌ **Not yet received.** Referenced by the Master Development Prompt §1 and the Project Bible |
-| **Technical Architecture v1.0** | — | ❌ **Not yet received.** Referenced by the Master Development Prompt §1 and the Project Bible |
+| URS v1.0 (Approved Planning Baseline) | [`urs/`](urs/) | ✅ Received 2026-09-30 (owner's `Downloads`, `..._FINAL.txt`) |
+| Technical Architecture v1.0 | [`technical-architecture/`](technical-architecture/) | ✅ Received 2026-09-30 (owner's `Downloads`, `..._FINAL.txt`) |
+| Project Decisions — Clarification Baseline | [`decisions/2026-09-30-project-decisions.txt`](decisions/2026-09-30-project-decisions.txt) | ✅ Owner's answers to the gap-matrix questions (tax, providers, alerts, retention/RPO/RTO, costing, AI). The owner also approved the gap-matrix priorities the same day |
+
+All documents referenced by the Master Development Prompt §1 are now present.
 
 ## Module map (from the Master Index)
 
