@@ -85,17 +85,20 @@ export default function StoreLayout({ shell, seo, children }: PropsWithChildren<
             <p className="font-semibold text-sf-text">{shell.store.name}</p>
             {shell.store.tagline && <p className="mt-1">{shell.store.tagline}</p>}
           </div>
-          {shell.navigation.pages.length > 0 && (
-            <ul className="space-y-1">
-              {shell.navigation.pages.map((page) => (
-                <li key={page.slug}>
-                  <Link href={`${base}/pages/${page.slug}`} className="hover:text-sf-text">
-                    {page.title}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          )}
+          <ul className="space-y-1">
+            {shell.navigation.pages.map((page) => (
+              <li key={page.slug}>
+                <Link href={`${base}/pages/${page.slug}`} className="hover:text-sf-text">
+                  {page.title}
+                </Link>
+              </li>
+            ))}
+            <li>
+              <Link href={`${base}/contact`} className="hover:text-sf-text">
+                Contact us
+              </Link>
+            </li>
+          </ul>
           {Object.keys(shell.store.social_links ?? {}).length > 0 && (
             <ul className="flex gap-3">
               {Object.entries(shell.store.social_links).map(([network, url]) => (

@@ -3,6 +3,7 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import LoadingState from '@/Components/LoadingState';
 import EmptyState from '@/Components/EmptyState';
 import ErrorState from '@/Components/ErrorState';
+import { adminErrorMessage, adminFetch } from '@/lib/adminApi';
 
 /**
  * Module 09 "Admin Order View" — list + status + cancel action where
@@ -41,13 +42,10 @@ export default function Index() {
     );
     if (!reason) return;
 
-    fetch(`/api/v1/orders/${orderId}/cancel`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ reason }),
-    })
-      .then((r) => (r.ok ? load() : r.json().then((b) => setError(b.message))))
-      .catch(() => setError('Could not cancel this order.'));
+    // adminFetch sends the XSRF token a stateful write needs (a bare fetch was refused with 419).
+    adminFetch(`/orders/${orderId}/cancel`, { method: 'POST', body: { reason } })
+      .then(load)
+      .catch((e) => setError(adminErrorMessage(e, 'Could not cancel this order.')));
   }
 
   return (

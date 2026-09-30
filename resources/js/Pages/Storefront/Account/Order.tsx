@@ -42,6 +42,10 @@ export default function Order({ storefront, seo, order_id }: StorefrontPageProps
           <p className="text-sm text-sf-muted">
             Placed {new Date(order.placed_at).toLocaleString()} · <span className="font-medium text-sf-text">{statusLabel(order.status)}</span>
             {order.cancellation_reason && ` (${order.cancellation_reason.replace(/_/g, ' ')})`}
+            {' · '}
+            <Link href={`${base}/account/support/new?order=${encodeURIComponent(order.id)}`} className="text-sf-accent">
+              Get help with this order
+            </Link>
           </p>
 
           <table className="w-full text-left text-sm">

@@ -32,3 +32,7 @@ Schedule::command('audit:prune')->dailyAt('03:10')->withoutOverlapping();
 // Hourly so a payment recorded late still renews within the hour; each
 // run is idempotent.
 Schedule::command('billing:run')->hourly()->withoutOverlapping();
+
+// Module 34 (Phase B26): flag support tickets that missed their service
+// level; close resolved tickets once the reopen window has passed.
+Schedule::command('support:maintain')->hourly()->withoutOverlapping();

@@ -1,5 +1,5 @@
 import { FormEvent } from 'react';
-import { useForm } from '@inertiajs/react';
+import { useApiForm } from '@/lib/useApiForm';
 
 /**
  * Store-owner self-registration. Submits to AuthController::register,
@@ -8,7 +8,7 @@ import { useForm } from '@inertiajs/react';
  * inputs a new owner actually provides.
  */
 export default function Register() {
-  const { data, setData, post, processing, errors } = useForm({
+  const { data, setData, post, processing, errors } = useApiForm({
     name: '',
     email: '',
     password: '',
@@ -18,7 +18,7 @@ export default function Register() {
 
   function submit(e: FormEvent) {
     e.preventDefault();
-    post('/api/v1/auth/register');
+    post('/auth/register', () => window.location.assign('/'));
   }
 
   return (
@@ -50,6 +50,8 @@ export default function Register() {
             {errors[field] && <p className="mt-1 text-sm text-red-600">{errors[field]}</p>}
           </div>
         ))}
+
+        {errors.form && <p className="text-sm text-red-600">{errors.form}</p>}
 
         <button
           type="submit"

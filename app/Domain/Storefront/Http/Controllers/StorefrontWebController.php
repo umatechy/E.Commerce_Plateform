@@ -6,6 +6,8 @@ namespace App\Domain\Storefront\Http\Controllers;
 
 use App\Domain\Seo\Services\SeoResolver;
 use App\Domain\Storefront\Services\StorefrontExperience;
+use App\Domain\Support\Models\SupportCategory;
+use App\Domain\Support\Models\SupportDesk;
 use App\Domain\Tenancy\Models\Store;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
@@ -96,6 +98,7 @@ final class StorefrontWebController
         $page = (string) $request->route('page');
         $props = match ($page) {
             'Order' => ['order_id' => (string) $request->route('orderId')],
+            'SupportTicket' => ['ticket_id' => (string) $request->route('ticketId')],
             // Read from the link in the reset email; only echoed back to the API.
             'ResetPassword' => ['token' => (string) $request->query('token', ''), 'email' => (string) $request->query('email', '')],
             'Login' => ['redirect' => $this->safeRedirect($request)],
@@ -106,8 +109,33 @@ final class StorefrontWebController
             'Login' => 'Sign in',
             'Register' => 'Create an account',
             'ForgotPassword', 'ResetPassword' => 'Reset your password',
+            'Support', 'SupportNew', 'SupportTicket' => 'Support',
             default => 'Your account',
         }));
+    }
+
+    /**
+     * Phase B26 — the contact form (Module 34). Public and indexable like
+     * any store page; a signed-in shopper's request goes to their account.
+     */
+    public function contact(Request $request): Response
+    {
+        return $this->render($request, 'Storefront/Contact', [
+            'categories' => array_map(fn (SupportCategory $c) => $c->value, SupportCategory::forDesk(SupportDesk::Store)),
+        ], $this->listingSeo($this->store($request), 'Contact us', 'contact'));
+    }
+
+    /**
+     * A guest's request, opened from the private link in their email. The
+     * access token is in the link's #fragment, which browsers never send,
+     * so this request (and its logs) never sees it: the page reads it and
+     * sends it to the API in a header.
+     */
+    public function supportTicket(Request $request): Response
+    {
+        return $this->render($request, 'Storefront/SupportTicket', [
+            'ticket_id' => (string) $request->route('ticketId'),
+        ], $this->privatePageSeo($request, 'Your request'));
     }
 
     /** Where to go after signing in: a path inside this storefront only, never another site. */

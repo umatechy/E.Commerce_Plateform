@@ -41,6 +41,14 @@ Route::middleware(['auth:customer', 'customer.principal'])->group(function () {
     Route::get('/customer/orders', [\App\Domain\CustomerAccount\Http\Controllers\CustomerOrderController::class, 'index']);
     Route::get('/customer/orders/{orderPublicId}', [\App\Domain\CustomerAccount\Http\Controllers\CustomerOrderController::class, 'show']);
 
+    // --- Support (Module 34, Phase B26) — the customer's own requests ---
+    Route::get('/customer/support/tickets', [\App\Domain\Support\Http\Controllers\CustomerSupportController::class, 'index']);
+    Route::post('/customer/support/tickets', [\App\Domain\Support\Http\Controllers\CustomerSupportController::class, 'store'])->middleware('throttle:10,1,support-open');
+    Route::get('/customer/support/tickets/{ticket}', [\App\Domain\Support\Http\Controllers\CustomerSupportController::class, 'show']);
+    Route::post('/customer/support/tickets/{ticket}/messages', [\App\Domain\Support\Http\Controllers\CustomerSupportController::class, 'reply'])->middleware('throttle:30,1,support-reply');
+    Route::post('/customer/support/tickets/{ticket}/resolve', [\App\Domain\Support\Http\Controllers\CustomerSupportController::class, 'resolve']);
+    Route::post('/customer/support/tickets/{ticket}/rating', [\App\Domain\Support\Http\Controllers\CustomerSupportController::class, 'rate']);
+
     // --- Wishlist (Module 11 §64-71 — authenticated customers only) ---
     Route::get('/wishlist', [WishlistController::class, 'index']);
     Route::post('/wishlist', [WishlistController::class, 'store']);
@@ -108,4 +116,12 @@ Route::middleware(['customer.optional', 'storefront.store:api', 'throttle:120,1'
         $reset = \App\Domain\CustomerAccount\Http\Controllers\CustomerPasswordResetController::class;
         Route::post('/password/forgot', [$reset, 'forgot'])->middleware('throttle:5,1,sf-forgot');
         Route::post('/password/reset', [$reset, 'reset'])->middleware('throttle:10,1,sf-reset');
+
+        // Module 34 (Phase B26): contact form and a guest's private ticket link.
+        $support = \App\Domain\Support\Http\Controllers\GuestSupportController::class;
+        Route::post('/support/contact', [$support, 'contact'])->middleware('throttle:3,1,sf-contact');
+        Route::get('/support/tickets/{ticket}', [$support, 'show'])->middleware('throttle:30,1,sf-ticket');
+        Route::post('/support/tickets/{ticket}/messages', [$support, 'reply'])->middleware('throttle:10,1,sf-ticket-reply');
+        Route::post('/support/tickets/{ticket}/resolve', [$support, 'resolve'])->middleware('throttle:10,1,sf-ticket-reply');
+        Route::post('/support/tickets/{ticket}/rating', [$support, 'rate'])->middleware('throttle:10,1,sf-ticket-reply');
     });

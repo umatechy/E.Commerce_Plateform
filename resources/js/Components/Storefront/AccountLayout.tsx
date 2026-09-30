@@ -10,6 +10,7 @@ const LINKS = [
   { path: '/account/orders', label: 'Orders' },
   { path: '/account/addresses', label: 'Addresses' },
   { path: '/account/wishlist', label: 'Wishlist' },
+  { path: '/account/support', label: 'Support' },
   { path: '/account/profile', label: 'Profile & security' },
 ];
 

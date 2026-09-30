@@ -50,10 +50,12 @@ final class StoreObserver
             'developer_platform.view', // developer_platform.manage withheld from Manager — API key issuance/revocation is Owner-only, same sensitivity precedent as domains.manage (Phase B14)
             'store_health.view', // Module 24 (Phase B21) — read-only operational view
             'backups.view', // backups.manage/backups.restore withheld from Manager — requesting a backup or restore is Owner-only, same sensitivity precedent (Phase B19)
+            'support.view', 'support.reply', 'support.manage', // Module 34 (Phase B26); support.platform stays with the Owner
         ],
         'staff' => [
             'products.view',
             'orders.view',
+            'support.view', 'support.reply', // Module 34 (Phase B26): front-line support
         ],
     ];
 

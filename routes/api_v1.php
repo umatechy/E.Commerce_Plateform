@@ -78,6 +78,22 @@ Route::middleware(['auth:sanctum', 'staff.principal'])->group(function () {
     Route::get('/subscription', [SubscriptionController::class, 'show']);
     Route::get('/subscription/usage', [SubscriptionController::class, 'usage']);
 
+    // --- Support (Module 34, Phase B26) ---
+    // The store's inbox for its shoppers' requests...
+    Route::get('/support/tickets', [\App\Domain\Support\Http\Controllers\StoreSupportController::class, 'index']);
+    Route::get('/support/summary', [\App\Domain\Support\Http\Controllers\StoreSupportController::class, 'summary']);
+    Route::get('/support/agents', [\App\Domain\Support\Http\Controllers\StoreSupportController::class, 'agentsList']);
+    Route::get('/support/tickets/{ticket}', [\App\Domain\Support\Http\Controllers\StoreSupportController::class, 'show']);
+    Route::patch('/support/tickets/{ticket}', [\App\Domain\Support\Http\Controllers\StoreSupportController::class, 'update']);
+    Route::post('/support/tickets/{ticket}/messages', [\App\Domain\Support\Http\Controllers\StoreSupportController::class, 'reply']);
+    // ...and the store's own requests to the platform's support team.
+    Route::get('/platform-support/tickets', [\App\Domain\Support\Http\Controllers\MerchantPlatformSupportController::class, 'index']);
+    Route::post('/platform-support/tickets', [\App\Domain\Support\Http\Controllers\MerchantPlatformSupportController::class, 'store'])->middleware('throttle:10,1,platform-support-open');
+    Route::get('/platform-support/tickets/{ticket}', [\App\Domain\Support\Http\Controllers\MerchantPlatformSupportController::class, 'show']);
+    Route::post('/platform-support/tickets/{ticket}/messages', [\App\Domain\Support\Http\Controllers\MerchantPlatformSupportController::class, 'reply']);
+    Route::post('/platform-support/tickets/{ticket}/resolve', [\App\Domain\Support\Http\Controllers\MerchantPlatformSupportController::class, 'resolve']);
+    Route::post('/platform-support/tickets/{ticket}/rating', [\App\Domain\Support\Http\Controllers\MerchantPlatformSupportController::class, 'rate']);
+
     // --- Storefront setup & launch (Module 05, Phase B24) ---
     Route::get('/storefront/setup', [\App\Domain\Storefront\Http\Controllers\StorefrontSetupController::class, 'show']);
     Route::post('/storefront/launch', [\App\Domain\Storefront\Http\Controllers\StorefrontSetupController::class, 'launch']);
@@ -292,6 +308,14 @@ Route::middleware(['auth:sanctum', 'staff.principal'])->group(function () {
             Route::get('/audit-logs', [SuperAdminAuditController::class, 'index']);
             Route::get('/audit-logs/integrity', [SuperAdminAuditController::class, 'integrity']);
             Route::get('/monitoring/outbox', [SuperAdminMonitoringController::class, 'outbox']);
+
+            // Module 34 (Phase B26): the platform's support inbox.
+            Route::get('/support/tickets', [\App\Domain\SuperAdmin\Http\Controllers\SuperAdminSupportController::class, 'index']);
+            Route::get('/support/summary', [\App\Domain\SuperAdmin\Http\Controllers\SuperAdminSupportController::class, 'summary']);
+            Route::get('/support/agents', [\App\Domain\SuperAdmin\Http\Controllers\SuperAdminSupportController::class, 'agentsList']);
+            Route::get('/support/tickets/{ticket}', [\App\Domain\SuperAdmin\Http\Controllers\SuperAdminSupportController::class, 'show']);
+            Route::patch('/support/tickets/{ticket}', [\App\Domain\SuperAdmin\Http\Controllers\SuperAdminSupportController::class, 'update']);
+            Route::post('/support/tickets/{ticket}/messages', [\App\Domain\SuperAdmin\Http\Controllers\SuperAdminSupportController::class, 'reply']);
 
             // Module 29 (Phase B23): platform billing.
             Route::get('/billing/summary', [SuperAdminBillingController::class, 'summary']);

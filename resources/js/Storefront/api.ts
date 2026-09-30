@@ -1,3 +1,4 @@
+import { xsrfToken } from '@/lib/xsrf';
 import type { Shell } from './types';
 
 /**
@@ -52,20 +53,14 @@ function rememberCart(shell: Shell, token: string | null | undefined): void {
   }
 }
 
-function xsrfToken(): string | null {
-  const match = document.cookie.match(/(?:^|;\s*)XSRF-TOKEN=([^;]+)/);
-
-  return match ? decodeURIComponent(match[1]) : null;
-}
-
 export async function storefrontFetch<T = Record<string, unknown>>(
   shell: Shell,
   path: string,
-  init: { method?: string; body?: unknown; query?: Record<string, string> } = {},
+  init: { method?: string; body?: unknown; query?: Record<string, string>; headers?: Record<string, string> } = {},
 ): Promise<T> {
   // X-Storefront-Request lets the API honour the HttpOnly session cookie
   // (Phase B25); other sites cannot send it without passing CORS.
-  const headers: Record<string, string> = { Accept: 'application/json', 'X-Storefront-Request': '1' };
+  const headers: Record<string, string> = { ...init.headers, Accept: 'application/json', 'X-Storefront-Request': '1' };
   if (shell.base_path !== '') headers['X-Store-Slug'] = shell.store.slug;
   const token = cartToken(shell);
   if (token) headers['X-Guest-Cart-Token'] = token;

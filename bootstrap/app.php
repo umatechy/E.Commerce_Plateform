@@ -31,6 +31,7 @@ return Application::configure(basePath: dirname(__DIR__))
         app_path('Domain/Monitoring/Console'),
         app_path('Domain/Compliance/Console'),
         app_path('Domain/Billing/Console'),
+        app_path('Domain/Support/Console'),
     ])
     ->withRouting(
         web: __DIR__.'/../routes/web.php',
