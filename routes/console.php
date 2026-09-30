@@ -27,3 +27,8 @@ Schedule::command('store-health:snapshot')->hourly()->withoutOverlapping();
 
 // Module 32 (Phase B22): audit retention; chains stay verifiable.
 Schedule::command('audit:prune')->dailyAt('03:10')->withoutOverlapping();
+
+// Module 29 (Phase B23): renewal invoices, period roll-over and dunning.
+// Hourly so a payment recorded late still renews within the hour; each
+// run is idempotent.
+Schedule::command('billing:run')->hourly()->withoutOverlapping();

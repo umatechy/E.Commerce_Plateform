@@ -71,6 +71,8 @@ final class PermissionSeeder extends Seeder
         ['key' => 'developer_platform.manage', 'group' => 'developer_platform', 'description' => 'Create/revoke developer applications, API keys, and webhooks (Phase B18)'],
         ['key' => 'audit.view', 'group' => 'compliance', 'description' => 'View the store\'s audit trail and verify its integrity — sensitive (Module 32 — Phase B22)'],
         ['key' => 'privacy.manage', 'group' => 'compliance', 'description' => 'Export or erase a customer\'s personal data — irreversible (Module 32 — Phase B22)'],
+        ['key' => 'billing.view', 'group' => 'billing', 'description' => 'View the store\'s platform subscription billing and invoices (Module 29 — Phase B23)'],
+        ['key' => 'billing.manage', 'group' => 'billing', 'description' => 'Cancel/resume the subscription or change its billing interval (Module 29 — Phase B23)'],
         ['key' => 'store_health.view', 'group' => 'store_health', 'description' => 'View the store\'s health checks and resource usage (Module 24 — Phase B21)'],
         ['key' => 'backups.view', 'group' => 'backups', 'description' => 'View this store\'s own backup history and status (Module 23 — Phase B19)'],
         ['key' => 'backups.manage', 'group' => 'backups', 'description' => 'Request a manual backup for this store (Phase B19)'],

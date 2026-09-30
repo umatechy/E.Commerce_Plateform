@@ -52,6 +52,8 @@ use App\Domain\SuperAdmin\Http\Controllers\SuperAdminSubscriptionController;
 use App\Domain\Tenancy\Http\Controllers\StoreSwitchController;
 use App\Domain\Compliance\Http\Controllers\AuditLogController;
 use App\Domain\Compliance\Http\Controllers\CustomerPrivacyController;
+use App\Domain\Billing\Http\Controllers\BillingController;
+use App\Domain\SuperAdmin\Http\Controllers\SuperAdminBillingController;
 use App\Domain\Monitoring\Http\Controllers\StoreHealthController;
 use Illuminate\Support\Facades\Route;
 
@@ -75,6 +77,14 @@ Route::middleware(['auth:sanctum', 'staff.principal'])->group(function () {
     // --- Subscription / Usage (Module 04 §40-41 — the store's own only) ---
     Route::get('/subscription', [SubscriptionController::class, 'show']);
     Route::get('/subscription/usage', [SubscriptionController::class, 'usage']);
+
+    // --- Billing, Invoices & Renewals (Module 29, Phase B23) — the store's own only ---
+    Route::get('/billing', [BillingController::class, 'show']);
+    Route::get('/billing/invoices', [BillingController::class, 'invoices']);
+    Route::get('/billing/invoices/{invoice}', [BillingController::class, 'invoice']);
+    Route::post('/billing/cancel', [BillingController::class, 'cancel']);
+    Route::post('/billing/resume', [BillingController::class, 'resume']);
+    Route::put('/billing/interval', [BillingController::class, 'changeInterval']);
 
     // --- Catalog (Modules 06-07, Phase B3) ---
     Route::apiResource('products', ProductController::class);
@@ -273,6 +283,17 @@ Route::middleware(['auth:sanctum', 'staff.principal'])->group(function () {
             Route::get('/audit-logs', [SuperAdminAuditController::class, 'index']);
             Route::get('/audit-logs/integrity', [SuperAdminAuditController::class, 'integrity']);
             Route::get('/monitoring/outbox', [SuperAdminMonitoringController::class, 'outbox']);
+
+            // Module 29 (Phase B23): platform billing.
+            Route::get('/billing/summary', [SuperAdminBillingController::class, 'summary']);
+            Route::get('/billing/prices', [SuperAdminBillingController::class, 'prices']);
+            Route::post('/billing/prices', [SuperAdminBillingController::class, 'upsertPrice']);
+            Route::patch('/billing/prices/{price}', [SuperAdminBillingController::class, 'updatePrice']);
+            Route::get('/billing/invoices', [SuperAdminBillingController::class, 'invoices']);
+            Route::get('/billing/invoices/{invoice}', [SuperAdminBillingController::class, 'invoice']);
+            Route::post('/billing/invoices/{invoice}/payments', [SuperAdminBillingController::class, 'recordPayment']);
+            Route::post('/billing/invoices/{invoice}/void', [SuperAdminBillingController::class, 'void']);
+            Route::post('/billing/invoices/{invoice}/extend-due-date', [SuperAdminBillingController::class, 'extendDueDate']);
             Route::get('/monitoring/api-usage', [SuperAdminMonitoringController::class, 'apiUsage']);
         });
 

@@ -11,10 +11,11 @@ namespace App\Domain\Packages\Models;
  * (see docs/development/b2-inspection-findings.md item B).
  *
  * "The final state machine will be defined in the Billing Blueprint"
- * (Module 29, not yet implemented) — this enum is the state SET;
- * SubscriptionLifecycleService is the current, B2-scope transition
- * logic, expected to be reconciled with Module 29 when that phase
- * begins, not a claim that this IS the final billing state machine.
+ * (Module 29) — reconciled in Phase B23: this enum is the state SET,
+ * SubscriptionBillingEngine drives the billing transitions (renewal and
+ * the past_due → grace_period → suspended → expired dunning ladder), and
+ * every transition is applied by SubscriptionLifecycleService (see
+ * docs/architecture/b23-billing.md).
  */
 enum SubscriptionStatus: string
 {

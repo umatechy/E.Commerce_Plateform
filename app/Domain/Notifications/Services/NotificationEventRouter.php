@@ -41,6 +41,7 @@ final class NotificationEventRouter
             'shipment.created' => $this->handleShipmentCreated($payload),
             'marketing.recipient_queued' => $this->handleMarketingRecipientQueued($payload),
             'marketing.abandoned_cart_detected' => $this->handleAbandonedCartDetected($payload),
+            'billing.invoice_issued', 'billing.invoice_paid', 'billing.payment_overdue' => $this->handleBillingEvent($eventType, $payload),
             default => null,
         };
     }
@@ -255,6 +256,74 @@ final class NotificationEventRouter
             ['customer.name' => $customer->name, 'unsubscribe.line' => $this->unsubscribeLine($customer)],
             "notification:cart:{$cart->id}:abandoned",
             'marketing.abandoned_cart_detected',
+        );
+    }
+
+    /**
+     * Module 29 (Phase B23) — platform billing mail to the store's Owner.
+     * These are the platform's own messages to a merchant, so a store's
+     * customer-facing templates never replace them (no resolveTemplate()).
+     * A zero-total invoice needs no mail.
+     */
+    private function handleBillingEvent(string $eventType, array $payload): void
+    {
+        $invoice = \App\Domain\Billing\Models\Invoice::query()->withoutTenantScope()->find($payload['invoice_id'] ?? 0);
+        $owner = $invoice !== null ? app(\App\Domain\Billing\Services\BillingContact::class)->ownerOf($invoice->store_id) : null;
+
+        if ($invoice === null || $owner === null || $invoice->total_minor === 0) {
+            return;
+        }
+
+        $stage = (string) ($payload['stage'] ?? '');
+        [$subject, $body] = match ($eventType) {
+            'billing.invoice_issued' => [
+                'Invoice {{invoice.number}} for {{store.name}}',
+                'Hi {{owner.name}}, invoice {{invoice.number}} for {{invoice.total}} {{invoice.currency}} covers {{invoice.period}}. It is due on {{invoice.due_date}}.',
+            ],
+            'billing.invoice_paid' => [
+                'Payment received for invoice {{invoice.number}}',
+                'Hi {{owner.name}}, thank you. Invoice {{invoice.number}} ({{invoice.total}} {{invoice.currency}}) is paid in full.',
+            ],
+            default => match ($stage) {
+                'grace_period' => [
+                    'Action needed: invoice {{invoice.number}} is overdue',
+                    'Hi {{owner.name}}, invoice {{invoice.number}} ({{invoice.total}} {{invoice.currency}}) is still unpaid. Your store will be suspended on {{subscription.grace_ends}} unless it is paid.',
+                ],
+                'suspended' => [
+                    '{{store.name}} has been suspended',
+                    'Hi {{owner.name}}, {{store.name}} has been suspended because invoice {{invoice.number}} is unpaid. Paying it restores the store immediately.',
+                ],
+                'expired' => [
+                    'Your {{store.name}} subscription has expired',
+                    'Hi {{owner.name}}, the subscription for {{store.name}} has expired because invoice {{invoice.number}} was not paid. Your data is kept; contact us to reactivate.',
+                ],
+                default => [
+                    'Payment overdue for invoice {{invoice.number}}',
+                    'Hi {{owner.name}}, invoice {{invoice.number}} ({{invoice.total}} {{invoice.currency}}) was due on {{invoice.due_date}} and is now overdue.',
+                ],
+            },
+        };
+
+        $subscription = $invoice->subscription()->withoutTenantScope()->first();
+
+        $this->notifications->send(
+            NotificationMessageType::Transactional, NotificationChannel::Email,
+            RecipientType::User, $owner->id, $owner->email,
+            $subject, $body,
+            [
+                'owner.name' => $owner->name,
+                'store.name' => (string) ($invoice->bill_to['store'] ?? ''),
+                'invoice.number' => $invoice->number,
+                'invoice.total' => number_format($invoice->total_minor / 100, 2),
+                'invoice.currency' => $invoice->currency,
+                'invoice.period' => $invoice->period_start->toDateString().' to '.$invoice->period_end->toDateString(),
+                'invoice.due_date' => $invoice->due_at->toDateString(),
+                'subscription.grace_ends' => $subscription?->grace_period_ends_at?->toDateString() ?? $invoice->due_at->toDateString(),
+            ],
+            "notification:invoice:{$invoice->id}:".($eventType === 'billing.payment_overdue'
+                ? "overdue:{$stage}:".($payload['due_at'] ?? '')
+                : substr($eventType, strlen('billing.invoice_'))),
+            $eventType,
         );
     }
 

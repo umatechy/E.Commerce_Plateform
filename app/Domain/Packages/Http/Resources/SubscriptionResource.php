@@ -27,6 +27,9 @@ final class SubscriptionResource extends JsonResource
             'trial_ends_at' => $this->trial_ends_at?->toIso8601String(),
             'grace_period_ends_at' => $this->grace_period_ends_at?->toIso8601String(),
             'current_period_ends_at' => $this->current_period_ends_at?->toIso8601String(),
+            // Module 29 (Phase B23) — full billing detail lives at /billing.
+            'billing_interval' => $this->billing_interval->value,
+            'cancel_at_period_end' => (bool) $this->cancel_at_period_end,
         ];
     }
 }
