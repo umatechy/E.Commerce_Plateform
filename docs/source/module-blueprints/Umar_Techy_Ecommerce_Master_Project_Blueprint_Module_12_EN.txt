@@ -1,0 +1,1762 @@
+UMAR TECHY
+E-COMMERCE PLATFORM
+MASTER PROJECT BLUEPRINT
+
+MODULE 12 — PAYMENT MANAGEMENT & GATEWAYS
+Version: 1.0
+Status: Planning / Blueprint
+
+============================================================
+1. MODULE PURPOSE
+============================================================
+
+This module defines the Core Payment Management and Gateway
+architecture for the Umar Techy multi-tenant E-Commerce Platform.
+
+The payment system must provide one unified payment layer capable
+of supporting multiple stores, multiple payment methods, multiple
+providers, refunds, reconciliation, callbacks/webhooks, COD,
+bank transfer, future gateways, and secure financial state
+management.
+
+Core principle:
+
+ONE CORE PAYMENT ENGINE
++
+MULTIPLE PAYMENT METHODS
++
+MULTIPLE PROVIDERS
++
+STORE-SPECIFIC CONFIGURATION
++
+TENANT ISOLATION
++
+SERVER-AUTHORITATIVE FINANCIAL STATE
+
+============================================================
+2. PAYMENT ARCHITECTURE PRINCIPLE
+============================================================
+
+The platform must NOT hard-code one payment provider into the
+checkout system.
+
+Instead:
+
+Checkout
+   ↓
+Payment Service
+   ↓
+Payment Method
+   ↓
+Provider Adapter
+   ↓
+Gateway / Manual Method
+   ↓
+Payment Result
+   ↓
+Verified Transaction
+   ↓
+Order Payment State
+
+This allows new providers to be added without rewriting the
+Checkout or Order engines.
+
+============================================================
+3. PAYMENT METHODS
+============================================================
+
+Initial payment methods should support:
+
+- Cash on Delivery
+- Bank Transfer
+- Online Payment Gateway
+- JazzCash
+- Easypaisa
+- Other supported local providers
+
+Future methods may include:
+
+- Credit/Debit Cards
+- Mobile Wallets
+- Apple Pay
+- Google Pay
+- PayPal
+- Stripe
+- Regional gateways
+- Buy Now Pay Later
+- Store Credit
+- Gift Cards
+- Wallet Balance
+
+Availability depends on store configuration and package
+entitlements.
+
+============================================================
+4. PROVIDER ABSTRACTION
+============================================================
+
+Every gateway/provider should implement a common abstraction.
+
+Conceptual operations:
+
+- Initialize Payment
+- Create Payment Intent
+- Redirect/Hosted Payment
+- Verify Payment
+- Capture Payment
+- Void Payment
+- Refund Payment
+- Get Transaction
+- Handle Callback
+- Handle Webhook
+- Reconcile Transaction
+
+Not every provider supports every operation.
+
+The provider capability matrix must explicitly define supported
+operations.
+
+============================================================
+5. PAYMENT ENTITY
+============================================================
+
+Potential Payment fields:
+
+- Payment ID
+- Store/Tenant ID
+- Order ID
+- Customer ID where available
+- Payment Method
+- Provider
+- Provider Account
+- Amount
+- Currency
+- Status
+- Provider Transaction Reference
+- Internal Transaction Reference
+- Idempotency Key
+- Payment Intent Reference
+- Created At
+- Updated At
+- Completed At
+- Failed At
+- Metadata
+
+Exact schema will be finalized in the Database Blueprint.
+
+============================================================
+6. PAYMENT VS ORDER
+============================================================
+
+Order and Payment are separate concepts.
+
+One Order may have:
+
+- One Payment
+- Multiple Payment Attempts
+- Multiple Transactions
+- Partial Payments
+- Multiple Refunds
+
+The Order remains authoritative for commercial order state.
+
+The Payment Engine remains authoritative for payment transaction
+state.
+
+============================================================
+7. PAYMENT STATUS
+============================================================
+
+Suggested states:
+
+- CREATED
+- PENDING
+- REQUIRES_ACTION
+- AUTHORIZED
+- PAID
+- PARTIALLY_PAID
+- FAILED
+- CANCELLED
+- EXPIRED
+- REFUND_PENDING
+- PARTIALLY_REFUNDED
+- REFUNDED
+- DISPUTED
+- REVERSED
+
+Provider-specific states must map into the platform state model.
+
+============================================================
+8. PAYMENT ATTEMPT
+============================================================
+
+A payment attempt records an individual attempt.
+
+Potential fields:
+
+- Attempt ID
+- Payment ID
+- Order ID
+- Provider
+- Method
+- Amount
+- Currency
+- Status
+- Started At
+- Completed At
+- Failure Code
+- Failure Reason
+- Provider Reference
+
+This allows retry without overwriting historical attempts.
+
+============================================================
+9. PAYMENT TRANSACTION
+============================================================
+
+Transactions should be immutable financial records wherever
+possible.
+
+Potential transaction types:
+
+- AUTHORIZATION
+- CAPTURE
+- SALE
+- VOID
+- REFUND
+- PARTIAL_REFUND
+- REVERSAL
+- ADJUSTMENT
+
+Every transaction must be auditable.
+
+============================================================
+10. INTERNAL VS PROVIDER REFERENCES
+============================================================
+
+Use separate identifiers:
+
+Internal Payment ID
+Internal Transaction ID
+Provider Payment ID
+Provider Transaction ID
+
+Provider identifiers must not replace internal identifiers.
+
+============================================================
+11. PAYMENT AMOUNT
+============================================================
+
+Payment amount must be calculated server-side.
+
+The server must validate:
+
+- Order total
+- Currency
+- Discounts
+- Shipping
+- Tax
+- Fees
+- Store credit
+- Previous payments
+- Refunds
+
+The client must never determine the final payable amount.
+
+============================================================
+12. PAYMENT CURRENCY
+============================================================
+
+Every payment must include:
+
+- Currency Code
+- Amount
+- Currency Precision
+
+The provider request must use the exact validated currency.
+
+Currency mismatches must fail safely.
+
+============================================================
+13. PAYMENT CALCULATION
+============================================================
+
+Conceptual:
+
+Order Total
+− Applied Payments
++ Required Adjustments
+− Eligible Store Credit
+=
+Remaining Payable Amount
+
+The exact financial model must be defined in the financial
+blueprints.
+
+============================================================
+14. ZERO-VALUE ORDERS
+============================================================
+
+If an order becomes fully discounted or otherwise has zero
+payable amount:
+
+The payment engine may mark payment as:
+
+PAID / NO_PAYMENT_REQUIRED
+
+according to the final financial rules.
+
+No external gateway should be called for zero-value orders.
+
+============================================================
+15. CASH ON DELIVERY
+============================================================
+
+COD is a payment method, not an online gateway.
+
+Flow:
+
+Checkout
+↓
+COD Eligibility
+↓
+Order Created
+↓
+Payment Status = UNPAID
+↓
+Fulfillment / Delivery
+↓
+Cash Collected
+↓
+Payment Recorded
+↓
+Payment Status = PAID
+
+COD collection must be recorded as an auditable transaction.
+
+============================================================
+16. COD ELIGIBILITY
+============================================================
+
+Store configuration may define:
+
+- Minimum order value
+- Maximum order value
+- Supported areas
+- Product restrictions
+- Customer restrictions
+- COD fee
+- Customer risk controls
+- Package availability
+
+============================================================
+17. COD RISK FOUNDATION
+============================================================
+
+Potential risk signals:
+
+- Repeated failed deliveries
+- Excessive COD cancellations
+- High-value COD
+- Repeated suspicious addresses
+- Excessive order velocity
+
+Risk assessment should be separate from payment state.
+
+============================================================
+18. BANK TRANSFER
+============================================================
+
+Bank transfer is a manual or semi-automated payment method.
+
+Flow:
+
+Checkout
+↓
+Order Created
+↓
+Payment Status = PENDING
+↓
+Customer Receives Bank Details
+↓
+Customer Transfers Money
+↓
+Proof / Reference Submitted where supported
+↓
+Staff / Bank Integration Verification
+↓
+Payment Confirmed
+
+============================================================
+19. BANK TRANSFER VERIFICATION
+============================================================
+
+Authorized staff may verify:
+
+- Amount
+- Bank account
+- Transfer reference
+- Transfer date
+- Order
+- Customer
+
+Confirmation must be audited.
+
+Customer-submitted screenshots must not automatically mark
+payments as paid.
+
+============================================================
+20. JAZZCASH
+============================================================
+
+JazzCash should be integrated through the provider abstraction.
+
+The integration must support only the capabilities actually
+provided by the selected JazzCash integration method.
+
+Required controls:
+
+- Merchant credentials
+- Signature/security validation
+- Amount validation
+- Currency validation
+- Order reference validation
+- Callback verification
+- Idempotency
+- Reconciliation
+
+Credentials must never be exposed to customers.
+
+============================================================
+21. EASYPaisa
+============================================================
+
+Easypaisa should use the same provider abstraction.
+
+Required controls:
+
+- Merchant credentials
+- Secure configuration
+- Transaction reference
+- Amount validation
+- Callback verification
+- Idempotency
+- Reconciliation
+
+Exact API behavior depends on the selected official provider
+integration.
+
+============================================================
+22. FUTURE CARD PAYMENTS
+============================================================
+
+The architecture should support card gateways without storing
+raw card credentials.
+
+Preferred approach:
+
+Customer
+↓
+Gateway Hosted UI / Secure Tokenization
+↓
+Provider Token
+↓
+Payment Transaction
+
+The platform should not store prohibited raw card data.
+
+============================================================
+23. TOKENIZED PAYMENT METHODS
+============================================================
+
+Future saved payment methods may store:
+
+- Provider Token
+- Provider Customer Reference
+- Card Brand where safely provided
+- Last Four Digits where permitted
+- Expiry Metadata where permitted
+
+Never store raw card number or CVV in the core platform.
+
+============================================================
+24. PAYMENT INTENT
+============================================================
+
+For gateways supporting payment intents:
+
+Checkout
+↓
+Create Payment Intent
+↓
+Customer Action
+↓
+Provider Processing
+↓
+Verified Result
+↓
+Capture / Confirmation
+↓
+Order Payment Update
+
+Payment Intent must be tenant and order scoped.
+
+============================================================
+25. REDIRECT PAYMENT
+============================================================
+
+For hosted checkout gateways:
+
+1. Create internal payment attempt
+2. Create provider transaction
+3. Redirect customer
+4. Customer completes payment
+5. Provider returns customer
+6. Server verifies transaction
+7. Update payment state
+8. Confirm order state
+
+The browser redirect alone is not authoritative.
+
+============================================================
+26. WEBHOOKS
+============================================================
+
+Provider webhooks are critical.
+
+Webhook processing must validate:
+
+- Provider signature
+- Provider account
+- Transaction reference
+- Store
+- Order
+- Amount
+- Currency
+- Event type
+
+Webhook processing must be idempotent.
+
+============================================================
+27. CALLBACK VS WEBHOOK
+============================================================
+
+Customer browser callback:
+
+Useful for user experience.
+
+Server webhook/provider verification:
+
+Authoritative source where supported.
+
+Never mark a payment successful solely because a customer
+returned to the success URL.
+
+============================================================
+28. WEBHOOK IDEMPOTENCY
+============================================================
+
+Duplicate webhook delivery must not create duplicate:
+
+- Payments
+- Captures
+- Refunds
+- Order updates
+- Notifications
+
+Store provider event IDs where available.
+
+============================================================
+29. WEBHOOK REPLAY PROTECTION
+============================================================
+
+Protect against:
+
+- Old webhook replay
+- Modified payload
+- Forged provider request
+- Duplicate event
+
+Use:
+
+- Signature verification
+- Timestamp validation where supported
+- Event ID uniqueness
+- Transaction state checks
+
+============================================================
+30. PAYMENT SIGNATURE VALIDATION
+============================================================
+
+Where provider signatures exist:
+
+Raw Payload
++
+Provider Secret
+↓
+Signature Verification
+↓
+Trusted Event
+
+Never trust a client-generated signature.
+
+============================================================
+31. PAYMENT PROVIDER CONFIGURATION
+============================================================
+
+Store-specific provider configuration may include:
+
+- Enabled/Disabled
+- Merchant ID
+- API Key
+- Secret
+- Public Key
+- Environment
+- Callback URL
+- Webhook Secret
+- Currency
+- Limits
+- Supported methods
+
+Secrets must be encrypted or stored in an appropriate secure
+secret-management mechanism.
+
+============================================================
+32. TEST VS PRODUCTION
+============================================================
+
+Each provider should support environment separation where
+available:
+
+- SANDBOX
+- PRODUCTION
+
+Production credentials must never be used in automated tests.
+
+============================================================
+33. SECRET MANAGEMENT
+============================================================
+
+Payment secrets must:
+
+- Never be committed to Git
+- Never appear in source code
+- Never appear in client applications
+- Never appear in normal logs
+- Never be returned by APIs
+- Be access-controlled
+- Be rotated where supported
+
+============================================================
+34. STORE-SPECIFIC PROVIDER ACCOUNTS
+============================================================
+
+Different stores may use different merchant accounts.
+
+Example:
+
+Store A → JazzCash Account A
+Store B → JazzCash Account B
+
+Provider configuration must therefore be tenant-scoped.
+
+============================================================
+35. PROVIDER ROUTING
+============================================================
+
+The Payment Engine determines:
+
+Store
++
+Payment Method
++
+Currency
++
+Order
++
+Provider Availability
+↓
+Selected Provider
+
+Future routing may support fallback providers where explicitly
+configured and financially safe.
+
+============================================================
+36. PAYMENT METHOD AVAILABILITY
+============================================================
+
+A payment method may be unavailable because of:
+
+- Store configuration
+- Package entitlement
+- Customer location
+- Order amount
+- Currency
+- Product restrictions
+- Provider outage
+- Store suspension
+- Provider limits
+
+Checkout must display only currently eligible methods.
+
+============================================================
+37. PAYMENT LIMITS
+============================================================
+
+Providers/stores may configure:
+
+- Minimum amount
+- Maximum amount
+- Daily volume
+- Monthly volume
+- Currency restrictions
+- Customer restrictions
+
+Limits must be enforced server-side.
+
+============================================================
+38. PAYMENT FEES
+============================================================
+
+Payment fees may be supported.
+
+Potential fee types:
+
+- Fixed Fee
+- Percentage Fee
+- Provider Fee
+- COD Fee
+
+Fee calculation must be transparent and server-authoritative.
+
+============================================================
+39. PAYMENT DISCOUNTS
+============================================================
+
+Promotions may apply payment-method-specific discounts.
+
+Example:
+
+Bank Transfer Discount
+
+The promotion engine must calculate eligibility.
+
+============================================================
+40. PARTIAL PAYMENTS
+============================================================
+
+Architecture should support:
+
+Order Total = 10000
+Payment 1 = 4000
+Payment 2 = 6000
+
+Order payment status:
+
+PARTIALLY_PAID
+→
+PAID
+
+Every payment must be independently auditable.
+
+============================================================
+41. MULTIPLE PAYMENT ATTEMPTS
+============================================================
+
+An order may have:
+
+Attempt 1 → Failed
+Attempt 2 → Failed
+Attempt 3 → Successful
+
+Historical attempts must remain available.
+
+============================================================
+42. PAYMENT RETRY
+============================================================
+
+Retry must:
+
+- Create a new attempt where appropriate
+- Preserve previous failure
+- Revalidate order
+- Revalidate amount
+- Revalidate currency
+- Revalidate payment method
+- Revalidate order state
+
+============================================================
+43. PAYMENT EXPIRATION
+============================================================
+
+Payment sessions may expire.
+
+Expired payment attempts must not later become successful without
+provider verification and state reconciliation.
+
+============================================================
+44. PAYMENT CANCELLATION
+============================================================
+
+Cancellation must consider provider capabilities.
+
+Possible:
+
+- Cancel pending payment
+- Void authorization
+- Cancel payment intent
+- Mark manual payment cancelled
+
+Never assume every provider supports cancellation.
+
+============================================================
+45. AUTHORIZATION AND CAPTURE
+============================================================
+
+Future card providers may support:
+
+Authorization
+→
+Capture
+
+The architecture must distinguish:
+
+AUTHORIZED
+from
+PAID/CAPTURED
+
+============================================================
+46. PAYMENT REFUNDS
+============================================================
+
+Refunds are linked to payments.
+
+Refund may be:
+
+- Full
+- Partial
+
+Refund flow:
+
+Refund Request
+↓
+Validate Refundable Amount
+↓
+Provider Refund
+↓
+Verify Result
+↓
+Record Refund Transaction
+↓
+Update Payment
+↓
+Update Order
+
+============================================================
+47. REFUND IDEMPOTENCY
+============================================================
+
+Repeated refund requests must not create duplicate refunds.
+
+Use:
+
+- Internal refund ID
+- Provider refund ID
+- Idempotency key
+- Amount validation
+- Refundable balance
+
+============================================================
+48. REFUNDABLE BALANCE
+============================================================
+
+Refundable amount must be calculated from authoritative payment
+transactions.
+
+Never allow:
+
+Refunded Amount > Captured/Paid Amount
+
+unless a separately authorized adjustment model exists.
+
+============================================================
+49. PARTIAL REFUND
+============================================================
+
+Example:
+
+Paid = 10,000
+Refund 1 = 2,000
+Refund 2 = 3,000
+Remaining refundable = 5,000
+
+The system must track every refund independently.
+
+============================================================
+50. ORDER REFUND COORDINATION
+============================================================
+
+Payment refund and Order refund states must remain synchronized
+through reliable events and reconciliation.
+
+Module 09 owns the Order refund lifecycle.
+
+Module 12 owns payment refund transactions.
+
+============================================================
+51. PAYMENT REVERSAL
+============================================================
+
+Provider may reverse or fail a previously successful payment.
+
+The system must support:
+
+- Reversal
+- Chargeback/dispute foundation
+- Provider correction
+- Reconciliation
+
+Financial state must not rely on assumptions.
+
+============================================================
+52. DISPUTES / CHARGEBACKS
+============================================================
+
+Future card integrations should support:
+
+- Dispute
+- Chargeback
+- Evidence Reference
+- Dispute Status
+- Provider Case ID
+
+This is architecture-ready and may be implemented later.
+
+============================================================
+53. PAYMENT RECONCILIATION
+============================================================
+
+Reconciliation is mandatory.
+
+Compare:
+
+Internal Payment
+vs
+Provider Transaction
+vs
+Order
+vs
+Refunds
+
+Potential mismatches:
+
+- Amount
+- Currency
+- Status
+- Missing transaction
+- Duplicate transaction
+- Missing refund
+- Unexpected reversal
+
+============================================================
+54. RECONCILIATION STATES
+============================================================
+
+Potential:
+
+- MATCHED
+- PENDING
+- MISMATCH
+- PROVIDER_ONLY
+- INTERNAL_ONLY
+- RESOLVED
+
+============================================================
+55. RECONCILIATION JOBS
+============================================================
+
+Scheduled jobs may:
+
+- Fetch provider transactions
+- Compare records
+- Detect mismatch
+- Retry verification
+- Create reconciliation tasks
+- Alert authorized operations staff
+
+============================================================
+56. PAYMENT OUTBOX
+============================================================
+
+Important payment events should use an Outbox pattern.
+
+Examples:
+
+- PaymentCreated
+- PaymentAttemptStarted
+- PaymentAuthorized
+- PaymentSucceeded
+- PaymentFailed
+- PaymentCancelled
+- PaymentRefundRequested
+- PaymentRefunded
+- PaymentReversed
+- PaymentDisputed
+- PaymentReconciled
+
+============================================================
+57. PAYMENT NOTIFICATIONS
+============================================================
+
+Payment events may trigger:
+
+- Customer notification
+- Admin notification
+- Order update
+- Accounting integration
+- Analytics event
+
+Notification failure must not roll back a confirmed payment.
+
+============================================================
+58. PAYMENT LOGGING
+============================================================
+
+Logs may include:
+
+- Internal transaction ID
+- Provider
+- Event type
+- Result
+- Timestamp
+- Error code
+
+Do NOT log:
+
+- Passwords
+- API secrets
+- Full card data
+- CVV
+- Sensitive authentication tokens
+- Raw payment credentials
+
+============================================================
+59. PAYMENT ERROR MODEL
+============================================================
+
+Normalize provider errors into safe platform categories.
+
+Examples:
+
+- INVALID_REQUEST
+- AUTHENTICATION_FAILED
+- PROVIDER_UNAVAILABLE
+- PAYMENT_DECLINED
+- PAYMENT_EXPIRED
+- AMOUNT_MISMATCH
+- CURRENCY_MISMATCH
+- SIGNATURE_INVALID
+- DUPLICATE_REQUEST
+- UNKNOWN_PROVIDER_ERROR
+
+Customer messages should be understandable without exposing
+provider internals.
+
+============================================================
+60. PROVIDER OUTAGE
+============================================================
+
+If a gateway is unavailable:
+
+- Mark provider availability appropriately
+- Prevent unsafe payment attempts
+- Allow alternative configured methods
+- Preserve order/cart state
+- Notify operations if necessary
+
+Do not automatically switch payment providers unless an explicit
+safe routing policy exists.
+
+============================================================
+61. PAYMENT TIMEOUT
+============================================================
+
+A gateway timeout does not necessarily mean payment failed.
+
+State should become something such as:
+
+PENDING / VERIFICATION_REQUIRED
+
+until verified.
+
+This prevents accidental duplicate charging.
+
+============================================================
+62. UNKNOWN PAYMENT STATE
+============================================================
+
+If provider response is ambiguous:
+
+Do not assume failure.
+
+Create reconciliation/verification work.
+
+This is especially important for network timeouts after payment
+submission.
+
+============================================================
+63. MANUAL PAYMENT CONFIRMATION
+============================================================
+
+Authorized staff may manually confirm:
+
+- Bank Transfer
+- Cash Collected
+- Other approved manual methods
+
+Manual confirmation must record:
+
+- Actor
+- Timestamp
+- Amount
+- Reference
+- Reason
+- Notes
+
+============================================================
+64. CASH COLLECTION
+============================================================
+
+For COD:
+
+Delivery/Cash Collection
+↓
+Collection Confirmation
+↓
+Payment Transaction
+↓
+Order Payment Update
+
+Collection status should be distinguishable from order delivery.
+
+============================================================
+65. PAYMENT PERMISSIONS
+============================================================
+
+Store permissions may include:
+
+- payments.view
+- payments.manage
+- payments.capture
+- payments.refund
+- payments.cancel
+- payments.verify_manual
+- payments.reconcile
+- payments.provider_config
+
+High-risk financial permissions should be separately controlled.
+
+============================================================
+66. SUPER ADMIN PAYMENT PERMISSIONS
+============================================================
+
+Umar Techy Super Admin may manage:
+
+- Provider definitions
+- Gateway adapters
+- Global capability matrix
+- Package entitlements
+- Provider health
+- System-level payment settings
+- Platform diagnostics
+
+Tenant payment records must remain protected.
+
+============================================================
+67. CUSTOMER PAYMENT VIEW
+============================================================
+
+Customers may see:
+
+- Payment Method
+- Amount
+- Currency
+- Payment Status
+- Transaction reference where appropriate
+- Refund status
+
+Never expose:
+
+- Merchant secrets
+- Internal fraud signals
+- Provider credentials
+- Sensitive gateway metadata
+
+============================================================
+68. STORE ADMIN PAYMENT VIEW
+============================================================
+
+Authorized staff may view:
+
+- Payment
+- Attempts
+- Transactions
+- Provider
+- Amount
+- Currency
+- Status
+- Refunds
+- Reconciliation status
+- Failure reason
+- Provider reference
+
+============================================================
+69. PAYMENT API
+============================================================
+
+Potential endpoints:
+
+POST   /payments
+GET    /payments/{id}
+POST   /payments/{id}/verify
+POST   /payments/{id}/cancel
+POST   /payments/{id}/refund
+GET    /payments/{id}/transactions
+POST   /payment-webhooks/{provider}
+
+Exact API design will be defined in the API Blueprint.
+
+============================================================
+70. WEBHOOK API SECURITY
+============================================================
+
+Webhook endpoints must:
+
+- Validate provider signature
+- Resolve provider account
+- Resolve tenant
+- Resolve transaction
+- Validate amount/currency
+- Enforce idempotency
+- Record event
+- Process asynchronously where appropriate
+
+============================================================
+71. PAYMENT DATA RETENTION
+============================================================
+
+Retain financial records according to business/legal requirements.
+
+Do not retain unnecessary sensitive payment data.
+
+Transaction history required for reconciliation must remain
+immutable.
+
+============================================================
+72. PAYMENT DATA ENCRYPTION
+============================================================
+
+Sensitive payment configuration must be encrypted at rest.
+
+Communication with providers must use secure transport.
+
+============================================================
+73. PAYMENT DATABASE INDEXING
+============================================================
+
+Potential indexes:
+
+- Store + Payment ID
+- Store + Order ID
+- Store + Customer ID
+- Store + Provider
+- Store + Status
+- Provider + Provider Transaction ID
+- Store + Created At
+- Store + Reconciliation Status
+
+Unique constraints should protect provider event and transaction
+idempotency.
+
+============================================================
+74. PAYMENT CACHE
+============================================================
+
+Payment state should generally not rely on long-lived caches.
+
+Financial truth must come from authoritative persistent data.
+
+Caches may support:
+
+- Provider configuration
+- Public availability
+- Non-sensitive metadata
+
+Never use stale cached payment state to authorize financial
+actions.
+
+============================================================
+75. PAYMENT SECURITY THREATS
+============================================================
+
+Protect against:
+
+- Payment amount tampering
+- Currency tampering
+- Order ID manipulation
+- Tenant crossing
+- Forged callback
+- Forged webhook
+- Replay
+- Duplicate capture
+- Duplicate refund
+- Payment session theft
+- Credential leakage
+- Provider account mix-up
+- Race conditions
+
+============================================================
+76. PAYMENT TESTING — METHODS
+============================================================
+
+Test:
+
+- COD
+- Bank Transfer
+- JazzCash
+- Easypaisa
+- Online gateway
+- Disabled method
+- Package-restricted method
+- Amount restrictions
+- Currency restrictions
+
+============================================================
+77. PAYMENT TESTING — SUCCESS
+============================================================
+
+Test:
+
+- Successful payment
+- Successful redirect
+- Successful webhook
+- Payment verification
+- Order payment update
+- Customer notification
+
+============================================================
+78. PAYMENT TESTING — FAILURE
+============================================================
+
+Test:
+
+- Declined payment
+- Gateway timeout
+- Provider unavailable
+- Invalid signature
+- Invalid amount
+- Invalid currency
+- Expired payment
+- Duplicate request
+
+============================================================
+79. REFUND TESTING
+============================================================
+
+Test:
+
+- Full refund
+- Partial refund
+- Multiple partial refunds
+- Refund above paid amount
+- Duplicate refund
+- Provider refund failure
+- Delayed refund confirmation
+
+============================================================
+80. RECONCILIATION TESTING
+============================================================
+
+Test:
+
+- Internal-only payment
+- Provider-only payment
+- Amount mismatch
+- Currency mismatch
+- Status mismatch
+- Missing refund
+- Duplicate provider event
+- Reversed transaction
+
+============================================================
+81. SECURITY TESTING
+============================================================
+
+Mandatory:
+
+- Tenant isolation
+- Payment IDOR
+- Order ID manipulation
+- Amount tampering
+- Currency tampering
+- Webhook forgery
+- Signature bypass
+- Replay attack
+- Duplicate capture
+- Duplicate refund
+- Secret exposure
+- Log leakage
+- Unauthorized manual confirmation
+
+============================================================
+82. CONCURRENCY TESTING
+============================================================
+
+Test:
+
+- Two simultaneous payment confirmations
+- Two webhooks
+- Payment callback + webhook simultaneously
+- Two refund requests
+- Payment timeout + successful provider payment
+- Payment retry after uncertain state
+
+============================================================
+83. FAILURE RECOVERY
+============================================================
+
+Simulate:
+
+- Database failure
+- Provider timeout
+- Queue failure
+- Webhook failure
+- Notification failure
+- Reconciliation failure
+- Partial transaction processing
+
+The system must recover without double charging or double
+refunding.
+
+============================================================
+84. HIGH-LEVEL DATA ENTITIES
+============================================================
+
+Potential entities:
+
+- Payment
+- PaymentAttempt
+- PaymentTransaction
+- PaymentMethod
+- PaymentProvider
+- PaymentProviderAccount
+- PaymentProviderCapability
+- PaymentIntent
+- PaymentCallback
+- PaymentWebhookEvent
+- PaymentWebhookDelivery
+- PaymentRefund
+- PaymentRefundItem
+- PaymentReconciliation
+- PaymentReconciliationItem
+- PaymentFailure
+- PaymentManualVerification
+- PaymentMethodConfiguration
+- PaymentFee
+- PaymentOutboxEvent
+- SavedPaymentMethodToken
+- PaymentDispute
+
+Exact schema will be finalized in the Database Blueprint.
+
+============================================================
+85. PROVIDER ADAPTER STRUCTURE
+============================================================
+
+Conceptual structure:
+
+Payment Core
+│
+├── COD Adapter
+├── Bank Transfer Adapter
+├── JazzCash Adapter
+├── Easypaisa Adapter
+├── Card Gateway Adapter
+├── Future Provider A
+└── Future Provider B
+
+All adapters must follow the common payment contract.
+
+============================================================
+86. PROVIDER CAPABILITY MATRIX
+============================================================
+
+Each provider should declare capabilities such as:
+
+- Create Payment
+- Redirect
+- Verify
+- Capture
+- Void
+- Refund
+- Partial Refund
+- Webhook
+- Recurring Payment
+- Tokenization
+- Dispute Support
+
+Checkout must not call unsupported operations.
+
+============================================================
+87. MULTI-STORE PAYMENT ROUTING
+============================================================
+
+Every payment request must resolve:
+
+1. Store
+2. Store Payment Configuration
+3. Payment Method
+4. Provider Account
+5. Currency
+6. Order
+7. Amount
+
+Only then may the provider request be created.
+
+============================================================
+88. PACKAGE ENTITLEMENTS
+============================================================
+
+Potential package model:
+
+Basic:
+- COD
+- Bank Transfer
+- Standard payment methods
+
+Business:
+- Multiple online gateways
+- Advanced payment configuration
+- Automated reconciliation
+
+Premium:
+- Advanced gateway integrations
+- Tokenized payment methods
+- Advanced payment analytics
+- Additional payment automation
+
+Exact package mapping must be finalized in Module 04.
+
+============================================================
+89. PAYMENT HEALTH MONITORING
+============================================================
+
+Module 24 may monitor:
+
+- Gateway availability
+- Success rate
+- Failure rate
+- Timeout rate
+- Webhook delay
+- Reconciliation mismatch
+- Refund failure
+- Provider response time
+
+============================================================
+90. PAYMENT ANALYTICS
+============================================================
+
+Module 22 may report:
+
+- Payment Volume
+- Successful Payments
+- Failed Payments
+- Refund Volume
+- COD Collection
+- Gateway Usage
+- Payment Method Distribution
+- Average Payment Value
+- Failure Reasons
+- Reconciliation Exceptions
+
+All analytics must be tenant-scoped except platform-level
+operational metrics.
+
+============================================================
+91. ACCOUNTING INTEGRATION FOUNDATION
+============================================================
+
+Future accounting integrations may consume:
+
+- Payments
+- Refunds
+- Fees
+- COD collections
+- Bank transfers
+- Reconciliation records
+
+Accounting integrations must use immutable financial events.
+
+============================================================
+92. BILLING DISTINCTION
+============================================================
+
+Customer order payments and Umar Techy platform subscription
+payments are separate financial domains.
+
+This module primarily manages store/customer commerce payments.
+
+Platform subscription billing belongs to Module 29.
+
+============================================================
+93. PAYMENT SUPPORT TOOLS
+============================================================
+
+Support tooling may provide:
+
+- Transaction lookup
+- Provider reference lookup
+- Verification
+- Reconciliation status
+- Retry verification
+- Refund status
+
+High-risk actions require elevated permissions.
+
+============================================================
+94. PAYMENT AUDIT
+============================================================
+
+Audit all sensitive actions:
+
+- Provider configuration changes
+- Manual payment confirmation
+- Refund
+- Cancellation
+- Capture
+- Reconciliation resolution
+- Credential changes
+
+============================================================
+95. PAYMENT PRIVACY
+============================================================
+
+Do not expose payment information beyond what is required.
+
+Customer-facing interfaces should minimize transaction metadata.
+
+============================================================
+96. MODULE DEPENDENCIES
+============================================================
+
+Required:
+
+- Module 01 — Complete Platform Structure
+- Module 02 — Authentication, Users, Roles & Permissions
+- Module 03 — Multi-Tenant & Store Management
+- Module 04 — Subscription, Packages & Feature Entitlements
+- Module 05 — Storefront
+- Module 08 — Inventory & Stock
+- Module 09 — Order Management
+- Module 10 — Customer Management
+- Module 11 — Cart, Wishlist & Checkout
+
+Strong integration with:
+
+- Module 13 — Shipping & Delivery
+- Module 14 — Discounts, Coupons & Promotions
+- Module 15 — Marketing & Customer Engagement
+- Module 21 — Notifications & Communication
+- Module 22 — Reports & Analytics
+- Module 24 — Store Health & Resource Usage
+- Module 29 — Billing & Renewals
+- Module 31 — API & Developer Platform
+- Module 32 — Security, Audit & Compliance
+
+============================================================
+97. REQUIRED FOLLOW-UP ARTIFACTS
+============================================================
+
+1. Payment Database Blueprint
+2. Payment State Machine
+3. Payment Provider Abstraction Blueprint
+4. Provider Capability Matrix
+5. JazzCash Integration Blueprint
+6. Easypaisa Integration Blueprint
+7. Bank Transfer Workflow Blueprint
+8. COD Payment Blueprint
+9. Payment Intent Blueprint
+10. Payment Webhook Blueprint
+11. Payment Callback Blueprint
+12. Payment Idempotency Blueprint
+13. Payment Refund Blueprint
+14. Payment Reconciliation Blueprint
+15. Payment Security Blueprint
+16. Payment Secrets Management Blueprint
+17. Payment API Contract
+18. Payment Event / Outbox Blueprint
+19. Payment Failure Recovery Blueprint
+20. Payment Test Matrix
+21. Payment Provider Onboarding Checklist
+22. Payment Monitoring Blueprint
+
+============================================================
+98. FINAL ARCHITECTURAL RULES
+============================================================
+
+1. One Core Payment Engine.
+2. Payment providers must use a common abstraction.
+3. Store payment configuration must be tenant-scoped.
+4. Client-submitted payment amounts must never be trusted.
+5. Currency must always be server-validated.
+6. Order total must be server-authoritative.
+7. Payment status and Order status are separate concerns.
+8. Payment attempts must preserve historical failures.
+9. Transactions should be immutable financial records.
+10. Provider references must remain separate from internal IDs.
+11. Customer redirects are never authoritative payment proof.
+12. Provider webhooks/callbacks must be securely verified.
+13. Webhook processing must be idempotent.
+14. Duplicate captures and refunds must be prevented.
+15. Payment timeout must not automatically mean failure.
+16. Unknown payment states must be reconciled.
+17. Refunds must never exceed the refundable balance.
+18. COD collection must be independently recorded.
+19. Bank-transfer confirmation must require authorized verification.
+20. Payment credentials and secrets must never reach clients.
+21. Raw card credentials must never be stored by the core platform.
+22. Provider accounts must never cross tenant boundaries.
+23. Financial records must remain auditable.
+24. Reconciliation is mandatory for externally processed payments.
+25. Payment notifications must not determine financial truth.
+26. Payment failures must not corrupt Order or Inventory state.
+27. Payment operations must support reliable failure recovery.
+28. New providers must be addable without rewriting Checkout.
+29. Package entitlements may control gateway availability.
+30. Payment architecture must remain ready for cards, wallets,
+    tokenization, subscriptions, disputes, BNPL, and future
+    payment technologies.
+
+============================================================
+99. STATUS
+============================================================
+
+Module 12 Status:
+PAYMENT MANAGEMENT & GATEWAYS — INITIALIZED
+
+Version:
+1.0
+
+This module establishes the multi-tenant payment foundation for
+COD, Bank Transfer, JazzCash, Easypaisa, online gateways,
+provider adapters, payment attempts, transactions, webhooks,
+callbacks, refunds, reconciliation, security, and future
+payment expansion.
+
+The next module will define:
+
+MODULE 13 — SHIPPING & DELIVERY MANAGEMENT
+
+============================================================
+END OF MODULE 12
+============================================================

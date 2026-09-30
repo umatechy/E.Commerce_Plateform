@@ -1,0 +1,1758 @@
+UMAR TECHY
+E-COMMERCE PLATFORM
+MASTER PROJECT BLUEPRINT
+
+MODULE 15 — MARKETING & CUSTOMER ENGAGEMENT
+Version: 1.0
+Status: Planning / Blueprint
+
+============================================================
+1. MODULE PURPOSE
+============================================================
+
+This module defines the Core Marketing and Customer Engagement
+Engine for the Umar Techy multi-tenant E-Commerce Platform.
+
+The module provides a reusable marketing foundation that allows
+each store to attract, engage, retain, and re-engage customers
+without modifying the Core Platform.
+
+It manages:
+
+- Marketing Campaigns
+- Customer Segmentation
+- Campaign Audiences
+- Email Marketing
+- SMS Marketing
+- WhatsApp Marketing
+- Push Notifications
+- In-Store Messaging
+- Abandoned Cart Recovery
+- Customer Re-engagement
+- Welcome Campaigns
+- Post-Purchase Engagement
+- Promotional Campaigns
+- Loyalty Foundation
+- Referral Foundation
+- Review Requests
+- Product Recommendations Foundation
+- Marketing Automation
+- Campaign Scheduling
+- Trigger-Based Automation
+- Templates
+- Personalization
+- Consent
+- Unsubscribe
+- Frequency Controls
+- Delivery Tracking
+- Campaign Analytics
+- Attribution Foundation
+- A/B Testing Foundation
+- Tenant Isolation
+- Security
+- API
+- Events / Outbox
+- Future AI Marketing
+
+============================================================
+2. CORE ARCHITECTURAL PRINCIPLE
+============================================================
+
+ONE CORE MARKETING ENGINE
++
+STORE-SCOPED CAMPAIGNS
++
+CUSTOMER-SCOPED AUDIENCES
++
+CONSENT-AWARE COMMUNICATION
++
+MULTI-CHANNEL DELIVERY
++
+EVENT-DRIVEN AUTOMATION
++
+TENANT ISOLATION
+
+must serve all stores.
+
+Basic, Business, and Premium packages use the same Marketing
+Engine.
+
+Package differences are enforced through Module 04.
+
+============================================================
+3. MARKETING VS COMMUNICATION
+============================================================
+
+Marketing determines:
+
+- Who should receive a campaign
+- What should be offered
+- When it should be sent
+- Which trigger applies
+- Which promotion applies
+
+Module 21 determines:
+
+- How the message is technically delivered
+- Provider configuration
+- Delivery infrastructure
+- Notification transport
+
+Module 15 owns marketing logic.
+Module 21 owns communication delivery.
+
+============================================================
+4. MARKETING CHANNELS
+============================================================
+
+Initial architecture should support:
+
+- Email
+- SMS
+- WhatsApp
+- Push Notification
+- Storefront Banner
+- Popup
+- In-Store Message
+
+Future channels:
+
+- Messenger
+- Telegram
+- Mobile App Messaging
+- External Ad Platforms
+- CRM Campaigns
+
+============================================================
+5. CAMPAIGN
+============================================================
+
+A Campaign may contain:
+
+- Campaign ID
+- Store ID
+- Name
+- Description
+- Objective
+- Audience
+- Channel
+- Template
+- Promotion
+- Schedule
+- Status
+- Budget where applicable
+- Tracking Configuration
+- Created At
+- Updated At
+
+============================================================
+6. CAMPAIGN OBJECTIVES
+============================================================
+
+Potential objectives:
+
+- Awareness
+- New Customer Acquisition
+- First Purchase
+- Repeat Purchase
+- Abandoned Cart Recovery
+- Product Promotion
+- Category Promotion
+- Seasonal Sale
+- Customer Reactivation
+- Loyalty Engagement
+- Review Collection
+- Cross-Sell
+- Up-Sell
+
+Objective is descriptive and must not bypass eligibility rules.
+
+============================================================
+7. CAMPAIGN STATUS
+============================================================
+
+Suggested states:
+
+- DRAFT
+- SCHEDULED
+- ACTIVE
+- PAUSED
+- COMPLETED
+- CANCELLED
+- FAILED
+- ARCHIVED
+
+============================================================
+8. CAMPAIGN AUDIENCE
+============================================================
+
+Audience may be:
+
+- All eligible customers
+- Customer segment
+- Customer group
+- Tag
+- Imported audience
+- Event-based audience
+- Dynamic segment
+
+Marketing must respect customer consent.
+
+============================================================
+9. AUDIENCE SNAPSHOT
+============================================================
+
+For scheduled campaigns, the system should define whether the
+audience is:
+
+- Evaluated at scheduling
+- Evaluated at send time
+- Continuously evaluated
+
+The selected behavior must be explicit.
+
+============================================================
+10. CUSTOMER SEGMENTS
+============================================================
+
+Marketing integrates with Module 10 segmentation.
+
+Examples:
+
+- New Customers
+- Repeat Customers
+- High-Value Customers
+- No Purchase in 90 Days
+- Purchased Category X
+- Abandoned Cart
+- VIP
+- Wholesale
+
+============================================================
+11. SEGMENT RULES
+============================================================
+
+Marketing may consume conditions such as:
+
+- Order Count
+- Spend
+- Last Order
+- Product Purchased
+- Category Purchased
+- Location
+- Customer Group
+- Customer Tag
+- Consent
+- Cart Activity
+
+Module 10 owns customer segmentation data.
+
+============================================================
+12. CAMPAIGN TARGETING
+============================================================
+
+Campaign targeting may combine:
+
+Customer
++
+Segment
++
+Consent
++
+Product Interest
++
+Purchase History
++
+Promotion Eligibility
+
+Final campaign audience must exclude ineligible customers.
+
+============================================================
+13. MARKETING CONSENT
+============================================================
+
+Marketing messages require appropriate consent according to
+applicable law and store policy.
+
+Consent may be tracked by:
+
+- Channel
+- Purpose
+- Status
+- Timestamp
+- Source
+- Consent Version
+
+Module 10 owns consent records.
+
+============================================================
+14. TRANSACTIONAL VS MARKETING
+============================================================
+
+Examples of transactional messages:
+
+- Order Confirmation
+- Payment Confirmation
+- Shipment Update
+- Refund Confirmation
+
+Examples of marketing messages:
+
+- Sale
+- Coupon
+- Product Launch
+- Promotional Campaign
+
+Marketing campaigns must not be used to bypass transactional
+communication rules.
+
+============================================================
+15. UNSUBSCRIBE
+============================================================
+
+Customers must be able to opt out of applicable marketing
+channels.
+
+Examples:
+
+- Email Unsubscribe
+- SMS Opt-Out
+- WhatsApp Marketing Opt-Out
+- Push Marketing Opt-Out
+
+Opt-out must be respected by future campaigns.
+
+============================================================
+16. CHANNEL PREFERENCE
+============================================================
+
+Customers may configure:
+
+- Preferred Channel
+- Allowed Channels
+- Marketing Categories
+- Frequency Preferences
+
+Preferences must remain store-scoped where appropriate.
+
+============================================================
+17. FREQUENCY CONTROL
+============================================================
+
+Stores may define limits such as:
+
+- Maximum 1 marketing message per day
+- Maximum 3 per week
+- Campaign category limits
+
+Frequency controls help reduce customer fatigue.
+
+============================================================
+18. GLOBAL SUPPRESSION
+============================================================
+
+A customer may be suppressed from marketing because of:
+
+- Opt-out
+- Complaint
+- Invalid contact
+- Abuse protection
+- Legal requirement
+- Store decision
+
+Suppression must override campaign targeting.
+
+============================================================
+19. EMAIL MARKETING
+============================================================
+
+Email campaigns may support:
+
+- HTML Templates
+- Plain Text Fallback
+- Subject
+- Preview Text
+- Personalization
+- Images
+- CTA
+- Promotion
+- Tracking
+
+============================================================
+20. EMAIL PERSONALIZATION
+============================================================
+
+Potential variables:
+
+- Customer Name
+- Store Name
+- Order Number
+- Coupon Code
+- Product Name
+- Expiry Date
+- Customer Segment
+
+Variables must be safely escaped.
+
+============================================================
+21. EMAIL TEMPLATE SYSTEM
+============================================================
+
+Templates should support:
+
+- Draft
+- Version
+- Preview
+- Test Send
+- Publish
+- Archive
+
+Templates must remain tenant-scoped.
+
+============================================================
+22. SMS MARKETING
+============================================================
+
+SMS may support:
+
+- Promotional Text
+- Coupon
+- Campaign Link
+- Personalization
+
+Message length and provider limits must be respected.
+
+============================================================
+23. SMS CONSENT
+============================================================
+
+Marketing SMS must respect:
+
+- Opt-in
+- Opt-out
+- Suppression
+- Provider rules
+
+============================================================
+24. WHATSAPP MARKETING
+============================================================
+
+WhatsApp may support:
+
+- Approved Templates
+- Promotional Messages
+- Order Follow-up
+- Re-engagement
+- Campaign Links
+
+Marketing WhatsApp messages require appropriate consent and
+provider policy compliance.
+
+============================================================
+25. WHATSAPP TEMPLATE FOUNDATION
+============================================================
+
+Templates may contain:
+
+- Header
+- Body
+- Footer
+- Variables
+- CTA Buttons
+- Promotion Reference
+
+Provider-approved templates must be handled through the
+communication layer.
+
+============================================================
+26. PUSH MARKETING
+============================================================
+
+Push notifications may support:
+
+- Sale Alert
+- New Product
+- Cart Reminder
+- Wishlist Reminder
+- Order Follow-up
+- Personalized Recommendation
+
+Push permissions remain customer/device dependent.
+
+============================================================
+27. STOREFRONT MARKETING
+============================================================
+
+Storefront marketing may include:
+
+- Homepage Banner
+- Promotional Banner
+- Popup
+- Announcement Bar
+- Product Badge
+- Countdown
+- Campaign Landing Page
+
+Module 05 handles storefront rendering.
+
+Module 15 controls campaign activation.
+
+============================================================
+28. CAMPAIGN LANDING PAGES
+============================================================
+
+Campaigns may link to:
+
+- Product
+- Category
+- Collection
+- Promotion
+- Custom Landing Page
+
+Landing pages must remain tenant-scoped.
+
+============================================================
+29. WELCOME CAMPAIGN
+============================================================
+
+Example:
+
+Customer Registration
+↓
+Consent Check
+↓
+Welcome Campaign
+↓
+Optional Coupon
+↓
+Message Delivery
+
+Coupon eligibility remains controlled by Module 14.
+
+============================================================
+30. FIRST PURCHASE CAMPAIGN
+============================================================
+
+Trigger:
+
+Customer Registered
+AND
+No Completed Order
+
+Possible action:
+
+Send first-order promotion.
+
+Eligibility must be revalidated when coupon is redeemed.
+
+============================================================
+31. POST-PURCHASE CAMPAIGN
+============================================================
+
+Potential triggers:
+
+- Order Delivered
+- Order Completed
+- Product Purchased
+- Category Purchased
+
+Actions:
+
+- Thank You Message
+- Review Request
+- Cross-Sell
+- Related Product
+- Reorder Reminder
+
+============================================================
+32. REVIEW REQUEST
+============================================================
+
+Review campaign may trigger after:
+
+- Delivery
+- Configured delay
+- Order completion
+
+Review system must distinguish legitimate purchase-based
+requests from general marketing.
+
+============================================================
+33. ABANDONED CART RECOVERY
+============================================================
+
+Flow:
+
+Cart Active
+↓
+No Activity
+↓
+Abandonment Threshold
+↓
+Eligibility Check
+↓
+Consent Check
+↓
+Campaign
+↓
+Optional Coupon
+↓
+Message
+
+Module 11 detects cart abandonment.
+
+Module 15 executes marketing automation.
+
+============================================================
+34. ABANDONED CART RULES
+============================================================
+
+Campaign may define:
+
+- Delay
+- Maximum Attempts
+- Channels
+- Coupon
+- Expiry
+- Frequency Limit
+
+Do not repeatedly message the same customer without explicit
+rules.
+
+============================================================
+35. ABANDONED CART COUPON
+============================================================
+
+If a coupon is generated:
+
+- Unique where required
+- Limited use
+- Expiring
+- Customer-scoped where appropriate
+
+Module 14 validates the coupon.
+
+============================================================
+36. WIN-BACK CAMPAIGN
+============================================================
+
+Example trigger:
+
+No purchase for 90 days.
+
+Actions may include:
+
+- Reminder
+- Product Recommendations
+- Coupon
+- New Arrival Message
+
+============================================================
+37. BIRTHDAY / EVENT CAMPAIGN FOUNDATION
+============================================================
+
+Future campaigns may use optional customer-provided dates.
+
+Such data must be explicitly collected and privacy-controlled.
+
+============================================================
+38. PRODUCT LAUNCH CAMPAIGN
+============================================================
+
+Campaign may target:
+
+- Previous buyers
+- Wishlist customers
+- Category buyers
+- Interested segments
+
+Product availability must be revalidated at message/click time.
+
+============================================================
+39. BACK-IN-STOCK CAMPAIGN
+============================================================
+
+Future trigger:
+
+Product unavailable
+↓
+Customer subscribes
+↓
+Stock becomes available
+↓
+Notification
+
+Module 08 provides inventory event.
+
+Module 15 executes engagement.
+
+============================================================
+40. PRICE-DROP CAMPAIGN
+============================================================
+
+Future trigger:
+
+Tracked product price decreases.
+
+Eligible customers may receive a notification subject to
+consent and preference.
+
+============================================================
+41. WISHLIST MARKETING
+============================================================
+
+Possible triggers:
+
+- Wishlist item back in stock
+- Wishlist price drop
+- Wishlist inactivity
+
+Module 11 owns wishlist data.
+
+============================================================
+42. CROSS-SELL CAMPAIGN
+============================================================
+
+Use purchase history to promote related products.
+
+Examples:
+
+Bought Phone
+→ Case
+→ Charger
+→ Screen Protector
+
+Recommendations must respect product availability and
+promotion rules.
+
+============================================================
+43. UP-SELL CAMPAIGN
+============================================================
+
+Promote a higher-value alternative where appropriate.
+
+The campaign should use approved product relationships or
+recommendation logic.
+
+============================================================
+44. REORDER CAMPAIGN
+============================================================
+
+For repeatable products:
+
+Purchase
+↓
+Expected Consumption Period
+↓
+Reorder Reminder
+
+The reminder timing should be configurable.
+
+============================================================
+45. LOYALTY FOUNDATION
+============================================================
+
+The marketing architecture should reserve support for:
+
+- Points
+- Tiers
+- Rewards
+- Loyalty Campaigns
+- Birthday Rewards
+- Repeat Purchase Rewards
+
+Actual loyalty accounting must use an auditable ledger.
+
+============================================================
+46. REFERRAL FOUNDATION
+============================================================
+
+Referral campaigns may support:
+
+- Referral Link
+- Referral Code
+- Referrer
+- Referred Customer
+- Reward
+- Status
+
+Module 10 owns customer identity.
+
+Module 14 may own referral coupon/discount mechanics.
+
+============================================================
+47. CUSTOMER ADVOCACY
+============================================================
+
+Future campaigns may encourage:
+
+- Reviews
+- Referrals
+- Social sharing
+- Repeat purchases
+
+Any incentive must be clearly represented and auditable.
+
+============================================================
+48. CAMPAIGN SCHEDULING
+============================================================
+
+Campaigns may be scheduled by:
+
+- Date
+- Time
+- Store timezone
+- Customer timezone where supported
+- Recurring schedule
+
+============================================================
+49. CAMPAIGN TIMEZONE
+============================================================
+
+Store timezone is authoritative for store campaign scheduling.
+
+Customer timezone may be used for send-time optimization only
+where explicitly supported.
+
+============================================================
+50. SEND WINDOWS
+============================================================
+
+Stores may configure allowed send windows.
+
+Example:
+
+Marketing messages:
+09:00–20:00
+
+Do not send promotional messages outside configured windows
+unless explicitly authorized.
+
+============================================================
+51. SEND QUEUE
+============================================================
+
+Campaign execution should use asynchronous jobs.
+
+Conceptual:
+
+Campaign
+↓
+Audience
+↓
+Eligibility
+↓
+Message Jobs
+↓
+Queue
+↓
+Communication Provider
+↓
+Delivery Result
+
+============================================================
+52. BATCHING
+============================================================
+
+Large campaigns should be processed in batches.
+
+Benefits:
+
+- Provider limits
+- Resource control
+- Retry
+- Failure isolation
+- Rate limiting
+
+============================================================
+53. RETRY
+============================================================
+
+Transient failures may retry.
+
+Permanent failures should be marked appropriately.
+
+Retry must not create duplicate customer messages.
+
+============================================================
+54. IDEMPOTENCY
+============================================================
+
+Campaign message delivery must use idempotency where possible.
+
+A single campaign event must not accidentally send the same
+message multiple times because of job retries.
+
+============================================================
+55. DELIVERY STATUS
+============================================================
+
+Potential statuses:
+
+- QUEUED
+- SENT
+- DELIVERED
+- FAILED
+- BOUNCED
+- REJECTED
+- UNSUBSCRIBED
+
+Provider-specific statuses should map into the platform model.
+
+============================================================
+56. EMAIL BOUNCE
+============================================================
+
+Email bounce handling may classify:
+
+- Temporary Bounce
+- Permanent Bounce
+
+Permanent invalid addresses may enter suppression.
+
+============================================================
+57. SMS FAILURE
+============================================================
+
+Record provider response and classify:
+
+- Invalid Number
+- Provider Error
+- Rejected
+- Rate Limited
+- Unknown
+
+Do not repeatedly retry permanent failures.
+
+============================================================
+58. WHATSAPP FAILURE
+============================================================
+
+Record:
+
+- Template Rejection
+- Provider Failure
+- Invalid Number
+- Opt-Out
+- Rate Limit
+
+============================================================
+59. PUSH FAILURE
+============================================================
+
+Invalid device tokens should be cleaned or deactivated where
+appropriate.
+
+============================================================
+60. CAMPAIGN ANALYTICS
+============================================================
+
+Track:
+
+- Audience Size
+- Eligible Audience
+- Sent
+- Delivered
+- Opened where available
+- Clicked
+- Converted
+- Revenue
+- Orders
+- Coupon Redemptions
+- Unsubscribes
+- Failures
+
+============================================================
+61. REVENUE ATTRIBUTION
+============================================================
+
+Campaign attribution should be configurable.
+
+Potential attribution:
+
+- Direct Campaign Order
+- Coupon-Based
+- Click-Based
+- View-Based where supported
+
+Attribution must not falsely claim revenue when causality is
+uncertain.
+
+============================================================
+62. ATTRIBUTION WINDOW
+============================================================
+
+Campaign may define:
+
+- Click Window
+- View Window
+- Coupon Window
+
+Analytics should clearly identify attribution methodology.
+
+============================================================
+63. CAMPAIGN CONVERSION
+============================================================
+
+Conversion may be:
+
+- Order
+- Purchase
+- Coupon Redemption
+- Signup
+- Wishlist Addition
+- Review
+
+Objective-specific conversion metrics should be supported.
+
+============================================================
+64. A/B TESTING FOUNDATION
+============================================================
+
+Future campaigns may support:
+
+- Variant A
+- Variant B
+- Audience Split
+- Different Subject
+- Different Message
+- Different Coupon
+
+Testing must be randomized only within the intended audience
+and must preserve consent and eligibility.
+
+============================================================
+65. EXPERIMENT SAFETY
+============================================================
+
+A/B testing must not:
+
+- Bypass promotion limits
+- Bypass consent
+- Expose private customer data
+- Create unfair pricing errors
+
+============================================================
+66. PERSONALIZATION
+============================================================
+
+Personalization may use:
+
+- Customer Name
+- Purchase History
+- Product Interest
+- Customer Segment
+- Wishlist
+- Recent Activity
+
+Only permitted data should be used.
+
+============================================================
+67. AI MARKETING FOUNDATION
+============================================================
+
+Future Module 26 may support:
+
+- AI campaign copy
+- AI segment suggestions
+- AI product recommendations
+- AI send-time suggestions
+- AI campaign summaries
+- AI customer insights
+
+AI output must remain subject to:
+
+- Store approval
+- Customer consent
+- Promotion rules
+- Security
+- Tenant isolation
+
+AI must not autonomously change financial rules.
+
+============================================================
+68. MARKETING CONTENT APPROVAL
+============================================================
+
+Stores may require approval before campaigns go live.
+
+Workflow:
+
+Draft
+→ Review
+→ Approve
+→ Schedule
+→ Execute
+
+============================================================
+69. MARKETING TEMPLATE VERSIONING
+============================================================
+
+Published templates should be versioned.
+
+Historical campaign records must retain the template version
+used.
+
+============================================================
+70. PROMOTION INTEGRATION
+============================================================
+
+Marketing may reference Module 14 promotions.
+
+Example:
+
+Campaign
+→ Promotion
+→ Coupon
+→ Customer
+
+Module 14 remains authoritative for actual discount eligibility.
+
+============================================================
+71. PRODUCT INTEGRATION
+============================================================
+
+Marketing may reference:
+
+- Products
+- Categories
+- Brands
+- Collections
+
+Product availability must be validated before campaign execution.
+
+============================================================
+72. CUSTOMER INTEGRATION
+============================================================
+
+Marketing consumes:
+
+- Customer
+- Segment
+- Group
+- Tags
+- Consent
+- Preferences
+- Order History
+
+Module 10 remains authoritative for customer data.
+
+============================================================
+73. ORDER INTEGRATION
+============================================================
+
+Marketing may trigger from:
+
+- Order Created
+- Payment Confirmed
+- Order Delivered
+- Order Completed
+- Return Completed
+
+Module 09 remains authoritative for order lifecycle.
+
+============================================================
+74. CART INTEGRATION
+============================================================
+
+Marketing consumes:
+
+- Cart Created
+- Cart Updated
+- Cart Abandoned
+- Checkout Started
+
+Module 11 remains authoritative for cart state.
+
+============================================================
+75. INVENTORY INTEGRATION
+============================================================
+
+Marketing may consume:
+
+- Back In Stock
+- Low Stock
+- Product Unavailable
+
+Marketing must never directly modify inventory.
+
+============================================================
+76. SHIPPING INTEGRATION
+============================================================
+
+Marketing may trigger after:
+
+- Shipment
+- Delivery
+- Failed Delivery
+
+Module 13 owns shipment state.
+
+============================================================
+77. PAYMENT INTEGRATION
+============================================================
+
+Marketing may trigger after:
+
+- Payment Confirmed
+- Payment Failed where appropriate
+- Refund Completed
+
+Module 12 owns payment state.
+
+============================================================
+78. COMMUNICATION INTEGRATION
+============================================================
+
+Module 21 provides:
+
+- Email Provider
+- SMS Provider
+- WhatsApp Provider
+- Push Provider
+
+Module 15 provides campaign intent and audience.
+
+============================================================
+79. MARKETING API
+============================================================
+
+Potential endpoints:
+
+POST   /campaigns
+GET    /campaigns
+GET    /campaigns/{id}
+PATCH  /campaigns/{id}
+POST   /campaigns/{id}/preview
+POST   /campaigns/{id}/schedule
+POST   /campaigns/{id}/pause
+POST   /campaigns/{id}/resume
+GET    /campaigns/{id}/analytics
+POST   /segments/{id}/evaluate
+
+Exact API design will be finalized in the API Blueprint.
+
+============================================================
+80. MARKETING EVENTS
+============================================================
+
+Potential events:
+
+- CampaignCreated
+- CampaignScheduled
+- CampaignStarted
+- CampaignPaused
+- CampaignCompleted
+- CampaignCancelled
+- AudienceEvaluated
+- MarketingMessageQueued
+- MarketingMessageSent
+- MarketingMessageDelivered
+- MarketingMessageFailed
+- MarketingConversionRecorded
+- CustomerUnsubscribed
+
+============================================================
+81. MARKETING OUTBOX
+============================================================
+
+Important campaign events should use reliable Outbox processing.
+
+This prevents data loss when downstream communication systems
+are temporarily unavailable.
+
+============================================================
+82. CAMPAIGN SECURITY
+============================================================
+
+Protect against:
+
+- Cross-tenant campaign access
+- Customer list leakage
+- Unauthorized exports
+- Unauthorized sends
+- Coupon abuse
+- Template injection
+- XSS
+- Malicious links
+- Provider credential exposure
+
+============================================================
+83. PERSONAL DATA PROTECTION
+============================================================
+
+Marketing data may contain:
+
+- Email
+- Phone
+- Name
+- Purchase history
+- Interests
+- Location
+- Engagement history
+
+Access must follow least privilege.
+
+============================================================
+84. EXPORT SECURITY
+============================================================
+
+Marketing audience exports must be:
+
+- Permission-controlled
+- Tenant-scoped
+- Audited
+- Time-limited
+- Data-minimized
+
+============================================================
+85. LINK SECURITY
+============================================================
+
+Campaign links should support:
+
+- Safe URL validation
+- Tracking parameters
+- Store domain validation
+- HTTPS where applicable
+
+Avoid open redirect vulnerabilities.
+
+============================================================
+86. UNSUBSCRIBE SECURITY
+============================================================
+
+Unsubscribe links/tokens should be:
+
+- Secure
+- Difficult to guess
+- Scoped to the correct customer/store
+- Revocable where appropriate
+
+============================================================
+87. FREQUENCY CAP ENFORCEMENT
+============================================================
+
+Frequency limits must be evaluated at send time, not only when
+the campaign is created.
+
+============================================================
+88. CAMPAIGN CONCURRENCY
+============================================================
+
+Prevent duplicate execution when:
+
+- Scheduler retries
+- Multiple workers run
+- Campaign is paused during execution
+- Same trigger arrives twice
+
+============================================================
+89. CAMPAIGN PAUSE
+============================================================
+
+Pausing a campaign must prevent new messages from being queued
+where possible.
+
+Already delivered messages remain historical.
+
+Queued messages should follow explicit cancellation rules.
+
+============================================================
+90. CAMPAIGN CANCELLATION
+============================================================
+
+Cancellation must:
+
+- Stop future scheduling
+- Stop new audience processing
+- Cancel eligible queued messages
+- Preserve history
+
+============================================================
+91. DATA RETENTION
+============================================================
+
+Retain marketing records according to:
+
+- Business requirements
+- Consent requirements
+- Analytics requirements
+- Legal requirements
+
+Do not retain unnecessary personal engagement data indefinitely.
+
+============================================================
+92. PACKAGE ENTITLEMENTS
+============================================================
+
+Potential package model:
+
+Basic:
+- Basic campaigns
+- Email foundation
+- Simple customer targeting
+- Basic abandoned cart
+
+Business:
+- Multi-channel marketing
+- Advanced segmentation
+- Automation
+- Scheduled campaigns
+- WhatsApp/SMS integrations
+
+Premium:
+- Advanced automation
+- AI marketing
+- Advanced personalization
+- A/B testing
+- Advanced attribution
+- Loyalty marketing
+
+Exact mapping must be finalized in Module 04.
+
+============================================================
+93. MARKETING LIMITS
+============================================================
+
+Potential limits:
+
+- Active Campaigns
+- Scheduled Campaigns
+- Marketing Contacts
+- Emails per Month
+- SMS per Month
+- WhatsApp Messages
+- Push Messages
+- Automation Rules
+- Segments
+- Templates
+- A/B Tests
+
+Limits must be configurable.
+
+============================================================
+94. MARKETING MONITORING
+============================================================
+
+Module 24 may monitor:
+
+- Campaign Queue
+- Provider Failure Rate
+- Delivery Delay
+- Bounce Rate
+- Suppression Rate
+- Automation Failure
+- Queue Backlog
+- Provider Availability
+
+============================================================
+95. MARKETING ANALYTICS
+============================================================
+
+Module 22 may report:
+
+- Campaign Revenue
+- Orders
+- Conversion
+- Open Rate
+- Click Rate
+- Delivery Rate
+- Unsubscribe Rate
+- Coupon Redemption
+- Customer Retention
+- Repeat Purchase
+
+All store analytics must remain tenant-scoped.
+
+============================================================
+96. FUNCTIONAL TESTING
+============================================================
+
+Test:
+
+- Campaign creation
+- Draft
+- Preview
+- Approval
+- Scheduling
+- Execution
+- Pause
+- Resume
+- Cancel
+- Completion
+- Audience evaluation
+- Coupon integration
+- Segmentation
+- Consent filtering
+
+============================================================
+97. CHANNEL TESTING
+============================================================
+
+Test:
+
+- Email
+- SMS
+- WhatsApp
+- Push
+- Storefront banner
+- Popup
+
+Test provider failure and retry behavior.
+
+============================================================
+98. AUTOMATION TESTING
+============================================================
+
+Test:
+
+- Welcome
+- First purchase
+- Post-purchase
+- Review request
+- Abandoned cart
+- Win-back
+- Reorder
+- Back-in-stock
+- Price-drop foundation
+
+============================================================
+99. CONSENT TESTING
+============================================================
+
+Test:
+
+- Opt-in
+- Opt-out
+- Channel-specific consent
+- Suppression
+- Consent withdrawal
+- Marketing after opt-out
+- Transactional vs marketing separation
+
+============================================================
+100. SECURITY TESTING
+============================================================
+
+Mandatory:
+
+- Cross-tenant campaign access
+- Customer audience leakage
+- Unauthorized campaign send
+- Unauthorized export
+- Template injection
+- XSS
+- Malicious URL
+- Unsubscribe token abuse
+- Coupon abuse
+- Provider secret leakage
+
+============================================================
+101. CONCURRENCY TESTING
+============================================================
+
+Test:
+
+- Duplicate campaign scheduler
+- Duplicate trigger
+- Multiple workers
+- Simultaneous pause/send
+- Frequency cap race
+- Duplicate message prevention
+
+============================================================
+102. PERFORMANCE TESTING
+============================================================
+
+Test:
+
+- Large audience
+- Large campaign
+- High message volume
+- Large segment
+- High-frequency triggers
+- Multiple stores
+- Provider rate limits
+- Queue backlog
+
+============================================================
+103. FAILURE RECOVERY
+============================================================
+
+Simulate:
+
+- Provider outage
+- Queue failure
+- Database failure
+- Webhook failure
+- Template failure
+- Segment evaluation failure
+- Partial campaign execution
+
+The system must preserve campaign state and avoid duplicate
+messages.
+
+============================================================
+104. HIGH-LEVEL DATA ENTITIES
+============================================================
+
+Potential entities:
+
+- MarketingCampaign
+- MarketingCampaignVersion
+- MarketingAudience
+- MarketingAudienceMember
+- MarketingSegmentReference
+- MarketingTemplate
+- MarketingTemplateVersion
+- MarketingAutomation
+- MarketingAutomationRule
+- MarketingTrigger
+- MarketingAction
+- MarketingMessage
+- MarketingMessageDelivery
+- MarketingSuppression
+- MarketingPreference
+- MarketingCampaignPromotion
+- MarketingCampaignCoupon
+- MarketingConversion
+- MarketingAttribution
+- MarketingExperiment
+- MarketingExperimentVariant
+- MarketingSchedule
+- MarketingFrequencyRule
+- MarketingOutboxEvent
+
+Exact schema will be finalized in the Database Blueprint.
+
+============================================================
+105. MODULE DEPENDENCIES
+============================================================
+
+Required:
+
+- Module 01 — Complete Platform Structure
+- Module 02 — Authentication, Users, Roles & Permissions
+- Module 03 — Multi-Tenant & Store Management
+- Module 04 — Subscription, Packages & Feature Entitlements
+- Module 05 — Storefront
+- Module 06 — Product & Catalog
+- Module 08 — Inventory & Stock
+- Module 09 — Order Management
+- Module 10 — Customer Management
+- Module 11 — Cart, Wishlist & Checkout
+- Module 12 — Payment Management & Gateways
+- Module 13 — Shipping & Delivery
+- Module 14 — Discounts, Coupons & Promotions
+
+Strong integration with:
+
+- Module 17 — Theme, Branding & Design System
+- Module 21 — Notifications & Communication
+- Module 22 — Reports & Analytics
+- Module 24 — Store Health & Resource Usage
+- Module 26 — AI Features
+- Module 27 — App / Plugin Marketplace
+- Module 31 — API & Developer Platform
+- Module 32 — Security, Audit & Compliance
+
+============================================================
+106. REQUIRED FOLLOW-UP ARTIFACTS
+============================================================
+
+1. Marketing Database Blueprint
+2. Campaign State Machine
+3. Marketing Audience Blueprint
+4. Marketing Segmentation Integration Blueprint
+5. Marketing Automation Blueprint
+6. Trigger/Action Blueprint
+7. Email Marketing Blueprint
+8. SMS Marketing Blueprint
+9. WhatsApp Marketing Blueprint
+10. Push Marketing Blueprint
+11. Campaign Template Blueprint
+12. Campaign Scheduling Blueprint
+13. Frequency Cap Blueprint
+14. Consent/Suppression Integration Blueprint
+15. Abandoned Cart Recovery Blueprint
+16. Post-Purchase Marketing Blueprint
+17. Win-Back Campaign Blueprint
+18. Review Request Blueprint
+19. Loyalty Marketing Foundation Blueprint
+20. Referral Marketing Foundation Blueprint
+21. Campaign Attribution Blueprint
+22. A/B Testing Blueprint
+23. AI Marketing Integration Blueprint
+24. Marketing API Contract
+25. Marketing Event / Outbox Blueprint
+26. Marketing Security Blueprint
+27. Marketing Analytics Blueprint
+28. Marketing Test Matrix
+
+============================================================
+107. FINAL ARCHITECTURAL RULES
+============================================================
+
+1. One Core Marketing Engine.
+2. Campaigns must be tenant-scoped.
+3. Audiences must be tenant-scoped.
+4. Marketing must respect customer consent.
+5. Channel-specific opt-out must be respected.
+6. Suppression must override campaign targeting.
+7. Transactional and marketing communication must remain
+   separate.
+8. Module 15 owns marketing logic.
+9. Module 21 owns message delivery infrastructure.
+10. Module 10 owns customer identity, segmentation, preferences,
+    and consent data.
+11. Module 14 owns promotion eligibility and discount rules.
+12. Module 11 owns cart state.
+13. Module 09 owns order state.
+14. Module 08 owns inventory state.
+15. Module 12 owns payment state.
+16. Module 13 owns shipment state.
+17. Campaign execution must be asynchronous and retry-safe.
+18. Campaign jobs must be idempotent.
+19. Frequency limits must be enforced at send time.
+20. Campaigns must support draft, preview, approval, schedule,
+    pause, resume, cancellation, and completion.
+21. Historical campaign/template versions must remain auditable.
+22. Marketing exports must be permission-controlled and audited.
+23. Personal data must be minimized and protected.
+24. Campaign attribution methodology must be explicit.
+25. AI must not bypass consent, security, promotion, or financial
+    rules.
+26. New communication channels must be addable through the
+    communication abstraction.
+27. New campaign types must be addable without rewriting the
+    Core Platform.
+28. Marketing must remain ready for loyalty, referrals, CRM,
+    external advertising, advanced personalization, and AI.
+29. Security, privacy, tenant isolation, auditability, and
+    failure recovery are mandatory.
+
+============================================================
+108. STATUS
+============================================================
+
+Module 15 Status:
+MARKETING & CUSTOMER ENGAGEMENT — INITIALIZED
+
+Version:
+1.0
+
+This module establishes the multi-tenant marketing foundation
+for campaigns, segmentation, automation, email, SMS, WhatsApp,
+push notifications, abandoned cart recovery, post-purchase
+engagement, reactivation, reviews, loyalty/referral readiness,
+attribution, A/B testing, personalization, AI integration,
+consent, suppression, analytics, and future marketing expansion.
+
+The next module will define:
+
+MODULE 16 — SEO & CONTENT MANAGEMENT
+
+============================================================
+END OF MODULE 15
+============================================================

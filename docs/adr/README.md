@@ -24,6 +24,10 @@ Approved ADRs / RFCs   <-- this folder
 Existing Implementation
 ```
 
+The higher documents are stored verbatim in [`docs/source/`](../source/README.md)
+(Project Bible, SRS, Master Index, Master Development Prompt and Module Blueprints
+01–35; URS and Technical Architecture are not yet received).
+
 ADRs sit **below** the Project Bible, SRS, Technical Architecture, and Module Blueprints
 in authority. An ADR may only:
 

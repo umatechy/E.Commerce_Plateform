@@ -1,0 +1,889 @@
+UMAR TECHY
+E-COMMERCE PLATFORM
+MASTER PROJECT BLUEPRINT
+
+MODULE 01 — COMPLETE PLATFORM STRUCTURE
+Version: 1.0
+Status: Planning / Blueprint
+
+============================================================
+1. MODULE PURPOSE
+============================================================
+
+This module defines the complete high-level structure of the
+Umar Techy E-Commerce Platform.
+
+The purpose is to establish the foundation before development
+starts, so the core architecture does not need to be repeatedly
+rebuilt for individual customers.
+
+The platform will follow a Multi-Tenant SaaS model.
+
+The Core E-Commerce Platform will be developed once. Each new
+customer will receive a new Store/Tenant instance within the
+existing platform instead of requiring a completely new
+application to be developed.
+
+This document is the initial Master Project Blueprint.
+It will later be expanded and connected with the complete
+Project Bible, URS, SRS, Database Blueprint, API Blueprint,
+Architecture Blueprint, Design System, Security Blueprint,
+Testing Strategy, and Deployment Strategy.
+
+============================================================
+2. CORE BUSINESS MODEL
+============================================================
+
+Umar Techy will operate the E-Commerce Platform as a
+Multi-Tenant SaaS product.
+
+Core concept:
+
+Umar Techy E-Commerce Platform
+    |
+    +-- Store / Tenant 001
+    +-- Store / Tenant 002
+    +-- Store / Tenant 003
+    +-- Store / Tenant 004
+    +-- Store / Tenant 005
+    +-- ...
+
+All stores will use the same Core Software Platform.
+
+Each store will have isolated business data and its own
+configuration.
+
+Each store may have its own:
+
+- Store Identity
+- Owner Account
+- Products
+- Categories
+- Brands
+- Customers
+- Orders
+- Inventory
+- Branding
+- Theme
+- Animation Settings
+- Domain
+- Payment Settings
+- Shipping Settings
+- Business Settings
+- Subscription / Package
+- Reports
+- Integrations
+
+The platform must enforce strict tenant isolation.
+
+============================================================
+3. TOP-LEVEL PLATFORM MODULE MAP
+============================================================
+
+Module 01 — Complete Platform Structure
+Module 02 — Authentication, Users, Roles & Permissions
+Module 03 — Multi-Tenant & Store Management
+Module 04 — Subscription, Packages & Feature Entitlements
+Module 05 — Storefront / Customer Website
+Module 06 — Product & Catalog Management
+Module 07 — Category, Brand & Attribute Management
+Module 08 — Inventory & Stock Management
+Module 09 — Order Management
+Module 10 — Customer Management
+Module 11 — Cart, Wishlist & Checkout
+Module 12 — Payment Management & Gateways
+Module 13 — Shipping & Delivery Management
+Module 14 — Discounts, Coupons & Promotions
+Module 15 — Marketing & Customer Engagement
+Module 16 — SEO & Content Management
+Module 17 — Theme, Branding & Design System
+Module 18 — Animation & Interaction System
+Module 19 — Domain Management
+Module 20 — Hosting & Infrastructure Management
+Module 21 — Notifications & Communication
+Module 22 — Reports, Analytics & Dashboard
+Module 23 — Backup, Restore & Data Protection
+Module 24 — Store Health, Monitoring & Resource Usage
+Module 25 — PWA / Mobile Experience
+Module 26 — AI Features
+Module 27 — App / Plugin Marketplace & Integrations
+Module 28 — Affiliate & Reseller Program
+Module 29 — Billing, Invoices & Renewals
+Module 30 — Umar Techy Super Admin
+Module 31 — API & Developer Platform
+Module 32 — Security, Audit & Compliance
+Module 33 — System Settings & Configuration
+Module 34 — Help, Support & Documentation
+Module 35 — Future Expansion Framework
+
+Note:
+This is the initial high-level module map. Detailed scope,
+features, workflows, dependencies, permissions, data structures,
+and technical requirements will be defined in the relevant
+module blueprints.
+
+============================================================
+4. PLATFORM USER LEVELS
+============================================================
+
+A. Umar Techy Platform-Level Users
+
+- Super Admin
+- Admin
+- Support Staff
+- Finance Staff
+- Technical / Operations Staff
+
+B. Store-Level Users
+
+- Store Owner
+- Store Administrator
+- Manager
+- Staff
+- Order Manager
+- Inventory Manager
+- Content / Marketing Staff
+
+C. Storefront Users
+
+- Guest Customer
+- Registered Customer
+
+The complete role and permission model will be defined in
+Module 02.
+
+============================================================
+5. STORE CREATION MODEL
+============================================================
+
+A new customer must not require a new software project.
+
+The new store creation process will use the existing platform.
+
+Initial workflow:
+
+1. Customer Signup / Account Creation
+2. Trial or Package Selection
+3. Store Creation
+4. Unique Store ID / Tenant ID
+5. Store Basic Information
+6. Business Information
+7. Branding Setup
+8. Theme Selection
+9. Animation Profile Selection
+10. Domain Connection
+11. Payment Configuration
+12. Shipping Configuration
+13. Product Setup
+14. Store Configuration
+15. Store Activation
+16. Store Launch
+
+The platform should support both assisted setup and future
+self-service onboarding.
+
+============================================================
+6. THREE CORE COMMERCIAL PACKAGES
+============================================================
+
+Package 01 — BASIC
+
+Designed for small and entry-level e-commerce businesses.
+
+Package 02 — BUSINESS
+
+Designed for established and growing businesses requiring
+advanced operational capabilities.
+
+Package 03 — PREMIUM
+
+Designed for advanced businesses, high-volume stores, brands,
+and customers requiring advanced features and integrations.
+
+Critical architectural rule:
+
+These are NOT three separate software systems.
+
+There will be ONE Core Platform.
+
+Package-based entitlements will determine which modules,
+features, limits, integrations, and capabilities are available
+to each store.
+
+============================================================
+7. PACKAGE LIMIT & ENTITLEMENT FRAMEWORK
+============================================================
+
+Each package may define configurable limits such as:
+
+- Maximum Products
+- Maximum Storage
+- Maximum Monthly Orders
+- Maximum Staff Accounts
+- Maximum Customers
+- Maximum Media Storage
+- Bandwidth / Resource Limits
+- Available Themes
+- Available Animation Profiles
+- Available Integrations
+- Available Reports
+- AI Usage Limits
+- Support Level
+- Domain Options
+- Backup Retention
+- API Access
+
+Limits and entitlements must NOT be hard-coded throughout
+the application.
+
+A centralized entitlement system should control:
+
+- Feature Availability
+- Usage Limits
+- Package Access
+- Add-ons
+- Upgrade / Downgrade
+- Trial Access
+- Subscription State
+
+============================================================
+8. THEME & BRANDING FRAMEWORK
+============================================================
+
+All stores will share the same Core Software while allowing
+each store to have its own visual identity.
+
+Store-level configurable design properties may include:
+
+- Theme
+- Primary Color
+- Secondary Color
+- Accent Color
+- Typography
+- Button Style
+- Card Style
+- Header Style
+- Footer Style
+- Layout Style
+- Banner Style
+- Product Display Style
+- Logo
+- Favicon
+- Brand Assets
+- Visual Spacing
+- Border Radius
+- UI Density
+
+The platform should provide ready-made themes/templates.
+
+Example theme categories:
+
+- Classic
+- Modern
+- Minimal
+- Luxury
+- Fresh
+- Dark
+- Fashion
+- Food
+- Technology
+- Nature
+
+The final theme library will be defined in the Design System
+and Theme Blueprint.
+
+============================================================
+9. ANIMATION & INTERACTION FRAMEWORK
+============================================================
+
+The platform will include a configurable Animation System
+separate from the Theme System.
+
+Configurable animation areas may include:
+
+- Product Hover
+- Product Card Hover
+- Button Hover
+- Image Hover
+- Scroll Reveal
+- Section Reveal
+- Page Transition
+- Micro Interactions
+
+Ready-made animation profiles may include:
+
+- Simple
+- Smooth
+- Modern
+- Premium
+
+Animation must be:
+
+- Performance-friendly
+- Configurable
+- Consistent with the selected theme
+- Optional where appropriate
+- Compatible with reduced-motion preferences
+
+Animations should enhance usability and visual quality without
+causing unnecessary performance overhead.
+
+============================================================
+10. DOMAIN MANAGEMENT FRAMEWORK
+============================================================
+
+The platform will support two primary domain models.
+
+A. Customer-Owned Domain
+
+The customer already owns a domain and connects it to the store.
+
+B. Umar Techy Managed Domain
+
+Umar Techy purchases and/or manages the domain as an additional
+service.
+
+The system must associate each domain with the correct Store/Tenant.
+
+Domain management should support:
+
+- Domain Verification
+- DNS Guidance / Configuration
+- Domain Status
+- SSL Status
+- Renewal Tracking
+- Primary Domain
+- Custom Domain Mapping
+- Platform Subdomain
+- Domain Ownership Records
+
+Ownership and renewal responsibilities must be clearly defined
+for every domain.
+
+============================================================
+11. HOSTING & INFRASTRUCTURE MODEL
+============================================================
+
+Two primary deployment models will be supported.
+
+A. Umar Techy Managed Hosting
+
+Umar Techy manages:
+
+- Server Infrastructure
+- Backend
+- Database
+- Storage
+- SSL
+- Backups
+- Monitoring
+- Infrastructure Security
+- Basic Operations
+
+This is the preferred SaaS model.
+
+B. Customer-Provided Hosting
+
+Where required, the platform may be deployed to a
+customer-provided infrastructure.
+
+This model may have separate:
+
+- Setup Fees
+- Deployment Fees
+- Maintenance Fees
+- Support Fees
+- Infrastructure Requirements
+
+The architecture should keep the application portable enough
+to support both models where technically practical.
+
+============================================================
+12. PAYMENT FRAMEWORK
+============================================================
+
+Initial Pakistan-focused payment options:
+
+- Cash on Delivery
+- JazzCash
+- Easypaisa
+- Bank Transfer
+
+The payment architecture must be gateway-agnostic and
+extension-friendly.
+
+Future payment gateways should be addable without modifying
+the core order and checkout logic unnecessarily.
+
+Payment concerns should be separated into:
+
+- Payment Methods
+- Payment Gateway Adapters
+- Transactions
+- Payment Status
+- Refunds
+- Verification
+- Reconciliation
+
+============================================================
+13. SHIPPING & DELIVERY FRAMEWORK
+============================================================
+
+Store-level shipping capabilities may include:
+
+- Shipping Methods
+- Shipping Zones
+- Delivery Charges
+- Free Shipping Rules
+- Minimum Order Rules
+- Delivery Status
+- Tracking
+- Courier Integrations
+- Local Delivery
+- Store Pickup
+- Shipping Reports
+
+The shipping architecture should allow future courier
+integrations through an extension-friendly approach.
+
+============================================================
+14. NOTIFICATION & COMMUNICATION FRAMEWORK
+============================================================
+
+Supported notification channels may include:
+
+- WhatsApp
+- SMS
+- Email
+- In-App Notifications
+
+Important events may include:
+
+- New Order
+- Order Confirmation
+- Order Status Change
+- Payment Confirmation
+- Shipment Update
+- Delivery Update
+- Low Stock
+- Subscription Expiry
+- Domain Renewal
+- Invoice
+- Customer Account Events
+
+WhatsApp order notifications are considered especially
+important for the Pakistan market.
+
+============================================================
+15. BILLING & SUBSCRIPTION FRAMEWORK
+============================================================
+
+Umar Techy will support recurring revenue through:
+
+- Package Fees
+- Hosting Fees
+- Domain Fees
+- Additional Storage
+- Additional Resources
+- Add-ons
+- Premium Services
+- Maintenance / Support
+
+The billing system should support:
+
+- Invoice Generation
+- Payment Status
+- Renewal Reminders
+- Domain Renewal Reminders
+- Subscription Expiry
+- Grace Period
+- Suspension
+- Reactivation
+- Upgrade
+- Downgrade
+- Trial Period
+- Billing History
+- Payment Records
+
+The 7–14 day trial period should be configurable.
+
+============================================================
+16. FUTURE SELF-SERVICE ONBOARDING
+============================================================
+
+The platform should be designed to support fully or mostly
+self-service onboarding.
+
+Future customer flow:
+
+1. Sign Up
+2. Verify Account
+3. Start Trial
+4. Select Package
+5. Create Store
+6. Select Theme
+7. Configure Branding
+8. Add Products
+9. Configure Shipping
+10. Configure Payments
+11. Connect Domain
+12. Complete Store Checklist
+13. Launch Store
+
+The onboarding system should provide progress indicators,
+validation, setup guidance, and launch readiness checks.
+
+============================================================
+17. STORE HEALTH & MONITORING
+============================================================
+
+Umar Techy Super Admin should eventually provide visibility
+into each store's operational health.
+
+Possible metrics:
+
+- Store Status
+- Uptime
+- Response Time
+- Resource Usage
+- CPU Usage
+- Memory Usage
+- Storage Usage
+- Bandwidth Usage
+- Order Activity
+- Error Indicators
+- Backup Status
+- Domain Status
+- SSL Status
+- Integration Status
+
+Monitoring must respect tenant privacy and security.
+
+============================================================
+18. BACKUP & RESTORE FRAMEWORK
+============================================================
+
+Each store should have a backup strategy appropriate to its
+package and infrastructure model.
+
+Capabilities may include:
+
+- Automated Backups
+- Scheduled Backups
+- Backup Retention
+- Backup Verification
+- Backup Status
+- One-Click Restore
+- Restore Authorization
+- Restore Audit Trail
+
+Restore operations must include strong safety controls to
+prevent accidental or unauthorized data loss.
+
+============================================================
+19. PWA / MOBILE EXPERIENCE
+============================================================
+
+The platform should provide Progressive Web App (PWA)
+capability for eligible stores.
+
+The goal is to give customers a mobile-friendly app-like
+experience without requiring every store to commission a
+separate native mobile application.
+
+PWA capabilities may include:
+
+- Installable Store
+- Mobile Navigation
+- Responsive UI
+- Offline-capable static assets where appropriate
+- Push Notifications where supported
+- App Icons
+- Splash / Launch Experience
+
+The exact PWA scope will be defined later.
+
+============================================================
+20. AI FRAMEWORK
+============================================================
+
+Advanced AI capabilities may be offered in higher packages,
+especially Premium.
+
+Potential capabilities:
+
+- AI Product Recommendations
+- AI Chatbot
+- AI-Assisted Product Descriptions
+- AI Customer Assistance
+- AI Search Assistance
+- AI Marketing Assistance
+- AI Store Insights
+- Future AI Automation
+
+AI features should be modular so they can evolve without
+rewriting the core platform.
+
+============================================================
+21. APP / PLUGIN MARKETPLACE FRAMEWORK
+============================================================
+
+The platform should be designed for a future extension ecosystem.
+
+Potential extensions:
+
+- Accounting
+- CRM
+- Marketing
+- Analytics
+- Shipping
+- Payment
+- Communication
+- Inventory
+- Automation
+- External Business Systems
+
+The long-term goal is to allow integrations and plugins to be
+added without unnecessary changes to the Core Platform.
+
+The extension architecture should consider:
+
+- API Contracts
+- Permissions
+- Webhooks
+- Events
+- Authentication
+- Tenant Context
+- Versioning
+- Extension Isolation
+
+============================================================
+22. AFFILIATE & RESELLER FRAMEWORK
+============================================================
+
+Future growth channels may include:
+
+- Affiliate Accounts
+- Reseller Accounts
+- Referral Links
+- Referral Tracking
+- Commission Rules
+- Commission Reports
+- Payout Tracking
+- Reseller Store Management
+- Reseller Branding Options
+
+This system should be designed as a separate business module
+that integrates with the customer and billing systems.
+
+============================================================
+23. SECURITY PRINCIPLE
+============================================================
+
+Because the platform is Multi-Tenant, tenant isolation is a
+non-negotiable requirement.
+
+A store must never be able to access another store's data
+through:
+
+- Web Interface
+- API
+- Database Queries
+- Files
+- Media
+- Reports
+- Search
+- Background Jobs
+- Exports
+- Integrations
+
+Core security areas:
+
+- Tenant Isolation
+- Authentication
+- Authorization
+- Role-Based Access Control
+- Input Validation
+- API Security
+- Secret Management
+- Audit Logging
+- File / Media Security
+- Rate Limiting
+- Session Security
+- Backup Security
+- Data Encryption where appropriate
+- Secure Configuration
+- Security Monitoring
+
+A dedicated Security Blueprint will define implementation
+requirements.
+
+============================================================
+24. CORE ARCHITECTURE PRINCIPLE
+============================================================
+
+Golden Rule:
+
+ONE CORE PLATFORM
++
+MANY STORES / TENANTS
++
+PACKAGE-BASED ENTITLEMENTS
++
+CONFIGURABLE THEMES
++
+CONFIGURABLE ANIMATIONS
++
+CONFIGURABLE INTEGRATIONS
++
+ISOLATED STORE DATA
++
+CENTRALIZED PLATFORM MANAGEMENT
+
+A new customer must NOT trigger development of a new
+E-Commerce application.
+
+A new customer should primarily require:
+
+- Store Creation
+- Tenant Configuration
+- Package Assignment
+- Branding
+- Theme Selection
+- Product Setup
+- Domain Configuration
+- Payment Configuration
+- Shipping Configuration
+- Optional Customization
+
+============================================================
+25. DEVELOPMENT PHILOSOPHY
+============================================================
+
+Development must begin only after the foundational
+documentation has been sufficiently defined.
+
+Required planning artifacts:
+
+- Master Project Blueprint
+- Complete Module Map
+- Package Definition
+- System Architecture Blueprint
+- Database Blueprint
+- API Blueprint
+- UI/UX Design System
+- Theme Blueprint
+- Animation Blueprint
+- Security Blueprint
+- Testing Strategy
+- Deployment Strategy
+- Project Bible
+
+Claude will be used for the maximum practical amount of:
+
+- Development
+- Testing
+- Bug Fixing
+- Refactoring
+- Code Review
+- Security Review
+- Documentation
+- Validation
+
+VS Code should be used mainly for:
+
+- Local Verification
+- Final Testing
+- Real-world Order Testing
+- Environment Verification
+- Production Checks
+- Deployment
+- Necessary local troubleshooting
+
+Unnecessary redevelopment in VS Code must be avoided.
+
+============================================================
+26. CLAUDE DEVELOPMENT WORKFLOW PRINCIPLE
+============================================================
+
+Claude must work from the approved project documentation.
+
+Before implementing any module, Claude should:
+
+1. Read the relevant Project Bible and Blueprint documents.
+2. Inspect the existing codebase and current implementation.
+3. Identify existing reusable components.
+4. Avoid rebuilding existing functionality unnecessarily.
+5. Implement the requested scope.
+6. Run relevant tests.
+7. Fix discovered issues.
+8. Run the tests again.
+9. Review security and tenant isolation impact.
+10. Update documentation where required.
+11. Provide a clear completion report.
+12. Commit changes only when the defined workflow permits it.
+
+The objective is to minimize later manual development.
+
+============================================================
+27. NEXT BLUEPRINT MODULES
+============================================================
+
+After Module 01, the detailed planning sequence will continue
+with:
+
+Module 02 — Authentication, Users, Roles & Permissions
+Module 03 — Multi-Tenant & Store Management
+Module 04 — Subscription, Packages & Feature Entitlements
+Module 05 — Storefront
+Module 06 — Product & Catalog Management
+Module 07 — Category, Brand & Attribute Management
+Module 08 — Inventory & Stock Management
+Module 09 — Order Management
+Module 10 — Customer Management
+Module 11 — Cart, Wishlist & Checkout
+Module 12 — Payment Management
+Module 13 — Shipping & Delivery
+Module 14 — Discounts & Promotions
+Module 15 — Marketing
+Module 16 — SEO & Content
+Module 17 — Theme & Branding
+Module 18 — Animation
+Module 19 — Domain
+Module 20 — Hosting & Infrastructure
+Module 21 — Notifications
+Module 22 — Reports & Analytics
+Module 23 — Backup & Restore
+Module 24 — Monitoring
+Module 25 — PWA
+Module 26 — AI
+Module 27 — App / Plugin Marketplace
+Module 28 — Affiliate / Reseller
+Module 29 — Billing
+Module 30 — Umar Techy Super Admin
+Module 31 — API / Developer Platform
+Module 32 — Security
+Module 33 — System Configuration
+Module 34 — Support
+Module 35 — Future Expansion
+
+============================================================
+28. STATUS
+============================================================
+
+Module 01 Status:
+FOUNDATION MAP — INITIALIZED
+
+Version:
+1.0
+
+This module is the initial high-level structure and will be
+refined where necessary as detailed modules reveal dependencies,
+requirements, or architectural decisions.
+
+The final Project Bible will supersede preliminary assumptions
+after all major blueprints have been reviewed and approved.
+
+============================================================
+END OF MODULE 01
+============================================================

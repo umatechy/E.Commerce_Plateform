@@ -1,0 +1,2245 @@
+UMAR TECHY
+E-COMMERCE PLATFORM
+MASTER PROJECT BLUEPRINT
+
+MODULE 06 — PRODUCT & CATALOG MANAGEMENT
+Version: 1.0
+Status: Planning / Blueprint
+
+============================================================
+1. MODULE PURPOSE
+============================================================
+
+This module defines the centralized product and catalog
+management architecture for the Umar Techy multi-tenant
+E-Commerce Platform.
+
+The catalog system must allow every Store/Tenant to manage its
+own products and catalog data while using the same Core
+E-Commerce Platform.
+
+The module covers:
+
+- Products
+- Product lifecycle
+- Product types
+- Product information
+- Product media
+- SKUs
+- Variants
+- Options
+- Pricing
+- Sale pricing
+- Product status
+- Product visibility
+- Catalog organization
+- Collections
+- Tags
+- Product relationships
+- Digital/physical product foundations
+- Bulk operations
+- Import/export
+- Product search indexing
+- Catalog validation
+- Tenant isolation
+- Auditability
+- Package limits
+- API foundations
+- Future extensibility
+
+Detailed Category, Brand and Attribute architecture will be
+expanded in Module 07, while inventory execution will be
+expanded in Module 08.
+
+============================================================
+2. CORE CATALOG PRINCIPLE
+============================================================
+
+ONE CORE CATALOG ENGINE
++
+TENANT-SCOPED DATA
++
+CONFIGURABLE PRODUCT TYPES
++
+PACKAGE ENTITLEMENTS
+
+must serve all stores.
+
+There must not be separate catalog codebases for Basic,
+Business, or Premium stores.
+
+Package differences are enforced through Module 04
+entitlements and usage limits.
+
+============================================================
+3. TENANT ISOLATION
+============================================================
+
+Every catalog record must belong to exactly one appropriate
+Store/Tenant scope unless it is explicitly a global platform
+record.
+
+Tenant-owned catalog data includes:
+
+- Products
+- Product Variants
+- SKUs
+- Prices
+- Media
+- Tags
+- Collections
+- Product Metadata
+- Product Relationships
+- Catalog settings
+
+A Store A request must never be able to read, modify, delete,
+or index Store B catalog data.
+
+============================================================
+4. CATALOG DATA OWNERSHIP
+============================================================
+
+The catalog system must clearly distinguish:
+
+GLOBAL PLATFORM DATA:
+
+- System-supported product types
+- Global feature definitions
+- Platform defaults
+- Approved media rules
+- Global safety configuration
+
+TENANT DATA:
+
+- Products
+- Product descriptions
+- SKUs
+- Prices
+- Variants
+- Media
+- Categories
+- Collections
+- Tags
+- Product visibility
+- Catalog settings
+
+The final database blueprint must make ownership explicit.
+
+============================================================
+5. PRODUCT ENTITY
+============================================================
+
+A Product represents a sellable or displayable catalog item.
+
+Core fields may include:
+
+- Product ID
+- Store/Tenant ID
+- Product Type
+- Name
+- Slug
+- SKU where applicable
+- Short Description
+- Full Description
+- Status
+- Visibility
+- Brand ID where applicable
+- Primary Category
+- Published At
+- Created At
+- Updated At
+- Archived At
+- SEO Metadata
+- Catalog Metadata
+
+The exact database schema will be defined separately.
+
+============================================================
+6. PRODUCT TYPES
+============================================================
+
+The architecture should support multiple product types.
+
+Initial types may include:
+
+1. Simple Physical Product
+2. Variable Physical Product
+3. Digital Product
+4. Service Product
+5. Bundle Product
+
+Future types may include:
+
+- Subscription Product
+- Gift Card
+- Donation
+- Booking Product
+- Custom Product
+- External/Affiliate Product
+
+The system should avoid hard-coded assumptions that every
+product is a single physical item.
+
+============================================================
+7. SIMPLE PRODUCT
+============================================================
+
+A simple product has one primary sellable configuration.
+
+Example:
+
+Product:
+Cotton T-Shirt
+
+SKU:
+TSH-001
+
+No customer-selectable variant is required.
+
+Simple products may still support:
+
+- Pricing
+- Stock
+- Media
+- Categories
+- Tags
+- Discounts
+- SEO
+- Shipping configuration
+
+============================================================
+8. VARIABLE PRODUCT
+============================================================
+
+A variable product contains multiple sellable variants.
+
+Example:
+
+T-Shirt
+
+Color:
+Black
+White
+
+Size:
+S
+M
+L
+XL
+
+Each valid combination may have its own:
+
+- SKU
+- Price
+- Sale Price
+- Stock
+- Image
+- Weight
+- Dimensions
+- Barcode
+- Availability
+
+Variant behavior must remain compatible with inventory and
+checkout modules.
+
+============================================================
+9. PRODUCT VARIANT
+============================================================
+
+A Product Variant is an independently sellable configuration
+of a parent product.
+
+A variant may have:
+
+- Variant ID
+- Product ID
+- SKU
+- Barcode
+- Price
+- Sale Price
+- Cost Price where permitted
+- Weight
+- Dimensions
+- Media
+- Inventory reference
+- Status
+- Metadata
+
+Variant identifiers must be unique within the appropriate
+tenant scope.
+
+============================================================
+10. VARIANT GENERATION
+============================================================
+
+The system may generate variant combinations from option values.
+
+Example:
+
+Color:
+Black, White
+
+Size:
+S, M, L
+
+Possible combinations:
+
+Black/S
+Black/M
+Black/L
+White/S
+White/M
+White/L
+
+The system must prevent duplicate or invalid combinations.
+
+For large variant sets, generation must be controlled to prevent
+resource abuse.
+
+============================================================
+11. VARIANT LIMITS
+============================================================
+
+Package entitlements may define limits for:
+
+- Variants per product
+- Total variants
+- Options per product
+- Attribute values
+- Product complexity
+
+The exact commercial limits should be finalized in Module 04
+after catalog design is complete.
+
+============================================================
+12. PRODUCT NAME
+============================================================
+
+Product names must support:
+
+- Required value
+- Tenant scope
+- Validation
+- Length limits
+- Safe rendering
+- Search indexing
+
+Duplicate names may be allowed unless the store configuration
+requires uniqueness.
+
+============================================================
+13. PRODUCT SLUG
+============================================================
+
+Every public product should have a safe URL slug.
+
+Requirements:
+
+- Tenant-scoped uniqueness
+- URL-safe
+- Stable where possible
+- Normalized
+- Reserved-word protection
+- Duplicate handling
+
+Example:
+
+/products/premium-cotton-shirt
+
+Slug changes should support redirect handling where appropriate.
+
+============================================================
+14. PRODUCT DESCRIPTION
+============================================================
+
+Products should support:
+
+- Short Description
+- Full Description
+- Specifications
+- Usage Information
+- Materials
+- Care Instructions
+- Additional Details
+
+Content must be safely sanitized before public rendering.
+
+============================================================
+15. RICH PRODUCT CONTENT
+============================================================
+
+Where supported, product descriptions may contain:
+
+- Headings
+- Lists
+- Tables
+- Images
+- Links
+- Basic formatting
+- Embedded approved content
+
+Arbitrary unsafe scripts must never be allowed.
+
+============================================================
+16. PRODUCT MEDIA
+============================================================
+
+Products may contain:
+
+- Main Image
+- Gallery Images
+- Variant Images
+- Product Videos
+- Documents where supported
+
+Media should support:
+
+- Alt Text
+- Sort Order
+- Caption
+- Type
+- Visibility
+- Variant Association
+
+============================================================
+17. MEDIA RULES
+============================================================
+
+Media upload rules should enforce:
+
+- Allowed file types
+- File size limits
+- Image dimensions
+- Malware/security checks where applicable
+- Safe filenames
+- Storage quotas
+- Tenant isolation
+
+Original files and generated derivatives should be managed
+through the platform media architecture.
+
+============================================================
+18. IMAGE DERIVATIVES
+============================================================
+
+The platform should support generated image sizes such as:
+
+- Thumbnail
+- Small
+- Medium
+- Large
+- Original
+
+The storefront should request the most appropriate size.
+
+This reduces bandwidth and improves performance.
+
+============================================================
+19. ALT TEXT
+============================================================
+
+Product images should support meaningful alt text.
+
+The system may provide automatic suggestions, but store
+administrators should be able to edit them.
+
+Accessibility and SEO should both be considered.
+
+============================================================
+20. SKU
+============================================================
+
+SKU stands for Stock Keeping Unit.
+
+SKU requirements:
+
+- Tenant-scoped uniqueness
+- Safe characters
+- Configurable format
+- Optional for non-inventory products where appropriate
+- Required for products/variants where inventory workflows
+  require it
+
+The system must prevent accidental duplicate SKUs within a
+store.
+
+============================================================
+21. BARCODE
+============================================================
+
+Products or variants may support barcode identifiers.
+
+Potential barcode types may include:
+
+- EAN
+- UPC
+- ISBN
+- Store-defined barcode
+
+Barcode uniqueness should be configurable and validated.
+
+============================================================
+22. PRICING
+============================================================
+
+The catalog must support authoritative base pricing.
+
+Potential fields:
+
+- Regular Price
+- Sale Price
+- Cost Price
+- Compare-at Price
+- Minimum Price
+- Maximum Price for ranges
+- Currency
+- Tax configuration reference
+
+Final order pricing is recalculated server-side during cart and
+checkout.
+
+============================================================
+23. SALE PRICE
+============================================================
+
+Sale pricing may be:
+
+- Fixed amount
+- Scheduled
+- Time limited
+- Store-wide
+- Product-specific
+- Variant-specific
+
+The catalog should expose effective pricing to the storefront.
+
+============================================================
+24. PRICE VALIDATION
+============================================================
+
+Client-submitted prices must never be trusted.
+
+The server must derive price from:
+
+- Product
+- Variant
+- Current catalog price
+- Active promotion
+- Customer eligibility
+- Store currency
+- Applicable tax
+- Shipping rules
+
+This protects against price manipulation.
+
+============================================================
+25. COST PRICE
+============================================================
+
+Cost price may be stored for store administration and
+profitability calculations.
+
+Cost price must never be exposed to customers.
+
+Access must be restricted through permissions.
+
+============================================================
+26. CURRENCY
+============================================================
+
+Each store has its own currency configuration.
+
+Product pricing must respect the store currency rules.
+
+Multi-currency architecture may be reserved for future
+expansion.
+
+If multi-currency is introduced later, the catalog must support
+currency-specific pricing without breaking existing orders.
+
+============================================================
+27. PRODUCT STATUS
+============================================================
+
+Products should support lifecycle states such as:
+
+DRAFT
+ACTIVE
+SCHEDULED
+HIDDEN
+ARCHIVED
+
+Optional future states:
+
+DISCONTINUED
+PENDING_REVIEW
+REJECTED
+
+Only appropriate active products should appear publicly.
+
+============================================================
+28. PRODUCT VISIBILITY
+============================================================
+
+Visibility should be independently configurable.
+
+Potential values:
+
+- Public
+- Catalog Only
+- Search Only
+- Hidden
+- Private
+- Scheduled
+
+The final visibility model should work with:
+
+- Storefront
+- Search
+- Categories
+- Collections
+- Recommendations
+- Sitemap
+- APIs
+
+============================================================
+29. PUBLISHING
+============================================================
+
+Product publishing should support:
+
+- Save Draft
+- Validate
+- Preview
+- Publish
+- Unpublish
+- Schedule
+- Archive
+
+Publishing must validate required information.
+
+============================================================
+30. PRODUCT SCHEDULING
+============================================================
+
+Stores may schedule:
+
+- Product publication
+- Product unpublication
+- Sale pricing
+- Collection membership
+- Promotional visibility
+
+Scheduling must use the store's configured timezone.
+
+============================================================
+31. PRODUCT ARCHIVING
+============================================================
+
+Archived products should normally:
+
+- Stop appearing in normal storefront catalog
+- Stop appearing in search
+- Stop appearing in recommendations
+- Remain available for historical orders
+- Preserve historical references
+
+Deleting historical product records should not break old orders.
+
+============================================================
+32. HISTORICAL ORDER INTEGRITY
+============================================================
+
+Orders must retain a historical snapshot of relevant product
+information.
+
+If a product changes later, old orders should not unexpectedly
+change.
+
+Historical order data may include:
+
+- Product Name
+- SKU
+- Variant
+- Unit Price
+- Discount
+- Tax
+- Product image/reference where appropriate
+
+Exact order snapshot design belongs to Module 09.
+
+============================================================
+33. CATALOG ORGANIZATION
+============================================================
+
+Products may be organized through:
+
+- Categories
+- Brands
+- Collections
+- Tags
+- Attributes
+
+Category, Brand, and Attribute details are expanded in
+Module 07.
+
+============================================================
+34. COLLECTIONS
+============================================================
+
+Collections group products for merchandising.
+
+Examples:
+
+- New Arrivals
+- Best Sellers
+- Summer
+- Sale
+- Eid
+- Featured
+
+Collections may be:
+
+- Manual
+- Rule-based
+- Scheduled
+
+A product may belong to multiple collections.
+
+============================================================
+35. PRODUCT TAGS
+============================================================
+
+Tags provide lightweight classification.
+
+Examples:
+
+- New
+- Bestseller
+- Premium
+- Handmade
+- Organic
+- Limited Edition
+
+Tags must be tenant-scoped.
+
+============================================================
+36. PRODUCT BADGES
+============================================================
+
+The storefront may display badges such as:
+
+- New
+- Sale
+- Bestseller
+- Limited
+- Featured
+- Out of Stock
+
+Badge configuration should be separated from the product's
+core business data where practical.
+
+============================================================
+37. FEATURED PRODUCTS
+============================================================
+
+Stores may mark products as featured.
+
+Featured status can influence:
+
+- Homepage
+- Category sections
+- Search ranking
+- Recommendations
+- Promotional sections
+
+Final ranking rules must remain deterministic and configurable.
+
+============================================================
+38. RELATED PRODUCTS
+============================================================
+
+Products may have relationships such as:
+
+- Related
+- Similar
+- Alternative
+- Cross-sell
+- Up-sell
+- Frequently Bought Together
+
+Relationships must remain tenant-scoped.
+
+============================================================
+39. PRODUCT BUNDLES
+============================================================
+
+The architecture should reserve support for bundles.
+
+Example:
+
+Gift Box
+  + Perfume
+  + Attar
+  + Gift Packaging
+
+Bundle rules may include:
+
+- Fixed bundle price
+- Component products
+- Component quantities
+- Inventory dependency
+- Availability
+
+Detailed bundle inventory behavior will be defined later.
+
+============================================================
+40. DIGITAL PRODUCTS
+============================================================
+
+The architecture should reserve support for digital products.
+
+Potential fields:
+
+- Downloadable File
+- Download Limit
+- Expiry
+- License Key
+- Digital Delivery Status
+
+Digital product delivery must use secure access controls.
+
+============================================================
+41. SERVICE PRODUCTS
+============================================================
+
+The architecture may support service-based products.
+
+Examples:
+
+- Consultation
+- Repair Service
+- Design Service
+- Installation
+
+Service products may not require physical inventory.
+
+============================================================
+42. PHYSICAL PRODUCT ATTRIBUTES
+============================================================
+
+Physical products may support:
+
+- Weight
+- Length
+- Width
+- Height
+- Package Dimensions
+- Shipping Class
+
+Shipping will use these values where applicable.
+
+============================================================
+43. PRODUCT OPTIONS
+============================================================
+
+Options represent customer-selectable product choices.
+
+Examples:
+
+- Color
+- Size
+- Capacity
+- Material
+
+Options should use reusable definitions where appropriate.
+
+Detailed attribute architecture is defined in Module 07.
+
+============================================================
+44. REQUIRED PRODUCT VALIDATION
+============================================================
+
+Before publishing a product, validate:
+
+- Product Name
+- Product Type
+- Slug
+- Price where required
+- SKU where required
+- Required media where configured
+- Required category
+- Required variant data
+- Required digital asset for digital products
+- Required shipping data for physical products
+- Store package entitlement
+
+Validation should produce actionable errors.
+
+============================================================
+45. DRAFT VALIDATION
+============================================================
+
+Draft products may be incomplete.
+
+Publishing should enforce stricter validation than saving a
+draft.
+
+This allows stores to build products progressively.
+
+============================================================
+46. BULK PRODUCT OPERATIONS
+============================================================
+
+The platform should support bulk operations.
+
+Potential operations:
+
+- Publish
+- Unpublish
+- Archive
+- Delete where safe
+- Change Category
+- Change Collection
+- Update Price
+- Update Sale Price
+- Update Tags
+- Update Visibility
+- Update Stock reference
+- Export
+
+Bulk operations must be permission-controlled.
+
+============================================================
+47. BULK OPERATION SAFETY
+============================================================
+
+Bulk operations must:
+
+- Show affected record count
+- Require confirmation for destructive actions
+- Respect package limits
+- Respect permissions
+- Create audit records
+- Handle partial failures safely
+- Avoid cross-tenant execution
+
+Large jobs should use background processing.
+
+============================================================
+48. PRODUCT IMPORT
+============================================================
+
+The platform should support product import.
+
+Potential formats:
+
+- CSV
+- Spreadsheet-compatible files
+- Future API import
+
+Import may include:
+
+- Product data
+- SKUs
+- Prices
+- Categories
+- Tags
+- Variants
+- Attributes
+
+============================================================
+49. IMPORT VALIDATION
+============================================================
+
+Import should use a staged process:
+
+Upload
+  ↓
+Parse
+  ↓
+Validate
+  ↓
+Preview
+  ↓
+Confirm
+  ↓
+Process
+  ↓
+Report
+
+Invalid rows should produce clear errors.
+
+One bad row should not necessarily corrupt the entire import.
+
+============================================================
+50. IMPORT IDEMPOTENCY
+============================================================
+
+Import should support safe reprocessing where possible.
+
+Potential matching keys:
+
+- Product ID
+- SKU
+- External ID
+
+The system must prevent accidental duplicate product creation
+during repeated imports.
+
+============================================================
+51. PRODUCT EXPORT
+============================================================
+
+Stores may export catalog data according to permissions.
+
+Exports may include:
+
+- Products
+- Variants
+- Prices
+- SKUs
+- Categories
+- Collections
+- Tags
+- Attributes
+- Media references
+
+Exports must be tenant-scoped.
+
+============================================================
+52. PACKAGE LIMITS
+============================================================
+
+Module 06 must integrate with Module 04 usage limits.
+
+Potential limits:
+
+- Total Products
+- Active Products
+- Variants
+- Categories
+- Collections
+- Media Storage
+- Product Imports
+- Product Exports
+- API catalog operations
+
+Limits must be configurable rather than hard-coded.
+
+============================================================
+53. LIMIT ENFORCEMENT
+============================================================
+
+Limits should be checked during:
+
+- Manual product creation
+- Bulk creation
+- Import
+- API creation
+- Variant generation
+- Media upload
+
+The system should provide clear upgrade messaging when a limit
+is reached.
+
+============================================================
+54. PRODUCT SEARCH INDEX
+============================================================
+
+Catalog changes should update the search index where used.
+
+Indexable fields may include:
+
+- Product Name
+- SKU
+- Description
+- Tags
+- Brand
+- Category
+- Attributes
+
+Every index record must include Store/Tenant ID.
+
+============================================================
+55. SEARCH INDEX CONSISTENCY
+============================================================
+
+When catalog data changes:
+
+Product Created
+Product Updated
+Product Published
+Product Unpublished
+Product Archived
+Product Deleted
+
+the search index should be updated reliably.
+
+Background jobs may be used.
+
+Failures should be retryable and observable.
+
+============================================================
+56. CACHE INVALIDATION
+============================================================
+
+Catalog updates may invalidate:
+
+- Product cache
+- Category cache
+- Collection cache
+- Search cache
+- Homepage product sections
+- Recommendation cache
+
+Cache keys must contain tenant/store context.
+
+============================================================
+57. CATALOG EVENTS
+============================================================
+
+The catalog should emit domain events such as:
+
+- ProductCreated
+- ProductUpdated
+- ProductPublished
+- ProductUnpublished
+- ProductArchived
+- ProductDeleted
+- VariantCreated
+- VariantUpdated
+- PriceChanged
+- MediaUpdated
+- CollectionMembershipChanged
+
+These events provide extension points for:
+
+- Search
+- Analytics
+- Notifications
+- AI
+- Integrations
+- Audit
+- Cache invalidation
+
+============================================================
+58. AUDIT LOGGING
+============================================================
+
+Important catalog changes should be auditable.
+
+Examples:
+
+- Product created
+- Price changed
+- SKU changed
+- Product published
+- Product archived
+- Bulk update
+- Import
+- Export
+- Media change
+
+Audit records should include:
+
+- Actor
+- Store/Tenant
+- Action
+- Entity
+- Timestamp
+- Relevant metadata
+
+============================================================
+59. PRODUCT VERSIONING
+============================================================
+
+The architecture should reserve versioning for important product
+content.
+
+Potentially version:
+
+- Description
+- Pricing configuration
+- SEO
+- Media ordering
+- Visibility
+- Product configuration
+
+Versioning is especially useful for rollback and audit.
+
+============================================================
+60. PRODUCT DUPLICATION
+============================================================
+
+Store administrators may duplicate products.
+
+Duplication should:
+
+- Create a new Product ID
+- Generate a safe new slug
+- Prevent duplicate SKU
+- Copy permitted content
+- Copy media references safely
+- Preserve tenant scope
+- Reset fields that must be unique
+
+Example:
+
+Original:
+Premium Shirt
+
+Duplicate:
+Premium Shirt Copy
+
+The final UX may allow immediate editing of the duplicated
+product.
+
+============================================================
+61. PRODUCT DELETION
+============================================================
+
+Deletion must be carefully controlled.
+
+A product referenced by historical orders should not be
+hard-deleted if doing so would break historical integrity.
+
+Possible approach:
+
+- Soft delete
+- Archive
+- Retain historical snapshot
+
+Destructive deletion should require elevated permissions where
+appropriate.
+
+============================================================
+62. PRODUCT RESTORE
+============================================================
+
+Where soft deletion is used, authorized users may restore
+products.
+
+Restore must revalidate:
+
+- SKU
+- Slug
+- Category
+- Store status
+- Package limits
+- Product configuration
+
+============================================================
+63. CATALOG STATUS DASHBOARD
+============================================================
+
+Admin should be able to see:
+
+- Total Products
+- Active
+- Draft
+- Scheduled
+- Hidden
+- Archived
+- Out of Stock
+- Low Stock where inventory data is available
+- Products with Validation Errors
+- Recent Catalog Changes
+
+============================================================
+64. PRODUCT LISTING ADMIN UX
+============================================================
+
+The Admin Panel product list should support:
+
+- Search
+- Filters
+- Sorting
+- Pagination
+- Bulk selection
+- Status indicators
+- Category filter
+- Brand filter
+- Stock status
+- Price range
+- Date filters
+
+The exact admin UI belongs to the broader Admin Panel
+architecture.
+
+============================================================
+65. PRODUCT FORM ARCHITECTURE
+============================================================
+
+The product editor should be modular.
+
+Suggested sections:
+
+1. Basic Information
+2. Media
+3. Pricing
+4. Inventory
+5. Variants
+6. Shipping
+7. Categories
+8. Collections
+9. Tags
+10. Attributes
+11. SEO
+12. Related Products
+13. Advanced Settings
+
+The UI should show only relevant sections based on product type
+and enabled features.
+
+============================================================
+66. PRODUCT FORM AUTOSAVE
+============================================================
+
+The architecture may support autosave drafts.
+
+Autosave should:
+
+- Save draft state
+- Prevent accidental data loss
+- Respect tenant scope
+- Avoid overwriting another editor unexpectedly
+- Provide recovery where possible
+
+============================================================
+67. CONCURRENT EDITING
+============================================================
+
+If multiple staff members edit the same product, the system
+should detect potential conflicts.
+
+Possible strategies:
+
+- Updated-at conflict detection
+- Version number
+- Optimistic concurrency
+- Draft locking where required
+
+Silent overwriting should be avoided.
+
+============================================================
+68. PRODUCT SEO
+============================================================
+
+Product SEO configuration may include:
+
+- SEO Title
+- Meta Description
+- Canonical URL
+- Social Image
+- Search Indexing
+- Structured Data configuration
+
+Defaults should be generated from product data when custom
+values are not supplied.
+
+============================================================
+69. PRODUCT URL REDIRECTS
+============================================================
+
+If a published product slug changes, the system should be able
+to preserve the old URL through a redirect where supported.
+
+Redirects must remain tenant-scoped.
+
+============================================================
+70. PRODUCT AVAILABILITY
+============================================================
+
+Availability may depend on:
+
+- Product status
+- Variant status
+- Inventory
+- Store status
+- Publication schedule
+- Package state
+- Sales channel
+
+The catalog should expose an authoritative availability state
+to consuming services.
+
+============================================================
+71. SALES CHANNEL FOUNDATION
+============================================================
+
+The architecture should reserve support for future sales
+channels.
+
+Potential channels:
+
+- Web Storefront
+- PWA
+- Mobile App
+- Marketplace
+- Social Commerce
+- POS
+- API
+
+Product visibility may eventually be channel-specific.
+
+============================================================
+72. PRODUCT CHANNEL VISIBILITY
+============================================================
+
+Future configuration may allow:
+
+Product:
+Published on Web
+Published on PWA
+Published on POS
+Hidden from Marketplace
+
+This should be architecture-ready even if the first release
+supports only the main storefront.
+
+============================================================
+73. API ACCESS
+============================================================
+
+The catalog must expose secure APIs for:
+
+- Create Product
+- Read Product
+- Update Product
+- Publish Product
+- Archive Product
+- Delete/Restore Product
+- Manage Variants
+- Manage Media
+- Manage Collections
+- Search Catalog
+- Import
+- Export
+
+All APIs must enforce:
+
+- Authentication
+- Authorization
+- Tenant scope
+- Package entitlement
+- Usage limits
+- Validation
+- Rate limits
+
+============================================================
+74. API IDEMPOTENCY
+============================================================
+
+Catalog write APIs should support idempotency where appropriate,
+especially for:
+
+- Bulk operations
+- Imports
+- Integrations
+- External synchronization
+
+This reduces duplicate product creation.
+
+============================================================
+75. EXTERNAL INTEGRATION FOUNDATION
+============================================================
+
+The architecture should reserve integration with:
+
+- Accounting systems
+- POS
+- Marketplaces
+- Supplier systems
+- ERP
+- CRM
+- Shipping platforms
+- Payment platforms
+
+External IDs should be supported without replacing internal
+platform IDs.
+
+============================================================
+76. EXTERNAL PRODUCT IDENTIFIERS
+============================================================
+
+A product or variant may have external references:
+
+- External System
+- External Product ID
+- External Variant ID
+- Last Synced At
+- Sync Status
+
+This should support future plugin/integration architecture.
+
+============================================================
+77. AI PRODUCT FOUNDATION
+============================================================
+
+The catalog should expose clean structured product data for
+future AI features.
+
+Potential AI capabilities:
+
+- Product description generation
+- SEO suggestions
+- Product tagging
+- Attribute extraction
+- Recommendation generation
+- Search assistance
+- Product Q&A
+
+AI output must never silently overwrite authoritative product
+data.
+
+============================================================
+78. AI SAFETY
+============================================================
+
+AI-generated content should:
+
+- Be reviewable
+- Be attributable as generated where useful
+- Remain editable
+- Respect tenant data isolation
+- Respect package entitlements
+- Respect usage limits
+
+Premium AI features will be defined in Module 26.
+
+============================================================
+79. CATALOG ANALYTICS FOUNDATION
+============================================================
+
+Catalog events should support analytics such as:
+
+- Product Views
+- Add to Cart
+- Purchases
+- Conversion
+- Search Impressions
+- Product Search Clicks
+- Wishlist Adds
+- Recommendation Clicks
+
+The analytics system will be defined separately.
+
+============================================================
+80. PERFORMANCE
+============================================================
+
+Catalog architecture must handle:
+
+- Small stores
+- Medium stores
+- Large stores
+- Large product catalogs
+- Large variant counts
+- High concurrent reads
+
+Use appropriate:
+
+- Indexing
+- Caching
+- Pagination
+- Lazy loading
+- Background processing
+- Search infrastructure
+- CDN/media optimization
+
+============================================================
+81. DATABASE INDEXING
+============================================================
+
+Likely indexed fields include:
+
+- Store/Tenant ID
+- Product ID
+- SKU
+- Slug
+- Status
+- Visibility
+- Category
+- Brand
+- Created At
+- Updated At
+
+Composite indexes should be designed around real query patterns.
+
+============================================================
+82. SOFT DELETE STRATEGY
+============================================================
+
+Where business integrity requires it, use soft deletion for
+catalog records.
+
+Soft-deleted records must:
+
+- Be excluded from normal queries
+- Remain inaccessible through public storefront
+- Remain recoverable where allowed
+- Preserve historical references
+
+============================================================
+83. DATA RETENTION
+============================================================
+
+Catalog retention must account for:
+
+- Historical orders
+- Audit logs
+- Product media
+- Deleted products
+- Export history
+- Integration references
+
+Retention rules should be configurable at platform level where
+legally and commercially appropriate.
+
+============================================================
+84. CATALOG SECURITY
+============================================================
+
+Protect against:
+
+- Cross-tenant access
+- IDOR
+- Unauthorized product modification
+- Price manipulation
+- SKU duplication
+- Unsafe HTML
+- Malicious uploads
+- Unauthorized exports
+- Bulk operation abuse
+- API abuse
+- Search injection
+- Cache leakage
+
+============================================================
+85. MEDIA SECURITY
+============================================================
+
+Media handling must ensure:
+
+- File type validation
+- Content validation
+- Safe storage
+- Tenant isolation
+- Access control
+- Size limits
+- Quota enforcement
+- Malware scanning where available
+
+Uploaded filenames must not be trusted.
+
+============================================================
+86. CATALOG IMPORT SECURITY
+============================================================
+
+Import files must be treated as untrusted input.
+
+Protection should include:
+
+- File validation
+- Size limits
+- Formula injection protection where spreadsheet data is
+  exported or processed
+- Malicious content detection
+- Row limits
+- Permission checks
+- Tenant isolation
+
+============================================================
+87. BULK JOB ARCHITECTURE
+============================================================
+
+Large catalog operations should use background jobs.
+
+Example:
+
+Admin Request
+  ↓
+Validate Permission
+  ↓
+Create Job
+  ↓
+Queue
+  ↓
+Process
+  ↓
+Track Progress
+  ↓
+Retry Failures
+  ↓
+Generate Result
+  ↓
+Audit
+
+============================================================
+88. JOB OBSERVABILITY
+============================================================
+
+Catalog jobs should expose:
+
+- Job ID
+- Store/Tenant
+- Type
+- Status
+- Progress
+- Started At
+- Completed At
+- Error Count
+- Result Summary
+
+Sensitive catalog information must not appear in public logs.
+
+============================================================
+89. PRODUCT DATA QUALITY
+============================================================
+
+The platform should provide data-quality signals.
+
+Examples:
+
+- Missing Image
+- Missing Description
+- Missing Price
+- Duplicate SKU
+- Missing Category
+- Missing SEO
+- Invalid Variant
+- Missing Shipping Information
+
+These are warnings unless required for publication.
+
+============================================================
+90. CATALOG READINESS SCORE
+============================================================
+
+The architecture may support a catalog readiness indicator.
+
+Example categories:
+
+- Product Completeness
+- Media Completeness
+- Pricing Completeness
+- SEO Completeness
+- Variant Completeness
+- Shipping Completeness
+
+This should be advisory unless explicitly configured as a
+publication requirement.
+
+============================================================
+91. PRODUCT COPY AND CONTENT SAFETY
+============================================================
+
+Product content must be sanitized.
+
+The system should protect against:
+
+- Script injection
+- Dangerous HTML
+- Unsafe URLs
+- Embedded malicious content
+
+Store administrators should not be allowed to bypass platform
+security controls through product descriptions.
+
+============================================================
+92. PRODUCT DUPLICATE DETECTION
+============================================================
+
+The system may detect likely duplicate products using:
+
+- SKU
+- Barcode
+- External ID
+- Similar name
+- Optional AI similarity
+
+Duplicate detection should provide warnings rather than silently
+merging products.
+
+============================================================
+93. CATALOG MERCHANDISING
+============================================================
+
+The architecture should support merchandising controls such as:
+
+- Featured
+- Sort priority
+- Manual product ordering
+- Collection priority
+- Category priority
+- Promotional placement
+
+These controls must remain tenant-specific.
+
+============================================================
+94. MANUAL PRODUCT SORTING
+============================================================
+
+Stores may manually arrange products within supported sections.
+
+The ordering model should use a scalable ordering strategy
+rather than requiring large-scale database rewrites.
+
+============================================================
+95. PRODUCT RELATIONSHIP VALIDATION
+============================================================
+
+Product relationships must validate:
+
+- Source product exists
+- Target product exists
+- Same tenant
+- Valid relationship type
+- No prohibited circular relationship
+- Target product visibility where required
+
+============================================================
+96. CATALOG SNAPSHOTS
+============================================================
+
+The architecture should reserve catalog snapshots for:
+
+- Backup
+- Restore
+- Migration
+- Audit
+- Versioning
+- Bulk changes
+
+Snapshots must preserve tenant boundaries.
+
+============================================================
+97. CATALOG MIGRATION
+============================================================
+
+When the platform schema evolves, migrations must preserve:
+
+- Product IDs
+- Variant IDs
+- SKUs
+- Historical references
+- Media references
+- Tenant ownership
+
+Migration scripts must not perform unsafe destructive changes
+without explicit controlled procedures.
+
+============================================================
+98. STORE CLONING FOUNDATION
+============================================================
+
+Module 03 reserves future store cloning.
+
+Catalog architecture should support cloning selected catalog
+configuration into another store only through an explicit,
+authorized process.
+
+Never expose source-store data to the destination store
+unintentionally.
+
+============================================================
+99. CATALOG API RESPONSE RULES
+============================================================
+
+Public storefront APIs should return only required public data.
+
+Never expose:
+
+- Cost Price
+- Internal Notes
+- Supplier Data
+- Internal Audit Data
+- Private Media
+- Security Metadata
+- Internal IDs where not needed
+
+Admin APIs may return additional fields according to permissions.
+
+============================================================
+100. PUBLIC CATALOG CACHE
+============================================================
+
+Public product data may be cached aggressively where safe.
+
+Cache invalidation must occur after relevant updates.
+
+Cache keys must include:
+
+- Store/Tenant
+- Product
+- Locale where applicable
+- Currency where applicable
+- Channel where applicable
+
+============================================================
+101. LOCALE-AWARE CATALOG
+============================================================
+
+Future multilingual product content should support:
+
+- Product Name Translation
+- Description Translation
+- SEO Translation
+- Category Translation
+- Attribute Translation
+
+The architecture should avoid assuming one language forever.
+
+============================================================
+102. RTL CATALOG SUPPORT
+============================================================
+
+Product content must render correctly in RTL languages.
+
+The data model should store content independently of visual
+direction.
+
+The storefront decides presentation direction based on locale.
+
+============================================================
+103. CURRENCY-AWARE CATALOG
+============================================================
+
+The catalog should separate:
+
+- Base price data
+- Store currency
+- Display formatting
+
+Future multi-currency support should not require redesigning
+the core product entity.
+
+============================================================
+104. PRODUCT STATUS TRANSITIONS
+============================================================
+
+Allowed transitions should be controlled.
+
+Example:
+
+DRAFT
+  → ACTIVE
+  → SCHEDULED
+  → ARCHIVED
+
+SCHEDULED
+  → ACTIVE
+  → DRAFT
+  → ARCHIVED
+
+ACTIVE
+  → HIDDEN
+  → ARCHIVED
+
+ARCHIVED
+  → RESTORED / DRAFT where allowed
+
+Invalid transitions must be rejected.
+
+============================================================
+105. PRODUCT EVENTUAL CONSISTENCY
+============================================================
+
+Some catalog operations may be eventually consistent.
+
+Examples:
+
+- Search indexing
+- Analytics
+- Recommendations
+- Cache invalidation
+- CDN derivative generation
+
+Critical purchase operations must not rely on stale catalog
+information.
+
+============================================================
+106. CATALOG TESTING
+============================================================
+
+Mandatory functional tests:
+
+- Product creation
+- Product update
+- Product publish
+- Product schedule
+- Product archive
+- Product restore
+- Variant creation
+- Variant update
+- SKU validation
+- Pricing
+- Sale pricing
+- Media
+- Categories
+- Collections
+- Tags
+- Search indexing
+- Import
+- Export
+- Bulk operations
+- Product duplication
+
+============================================================
+107. MULTI-TENANT SECURITY TESTING
+============================================================
+
+Mandatory isolation tests:
+
+- Store A cannot read Store B product
+- Store A cannot update Store B product
+- Store A cannot delete Store B product
+- Store A cannot access Store B media
+- Store A cannot search Store B products
+- Store A cannot import into Store B
+- Store A cannot export Store B
+- Store A cannot manipulate Store B variants
+- Store A cannot access Store B cache
+- Store A cannot access Store B search index
+
+============================================================
+108. PACKAGE ENTITLEMENT TESTING
+============================================================
+
+Test:
+
+- Product limit
+- Variant limit
+- Media limit
+- Import limit
+- Export limit
+- Feature restrictions
+- Upgrade
+- Downgrade
+- Trial
+- Expired subscription
+- Suspended store
+
+No package restriction should be enforced only in the UI.
+
+============================================================
+109. PERFORMANCE TESTING
+============================================================
+
+Test catalog behavior with:
+
+- 100 products
+- 1,000 products
+- 10,000 products
+- Large variant sets
+- Large media libraries
+- Concurrent reads
+- Search traffic
+- Bulk imports
+- Bulk updates
+
+The final scale targets will be defined in the Architecture
+and Infrastructure Blueprints.
+
+============================================================
+110. API TESTING
+============================================================
+
+Test:
+
+- Authentication
+- Authorization
+- Tenant resolution
+- Validation
+- Pagination
+- Sorting
+- Filtering
+- Rate limits
+- Idempotency
+- Error handling
+- Package enforcement
+- Audit logging
+
+============================================================
+111. HIGH-LEVEL DATA ENTITIES
+============================================================
+
+Potential entities:
+
+- Product
+- ProductVariant
+- ProductMedia
+- ProductPrice
+- ProductSchedule
+- ProductSEO
+- ProductTag
+- ProductCollection
+- ProductRelationship
+- ProductOption
+- ProductOptionValue
+- ProductExternalReference
+- ProductChannelVisibility
+- ProductVersion
+- CatalogImportJob
+- CatalogExportJob
+- CatalogJobError
+- CatalogConfiguration
+
+Category, Brand, and Attribute entities will be expanded in
+Module 07.
+
+============================================================
+112. ADMIN CAPABILITIES
+============================================================
+
+Store administrators should eventually be able to:
+
+- Create Product
+- Edit Product
+- Duplicate Product
+- Publish Product
+- Schedule Product
+- Archive Product
+- Restore Product
+- Manage Variants
+- Manage Media
+- Manage Pricing
+- Manage Categories
+- Manage Collections
+- Manage Tags
+- Manage SEO
+- Manage Relationships
+- Import Products
+- Export Products
+- Perform Bulk Operations
+
+Permissions must come from Module 02.
+
+============================================================
+113. SUPER ADMIN CAPABILITIES
+============================================================
+
+Umar Techy Super Admin should be able to manage platform-level
+catalog capabilities such as:
+
+- Product feature definitions
+- Global validation rules
+- Media policies
+- Import limits
+- Export limits
+- Package entitlements
+- Platform catalog defaults
+- Monitoring
+- Operational troubleshooting
+
+Super Admin access to tenant catalog data must be audited and
+permission-controlled.
+
+============================================================
+114. MODULE DEPENDENCIES
+============================================================
+
+Module 06 depends on:
+
+- Module 01 — Complete Platform Structure
+- Module 02 — Authentication, Users, Roles & Permissions
+- Module 03 — Multi-Tenant & Store Management
+- Module 04 — Subscription, Packages & Feature Entitlements
+- Module 05 — Storefront / Customer-Facing Website
+
+Strong integration with:
+
+- Module 07 — Category, Brand & Attribute Management
+- Module 08 — Inventory & Stock Management
+- Module 09 — Order Management
+- Module 11 — Cart, Wishlist & Checkout
+- Module 16 — SEO & Content
+- Module 17 — Theme & Branding
+- Module 18 — Animation
+- Module 21 — Notifications
+- Module 22 — Reports & Analytics
+- Module 26 — AI
+- Module 27 — App / Plugin Marketplace
+- Module 31 — API Platform
+- Module 32 — Security
+
+============================================================
+115. REQUIRED FOLLOW-UP ARTIFACTS
+============================================================
+
+The following detailed artifacts should be created later:
+
+1. Product Database Blueprint
+2. Product Variant Blueprint
+3. Product Pricing Blueprint
+4. Product Media Blueprint
+5. Product Lifecycle State Machine
+6. Product Validation Matrix
+7. Product Form Blueprint
+8. Product API Contract
+9. Catalog Search Blueprint
+10. Catalog Import Blueprint
+11. Catalog Export Blueprint
+12. Bulk Operations Blueprint
+13. Product Relationship Blueprint
+14. Product SEO Blueprint
+15. Product Event Model
+16. Catalog Cache Strategy
+17. Catalog Indexing Strategy
+18. Catalog Security Test Matrix
+19. Catalog Performance Test Plan
+20. Catalog Data Migration Strategy
+
+============================================================
+116. FINAL ARCHITECTURAL RULES
+============================================================
+
+1. One Core Catalog Engine.
+2. All catalog records must have explicit tenant ownership.
+3. Basic, Business, and Premium use the same catalog engine.
+4. Package restrictions must be entitlement-driven.
+5. Product IDs must remain stable.
+6. Historical orders must not depend on mutable product data.
+7. Client-side prices are never authoritative.
+8. SKU uniqueness must be tenant-scoped.
+9. Product slugs must be tenant-scoped.
+10. Variants must remain tied to the parent product.
+11. Product status must control public visibility.
+12. Draft products must not leak publicly.
+13. Archived products must preserve historical references.
+14. Media must be tenant-isolated.
+15. Search indexes must be tenant-isolated.
+16. Cache keys must be tenant-aware.
+17. Bulk operations must be permission-controlled.
+18. Imports must validate before committing data.
+19. Exports must be tenant-scoped.
+20. Product content must be sanitized.
+21. Cost price must never be exposed publicly.
+22. Critical purchase values must be recalculated server-side.
+23. Catalog events must provide extension points.
+24. AI must not silently overwrite authoritative data.
+25. Catalog design must remain extensible for future channels.
+
+============================================================
+117. STATUS
+============================================================
+
+Module 06 Status:
+PRODUCT & CATALOG MANAGEMENT — INITIALIZED
+
+Version:
+1.0
+
+This module establishes the reusable multi-tenant catalog
+foundation for products, variants, pricing, media, publishing,
+collections, relationships, imports, exports, search,
+performance, security, and future extensibility.
+
+Detailed Category, Brand, Attribute, Inventory, Order, Cart,
+Checkout, Payment, Shipping, SEO, AI, and Integration
+architectures will be defined in their respective modules.
+
+============================================================
+END OF MODULE 06
+============================================================

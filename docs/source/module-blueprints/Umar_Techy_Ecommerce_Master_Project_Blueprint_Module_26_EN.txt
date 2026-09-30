@@ -1,0 +1,1636 @@
+====================================================================
+UMAR TECHY E-COMMERCE PLATFORM
+MASTER PROJECT BLUEPRINT — MODULE 26
+AI FEATURES
+Technical Specification — English Only
+Version 1.0
+====================================================================
+
+1. MODULE PURPOSE
+--------------------------------------------------------------------
+Module 26 provides the Core AI Features, AI Orchestration, AI
+Assistants, Recommendations, Search Intelligence, Content
+Generation, Store Intelligence, Automation, AI Usage Metering, AI
+Safety, Provider Abstraction, and future AI Agent foundation for the
+Umar Techy Multi-Tenant E-Commerce Platform.
+
+AI must enhance commerce workflows without becoming the authority for
+financial, inventory, security, identity, payment, shipping, or
+tenant-isolation decisions.
+
+Core principle:
+
+AI ASSISTS
+        +
+DETERMINISTIC BUSINESS RULES
+        +
+SERVER-AUTHORITATIVE DATA
+        +
+TENANT ISOLATION
+        +
+HUMAN CONTROL
+        +
+SAFETY
+        +
+AUDITABILITY
+
+
+2. PRIMARY OBJECTIVES
+--------------------------------------------------------------------
+The module shall:
+
+1. Provide centralized AI architecture.
+2. Provide tenant-aware AI services.
+3. Provide AI provider abstraction.
+4. Provide AI model configuration.
+5. Provide AI usage metering.
+6. Provide AI cost tracking foundations.
+7. Provide product content assistance.
+8. Provide SEO content assistance.
+9. Provide marketing assistance.
+10. Provide product recommendations.
+11. Provide intelligent search foundations.
+12. Provide customer-facing AI chatbot foundations.
+13. Provide store-owner AI assistant foundations.
+14. Provide analytics/insight assistance.
+15. Provide inventory insight assistance.
+16. Provide customer insight assistance.
+17. Provide support assistance.
+18. Provide AI automation foundations.
+19. Provide prompt/template management.
+20. Provide output validation.
+21. Provide AI safety controls.
+22. Provide privacy controls.
+23. Provide human approval workflows.
+24. Prevent unauthorized business actions.
+25. Support future AI agents under strict permissions.
+
+
+3. ARCHITECTURAL POSITION
+--------------------------------------------------------------------
+Module 26 owns:
+
+- AI orchestration.
+- AI provider adapters.
+- AI model registry.
+- AI feature configuration.
+- AI prompt/template management.
+- AI request lifecycle.
+- AI response validation.
+- AI usage metering.
+- AI cost tracking foundation.
+- AI safety policy enforcement.
+- AI context assembly.
+- AI recommendation orchestration.
+- AI assistant orchestration.
+- AI automation foundations.
+
+Module 26 does NOT own:
+
+- Product truth — Module 06.
+- Inventory truth — Module 08.
+- Order truth — Module 09.
+- Customer truth — Module 10.
+- Checkout/payment truth — Modules 11/12.
+- Shipping truth — Module 13.
+- Marketing campaign authority — Module 15.
+- SEO authority — Module 16.
+- Analytics authority — Module 22.
+- Security policy — Module 32.
+- Entitlements — Module 04.
+
+
+4. AI AUTHORITY PRINCIPLE
+--------------------------------------------------------------------
+AI is advisory or assistive by default.
+
+AI must not independently become the source of truth for:
+
+- Price.
+- Tax.
+- Inventory quantity.
+- Payment amount.
+- Refund amount.
+- Shipping rate.
+- Order status.
+- Subscription status.
+- Permissions.
+- Identity.
+- Tenant isolation.
+
+
+5. DETERMINISTIC BUSINESS RULES
+--------------------------------------------------------------------
+When AI output conflicts with a deterministic business rule:
+
+DETERMINISTIC BUSINESS RULE WINS.
+
+Examples:
+
+AI suggests an unavailable product:
+→ Inventory authority decides availability.
+
+AI suggests a discount:
+→ Promotion Engine validates the discount.
+
+AI suggests a refund:
+→ Order/Payment systems validate the refund.
+
+AI suggests a shipping option:
+→ Shipping Engine validates serviceability/rate.
+
+
+6. TENANT ISOLATION
+--------------------------------------------------------------------
+AI requests must preserve:
+
+- Tenant ID.
+- User/customer authorization.
+- Store context.
+- Data scope.
+- Feature entitlement.
+
+AI context must never include another tenant's data.
+
+Cross-tenant AI context leakage is a critical security failure.
+
+
+7. AI PROVIDER ABSTRACTION
+--------------------------------------------------------------------
+Support provider adapters.
+
+Adapter capabilities may include:
+
+- Generate text.
+- Generate structured output.
+- Embeddings.
+- Moderation.
+- Classification.
+- Vision where enabled.
+- Tool/function calling.
+- Streaming.
+- Token usage reporting.
+
+Provider-specific code must not leak into business modules.
+
+
+8. AI MODEL REGISTRY
+--------------------------------------------------------------------
+Model records may include:
+
+- Provider.
+- Model name.
+- Capability.
+- Context limit.
+- Output limit.
+- Cost metadata.
+- Availability.
+- Region.
+- Data handling classification.
+- Version.
+- Status.
+
+
+9. MODEL ROUTING
+--------------------------------------------------------------------
+Routing may consider:
+
+- Feature.
+- Tenant package.
+- Quality requirement.
+- Latency.
+- Cost.
+- Context size.
+- Availability.
+- Data sensitivity.
+
+Routing must be deterministic and auditable.
+
+
+10. SANDBOX / PRODUCTION SEPARATION
+--------------------------------------------------------------------
+AI development/testing environments must not use production side
+effects.
+
+Test AI calls must not:
+
+- Send real marketing messages.
+- Create real orders.
+- Trigger real payments.
+- Change live inventory.
+- Modify production configuration.
+
+Use mocked or isolated tools.
+
+
+11. AI REQUEST LIFECYCLE
+--------------------------------------------------------------------
+Conceptual flow:
+
+User/System Event
+→ Authenticate
+→ Authorize
+→ Resolve Tenant
+→ Check Entitlement
+→ Assemble Safe Context
+→ Select Model
+→ Apply Prompt Policy
+→ Execute
+→ Validate Output
+→ Apply Business Rules
+→ Human Approval if required
+→ Execute permitted action
+→ Audit
+→ Meter Usage
+
+
+12. AI REQUEST STATES
+--------------------------------------------------------------------
+Suggested:
+
+CREATED
+AUTHORIZED
+QUEUED
+PROCESSING
+COMPLETED
+PARTIALLY_COMPLETED
+REQUIRES_APPROVAL
+REJECTED
+FAILED
+CANCELLED
+EXPIRED
+
+
+13. AI CONTEXT ENGINE
+--------------------------------------------------------------------
+Context may include:
+
+- Store identity.
+- Store settings.
+- Product data.
+- Category data.
+- Customer data where authorized.
+- Order data where authorized.
+- Inventory data where authorized.
+- Marketing data.
+- SEO/content.
+- Analytics summaries.
+
+Context must be:
+
+- Tenant-scoped.
+- Minimal.
+- Relevant.
+- Permission-aware.
+- Time-bounded where appropriate.
+
+
+14. CONTEXT MINIMIZATION
+--------------------------------------------------------------------
+Do not send entire databases to AI.
+
+Use only required fields.
+
+Sensitive information must be excluded unless explicitly necessary
+and authorized.
+
+
+15. CUSTOMER PII
+--------------------------------------------------------------------
+AI features must minimize:
+
+- Names.
+- Phone numbers.
+- Email addresses.
+- Addresses.
+- Payment details.
+- Authentication data.
+
+Never send payment credentials or authentication secrets to AI.
+
+
+16. AI DATA RETENTION
+--------------------------------------------------------------------
+AI request/response retention must be configurable.
+
+Separate:
+
+- Prompt.
+- Context.
+- Output.
+- Metadata.
+- Usage.
+- Audit record.
+
+Retention should follow privacy and business requirements.
+
+
+17. PROMPT MANAGEMENT
+--------------------------------------------------------------------
+Support versioned prompt templates.
+
+Prompt records may include:
+
+- Prompt ID.
+- Feature.
+- Version.
+- System instructions.
+- User template.
+- Variables.
+- Output schema.
+- Safety rules.
+- Model requirements.
+- Status.
+
+
+18. PROMPT VERSIONING
+--------------------------------------------------------------------
+Published prompts should be immutable.
+
+Changes create new versions.
+
+Historical AI requests should preserve the prompt/model version used.
+
+
+19. STRUCTURED OUTPUT
+--------------------------------------------------------------------
+Where possible, AI should return schema-constrained output.
+
+Examples:
+
+Product description object.
+SEO metadata object.
+Recommendation object.
+Support response object.
+Marketing draft object.
+
+
+20. OUTPUT VALIDATION
+--------------------------------------------------------------------
+AI output must be validated before use.
+
+Validation may include:
+
+- Schema.
+- Length.
+- Allowed values.
+- Required fields.
+- HTML sanitization.
+- URL validation.
+- Business rule validation.
+- Tenant ownership validation.
+
+
+21. AI CONTENT GENERATION
+--------------------------------------------------------------------
+Support assistance for:
+
+- Product titles.
+- Product descriptions.
+- Short descriptions.
+- Bullet points.
+- Meta titles.
+- Meta descriptions.
+- Category descriptions.
+- Brand descriptions.
+- Blog drafts.
+- FAQ drafts.
+- Landing page copy.
+
+
+22. CONTENT SAFETY
+--------------------------------------------------------------------
+Generated content must be:
+
+- Sanitized.
+- Previewable.
+- Editable.
+- Versioned.
+- Approval-controlled where configured.
+
+AI output must never directly publish privileged content without
+required authorization.
+
+
+23. PRODUCT CONTENT ASSISTANT
+--------------------------------------------------------------------
+Product assistant may generate:
+
+- SEO-friendly title.
+- Description.
+- Highlights.
+- Specifications summary.
+- Search keywords.
+- Suggested tags.
+- Image alt text.
+
+Actual product data remains Module 06 authority.
+
+
+24. SEO ASSISTANT
+--------------------------------------------------------------------
+Support:
+
+- Metadata suggestions.
+- Keyword/topic suggestions.
+- Internal-link suggestions.
+- Structured content suggestions.
+- Content gap suggestions.
+
+Module 16 remains SEO authority.
+
+
+25. MARKETING ASSISTANT
+--------------------------------------------------------------------
+Support:
+
+- Campaign ideas.
+- Copy drafts.
+- Subject lines.
+- SMS drafts.
+- WhatsApp drafts.
+- Push drafts.
+- Audience suggestions.
+- Promotion ideas.
+
+Module 15 remains campaign authority.
+
+
+26. CUSTOMER SUPPORT ASSISTANT
+--------------------------------------------------------------------
+Customer-facing chatbot may answer:
+
+- Product questions.
+- Store policies.
+- Shipping information.
+- Order status where authorized.
+- FAQ.
+- Return-policy guidance.
+
+It must not expose another customer's data.
+
+
+27. CHATBOT ORDER DATA
+--------------------------------------------------------------------
+For authenticated order inquiries:
+
+AI may retrieve authorized order information.
+
+Order status remains Module 09 authority.
+
+AI must not invent order status.
+
+
+28. STORE OWNER ASSISTANT
+--------------------------------------------------------------------
+Store-owner assistant may help with:
+
+- Sales summaries.
+- Product performance.
+- Inventory alerts.
+- Marketing suggestions.
+- Customer insights.
+- SEO suggestions.
+- Store configuration guidance.
+- Operational summaries.
+
+
+29. ANALYTICS ASSISTANT
+--------------------------------------------------------------------
+AI may summarize Module 22 data:
+
+- Sales trends.
+- Product trends.
+- Customer trends.
+- Marketing performance.
+- Inventory trends.
+
+AI summaries must reference the underlying reporting data.
+
+
+30. INVENTORY ASSISTANT
+--------------------------------------------------------------------
+AI may identify:
+
+- Low-stock patterns.
+- Slow movers.
+- Dead-stock candidates.
+- Reorder suggestions.
+- Product demand patterns.
+
+AI suggestions must not directly change stock without authorized
+deterministic workflows.
+
+
+31. RECOMMENDATION ENGINE
+--------------------------------------------------------------------
+Support:
+
+- Related products.
+- Cross-sell.
+- Up-sell.
+- Personalized recommendations.
+- Recently viewed.
+- Similar products.
+- Frequently bought together.
+
+
+32. RECOMMENDATION INPUTS
+--------------------------------------------------------------------
+Possible inputs:
+
+- Product attributes.
+- Categories.
+- Brand.
+- Customer behavior.
+- Purchase history.
+- Cart.
+- Wishlist.
+- Popularity.
+- Inventory.
+- Promotions.
+
+Respect consent and privacy.
+
+
+33. RECOMMENDATION SAFETY
+--------------------------------------------------------------------
+Recommendations must not:
+
+- Recommend unavailable products as purchasable.
+- Expose private customer behavior.
+- Bypass promotion rules.
+- Bypass package entitlements.
+
+
+34. RECOMMENDATION FALLBACK
+--------------------------------------------------------------------
+If AI recommendation is unavailable:
+
+Fallback to deterministic methods:
+
+- Best sellers.
+- Category popularity.
+- Related products.
+- Recently viewed.
+
+
+35. AI SEARCH
+--------------------------------------------------------------------
+Future intelligent search may support:
+
+- Semantic search.
+- Query understanding.
+- Synonyms.
+- Natural-language product queries.
+- Typo tolerance.
+- Intent detection.
+
+
+36. SEARCH SAFETY
+--------------------------------------------------------------------
+AI search must still use tenant-scoped catalog data.
+
+Search results must obey:
+
+- Product visibility.
+- Store status.
+- Inventory rules.
+- Customer eligibility.
+- Package rules.
+
+
+37. AI TOOL CALLING
+--------------------------------------------------------------------
+Future AI agents may call controlled tools.
+
+Tools must be:
+
+- Explicitly allowlisted.
+- Permission-checked.
+- Schema-constrained.
+- Tenant-scoped.
+- Audited.
+- Rate-limited.
+
+
+38. TOOL CLASSIFICATION
+--------------------------------------------------------------------
+Classify tools:
+
+READ_ONLY
+LOW_RISK_WRITE
+HIGH_RISK_WRITE
+FINANCIAL
+SECURITY_CRITICAL
+
+High-risk and financial tools require stronger controls.
+
+
+39. READ-ONLY AI TOOLS
+--------------------------------------------------------------------
+Examples:
+
+- Get product.
+- Get category.
+- Get order status.
+- Get inventory summary.
+- Get analytics summary.
+- Get store settings.
+
+
+40. WRITE TOOL SAFETY
+--------------------------------------------------------------------
+AI must not execute sensitive writes automatically by default.
+
+Examples requiring approval:
+
+- Publish content.
+- Change product price.
+- Issue refund.
+- Cancel order.
+- Modify payment settings.
+- Change permissions.
+- Delete data.
+
+
+41. HUMAN APPROVAL
+--------------------------------------------------------------------
+Support approval states:
+
+- Pending.
+- Approved.
+- Rejected.
+- Expired.
+
+Approval must identify:
+
+- User.
+- Action.
+- AI request.
+- Proposed changes.
+- Timestamp.
+
+
+42. AI AGENT FOUNDATION
+--------------------------------------------------------------------
+Future AI agents may perform multi-step workflows.
+
+Agent architecture must enforce:
+
+- Maximum steps.
+- Tool allowlist.
+- Time limit.
+- Token limit.
+- Cost limit.
+- Tenant boundary.
+- Permission boundary.
+- Approval boundary.
+- Kill switch.
+
+
+43. AGENT LOOP SAFETY
+--------------------------------------------------------------------
+Prevent:
+
+- Infinite loops.
+- Recursive tool calls.
+- Unbounded token use.
+- Repeated external calls.
+- Duplicate actions.
+
+
+44. IDEMPOTENCY
+--------------------------------------------------------------------
+AI-triggered business actions must use idempotency.
+
+Examples:
+
+- Create campaign.
+- Create content draft.
+- Send message.
+- Update product.
+- Create support ticket.
+
+
+45. AI AUTOMATION
+--------------------------------------------------------------------
+Possible automations:
+
+- Product content generation.
+- Back-in-stock messaging draft.
+- Abandoned-cart assistance.
+- Customer support triage.
+- Review summarization.
+- SEO content suggestions.
+- Inventory insights.
+- Daily store summary.
+
+
+46. AUTOMATION SAFETY
+--------------------------------------------------------------------
+Automation must respect:
+
+- Module 04 entitlements.
+- Module 10 consent.
+- Module 15 marketing rules.
+- Module 21 communication rules.
+- Module 32 security.
+
+
+47. REVIEW SUMMARIZATION
+--------------------------------------------------------------------
+AI may summarize product reviews.
+
+Requirements:
+
+- Preserve review-source references.
+- Avoid fabricating review claims.
+- Mark summaries as AI-generated where appropriate.
+
+
+48. SENTIMENT / CLASSIFICATION
+--------------------------------------------------------------------
+Possible AI analysis:
+
+- Review sentiment.
+- Support-ticket classification.
+- Product issue classification.
+- Customer feedback themes.
+
+Results are advisory unless a deterministic workflow uses them.
+
+
+49. AI TRANSLATION
+--------------------------------------------------------------------
+Support translation assistance for:
+
+- Product content.
+- Categories.
+- SEO metadata.
+- Marketing copy.
+- FAQ.
+
+Human review may be required for published content.
+
+
+50. AI IMAGE CAPABILITIES
+--------------------------------------------------------------------
+Where enabled, AI may assist with:
+
+- Image tagging.
+- Alt-text generation.
+- Background/content classification.
+- Product-image quality analysis.
+
+Generated/processed assets must follow Module 06/17 media rules.
+
+
+51. AI MODERATION
+--------------------------------------------------------------------
+Support moderation for:
+
+- Customer reviews.
+- User-generated content.
+- Product content.
+- Marketing drafts.
+
+AI moderation is a signal; final enforcement must follow explicit
+platform policy.
+
+
+52. AI SAFETY LAYERS
+--------------------------------------------------------------------
+Use layered controls:
+
+1. Input validation.
+2. Tenant authorization.
+3. Context filtering.
+4. Prompt policy.
+5. Provider controls.
+6. Output validation.
+7. Business rule validation.
+8. Human approval.
+9. Audit.
+10. Monitoring.
+
+
+53. PROMPT INJECTION DEFENSE
+--------------------------------------------------------------------
+Treat external/customer content as untrusted.
+
+Do not allow customer-provided text to override system instructions.
+
+Separate:
+
+- System instructions.
+- Business rules.
+- Retrieved data.
+- User content.
+- Tool results.
+
+
+54. DATA EXFILTRATION DEFENSE
+--------------------------------------------------------------------
+AI must not be allowed to reveal:
+
+- Other tenant data.
+- Secrets.
+- Authentication tokens.
+- Payment credentials.
+- Internal infrastructure secrets.
+- Private customer records without authorization.
+
+
+55. TOOL OUTPUT VALIDATION
+--------------------------------------------------------------------
+Tool results must be validated before being returned to AI.
+
+Do not trust arbitrary tool output as safe instructions.
+
+
+56. URL / HTML SAFETY
+--------------------------------------------------------------------
+AI-generated:
+
+- URLs.
+- HTML.
+- Markdown.
+- Scripts.
+- Images.
+
+must be validated/sanitized according to the target context.
+
+AI must not generate executable server-side code for automatic
+execution.
+
+
+57. AI-COST MANAGEMENT
+--------------------------------------------------------------------
+Track:
+
+- Requests.
+- Input tokens.
+- Output tokens.
+- Model.
+- Provider.
+- Estimated cost.
+- Actual cost where available.
+- Feature.
+- Tenant.
+
+
+58. AI USAGE LIMITS
+--------------------------------------------------------------------
+Module 04 may define:
+
+- AI requests/month.
+- Token allowance.
+- Recommendation calls.
+- Chatbot messages.
+- Content generations.
+- Embedding volume.
+- Image analysis.
+- Agent runs.
+
+
+59. AI QUOTA ENFORCEMENT
+--------------------------------------------------------------------
+When limits are reached:
+
+- Block.
+- Queue.
+- Degrade to fallback.
+- Request upgrade.
+
+Behavior must be deterministic.
+
+
+60. AI BILLING INTEGRATION
+--------------------------------------------------------------------
+Module 24 measures usage.
+
+Module 29 may bill metered AI usage where applicable.
+
+Module 04 defines commercial entitlement.
+
+
+61. AI PROVIDER FAILOVER
+--------------------------------------------------------------------
+Future provider failover may use:
+
+- Secondary provider.
+- Model downgrade.
+- Deterministic fallback.
+
+Failover must preserve:
+
+- Tenant policy.
+- Data policy.
+- Cost controls.
+- No duplicate business action.
+
+
+62. AI AVAILABILITY
+--------------------------------------------------------------------
+If AI is unavailable:
+
+Core commerce must continue.
+
+Fallbacks may include:
+
+- Standard search.
+- Rule-based recommendations.
+- Manual content editing.
+- Normal support flow.
+
+
+63. AI LATENCY
+--------------------------------------------------------------------
+Use:
+
+- Streaming where appropriate.
+- Async processing.
+- Background jobs.
+- Cached results where safe.
+- Smaller models for simple tasks.
+
+
+64. AI CACHING
+--------------------------------------------------------------------
+AI responses may be cached only when safe.
+
+Cache keys must include:
+
+- Tenant.
+- Feature.
+- Context version.
+- Prompt version.
+- Model.
+- Relevant input hash.
+
+Never share tenant-specific AI responses across stores.
+
+
+65. EMBEDDINGS / VECTOR SEARCH
+--------------------------------------------------------------------
+Future semantic search may use embeddings.
+
+Vector records must preserve:
+
+- Tenant ID.
+- Source entity.
+- Source version.
+- Model version.
+- Embedding version.
+
+
+66. VECTOR ISOLATION
+--------------------------------------------------------------------
+Vector search must enforce tenant filters before similarity results are
+returned.
+
+Cross-tenant vector retrieval is prohibited.
+
+
+67. AI MEMORY
+--------------------------------------------------------------------
+Future AI memory must distinguish:
+
+- Session context.
+- Store configuration.
+- Customer-approved preferences.
+- Long-term business context.
+
+Memory must be:
+
+- Tenant-scoped.
+- Permission-aware.
+- Retention-controlled.
+
+
+68. AI AUDIT
+--------------------------------------------------------------------
+Audit:
+
+- Feature.
+- Tenant.
+- User.
+- Model.
+- Provider.
+- Prompt version.
+- Tool calls.
+- Approval.
+- Output action.
+- Usage.
+- Cost metadata.
+- Errors.
+
+
+69. AI OBSERVABILITY
+--------------------------------------------------------------------
+Monitor:
+
+- Request rate.
+- Latency.
+- Error rate.
+- Provider availability.
+- Token usage.
+- Cost.
+- Safety blocks.
+- Tool failures.
+- Approval rate.
+- Recommendation quality foundation.
+
+
+70. AI QUALITY
+--------------------------------------------------------------------
+Track quality signals such as:
+
+- Acceptance.
+- Rejection.
+- Edit rate.
+- Regeneration rate.
+- User feedback.
+- Conversion impact where measurable.
+
+Quality metrics must not be confused with business truth.
+
+
+71. AI FEEDBACK LOOP
+--------------------------------------------------------------------
+Allow authorized users to provide:
+
+- Helpful.
+- Not helpful.
+- Edit.
+- Reject.
+- Regenerate.
+
+Feedback may improve future models but must not automatically expose
+private tenant data to providers.
+
+
+72. AI MODEL EVALUATION
+--------------------------------------------------------------------
+Maintain evaluation sets for:
+
+- Content generation.
+- Recommendations.
+- Search.
+- Chatbot.
+- Classification.
+- Summarization.
+
+Test against:
+
+- Accuracy.
+- Safety.
+- Hallucination.
+- Relevance.
+- Tenant isolation.
+
+
+73. HALLUCINATION CONTROL
+--------------------------------------------------------------------
+For factual store answers:
+
+- Retrieve authoritative data.
+- Cite/reference source records internally where useful.
+- Reject unsupported claims.
+- Ask for clarification where necessary.
+
+
+74. CUSTOMER CHATBOT SAFETY
+--------------------------------------------------------------------
+Chatbot must not:
+
+- Reveal private data.
+- Make unauthorized account changes.
+- Promise refunds.
+- Change order state.
+- Reveal internal prompts.
+- Reveal system architecture.
+
+
+75. MARKETING AI SAFETY
+--------------------------------------------------------------------
+AI-generated marketing must respect:
+
+- Consent.
+- Suppression.
+- Frequency caps.
+- Promotion rules.
+- Brand rules.
+
+Module 15/21 remain authoritative.
+
+
+76. AI BRAND VOICE
+--------------------------------------------------------------------
+Store owners may configure:
+
+- Tone.
+- Language.
+- Formality.
+- Brand vocabulary.
+- Forbidden terms.
+- Preferred terms.
+
+These are presentation constraints, not security controls.
+
+
+77. AI PACKAGE ENTITLEMENTS
+--------------------------------------------------------------------
+Possible keys:
+
+ai.content_generation
+ai.seo_assistant
+ai.marketing_assistant
+ai.recommendations
+ai.semantic_search
+ai.chatbot
+ai.analytics_assistant
+ai.inventory_assistant
+ai.translation
+ai.moderation
+ai.advanced_models
+ai.multi_provider
+ai.agent
+ai.advanced_automation
+
+
+78. AI API
+--------------------------------------------------------------------
+Example endpoint families:
+
+/api/stores/{storeId}/ai/requests
+/api/stores/{storeId}/ai/chat
+/api/stores/{storeId}/ai/recommendations
+/api/stores/{storeId}/ai/content
+/api/stores/{storeId}/ai/seo
+/api/stores/{storeId}/ai/insights
+/api/stores/{storeId}/ai/usage
+/api/stores/{storeId}/ai/approvals
+/api/platform/ai/models
+/api/platform/ai/providers
+
+
+79. DATA MODEL — HIGH LEVEL
+--------------------------------------------------------------------
+Core entities may include:
+
+AiProvider
+AiModel
+AiModelVersion
+AiFeature
+AiConfiguration
+AiPrompt
+AiPromptVersion
+AiRequest
+AiRequestContext
+AiResponse
+AiOutputValidation
+AiTool
+AiToolCall
+AiApproval
+AiAgent
+AiAgentRun
+AiAgentStep
+AiRecommendation
+AiEmbedding
+AiVectorReference
+AiConversation
+AiMessage
+AiMemory
+AiUsage
+AiCostRecord
+AiSafetyEvent
+AiFeedback
+AiEvaluation
+AiAuditRecord
+
+Tenant-scoped entities must preserve tenant context.
+
+
+80. PERMISSIONS
+--------------------------------------------------------------------
+Example permissions:
+
+ai.view
+ai.use
+ai.content.generate
+ai.seo.generate
+ai.marketing.generate
+ai.recommendations.view
+ai.chatbot.manage
+ai.analytics.use
+ai.inventory.use
+ai.approve
+ai.manage_prompts
+ai.manage_models
+ai.manage_providers
+ai.manage_agents
+ai.view_usage
+ai.view_cost
+ai.platform_admin
+
+
+81. SECRET MANAGEMENT
+--------------------------------------------------------------------
+Provider API keys must:
+
+- Never be stored in source code.
+- Never be returned to clients.
+- Never be included in prompts.
+- Never appear in ordinary logs.
+- Be stored through secure secret management.
+
+
+82. PROVIDER DATA POLICY
+--------------------------------------------------------------------
+Each AI provider configuration should record:
+
+- Data handling classification.
+- Retention policy.
+- Regional restrictions where relevant.
+- Model capability.
+- Allowed features.
+
+Routing must honor tenant/platform data policy.
+
+
+83. AI SECURITY
+--------------------------------------------------------------------
+Defend against:
+
+- Prompt injection.
+- Data exfiltration.
+- Tool abuse.
+- Cross-tenant context.
+- Model manipulation.
+- Credential leakage.
+- Excessive cost.
+- Agent loops.
+- Unauthorized writes.
+
+
+84. AI RATE LIMITING
+--------------------------------------------------------------------
+Limit:
+
+- Requests.
+- Tokens.
+- Agent steps.
+- Tool calls.
+- Chat messages.
+- Content generations.
+
+Rate limits may apply at:
+
+- Platform.
+- Tenant.
+- User.
+- Feature.
+- IP/network layer where appropriate.
+
+
+85. AI BACKUP
+--------------------------------------------------------------------
+Module 23 may back up:
+
+- AI configuration.
+- Prompt versions.
+- Model routing configuration.
+- Agent definitions.
+- Tool definitions.
+- Recommendation configuration.
+- AI usage metadata where required.
+
+Provider secrets must follow separate secret-management policy.
+
+
+86. AI DISASTER RECOVERY
+--------------------------------------------------------------------
+Core commerce must remain usable if AI services fail.
+
+AI state should be recoverable according to retention requirements.
+
+
+87. TESTING — FUNCTIONAL
+--------------------------------------------------------------------
+Test:
+
+- Content generation.
+- SEO assistance.
+- Marketing assistance.
+- Recommendations.
+- Chatbot.
+- Analytics assistant.
+- Inventory assistant.
+- Translation.
+- Moderation.
+
+
+88. TESTING — SAFETY
+--------------------------------------------------------------------
+Test:
+
+- Prompt injection.
+- Cross-tenant requests.
+- Data exfiltration.
+- Secret extraction.
+- Tool abuse.
+- Unauthorized write.
+- Financial action.
+- Infinite agent loop.
+- Excessive cost.
+
+
+89. TESTING — BUSINESS RULES
+--------------------------------------------------------------------
+Verify AI cannot bypass:
+
+- Pricing.
+- Inventory.
+- Discounts.
+- Shipping.
+- Payment.
+- Orders.
+- Permissions.
+- Subscription limits.
+
+
+90. TESTING — PROVIDER FAILURE
+--------------------------------------------------------------------
+Test:
+
+- Timeout.
+- Rate limit.
+- Provider outage.
+- Invalid response.
+- Malformed structured output.
+- Partial response.
+- Model unavailable.
+
+
+91. TESTING — QUALITY
+--------------------------------------------------------------------
+Evaluate:
+
+- Relevance.
+- Accuracy.
+- Hallucination.
+- Formatting.
+- Safety.
+- Brand consistency.
+- Localization.
+- Recommendation usefulness.
+
+
+92. ACCEPTANCE CRITERIA
+--------------------------------------------------------------------
+Module 26 is complete only when:
+
+1. AI architecture exists.
+2. Provider abstraction exists.
+3. Model registry exists.
+4. Tenant isolation is verified.
+5. AI request lifecycle works.
+6. Prompt versioning works.
+7. Structured output validation works.
+8. Product content assistance works.
+9. SEO assistance works.
+10. Marketing assistance works.
+11. Recommendation foundation works.
+12. Chatbot foundation works.
+13. Analytics assistant works.
+14. Inventory assistant works.
+15. AI usage metering works.
+16. AI cost tracking foundation works.
+17. Package entitlements work.
+18. AI safety controls work.
+19. Prompt injection defenses work.
+20. Tool authorization works.
+21. Human approval works.
+22. AI fallback works.
+23. AI provider failure handling works.
+24. AI cache isolation works.
+25. Vector isolation works where enabled.
+26. Privacy controls work.
+27. Audit logging works.
+28. Security tests pass.
+29. Performance/cost tests pass.
+30. Production AI readiness validation passes.
+
+
+93. REQUIRED FOLLOW-UP ARTIFACTS
+--------------------------------------------------------------------
+After implementation, create and maintain:
+
+1. Module 26 implementation checklist.
+2. AI architecture specification.
+3. AI provider adapter specification.
+4. Model registry specification.
+5. Prompt management specification.
+6. Prompt/version policy.
+7. AI context specification.
+8. Output validation specification.
+9. AI safety policy.
+10. Prompt injection defense specification.
+11. Tool/function calling specification.
+12. Agent safety specification.
+13. Human approval specification.
+14. Recommendation specification.
+15. AI chatbot specification.
+16. AI content-generation specification.
+17. AI SEO specification.
+18. AI marketing specification.
+19. AI analytics assistant specification.
+20. AI inventory assistant specification.
+21. AI usage/cost specification.
+22. AI privacy/retention specification.
+23. AI evaluation specification.
+24. API contract.
+25. Data model specification.
+26. Permission matrix.
+27. Package entitlement matrix.
+28. Security test matrix.
+29. AI quality evaluation matrix.
+30. Production AI readiness checklist.
+31. Repository checkpoint/progress note.
+
+
+94. CLAUDE DEVELOPMENT REQUIREMENTS
+--------------------------------------------------------------------
+Claude must:
+
+1. Read the Project Bible and all finalized modules.
+2. Treat Module 26 as authoritative for AI orchestration.
+3. Inspect the existing repository before implementation.
+4. Reuse Modules 04, 05, 06, 08, 09, 10, 11, 12, 13, 15, 16, 21,
+   22, 24, 25, and 32 where applicable.
+5. Never duplicate business truth.
+6. Preserve tenant isolation.
+7. Implement provider abstraction.
+8. Implement secure secret management.
+9. Implement prompt versioning.
+10. Implement output validation.
+11. Implement tool authorization.
+12. Implement human approval for sensitive actions.
+13. Implement usage metering.
+14. Implement cost controls.
+15. Implement provider failure handling.
+16. Implement AI fallback behavior.
+17. Add prompt-injection tests.
+18. Add cross-tenant tests.
+19. Add unauthorized-tool tests.
+20. Add financial-action safety tests.
+21. Add agent-loop safety tests.
+22. Add provider-failure tests.
+23. Add quality evaluation tests.
+24. Run builds, static analysis, and automated tests.
+25. Preserve a concise repository checkpoint after validation.
+
+
+95. PRODUCTION READINESS
+--------------------------------------------------------------------
+Before production:
+
+- Confirm provider configuration.
+- Confirm secret management.
+- Confirm data policy.
+- Confirm tenant isolation.
+- Confirm prompt versions.
+- Confirm output validation.
+- Confirm business-rule validation.
+- Confirm package entitlements.
+- Confirm usage limits.
+- Confirm cost limits.
+- Confirm fallback behavior.
+- Confirm provider failure handling.
+- Confirm chatbot permissions.
+- Confirm tool permissions.
+- Confirm approval workflow.
+- Confirm audit logging.
+- Confirm privacy/retention.
+- Confirm monitoring.
+- Confirm security testing.
+- Confirm quality evaluation.
+- Confirm agent kill switch where applicable.
+
+
+96. FINAL ARCHITECTURAL RULES
+--------------------------------------------------------------------
+RULE 01:
+Module 26 owns AI orchestration and AI features.
+
+RULE 02:
+AI is assistive by default.
+
+RULE 03:
+Deterministic business rules always outrank AI output.
+
+RULE 04:
+AI must never become the source of truth for commerce transactions.
+
+RULE 05:
+Tenant context is mandatory for tenant-scoped AI operations.
+
+RULE 06:
+Cross-tenant AI context is prohibited.
+
+RULE 07:
+AI context must be minimized.
+
+RULE 08:
+Payment credentials and authentication secrets must never be sent to
+AI.
+
+RULE 09:
+Provider secrets must never be exposed to clients.
+
+RULE 10:
+Published prompts must be versioned and immutable.
+
+RULE 11:
+AI outputs must be validated before use.
+
+RULE 12:
+Generated HTML/content must be sanitized.
+
+RULE 13:
+Customer-provided content is untrusted input.
+
+RULE 14:
+Prompt injection must not override system/business instructions.
+
+RULE 15:
+Tool calling must use explicit allowlists.
+
+RULE 16:
+Every AI tool call must be authorization-checked.
+
+RULE 17:
+High-risk writes require explicit approval unless a separately
+approved deterministic automation exists.
+
+RULE 18:
+Financial actions require deterministic financial validation.
+
+RULE 19:
+AI must not issue unauthorized refunds.
+
+RULE 20:
+AI must not modify permissions or security configuration
+autonomously.
+
+RULE 21:
+AI agents must have step, time, token, cost, and tool limits.
+
+RULE 22:
+AI agents require a kill-switch capability.
+
+RULE 23:
+AI-triggered writes must be idempotent.
+
+RULE 24:
+AI provider failure must not stop core commerce.
+
+RULE 25:
+AI recommendations must respect inventory and visibility rules.
+
+RULE 26:
+AI search must enforce tenant and catalog permissions.
+
+RULE 27:
+Vector/embedding retrieval must preserve tenant isolation.
+
+RULE 28:
+AI cache keys must preserve tenant and context identity.
+
+RULE 29:
+AI usage must be metered.
+
+RULE 30:
+AI cost must be observable.
+
+RULE 31:
+Package entitlements are authoritative in Module 04.
+
+RULE 32:
+Analytics authority remains in Module 22.
+
+RULE 33:
+Security authority remains in Module 32.
+
+RULE 34:
+Notification delivery remains in Module 21.
+
+RULE 35:
+AI must enhance the platform without becoming a hidden second
+commerce authority.
+
+====================================================================
+END OF MODULE 26 — AI FEATURES
+====================================================================

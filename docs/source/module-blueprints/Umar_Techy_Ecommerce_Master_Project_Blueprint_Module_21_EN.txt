@@ -1,0 +1,1527 @@
+====================================================================
+UMAR TECHY E-COMMERCE PLATFORM
+MASTER PROJECT BLUEPRINT — MODULE 21
+NOTIFICATIONS & COMMUNICATION
+Technical Specification — English Only
+Version 1.0
+====================================================================
+
+1. MODULE PURPOSE
+--------------------------------------------------------------------
+Module 21 provides the Core Notifications and Communication Delivery
+Engine for the Umar Techy Multi-Tenant E-Commerce Platform.
+
+The module is responsible for technically delivering messages across
+supported communication channels while preserving tenant isolation,
+customer preferences, consent requirements, reliability, delivery
+tracking, provider abstraction, templates, retries, and auditability.
+
+Supported channels:
+
+- Email.
+- SMS.
+- WhatsApp.
+- Push notifications.
+- In-app notifications.
+- Storefront notifications.
+- Future Telegram/Messenger channels.
+- Future voice/call channels where legally and technically supported.
+
+Core principle:
+
+ONE CORE COMMUNICATION ENGINE
+        +
+MULTIPLE CHANNEL ADAPTERS
+        +
+TENANT-SCOPED CONFIGURATION
+        +
+CONSENT/PREFERENCE ENFORCEMENT
+        +
+RELIABLE ASYNCHRONOUS DELIVERY
+        +
+DELIVERY TRACKING
+
+Module 15 decides marketing audience, campaign intent, and
+automation logic.
+
+Module 21 decides how an authorized message is technically delivered.
+
+
+2. PRIMARY OBJECTIVES
+--------------------------------------------------------------------
+The module shall:
+
+1. Provide a centralized communication delivery architecture.
+2. Support multiple communication channels.
+3. Provide provider adapter abstraction.
+4. Support transactional notifications.
+5. Support marketing message delivery from Module 15.
+6. Enforce customer communication preferences.
+7. Enforce consent requirements.
+8. Support unsubscribe/suppression enforcement.
+9. Provide tenant-specific provider configurations.
+10. Provide reusable message templates.
+11. Support localization.
+12. Support queue-based asynchronous delivery.
+13. Support retries and backoff.
+14. Support idempotent delivery.
+15. Track message and delivery status.
+16. Process provider webhooks.
+17. Support provider failover foundations.
+18. Protect against abuse and messaging fraud.
+19. Provide cost/usage tracking.
+20. Support package-based communication limits.
+21. Provide observability and auditability.
+22. Provide comprehensive testing.
+
+
+3. ARCHITECTURAL POSITION
+--------------------------------------------------------------------
+Module 21 owns:
+
+- Communication channels.
+- Delivery providers.
+- Provider adapters.
+- Message orchestration.
+- Message templates.
+- Message rendering.
+- Delivery attempts.
+- Delivery status.
+- Provider callbacks/webhooks.
+- Retry policy.
+- Suppression enforcement.
+- Channel routing.
+- Tenant communication configuration.
+- Communication usage metering.
+- Delivery logs.
+- Communication health.
+
+Module 21 does NOT own:
+
+- Marketing campaign strategy — Module 15.
+- Customer identity/profile — Module 10.
+- Orders — Module 09.
+- Payments — Module 12.
+- Shipping — Module 13.
+- Storefront presentation — Module 05.
+- Theme — Module 17.
+- Domain ownership — Module 19.
+- Infrastructure execution — Module 20.
+- Billing ownership — Module 29.
+- Security/compliance policy — Module 32.
+
+Those modules remain authoritative.
+
+
+4. COMMUNICATION CHANNELS
+--------------------------------------------------------------------
+Initial channels:
+
+EMAIL
+SMS
+WHATSAPP
+PUSH
+IN_APP
+STOREFRONT
+
+Future:
+
+TELEGRAM
+MESSENGER
+VOICE
+OTHER_PROVIDER_CHANNELS
+
+Each channel must use a common delivery abstraction.
+
+
+5. MESSAGE TYPES
+--------------------------------------------------------------------
+Message categories:
+
+TRANSACTIONAL
+MARKETING
+SYSTEM
+SECURITY
+ADMINISTRATIVE
+
+Examples:
+
+Transactional:
+- Order confirmation.
+- Payment confirmation.
+- Shipment update.
+- Delivery update.
+- Refund confirmation.
+- Password reset.
+- Email verification.
+
+Marketing:
+- Promotional campaign.
+- Coupon.
+- Product launch.
+- Win-back.
+- Abandoned cart.
+
+System:
+- Backup result.
+- Infrastructure alert.
+- Domain warning.
+
+Security:
+- New login.
+- Password change.
+- 2FA event.
+
+Marketing communication must remain separate from mandatory
+transactional communication.
+
+
+6. MESSAGE ORCHESTRATION
+--------------------------------------------------------------------
+General flow:
+
+Business Event
+→ Determine Message Type
+→ Resolve Recipient
+→ Resolve Tenant
+→ Check Eligibility
+→ Check Consent/Preference
+→ Resolve Template
+→ Resolve Locale
+→ Render Message
+→ Select Channel/Provider
+→ Queue Delivery
+→ Send
+→ Receive Provider Result
+→ Update Delivery State
+→ Emit Event
+→ Record Analytics/Audit
+
+The system must not send messages before required authorization and
+eligibility checks.
+
+
+7. RECIPIENT RESOLUTION
+--------------------------------------------------------------------
+Recipients may include:
+
+- Customer.
+- Store Owner.
+- Store Staff.
+- Platform Admin.
+- Support Staff.
+- External operational contact.
+
+Recipient resolution must use authoritative identity data.
+
+Never trust arbitrary client-provided destination addresses for
+sensitive messages without validation.
+
+
+8. CUSTOMER CONTACT DATA
+--------------------------------------------------------------------
+Supported destination types:
+
+- Email address.
+- Phone number.
+- WhatsApp-capable phone number.
+- Push token.
+- In-app user identity.
+
+Normalization requirements:
+
+Email:
+- Lowercase domain.
+- Validate syntax.
+- Preserve appropriate local-part semantics.
+
+Phone:
+- Normalize to international format.
+- Validate country/number format.
+- Store country context where necessary.
+
+Push:
+- Token validation.
+- Device/app association.
+- Revocation handling.
+
+
+9. CONSENT & PREFERENCE ENFORCEMENT
+--------------------------------------------------------------------
+Before marketing delivery:
+
+1. Confirm recipient eligibility.
+2. Confirm channel consent where required.
+3. Confirm store-level subscription.
+4. Check global suppression.
+5. Check channel preference.
+6. Check frequency cap.
+7. Check legal/region restrictions where configured.
+
+Transactional messages may follow different rules where legally
+required.
+
+Module 10 remains authoritative for customer preferences and consent
+history.
+
+
+10. SUPPRESSION SYSTEM
+--------------------------------------------------------------------
+Support:
+
+- Global unsubscribe.
+- Channel unsubscribe.
+- Email suppression.
+- SMS suppression.
+- WhatsApp suppression.
+- Push suppression.
+- Hard bounce suppression.
+- Complaint suppression.
+- Invalid destination suppression.
+- Manual suppression.
+
+Suppression checks must occur immediately before delivery where
+practical, not only when a campaign is created.
+
+
+11. FREQUENCY LIMITS
+--------------------------------------------------------------------
+Support configurable limits:
+
+- Messages per hour.
+- Messages per day.
+- Messages per week.
+- Channel-specific limits.
+- Campaign-specific limits.
+- Customer-specific limits.
+
+Transactional/security messages may use separate rules.
+
+
+12. MESSAGE TEMPLATES
+--------------------------------------------------------------------
+Templates must support:
+
+- Subject.
+- Preheader.
+- Body.
+- Plain text.
+- HTML.
+- Variables.
+- Conditional sections.
+- Locale.
+- Version.
+- Channel.
+- Message type.
+
+Templates must be versioned.
+
+Published template versions should be immutable.
+
+
+13. TEMPLATE VARIABLES
+--------------------------------------------------------------------
+Supported variable examples:
+
+{{customer.first_name}}
+{{store.name}}
+{{order.number}}
+{{order.total}}
+{{order.status}}
+{{payment.status}}
+{{shipment.tracking_number}}
+{{shipment.status}}
+{{product.name}}
+{{coupon.code}}
+{{support.contact}}
+
+Variable resolution must use an allowlisted schema.
+
+Arbitrary object traversal must be prohibited.
+
+
+14. TEMPLATE SECURITY
+--------------------------------------------------------------------
+Templates must protect against:
+
+- XSS.
+- HTML injection.
+- Template injection.
+- SSRF through dynamic URLs.
+- Malicious external resources.
+
+HTML email templates must be sanitized/validated according to the
+supported email rendering architecture.
+
+User-generated content must be encoded appropriately.
+
+
+15. LOCALIZATION
+--------------------------------------------------------------------
+Messages should support:
+
+- Store default locale.
+- Customer preferred locale.
+- Channel-specific locale.
+- Fallback locale.
+
+Localization must support:
+
+- Urdu.
+- English.
+- Future languages.
+
+RTL-aware rendering is required for supported RTL languages.
+
+
+16. EMAIL DELIVERY
+--------------------------------------------------------------------
+Email capabilities:
+
+- SMTP adapter foundation.
+- Transactional email provider adapter.
+- Marketing provider adapter.
+- HTML email.
+- Plain text.
+- Attachments where authorized.
+- Reply-to.
+- From address.
+- Sender name.
+- Tracking where legally/configurably allowed.
+
+Email provider configuration must be tenant-aware.
+
+
+17. EMAIL DOMAIN / SENDER VALIDATION
+--------------------------------------------------------------------
+Support:
+
+- Sender identity.
+- From domain.
+- Reply-to.
+- SPF/DKIM/DMARC readiness.
+- Domain verification integration with Module 19.
+
+The platform must distinguish:
+
+- Umar Techy sender domain.
+- Tenant-owned sender domain.
+
+Unverified sender identities must not be used in production when
+provider policy requires verification.
+
+
+18. SMS DELIVERY
+--------------------------------------------------------------------
+SMS capabilities:
+
+- Provider adapter.
+- Sender ID where supported.
+- Message length handling.
+- Unicode/RTL support.
+- Delivery reports.
+- Retry policy.
+- Country restrictions.
+
+SMS content should be validated for provider limitations.
+
+
+19. WHATSAPP DELIVERY
+--------------------------------------------------------------------
+WhatsApp capabilities:
+
+- Provider adapter.
+- Approved template support.
+- Template variables.
+- Session/conversation rules according to provider requirements.
+- Delivery status.
+- Read status where available.
+- Media message foundation.
+- Opt-out enforcement.
+
+Provider-specific policy must remain behind the adapter.
+
+
+20. PUSH NOTIFICATIONS
+--------------------------------------------------------------------
+Support:
+
+- Web push.
+- PWA push foundation.
+- Mobile push foundation.
+- Device tokens.
+- Topic/segment targeting where authorized.
+- Deep links.
+- Notification actions.
+
+Push tokens must be revocable and tenant-safe.
+
+
+21. IN-APP NOTIFICATIONS
+--------------------------------------------------------------------
+Support:
+
+- Notification center.
+- Unread count.
+- Read/unread state.
+- Priority.
+- Expiration.
+- Action links.
+- Grouping.
+
+In-app notifications should be lightweight and cache-friendly.
+
+
+22. STOREFRONT NOTIFICATIONS
+--------------------------------------------------------------------
+Support UI messages such as:
+
+- Announcement.
+- Maintenance notice.
+- Order status banner.
+- Shipping notice.
+- Promotional message.
+
+Storefront presentation is rendered by Module 05/17.
+
+Module 21 owns message delivery/state, not visual theme implementation.
+
+
+23. TRANSACTIONAL NOTIFICATION EVENTS
+--------------------------------------------------------------------
+Potential events:
+
+UserRegistered
+EmailVerificationRequested
+PasswordResetRequested
+PasswordChanged
+OrderCreated
+OrderConfirmed
+PaymentReceived
+PaymentFailed
+OrderCancelled
+OrderShipped
+OrderDelivered
+ReturnRequested
+RefundIssued
+CustomerBlocked
+DomainVerified
+DomainExpiring
+SubscriptionExpiring
+SubscriptionPaymentFailed
+
+The authoritative business module must emit the event.
+
+
+24. MARKETING DELIVERY INTEGRATION
+--------------------------------------------------------------------
+Module 15 may submit approved communication jobs.
+
+Module 21 must:
+
+- Validate channel.
+- Check suppression.
+- Check consent.
+- Resolve provider.
+- Render approved template.
+- Queue message.
+- Deliver.
+- Track result.
+
+Module 21 must not invent campaign audiences or marketing strategy.
+
+
+25. MESSAGE PRIORITY
+--------------------------------------------------------------------
+Priority levels:
+
+CRITICAL
+HIGH
+NORMAL
+LOW
+BULK
+
+Examples:
+
+Security → CRITICAL/HIGH.
+Order confirmation → HIGH.
+Marketing campaign → BULK.
+
+Priority affects queue scheduling and retry policy.
+
+
+26. QUEUE ARCHITECTURE
+--------------------------------------------------------------------
+Communication delivery must be asynchronous where appropriate.
+
+Queue categories may include:
+
+- Transactional.
+- Security.
+- Marketing.
+- Bulk.
+- Provider webhook.
+- Retry.
+- Scheduled.
+
+Critical messages must not wait behind large bulk campaigns.
+
+
+27. DELIVERY STATES
+--------------------------------------------------------------------
+Message lifecycle:
+
+CREATED
+QUEUED
+PROCESSING
+SENT
+DELIVERED
+FAILED
+RETRY_PENDING
+BOUNCED
+REJECTED
+SUPPRESSED
+CANCELLED
+EXPIRED
+
+Provider-specific states must be normalized.
+
+
+28. DELIVERY ATTEMPTS
+--------------------------------------------------------------------
+Each message may have multiple delivery attempts.
+
+Track:
+
+- Attempt number.
+- Provider.
+- Timestamp.
+- Request reference.
+- Provider message ID.
+- Result.
+- Failure code.
+- Failure category.
+- Retry eligibility.
+
+Sensitive message content should not be stored unnecessarily in logs.
+
+
+29. RETRY POLICY
+--------------------------------------------------------------------
+Retries should use:
+
+- Exponential backoff.
+- Maximum attempts.
+- Provider-aware retryability.
+- Jitter where appropriate.
+- Dead-letter handling.
+
+Do not retry permanent failures indefinitely.
+
+
+30. IDEMPOTENCY
+--------------------------------------------------------------------
+Every deliverable message should have an idempotency key.
+
+Duplicate prevention must cover:
+
+- Event retries.
+- Queue retries.
+- Worker restarts.
+- Provider timeouts.
+- Webhook duplication.
+
+A timeout after provider submission must not automatically create a
+duplicate message without reconciliation.
+
+
+31. PROVIDER ABSTRACTION
+--------------------------------------------------------------------
+Provider adapter capabilities may include:
+
+send
+validate
+get_status
+cancel
+template_check
+verify_sender
+handle_webhook
+get_delivery_report
+
+Each provider declares supported capabilities.
+
+
+32. PROVIDER ROUTING
+--------------------------------------------------------------------
+Routing may consider:
+
+- Channel.
+- Tenant.
+- Country.
+- Message type.
+- Provider capability.
+- Provider health.
+- Cost.
+- Package entitlement.
+- Sender verification.
+- Failover policy.
+
+Provider selection must be deterministic and auditable.
+
+
+33. PROVIDER FAILOVER
+--------------------------------------------------------------------
+Future support may use:
+
+Primary Provider
+→ Failure Classification
+→ Retry or Secondary Provider
+→ Delivery Reconciliation
+
+Failover must not duplicate a successfully submitted message.
+
+Only safe failure classes should trigger automatic failover.
+
+
+34. PROVIDER HEALTH
+--------------------------------------------------------------------
+Track:
+
+- Availability.
+- Latency.
+- Failure rate.
+- Rate-limit responses.
+- Authentication failures.
+- Delivery success.
+- Webhook health.
+
+Module 24 may consume provider health data.
+
+
+35. WEBHOOK PROCESSING
+--------------------------------------------------------------------
+Providers may send:
+
+- Sent.
+- Delivered.
+- Read.
+- Failed.
+- Bounced.
+- Rejected.
+- Complaint.
+- Unsubscribe.
+
+Webhook requirements:
+
+- Signature validation.
+- Replay protection.
+- Idempotency.
+- Timestamp validation.
+- Provider event ID tracking.
+- Tenant mapping validation.
+
+
+36. WEBHOOK SECURITY
+--------------------------------------------------------------------
+Never trust webhook payloads before:
+
+- Signature verification.
+- Provider validation.
+- Event ID validation.
+- Timestamp/replay checks.
+- Tenant/provider-account mapping.
+
+Webhook processing must not permit cross-tenant state updates.
+
+
+37. TEMPLATE APPROVAL
+--------------------------------------------------------------------
+Certain channels, especially WhatsApp, may require provider-approved
+templates.
+
+Template lifecycle:
+
+DRAFT
+→ SUBMITTED
+→ APPROVED
+→ PUBLISHED
+→ DEPRECATED
+→ ARCHIVED
+
+Provider approval state must be tracked separately from platform
+publishing state.
+
+
+38. ATTACHMENTS & MEDIA
+--------------------------------------------------------------------
+Support controlled attachments for eligible channels.
+
+Requirements:
+
+- File type validation.
+- Size limits.
+- Virus/malware scanning foundation.
+- Tenant isolation.
+- Signed URLs.
+- Expiration.
+- Provider compatibility.
+
+Never expose private customer files through public communication URLs.
+
+
+39. MESSAGE LINKS
+--------------------------------------------------------------------
+Links should support:
+
+- Tenant-aware storefront URLs.
+- Secure signed action URLs where required.
+- Expiring tokens.
+- Tracking parameters where authorized.
+
+Security-sensitive actions must require server-side authentication
+and authorization even when a message link is signed.
+
+
+40. COMMUNICATION COST METERING
+--------------------------------------------------------------------
+Track:
+
+- Message count.
+- Channel.
+- Provider.
+- Destination region.
+- Provider cost where available.
+- Estimated cost.
+- Package allowance.
+- Overage.
+
+Cost data may feed Module 29 billing and Module 22 reporting.
+
+
+41. PACKAGE ENTITLEMENTS
+--------------------------------------------------------------------
+Module 04 remains authoritative.
+
+Possible entitlement keys:
+
+notifications.email
+notifications.sms
+notifications.whatsapp
+notifications.push
+notifications.in_app
+notifications.advanced_templates
+notifications.custom_sender
+notifications.multiple_providers
+notifications.provider_failover
+notifications.bulk
+notifications.advanced_analytics
+
+Possible limits:
+
+- Emails/month.
+- SMS/month.
+- WhatsApp messages/month.
+- Push notifications/month.
+- Bulk messages.
+- Templates.
+- Providers.
+- Attachments.
+- Message retention.
+- API notification requests.
+
+
+42. API REQUIREMENTS
+--------------------------------------------------------------------
+Example endpoint families:
+
+/api/stores/{storeId}/notifications
+/api/stores/{storeId}/notifications/templates
+/api/stores/{storeId}/notifications/preferences
+/api/stores/{storeId}/notifications/providers
+/api/stores/{storeId}/notifications/deliveries
+/api/stores/{storeId}/notifications/test
+/api/stores/{storeId}/notifications/usage
+
+Provider webhook endpoints should use dedicated secure routes and
+provider signature verification.
+
+
+43. DATA MODEL — HIGH LEVEL
+--------------------------------------------------------------------
+Core entities may include:
+
+CommunicationChannel
+CommunicationProvider
+ProviderAccount
+ProviderCapability
+CommunicationTemplate
+TemplateVersion
+TemplateVariable
+Message
+MessageRecipient
+MessageContent
+Delivery
+DeliveryAttempt
+DeliveryProviderReference
+DeliveryWebhookEvent
+Suppression
+ChannelPreference
+ConsentReference
+FrequencyRule
+MessageSchedule
+MessageAttachment
+MessageLink
+ProviderHealth
+CommunicationUsage
+CommunicationQuota
+CommunicationFailure
+CommunicationOutboxEvent
+SenderIdentity
+SenderVerification
+CommunicationAuditReference
+
+Tenant-owned entities must contain or inherit tenant context.
+
+
+44. DATA INTEGRITY RULES
+--------------------------------------------------------------------
+1. Tenant provider configurations are isolated.
+2. Provider secrets are encrypted.
+3. Published templates are immutable.
+4. Message type must be explicit.
+5. Marketing delivery must pass consent/suppression checks.
+6. Transactional delivery must remain separate from marketing
+   unsubscribe logic where legally required.
+7. Every delivery must be idempotent.
+8. Webhooks must be verified.
+9. Provider message IDs must be unique within provider scope.
+10. Delivery state transitions must be valid.
+11. Cross-tenant recipient/provider mappings are prohibited.
+12. Sensitive message content must not be unnecessarily retained.
+
+
+45. SECURITY REQUIREMENTS
+--------------------------------------------------------------------
+Mandatory controls:
+
+- Tenant isolation.
+- RBAC.
+- Least privilege.
+- Secret encryption.
+- Provider credential isolation.
+- Webhook signature validation.
+- Replay protection.
+- Template sanitization.
+- XSS protection.
+- Secure links.
+- Rate limiting.
+- Abuse prevention.
+- Destination validation.
+- PII minimization.
+- Audit logging.
+- No secrets in logs.
+- No raw provider credentials in client applications.
+
+
+46. ANTI-ABUSE CONTROLS
+--------------------------------------------------------------------
+Protect against:
+
+- Spam.
+- Message bombing.
+- OTP abuse.
+- Fake account messaging.
+- Bulk abuse.
+- Provider quota exhaustion.
+- SMS pumping.
+- WhatsApp abuse.
+- Email reputation damage.
+
+Controls:
+
+- Rate limits.
+- Per-user limits.
+- Per-tenant limits.
+- Verification requirements.
+- Cooldowns.
+- Anomaly detection foundation.
+- Provider limits.
+- Manual review for suspicious bulk activity.
+
+
+47. EMAIL REPUTATION
+--------------------------------------------------------------------
+Support operational controls for:
+
+- Bounce monitoring.
+- Complaint monitoring.
+- Suppression.
+- Sender reputation.
+- Domain reputation.
+- Provider reputation.
+
+High bounce/complaint patterns should trigger warnings and
+potential delivery restrictions.
+
+
+48. SMS / WHATSAPP REPUTATION
+--------------------------------------------------------------------
+Track provider-specific failures and blocks.
+
+The system should be able to:
+
+- Pause risky campaigns.
+- Suppress repeatedly failed destinations.
+- Alert administrators.
+- Record provider rejection reasons.
+
+
+49. PRIVACY & RETENTION
+--------------------------------------------------------------------
+Message data retention must be configurable.
+
+Separate:
+
+- Delivery metadata.
+- Message content.
+- Provider metadata.
+- Audit data.
+
+Where possible, minimize stored message content.
+
+Privacy requests must integrate with Module 10 and Module 32.
+
+
+50. CUSTOMER COMMUNICATION CENTER
+--------------------------------------------------------------------
+Customers may have access to:
+
+- Communication preferences.
+- Channel settings.
+- Unsubscribe controls.
+- Notification history.
+- Device management.
+- Marketing subscriptions.
+
+Transactional/security communications should remain clearly
+distinguished.
+
+
+51. ADMIN COMMUNICATION CENTER
+--------------------------------------------------------------------
+Store administrators should be able to view:
+
+- Templates.
+- Delivery status.
+- Failed messages.
+- Suppressions.
+- Provider health.
+- Usage.
+- Channel configuration.
+- Communication logs according to permission.
+
+Sensitive content should be masked where appropriate.
+
+
+52. TEST / SANDBOX MODE
+--------------------------------------------------------------------
+Providers should support:
+
+SANDBOX
+and
+PRODUCTION
+
+Testing must never accidentally send real production messages.
+
+Test recipients and sandbox credentials must be isolated.
+
+
+53. OBSERVABILITY
+--------------------------------------------------------------------
+Track:
+
+- Queue depth.
+- Send latency.
+- Delivery rate.
+- Failure rate.
+- Bounce rate.
+- Complaint rate.
+- Provider latency.
+- Provider error rate.
+- Retry count.
+- Suppression count.
+- Cost.
+- Usage.
+
+Logs should include correlation IDs.
+
+
+54. ALERTING
+--------------------------------------------------------------------
+Alerts may include:
+
+- Provider outage.
+- High failure rate.
+- High bounce rate.
+- High complaint rate.
+- Queue backlog.
+- Credential failure.
+- Webhook failure.
+- Quota exhaustion.
+- Sender verification failure.
+- Suspicious messaging activity.
+
+
+55. PERFORMANCE
+--------------------------------------------------------------------
+The system must support high-volume communication through:
+
+- Queues.
+- Batching.
+- Provider connection reuse.
+- Template caching.
+- Rate-aware workers.
+- Parallel workers where safe.
+- Backpressure.
+
+Bulk marketing must not degrade critical transactional delivery.
+
+
+56. BACKPRESSURE
+--------------------------------------------------------------------
+When provider/platform capacity is reached:
+
+- Slow bulk delivery.
+- Preserve critical priority.
+- Queue safely.
+- Respect provider rate limits.
+- Avoid uncontrolled retries.
+- Record delayed state.
+
+
+57. DISASTER RECOVERY
+--------------------------------------------------------------------
+Communication infrastructure should recover safely after:
+
+- Queue outage.
+- Worker outage.
+- Provider outage.
+- Database outage.
+- Cache outage.
+
+Recovery must avoid duplicate messages.
+
+Pending messages should reconcile using idempotency and provider
+references.
+
+
+58. BACKUP
+--------------------------------------------------------------------
+Module 23 may back up:
+
+- Templates.
+- Template versions.
+- Provider configuration metadata.
+- Sender identity metadata.
+- Routing rules.
+- Communication preferences references.
+- Delivery metadata as permitted.
+
+Secrets must be restored through secure secret management rather than
+plain database backup.
+
+
+59. PERMISSIONS
+--------------------------------------------------------------------
+Example permissions:
+
+notifications.view
+notifications.send
+notifications.templates.view
+notifications.templates.manage
+notifications.providers.view
+notifications.providers.manage
+notifications.deliveries.view
+notifications.usage.view
+notifications.suppression.manage
+notifications.test
+notifications.bulk_send
+notifications.advanced.manage
+
+Bulk sending and provider credential management require elevated
+permissions.
+
+
+60. AUDIT REQUIREMENTS
+--------------------------------------------------------------------
+Audit:
+
+- Provider configuration changes.
+- Sender changes.
+- Template changes.
+- Template publication.
+- Bulk-send actions.
+- Suppression changes.
+- Test-send actions.
+- Channel configuration.
+- Routing changes.
+- Provider failover changes.
+- Manual resend actions.
+
+Audit should include actor, tenant, action, target, timestamp,
+result, and correlation ID.
+
+
+61. EVENTS & OUTBOX
+--------------------------------------------------------------------
+Important events:
+
+MessageCreated
+MessageQueued
+MessageSent
+MessageDelivered
+MessageFailed
+MessageSuppressed
+MessageBounced
+MessageRejected
+MessageRetried
+ProviderHealthChanged
+TemplatePublished
+TemplateDeprecated
+SenderVerified
+CommunicationQuotaReached
+
+Events must follow the platform outbox pattern.
+
+
+62. INTEGRATION WITH OTHER MODULES
+--------------------------------------------------------------------
+Module 09:
+Order and fulfillment events.
+
+Module 10:
+Customer contact, consent, preferences, suppression.
+
+Module 12:
+Payment events.
+
+Module 13:
+Shipping events.
+
+Module 15:
+Marketing campaigns and automation.
+
+Module 16:
+Content/template links and tenant URLs.
+
+Module 19:
+Domain/sender-domain verification.
+
+Module 20:
+Queues, workers, infrastructure.
+
+Module 22:
+Communication analytics.
+
+Module 24:
+Provider/platform health.
+
+Module 29:
+Usage/cost/billing.
+
+Module 32:
+Security/compliance.
+
+Module 33:
+Communication configuration defaults.
+
+
+63. TESTING REQUIREMENTS
+--------------------------------------------------------------------
+Functional tests:
+
+- Email delivery.
+- SMS delivery.
+- WhatsApp delivery.
+- Push delivery.
+- In-app notifications.
+- Template rendering.
+- Localization.
+- RTL rendering.
+- Consent enforcement.
+- Suppression.
+- Frequency caps.
+- Queueing.
+- Retry.
+- Idempotency.
+- Webhooks.
+- Provider routing.
+- Failover.
+- Usage metering.
+
+Security tests:
+
+- Cross-tenant provider access.
+- Secret leakage.
+- Webhook spoofing.
+- Replay attack.
+- XSS/template injection.
+- Open redirect through message links.
+- Unauthorized bulk send.
+- Provider credential access.
+- PII exposure.
+
+Failure tests:
+
+- Provider timeout.
+- Provider outage.
+- Queue outage.
+- Worker restart.
+- Database outage.
+- Duplicate webhook.
+- Duplicate event.
+- Unknown delivery state.
+- Provider submission timeout.
+
+Performance tests:
+
+- High-volume bulk campaign.
+- Transactional traffic during bulk send.
+- Queue backlog.
+- Rate-limit handling.
+- Provider throttling.
+- Large template rendering.
+
+
+64. ACCEPTANCE CRITERIA
+--------------------------------------------------------------------
+Module 21 is complete only when:
+
+1. Core communication engine exists.
+2. Email channel works.
+3. SMS channel works.
+4. WhatsApp channel foundation works.
+5. Push foundation works.
+6. In-app notifications work.
+7. Provider abstraction works.
+8. Tenant-specific provider configuration works.
+9. Templates work.
+10. Localization works.
+11. Consent/preference enforcement works.
+12. Suppression works.
+13. Frequency caps work.
+14. Queue delivery works.
+15. Retry works.
+16. Idempotency works.
+17. Webhooks work securely.
+18. Delivery states are tracked.
+19. Provider health is tracked.
+20. Provider failover foundation works.
+21. Usage/cost metering works.
+22. Package entitlements work.
+23. Anti-abuse controls work.
+24. Audit logging works.
+25. API works securely.
+26. Backup/restore compatibility works.
+27. Security tests pass.
+28. Failure tests pass.
+29. Performance tests pass.
+30. Build and deployment checks pass.
+
+
+65. REQUIRED FOLLOW-UP ARTIFACTS
+--------------------------------------------------------------------
+After implementation, create and maintain:
+
+1. Module 21 implementation checklist.
+2. Communication architecture specification.
+3. Provider adapter specification.
+4. Email provider specification.
+5. SMS provider specification.
+6. WhatsApp provider specification.
+7. Push notification specification.
+8. In-app notification specification.
+9. Template schema specification.
+10. Template variable specification.
+11. Consent/suppression specification.
+12. Frequency-control specification.
+13. Queue/worker specification.
+14. Retry/idempotency specification.
+15. Webhook security specification.
+16. Provider failover specification.
+17. Communication usage/cost specification.
+18. Permission matrix.
+19. Package entitlement matrix.
+20. API contract.
+21. Event/outbox specification.
+22. Security audit checklist.
+23. Privacy/retention specification.
+24. Automated test matrix.
+25. Provider sandbox test plan.
+26. Production messaging checklist.
+27. Module 21 completion report.
+28. Repository checkpoint/progress note.
+
+
+66. CLAUDE DEVELOPMENT REQUIREMENTS
+--------------------------------------------------------------------
+Claude must:
+
+1. Read the Project Bible and all finalized module blueprints.
+2. Treat Module 21 as authoritative for technical communication
+   delivery.
+3. Inspect the repository before implementation.
+4. Reuse existing queue/provider abstractions where available.
+5. Preserve strict tenant isolation.
+6. Never commit provider secrets.
+7. Never send production messages during automated tests.
+8. Implement sandbox mode.
+9. Add automated tests for every enabled channel.
+10. Test consent and suppression.
+11. Test idempotency.
+12. Test provider callbacks.
+13. Test retry/failure behavior.
+14. Test high-volume queues.
+15. Test priority isolation between transactional and bulk traffic.
+16. Test webhook security.
+17. Test provider credential protection.
+18. Test multilingual/RTL messages.
+19. Test package limits.
+20. Test usage metering.
+21. Run builds, tests, static analysis, and security checks.
+22. Record all fixes.
+23. Commit only after validation.
+24. Push only according to the established workflow.
+25. Preserve a concise repository checkpoint after the module.
+
+
+67. PRODUCTION READINESS
+--------------------------------------------------------------------
+Before production:
+
+- Confirm provider credentials are secure.
+- Confirm sandbox/production separation.
+- Confirm sender verification.
+- Confirm email domain authentication.
+- Confirm consent enforcement.
+- Confirm suppression.
+- Confirm unsubscribe.
+- Confirm provider webhook security.
+- Confirm idempotency.
+- Confirm retry limits.
+- Confirm queue priorities.
+- Confirm bulk isolation.
+- Confirm rate limits.
+- Confirm anti-abuse controls.
+- Confirm delivery monitoring.
+- Confirm provider health monitoring.
+- Confirm usage metering.
+- Confirm package entitlements.
+- Confirm audit logs.
+- Confirm privacy/retention.
+- Confirm backups.
+- Confirm representative end-to-end transactional messages.
+- Confirm no real messages are sent by test environments.
+
+
+68. FINAL ARCHITECTURAL RULES
+--------------------------------------------------------------------
+RULE 01:
+Module 21 owns technical communication delivery.
+
+RULE 02:
+Module 15 owns marketing strategy, audience, campaign, and automation
+intent.
+
+RULE 03:
+Transactional and marketing communications must remain logically
+separate.
+
+RULE 04:
+Every tenant provider configuration is isolated.
+
+RULE 05:
+Provider secrets must never be exposed to clients or logs.
+
+RULE 06:
+Every delivery must be idempotent.
+
+RULE 07:
+Provider webhook events must be authenticated and replay-protected.
+
+RULE 08:
+Published templates are immutable.
+
+RULE 09:
+Template variables must use an allowlisted schema.
+
+RULE 10:
+Rich message content must be sanitized.
+
+RULE 11:
+Marketing delivery must respect consent and suppression.
+
+RULE 12:
+Transactional/security communications must not be accidentally
+blocked by ordinary marketing unsubscribe rules.
+
+RULE 13:
+Bulk traffic must never starve critical transactional traffic.
+
+RULE 14:
+Provider rate limits must be respected.
+
+RULE 15:
+Permanent failures must not be retried indefinitely.
+
+RULE 16:
+Provider timeouts must be reconciled before duplicate delivery is
+attempted.
+
+RULE 17:
+Provider failover must not create duplicate successful messages.
+
+RULE 18:
+Every message must retain tenant context.
+
+RULE 19:
+Communication cache and queue data must preserve tenant identity.
+
+RULE 20:
+Test/sandbox environments must never accidentally send production
+messages.
+
+RULE 21:
+Sensitive message content should be retained only when necessary.
+
+RULE 22:
+Communication links must not bypass normal authorization.
+
+RULE 23:
+Phone/email normalization must be deterministic.
+
+RULE 24:
+Package entitlements control advanced communication capabilities.
+
+RULE 25:
+Infrastructure execution belongs to Module 20.
+
+RULE 26:
+Customer consent/preferences belong to Module 10.
+
+RULE 27:
+Communication analytics belong to Module 22.
+
+RULE 28:
+Communication billing/usage monetization integrates with Module 29.
+
+RULE 29:
+Security and compliance policy belongs to Module 32.
+
+RULE 30:
+Module 21 must integrate through explicit APIs, adapters, events,
+queues, schemas, and authoritative ownership boundaries.
+
+====================================================================
+END OF MODULE 21 — NOTIFICATIONS & COMMUNICATION
+====================================================================

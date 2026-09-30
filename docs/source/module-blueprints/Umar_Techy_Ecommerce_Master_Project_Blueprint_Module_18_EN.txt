@@ -1,0 +1,1476 @@
+====================================================================
+UMAR TECHY E-COMMERCE PLATFORM
+MASTER PROJECT BLUEPRINT — MODULE 18
+ANIMATION & INTERACTION SYSTEM
+Technical Specification — English Only
+Version 1.0
+====================================================================
+
+1. MODULE PURPOSE
+--------------------------------------------------------------------
+Module 18 provides the Core Animation, Motion, Transition, Gesture,
+Interaction, and Micro-Interaction System for the Umar Techy
+Multi-Tenant E-Commerce Platform.
+
+The module provides a reusable, configuration-driven motion engine
+that allows each store to have a controlled interaction style while
+remaining on the same core platform and codebase.
+
+The system must support:
+
+- Page transitions.
+- Component transitions.
+- Hover interactions.
+- Press interactions.
+- Scroll-based effects.
+- Reveal animations.
+- Product interactions.
+- Cart feedback.
+- Loading states.
+- Skeleton transitions.
+- Modal/drawer transitions.
+- Toast notifications.
+- Micro-interactions.
+- Gesture foundations.
+- Reduced-motion support.
+- Device-aware behavior.
+- Performance safeguards.
+- Theme-level animation profiles.
+- Store-specific animation configuration.
+- Package-based animation entitlements.
+
+Core principle:
+
+ONE CORE MOTION ENGINE
+        +
+CONFIGURATION-DRIVEN ANIMATION PROFILES
+        +
+THEME INTEGRATION
+        +
+TENANT-SPECIFIC SETTINGS
+        +
+PERFORMANCE & ACCESSIBILITY SAFEGUARDS
+
+No tenant-specific animation source-code forks are permitted.
+
+
+2. PRIMARY OBJECTIVES
+--------------------------------------------------------------------
+The module shall:
+
+1. Provide a reusable animation and interaction architecture.
+2. Define centralized motion tokens.
+3. Support configurable animation profiles.
+4. Integrate with Module 17 Theme, Branding & Design System.
+5. Provide consistent component motion behavior.
+6. Support storefront page transitions.
+7. Support micro-interactions for commerce actions.
+8. Support reduced-motion accessibility.
+9. Respect device and performance capabilities.
+10. Prevent animation from blocking business operations.
+11. Support mobile and desktop interaction differences.
+12. Provide safe scroll/reveal animation foundations.
+13. Provide gesture foundations without coupling to business logic.
+14. Support package-based animation capabilities.
+15. Support preview and publishing of animation configuration.
+16. Preserve previous animation configuration for rollback.
+17. Prevent cross-tenant configuration leakage.
+18. Provide observability and performance diagnostics.
+19. Support future theme marketplace compatibility.
+20. Provide comprehensive automated testing.
+
+
+3. ARCHITECTURAL POSITION
+--------------------------------------------------------------------
+Module 18 owns:
+
+- Motion tokens.
+- Animation profiles.
+- Transition definitions.
+- Interaction definitions.
+- Micro-interaction definitions.
+- Component motion configuration.
+- Page transition configuration.
+- Scroll/reveal configuration.
+- Gesture configuration foundations.
+- Reduced-motion policy.
+- Device/performance adaptation rules.
+- Animation configuration versioning.
+- Animation preview/publish/rollback.
+
+Module 18 does NOT own:
+
+- Theme structure — Module 17.
+- Storefront pages — Module 05.
+- Product/catalog business logic — Module 06.
+- Cart/checkout business logic — Module 11.
+- Orders — Module 09.
+- Marketing campaigns — Module 15.
+- SEO/content — Module 16.
+- Domain — Module 19.
+- Hosting — Module 20.
+- Analytics ownership — Module 22.
+
+Other modules remain authoritative for their business domains.
+
+
+4. MOTION DESIGN PRINCIPLES
+--------------------------------------------------------------------
+The animation system must follow these principles:
+
+1. Purposeful.
+2. Fast.
+3. Consistent.
+4. Accessible.
+5. Interruptible.
+6. Performance-conscious.
+7. Device-aware.
+8. Progressive enhancement.
+9. Non-blocking.
+10. Reversible where practical.
+
+Animations must communicate:
+
+- State changes.
+- Hierarchy.
+- Continuity.
+- Feedback.
+- Focus.
+- Spatial relationships.
+
+Animations must not exist merely for visual decoration when they
+harm usability or performance.
+
+
+5. MOTION TOKEN SYSTEM
+--------------------------------------------------------------------
+Provide centralized motion tokens.
+
+Categories:
+
+- Duration.
+- Delay.
+- Easing.
+- Distance.
+- Scale.
+- Opacity.
+- Blur.
+- Spring parameters where supported.
+- Stagger.
+- Transition priority.
+
+Example semantic tokens:
+
+motion.duration.instant
+motion.duration.fast
+motion.duration.normal
+motion.duration.slow
+
+motion.ease.standard
+motion.ease.emphasized
+motion.ease.enter
+motion.ease.exit
+
+motion.distance.xs
+motion.distance.sm
+motion.distance.md
+motion.distance.lg
+
+Actual values must be centrally defined and theme-aware.
+
+
+6. DURATION SYSTEM
+--------------------------------------------------------------------
+Provide semantic duration presets such as:
+
+- Instant.
+- Very fast.
+- Fast.
+- Normal.
+- Slow.
+
+Typical guidance:
+
+Instant:
+Immediate state feedback.
+
+Fast:
+Button, hover, small UI changes.
+
+Normal:
+Cards, drawers, menus, standard transitions.
+
+Slow:
+Large visual transitions or deliberate hero effects.
+
+Exact timing values must be centrally controlled and performance
+tested.
+
+
+7. EASING SYSTEM
+--------------------------------------------------------------------
+Support semantic easing curves:
+
+- Linear.
+- Standard.
+- Ease-in.
+- Ease-out.
+- Ease-in-out.
+- Emphasized.
+- Spring foundation.
+
+Theme profiles may choose different curves.
+
+The system should avoid excessive bouncing or elastic behavior unless
+explicitly configured.
+
+
+8. ANIMATION PROFILES
+--------------------------------------------------------------------
+Provide reusable profiles such as:
+
+NONE
+MINIMAL
+STANDARD
+PREMIUM
+PLAYFUL
+CUSTOM
+
+Profile characteristics may define:
+
+- Page transitions.
+- Hover effects.
+- Button feedback.
+- Card interactions.
+- Image transitions.
+- Scroll reveals.
+- Modal transitions.
+- Toast transitions.
+- Loading animations.
+- Product feedback.
+- Stagger intensity.
+
+NONE must disable non-essential motion.
+
+MINIMAL should provide only useful state transitions.
+
+STANDARD should provide normal polished commerce interactions.
+
+PREMIUM may add enhanced but controlled visual effects.
+
+PLAYFUL may provide more expressive interactions where appropriate.
+
+Every profile must remain accessibility- and performance-safe.
+
+
+9. TENANT ANIMATION CONFIGURATION
+--------------------------------------------------------------------
+Each store may configure:
+
+- Active animation profile.
+- Motion intensity.
+- Transition speed.
+- Hover behavior.
+- Page transition behavior.
+- Scroll effects.
+- Product-card effects.
+- Button interactions.
+- Loading behavior.
+- Modal/drawer transitions.
+- Reduced-motion policy.
+- Mobile motion policy.
+
+Configuration must be:
+
+- Tenant-scoped.
+- Versioned.
+- Audited.
+- Previewable.
+- Publishable.
+- Rollback-capable.
+
+
+10. THEME INTEGRATION
+--------------------------------------------------------------------
+Module 17 selects and exposes the animation profile reference.
+
+Module 18 owns runtime motion behavior.
+
+Integration flow:
+
+Theme Selected
+→ Resolve Animation Profile
+→ Resolve Store Motion Overrides
+→ Resolve Device Context
+→ Resolve Accessibility Preference
+→ Resolve Performance Policy
+→ Execute Approved Motion
+
+Module 18 must not duplicate theme structure or business logic.
+
+
+11. PAGE TRANSITIONS
+--------------------------------------------------------------------
+Support optional page transitions such as:
+
+- Fade.
+- Fade + slide.
+- Scale/fade.
+- Shared-element foundation.
+- Crossfade.
+
+Rules:
+
+1. Page transitions must not delay navigation unnecessarily.
+2. They must be disabled or simplified on low-performance devices.
+3. Reduced-motion users must receive an appropriate alternative.
+4. Browser navigation/back/forward behavior must remain correct.
+5. Deep links must work without requiring an animation state.
+
+
+12. COMPONENT TRANSITIONS
+--------------------------------------------------------------------
+Reusable transitions may include:
+
+- Expand/collapse.
+- Show/hide.
+- Fade.
+- Slide.
+- Scale.
+- Height/width transition.
+- Drawer entry/exit.
+- Modal entry/exit.
+- Tooltip/popover transition.
+
+Transitions must handle:
+
+- Interruptions.
+- Rapid state changes.
+- Component unmounting.
+- Route changes.
+- Error states.
+
+
+13. HOVER INTERACTIONS
+--------------------------------------------------------------------
+Desktop-capable devices may support:
+
+- Product image swap.
+- Card elevation.
+- Button elevation.
+- Underline animation.
+- Icon movement.
+- Subtle scale.
+- Color transition.
+
+Hover interactions must not be the only way to discover functionality.
+
+Touch devices must not depend on hover behavior.
+
+
+14. PRESS / TAP FEEDBACK
+--------------------------------------------------------------------
+Interactive elements may support:
+
+- Scale-down feedback.
+- Ripple foundation.
+- Opacity change.
+- Icon feedback.
+- Loading transition.
+
+Feedback must be brief and must not alter business state incorrectly.
+
+Double-tap or repeated tap must not cause duplicate financial or
+order operations.
+
+
+15. PRODUCT CARD MOTION
+--------------------------------------------------------------------
+Product cards may support:
+
+- Image transition.
+- Hover elevation.
+- Wishlist feedback.
+- Add-to-cart feedback.
+- Quick-view transition.
+- Badge animation.
+
+Animation must not hide:
+
+- Product name.
+- Price.
+- Sale information.
+- Stock state.
+- Required actions.
+
+
+16. ADD-TO-CART FEEDBACK
+--------------------------------------------------------------------
+Support visual feedback such as:
+
+- Button state change.
+- Cart icon count transition.
+- Small confirmation animation.
+- Toast.
+- Product image movement foundation.
+
+Business operation remains owned by Module 11.
+
+The animation layer must respond only to confirmed UI/business
+events and must never imply a successful purchase before the
+authoritative operation succeeds.
+
+
+17. WISHLIST FEEDBACK
+--------------------------------------------------------------------
+Support:
+
+- Icon transition.
+- Favorite state animation.
+- Toast feedback.
+- Loading state.
+
+Animation must distinguish:
+
+- Request started.
+- Success.
+- Failure.
+
+Wishlist business logic remains outside Module 18.
+
+
+18. LOADING & SKELETON STATES
+--------------------------------------------------------------------
+Support:
+
+- Skeleton loading.
+- Shimmer foundation.
+- Spinner.
+- Progress indicator.
+- Button loading.
+- Image placeholder transition.
+
+Shimmer must be disabled or simplified under reduced-motion or
+performance constraints.
+
+Loading animation must never continue indefinitely after a resolved
+request.
+
+
+19. SUCCESS / ERROR FEEDBACK
+--------------------------------------------------------------------
+Support:
+
+Success:
+
+- Checkmark transition.
+- Toast.
+- Inline confirmation.
+
+Error:
+
+- Subtle shake foundation.
+- Error highlight.
+- Toast.
+- Inline state transition.
+
+Error animation must not be excessive or disorienting.
+
+Business status remains authoritative from the relevant module.
+
+
+20. MODAL / DRAWER ANIMATIONS
+--------------------------------------------------------------------
+Support:
+
+- Fade.
+- Slide.
+- Scale.
+- Backdrop transition.
+
+Requirements:
+
+- Focus management.
+- Keyboard support.
+- Escape behavior.
+- Screen-reader compatibility.
+- Reduced-motion alternative.
+- Mobile-safe interaction.
+
+
+21. TOAST / NOTIFICATION ANIMATIONS
+--------------------------------------------------------------------
+Support:
+
+- Enter.
+- Exit.
+- Progress/timeout indicator where appropriate.
+- Stack/reorder behavior.
+
+Toast animations must not hide critical error information.
+
+Critical notifications may require persistent non-animated display.
+
+
+22. SCROLL-BASED ANIMATIONS
+--------------------------------------------------------------------
+Optional features:
+
+- Reveal on enter viewport.
+- Fade-in.
+- Slide-in.
+- Scale-in.
+- Staggered sections.
+- Parallax foundation.
+
+Safety rules:
+
+1. No essential content may depend on scroll animation.
+2. Content must remain accessible without animation.
+3. Parallax must be disabled for reduced motion.
+4. Heavy scroll listeners should use efficient browser APIs.
+5. Avoid layout-triggering calculations on every scroll event.
+
+
+23. STAGGER ANIMATIONS
+--------------------------------------------------------------------
+Support controlled stagger for:
+
+- Product grids.
+- Category grids.
+- Navigation menus.
+- Content sections.
+
+Stagger must have:
+
+- Maximum item count.
+- Maximum total duration.
+- Reduced-motion behavior.
+- Mobile simplification.
+
+Large catalogs must never produce hundreds of sequential animations.
+
+
+24. GESTURE FOUNDATION
+--------------------------------------------------------------------
+Future-capable gesture support may include:
+
+- Swipe.
+- Drag.
+- Pull.
+- Horizontal carousel movement.
+- Drawer swipe.
+
+Gestures must:
+
+- Be optional.
+- Respect native scrolling.
+- Support cancellation.
+- Support keyboard alternatives.
+- Support accessibility.
+- Avoid accidental destructive actions.
+
+Business actions must require appropriate confirmation where needed.
+
+
+25. CAROUSEL MOTION
+--------------------------------------------------------------------
+Carousel animations may support:
+
+- Slide.
+- Fade.
+- Crossfade.
+- Drag/swipe.
+- Auto-rotation.
+
+Auto-rotation requirements:
+
+- Pause on interaction.
+- Pause when not visible where appropriate.
+- Provide accessible controls.
+- Respect reduced motion.
+- Avoid rapidly changing essential content.
+
+
+26. IMAGE TRANSITIONS
+--------------------------------------------------------------------
+Support:
+
+- Fade between image variants.
+- Progressive image reveal.
+- Blur-up foundation.
+- Placeholder-to-image transition.
+
+Image transitions must not create layout shifts.
+
+Width/height should be reserved before image loading.
+
+
+27. REDUCED-MOTION ACCESSIBILITY
+--------------------------------------------------------------------
+This is mandatory.
+
+The system must respect:
+
+- prefers-reduced-motion.
+- Store-level reduced-motion settings where applicable.
+- User preferences.
+
+When reduced motion is active:
+
+- Disable non-essential motion.
+- Remove parallax.
+- Remove large transforms.
+- Reduce duration.
+- Simplify transitions.
+- Preserve state-change feedback through static visual cues.
+
+Reduced motion must never remove essential status information.
+
+
+28. MOTION INTENSITY
+--------------------------------------------------------------------
+Support:
+
+NONE
+LOW
+MEDIUM
+HIGH
+
+Intensity affects only non-essential animation.
+
+It must not affect:
+
+- Business rules.
+- Order processing.
+- Payment.
+- Inventory.
+- Security.
+- Data validation.
+
+
+29. DEVICE ADAPTATION
+--------------------------------------------------------------------
+The system may adapt animation based on:
+
+- Device class.
+- Reduced-motion preference.
+- CPU/performance signals where reliably available.
+- Network conditions where appropriate.
+- Battery-saving context where available.
+- Viewport size.
+
+Never fingerprint users unnecessarily.
+
+Default behavior should remain conservative.
+
+
+30. PERFORMANCE BUDGETS
+--------------------------------------------------------------------
+Animations must avoid:
+
+- Excessive JavaScript.
+- Large runtime libraries when unnecessary.
+- Forced synchronous layout.
+- Excessive repaint.
+- Excessive GPU memory usage.
+- Large simultaneous animations.
+- Long blocking transitions.
+
+Prefer performant properties such as:
+
+- transform.
+- opacity.
+
+Avoid animating layout-heavy properties unless necessary.
+
+
+31. PERFORMANCE SAFETY GUARD
+--------------------------------------------------------------------
+The engine should support automatic safeguards:
+
+- Disable heavy effects on constrained devices.
+- Limit simultaneous animations.
+- Limit stagger count.
+- Limit parallax.
+- Reduce blur.
+- Reduce shadow intensity.
+- Stop animations when off-screen.
+- Cancel obsolete animations.
+
+The system should fail toward simpler motion, not broken UI.
+
+
+32. INTERACTION PRIORITY
+--------------------------------------------------------------------
+Animation priority levels:
+
+P0 — Critical business feedback.
+P1 — Important interaction feedback.
+P2 — Navigation/continuity.
+P3 — Decorative.
+
+Under performance pressure:
+
+P3 is removed first.
+P2 is simplified.
+P1 is retained where useful.
+P0 remains as static/accessible feedback if animation is unavailable.
+
+
+33. ANIMATION STATE MODEL
+--------------------------------------------------------------------
+Supported conceptual states:
+
+IDLE
+ENTERING
+ACTIVE
+HOVERED
+PRESSED
+LOADING
+SUCCESS
+ERROR
+EXITING
+DISABLED
+CANCELLED
+
+The state model must not become a duplicate business state machine.
+
+It only represents presentation state.
+
+
+34. INTERRUPTIBILITY
+--------------------------------------------------------------------
+Animations must be interruptible.
+
+Examples:
+
+- User navigates away during transition.
+- Product card state changes rapidly.
+- Modal closes while opening.
+- Loading resolves during skeleton animation.
+- User changes theme while previewing.
+
+The system must cancel or replace obsolete animation safely.
+
+
+35. ANIMATION QUEUE
+--------------------------------------------------------------------
+Only animations that require sequencing should use a queue.
+
+Rules:
+
+- No unbounded queues.
+- Maximum queue length.
+- Cancellation.
+- Deduplication.
+- Priority.
+- Timeout.
+
+Critical UI interactions must not wait behind decorative animations.
+
+
+36. THEME CUSTOMIZER INTEGRATION
+--------------------------------------------------------------------
+Module 17 customizer may expose:
+
+- Animation profile.
+- Motion intensity.
+- Transition speed.
+- Hover effects.
+- Card motion.
+- Page transitions.
+- Scroll effects.
+- Loading style.
+
+Advanced controls may be package-restricted.
+
+The customizer must provide:
+
+- Preview.
+- Save.
+- Reset.
+- Publish.
+- Rollback.
+
+
+37. ANIMATION PREVIEW
+--------------------------------------------------------------------
+Preview should allow authorized users to test:
+
+- Desktop.
+- Tablet.
+- Mobile.
+- RTL.
+- LTR.
+- Reduced motion.
+- Different profiles.
+
+Preview must not affect production.
+
+Preview tokens must be short-lived and tenant-scoped.
+
+
+38. PUBLISHING & VERSIONING
+--------------------------------------------------------------------
+Animation configuration lifecycle:
+
+DRAFT
+→ PREVIEW
+→ APPROVED
+→ PUBLISHED
+→ SCHEDULED
+→ ROLLED_BACK
+→ ARCHIVED
+
+Published configurations should be immutable.
+
+A new configuration creates a new revision.
+
+Rollback must restore a previously published configuration without
+changing business data.
+
+
+39. SCHEDULING
+--------------------------------------------------------------------
+Support scheduled animation configuration changes where entitled.
+
+Examples:
+
+- Seasonal animation.
+- Campaign animation.
+- Holiday theme motion.
+- Temporary promotional motion.
+
+Scheduling must use store timezone and be:
+
+- Idempotent.
+- Retryable.
+- Auditable.
+
+
+40. PACKAGE ENTITLEMENTS
+--------------------------------------------------------------------
+Module 04 remains authoritative.
+
+Possible entitlement keys:
+
+animation.basic
+animation.advanced
+animation.premium
+animation.profiles
+animation.customization
+animation.scroll_effects
+animation.parallax
+animation.gestures
+animation.seasonal
+animation.scheduling
+animation.custom_motion
+animation.advanced_preview
+
+Possible limits:
+
+- Animation profiles.
+- Custom motion presets.
+- Active scheduled profiles.
+- Scroll effects per page.
+- Staggered components.
+- Advanced interaction effects.
+
+
+41. SECURITY
+--------------------------------------------------------------------
+Animation configuration must never be able to:
+
+- Execute arbitrary server-side code.
+- Access secrets.
+- Read another tenant's data.
+- Modify business data.
+- Bypass permissions.
+- Inject malicious scripts.
+
+Any custom animation configuration must be schema-based.
+
+Custom JavaScript animation should not be enabled through ordinary
+store configuration.
+
+
+42. ACCESSIBILITY
+--------------------------------------------------------------------
+Requirements:
+
+- Keyboard-compatible interactions.
+- Visible focus.
+- Reduced-motion support.
+- No content hidden permanently by animation.
+- No flashing content that can create accessibility hazards.
+- No interaction that requires precise timing.
+- Screen-reader state changes must be communicated independently.
+- Animation must not trap focus.
+
+
+43. FLASH / VISUAL SAFETY
+--------------------------------------------------------------------
+The system must prevent:
+
+- Rapid flashing.
+- Excessive strobing.
+- High-frequency color changes.
+- Rapid scale changes.
+
+Decorative effects must remain within safe visual limits.
+
+
+44. RTL / LTR MOTION
+--------------------------------------------------------------------
+Directional animations must respect text direction.
+
+Examples:
+
+LTR:
+Drawer enters from left/right according to design.
+
+RTL:
+Directional relationships should be mirrored where appropriate.
+
+The system should use logical directional semantics rather than
+hard-coded assumptions.
+
+
+45. MULTILINGUAL SUPPORT
+--------------------------------------------------------------------
+Animation itself is language-neutral, but motion-dependent UI labels
+must support localization.
+
+Examples:
+
+- Loading.
+- Success.
+- Added to cart.
+- Removed from wishlist.
+- Expanded/collapsed.
+
+Localized text remains owned by the content/localization system.
+
+
+46. ANALYTICS INTEGRATION
+--------------------------------------------------------------------
+Module 18 may emit presentation events such as:
+
+AnimationTriggered
+AnimationCompleted
+AnimationCancelled
+InteractionTriggered
+MotionProfileChanged
+ReducedMotionActivated
+PerformanceSafeguardActivated
+
+Analytics must avoid collecting unnecessary personal data.
+
+Module 22 remains authoritative for analytics storage/reporting.
+
+
+47. OBSERVABILITY
+--------------------------------------------------------------------
+Monitor:
+
+- Animation errors.
+- Configuration errors.
+- Preview errors.
+- Publishing failures.
+- Scheduled profile failures.
+- Performance safeguard activations.
+- Excessive animation duration.
+- Client-side exceptions.
+
+Possible metrics:
+
+- Animation initialization time.
+- Animation cancellation rate.
+- Motion configuration resolution time.
+- Number of active effects.
+- Performance fallback frequency.
+
+
+48. API REQUIREMENTS
+--------------------------------------------------------------------
+Example endpoint families:
+
+/api/stores/{storeId}/animation
+/api/stores/{storeId}/animation/profiles
+/api/stores/{storeId}/animation/preview
+/api/stores/{storeId}/animation/publish
+/api/stores/{storeId}/animation/rollback
+/api/stores/{storeId}/animation/revisions
+/api/stores/{storeId}/animation/schedules
+
+Every endpoint must enforce tenant authorization.
+
+Client-provided Store ID must never bypass tenant membership checks.
+
+
+49. EVENTS & OUTBOX
+--------------------------------------------------------------------
+Important domain events:
+
+AnimationProfileSelected
+AnimationConfigurationUpdated
+AnimationPreviewCreated
+AnimationPublished
+AnimationRolledBack
+AnimationScheduled
+AnimationScheduleExecuted
+AnimationConfigurationArchived
+
+Events should follow the platform outbox architecture.
+
+
+50. DATA MODEL — HIGH LEVEL
+--------------------------------------------------------------------
+Core entities may include:
+
+AnimationProfile
+AnimationProfileVersion
+MotionTokenDefinition
+MotionTokenValue
+AnimationPreset
+InteractionDefinition
+TransitionDefinition
+MicroInteractionDefinition
+ScrollEffectDefinition
+GestureDefinition
+PerformancePolicy
+ReducedMotionPolicy
+StoreAnimationConfiguration
+StoreAnimationRevision
+AnimationPreview
+AnimationSchedule
+AnimationCompatibility
+AnimationAuditReference
+
+All tenant-owned records must contain or inherit tenant context.
+
+
+51. DATA INTEGRITY RULES
+--------------------------------------------------------------------
+1. Published animation profiles are immutable.
+2. Store configuration must reference valid profiles.
+3. Invalid animation configuration cannot be published.
+4. Preview cannot modify production state.
+5. Animation cannot mutate business data.
+6. Scheduled changes must be idempotent.
+7. Rollback must preserve business data.
+8. Tenant configuration must remain isolated.
+9. Reduced-motion policy must always remain available.
+10. Decorative animation cannot block critical interactions.
+11. Custom motion must use validated schemas.
+12. Theme/profile compatibility must be checked before activation.
+
+
+52. CACHE STRATEGY
+--------------------------------------------------------------------
+Resolved animation configuration may be cached.
+
+Cache keys must include:
+
+- Tenant/store ID.
+- Theme ID.
+- Theme version.
+- Animation profile/version.
+- Configuration version.
+- Locale where relevant.
+- Device mode where applicable.
+
+Never share resolved tenant animation configuration globally.
+
+Publishing changes must invalidate affected caches.
+
+
+53. ADMIN UI REQUIREMENTS
+--------------------------------------------------------------------
+Admin areas should include:
+
+Animation Profiles
+Active Profile
+Motion Intensity
+Transition Settings
+Hover Effects
+Product Interactions
+Page Transitions
+Scroll Effects
+Loading States
+Modal/Drawer Motion
+Reduced Motion
+Mobile Motion
+Preview
+Scheduled Motion
+Revisions
+Rollback
+
+The UI must clearly show:
+
+- Active profile.
+- Draft configuration.
+- Published configuration.
+- Package restrictions.
+- Performance warnings.
+- Accessibility warnings.
+
+
+54. PERMISSIONS
+--------------------------------------------------------------------
+Example permissions:
+
+animation.view
+animation.select
+animation.customize
+animation.preview
+animation.publish
+animation.schedule
+animation.rollback
+animation.revisions.view
+animation.advanced.manage
+
+Advanced/custom motion permissions must be separated from ordinary
+theme editing.
+
+
+55. CONTENT / STOREFRONT INTEGRATION
+--------------------------------------------------------------------
+Module 18 may animate components generated by:
+
+- Module 05 Storefront.
+- Module 16 Content.
+- Module 17 Theme.
+- Module 06 Product Catalog.
+- Module 11 Cart/Checkout.
+
+Animation must consume events/state references and must not take
+ownership of business logic.
+
+
+56. PWA / MOBILE INTEGRATION
+--------------------------------------------------------------------
+Module 25 may consume:
+
+- Motion profile.
+- Reduced-motion policy.
+- Mobile animation settings.
+- Touch interaction definitions.
+
+Native/PWA-specific capabilities may use the same semantic motion
+tokens where technically possible.
+
+
+57. THEME MARKETPLACE COMPATIBILITY
+--------------------------------------------------------------------
+Theme packages may declare:
+
+- Supported animation profiles.
+- Required motion tokens.
+- Supported interaction types.
+- Supported devices.
+- Reduced-motion compliance.
+- Performance profile.
+
+Module 27 may later use this information for theme marketplace
+compatibility validation.
+
+
+58. TESTING REQUIREMENTS
+--------------------------------------------------------------------
+Functional tests:
+
+- Profile selection.
+- Configuration resolution.
+- Preview.
+- Publish.
+- Schedule.
+- Rollback.
+- Revision restore.
+- Entitlement enforcement.
+
+Component tests:
+
+- Button feedback.
+- Product card.
+- Cart feedback.
+- Wishlist feedback.
+- Modal.
+- Drawer.
+- Toast.
+- Loading state.
+- Skeleton.
+- Carousel.
+- Navigation.
+
+Accessibility tests:
+
+- Reduced motion.
+- Keyboard interaction.
+- Focus behavior.
+- Screen reader state changes.
+- No flashing.
+- No content hidden by animation.
+
+RTL/LTR tests:
+
+- Directional transitions.
+- Drawers.
+- Carousels.
+- Navigation.
+
+Performance tests:
+
+- Many product cards.
+- Large page.
+- Mobile device simulation.
+- Low-performance fallback.
+- Concurrent animations.
+- Scroll effects.
+- Cache resolution.
+
+Security tests:
+
+- Tenant isolation.
+- Custom configuration abuse.
+- Script injection.
+- Preview token abuse.
+- Privilege escalation.
+
+Failure tests:
+
+- Animation initialization failure.
+- Configuration failure.
+- Theme mismatch.
+- Scheduler failure.
+- Cache failure.
+- Rapid state changes.
+- Navigation interruption.
+
+
+59. ACCEPTANCE CRITERIA
+--------------------------------------------------------------------
+Module 18 is complete only when:
+
+1. Central motion tokens exist.
+2. Animation profiles exist.
+3. Store-specific animation configuration works.
+4. Theme integration works.
+5. Page transitions work where enabled.
+6. Component transitions work.
+7. Product interactions work.
+8. Cart feedback works.
+9. Wishlist feedback works.
+10. Loading/skeleton states work.
+11. Modal/drawer transitions work.
+12. Toast transitions work.
+13. Scroll/reveal foundations work.
+14. Gesture foundations work where supported.
+15. Reduced-motion support works.
+16. Device/performance adaptation works.
+17. Preview works safely.
+18. Publishing works.
+19. Scheduling works.
+20. Rollback works.
+21. Package entitlements work.
+22. Tenant isolation is verified.
+23. Accessibility tests pass.
+24. Performance tests pass.
+25. Security tests pass.
+26. API/events work.
+27. Audit logging works.
+28. Theme marketplace compatibility metadata exists.
+29. No animation blocks critical business operations.
+30. Build and deployment checks pass.
+
+
+60. REQUIRED FOLLOW-UP ARTIFACTS
+--------------------------------------------------------------------
+After implementation, create and maintain:
+
+1. Module 18 implementation checklist.
+2. Motion token specification.
+3. Animation profile specification.
+4. Interaction state specification.
+5. Page transition specification.
+6. Component transition specification.
+7. Micro-interaction specification.
+8. Scroll/reveal specification.
+9. Gesture specification.
+10. Reduced-motion accessibility specification.
+11. Performance budget specification.
+12. Device adaptation specification.
+13. Theme integration specification.
+14. Preview security specification.
+15. Publishing/versioning/rollback specification.
+16. Permission matrix.
+17. Package entitlement matrix.
+18. Animation test matrix.
+19. Accessibility test checklist.
+20. Security audit checklist.
+21. Theme marketplace compatibility specification.
+22. Production deployment checklist.
+23. Module 18 completion report.
+24. Repository checkpoint/progress note.
+
+
+61. CLAUDE DEVELOPMENT REQUIREMENTS
+--------------------------------------------------------------------
+Claude must:
+
+1. Read the Project Bible and all finalized module blueprints.
+2. Treat Module 18 as authoritative for motion responsibilities.
+3. Inspect the existing repository before implementation.
+4. Reuse established theme and component architecture.
+5. Avoid unnecessary animation libraries.
+6. Preserve tenant isolation.
+7. Never create separate animation codebases for packages.
+8. Use profiles, tokens, configuration, and entitlements.
+9. Never perform destructive database operations without explicit
+   authorization.
+10. Implement safe migrations.
+11. Add automated tests.
+12. Verify actual storefront interactions.
+13. Test multiple tenants with different motion profiles.
+14. Test reduced-motion behavior.
+15. Test RTL/LTR directional behavior.
+16. Test mobile and desktop behavior.
+17. Test performance safeguards.
+18. Test preview/publish/rollback.
+19. Test package restrictions.
+20. Test malicious configuration cases.
+21. Run builds, tests, and static analysis.
+22. Record all fixes.
+23. Commit only after validation.
+24. Push only according to the established workflow.
+25. Preserve a concise repository checkpoint after the module.
+
+
+62. PRODUCTION READINESS
+--------------------------------------------------------------------
+Before production:
+
+- Confirm tenant animation isolation.
+- Confirm theme/profile compatibility.
+- Confirm reduced-motion support.
+- Confirm keyboard behavior.
+- Confirm no flashing hazards.
+- Confirm mobile behavior.
+- Confirm desktop behavior.
+- Confirm performance budgets.
+- Confirm low-performance fallback.
+- Confirm animation cancellation.
+- Confirm preview security.
+- Confirm publish workflow.
+- Confirm scheduling.
+- Confirm rollback.
+- Confirm cache invalidation.
+- Confirm package entitlements.
+- Confirm monitoring.
+- Confirm audit logs.
+- Confirm backups.
+- Confirm representative storefront interactions.
+- Confirm critical business actions remain usable without animation.
+
+
+63. FINAL ARCHITECTURAL RULES
+--------------------------------------------------------------------
+RULE 01:
+Module 18 is tenant-scoped for store-owned motion configuration.
+
+RULE 02:
+One core motion engine serves all packages.
+
+RULE 03:
+Animation profiles and motion tokens are configuration-driven.
+
+RULE 04:
+Published animation configurations are immutable.
+
+RULE 05:
+Animation is presentation logic, not business logic.
+
+RULE 06:
+Animation must never become the source of truth for orders,
+payments, inventory, checkout, or customer data.
+
+RULE 07:
+Critical business operations must work without animation.
+
+RULE 08:
+Reduced-motion support is mandatory.
+
+RULE 09:
+Motion must degrade gracefully under performance constraints.
+
+RULE 10:
+Prefer transform and opacity for performant animation.
+
+RULE 11:
+Avoid animation that causes unnecessary layout/reflow.
+
+RULE 12:
+Decorative animation must never block critical interaction.
+
+RULE 13:
+Animations must be interruptible.
+
+RULE 14:
+Unbounded animation queues are prohibited.
+
+RULE 15:
+Large-scale simultaneous animations must be limited.
+
+RULE 16:
+Scroll effects must use efficient observation techniques and must
+not hide essential content.
+
+RULE 17:
+Parallax must be disabled for reduced-motion users.
+
+RULE 18:
+Hover behavior must never be required for touch users.
+
+RULE 19:
+Directional animation must respect RTL/LTR semantics.
+
+RULE 20:
+Theme Module 17 selects/configures animation integration; Module 18
+owns runtime motion behavior.
+
+RULE 21:
+Package entitlements control advanced animation capabilities.
+
+RULE 22:
+Custom JavaScript animation is not ordinary store configuration.
+
+RULE 23:
+Custom motion must use validated schemas.
+
+RULE 24:
+Preview must never modify production state.
+
+RULE 25:
+Rollback must preserve all business data.
+
+RULE 26:
+Animation configuration caches must always preserve tenant identity.
+
+RULE 27:
+All privileged motion configuration changes must be auditable.
+
+RULE 28:
+Animation events must not falsely imply successful business
+operations.
+
+RULE 29:
+Performance and accessibility are mandatory product requirements.
+
+RULE 30:
+Module 18 must integrate through explicit contracts, APIs, events,
+schemas, and ownership boundaries.
+
+====================================================================
+END OF MODULE 18 — ANIMATION & INTERACTION SYSTEM
+====================================================================

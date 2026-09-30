@@ -1,0 +1,3 @@
+# Source specifications are stored byte-for-byte as supplied (see docs/source/README.md checksums).
+docs/source/**/*.txt -text
+docs/source/SHA256SUMS -text

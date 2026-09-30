@@ -1,0 +1,1721 @@
+====================================================================
+UMAR TECHY E-COMMERCE PLATFORM
+MASTER PROJECT BLUEPRINT — MODULE 16
+SEO & CONTENT MANAGEMENT
+Technical Specification — English Only
+Version 1.0
+====================================================================
+
+1. MODULE PURPOSE
+--------------------------------------------------------------------
+Module 16 provides the Core SEO Engine and Content Management Engine
+for the Umar Techy E-Commerce Platform.
+
+The module controls tenant-scoped search engine optimization,
+metadata, URL strategy, indexing directives, structured data,
+social sharing metadata, sitemaps, robots directives, redirects,
+static content, landing pages, blog/content foundations, content
+blocks, publishing workflows, revisions, previews, scheduling,
+multilingual content, internal linking, and SEO integrations.
+
+The module must work across all tenants without sharing tenant-owned
+content, URLs, metadata, indexes, media references, analytics
+configuration, or SEO settings between stores.
+
+The module is configuration-driven and must integrate with the
+Storefront Engine, Catalog, Taxonomy, Customer/Marketing content,
+Theme/Branding, Domain Management, Package Entitlements, Analytics,
+and API layers.
+
+Core principle:
+
+ONE CORE SEO + CONTENT ENGINE
+        +
+TENANT SEO CONFIGURATION
+        +
+TENANT CONTENT
+        +
+TENANT DOMAIN / URL CONTEXT
+        +
+TENANT ENTITLEMENTS
+
+No tenant-specific source-code forks are permitted.
+
+
+2. PRIMARY OBJECTIVES
+--------------------------------------------------------------------
+The module shall:
+
+1. Provide tenant-scoped SEO configuration.
+2. Generate consistent metadata for storefront pages.
+3. Support custom SEO metadata where permitted.
+4. Provide deterministic canonical URL handling.
+5. Manage SEO-safe slugs and URL changes.
+6. Maintain redirect rules for changed URLs.
+7. Generate XML sitemaps.
+8. Generate robots directives and robots.txt output.
+9. Support structured data / Schema.org foundations.
+10. Support Open Graph and social sharing metadata.
+11. Support image SEO and accessible alternative text.
+12. Provide SEO controls for products, categories, collections,
+    brands, pages, and content.
+13. Provide static pages and configurable landing pages.
+14. Provide content blocks and reusable sections.
+15. Provide blog/article content foundations where entitled.
+16. Support draft, review, preview, publish, schedule, unpublish,
+    archive, and restore workflows.
+17. Maintain content revisions and publishing history.
+18. Support multilingual and RTL content foundations.
+19. Support internal linking and breadcrumbs.
+20. Handle pagination and duplicate-content risks.
+21. Provide noindex/nofollow controls with safe defaults.
+22. Support search-engine verification foundations.
+23. Support analytics integration foundations.
+24. Provide safe custom head/script insertion with strict controls.
+25. Handle 404 and invalid URL behavior.
+26. Prevent URL conflicts and tenant cross-contamination.
+27. Expose secure APIs and events.
+28. Enforce permissions and package entitlements.
+29. Support caching, CDN, performance optimization, and observability.
+30. Provide comprehensive security and automated testing.
+
+
+3. ARCHITECTURAL POSITION
+--------------------------------------------------------------------
+Module 16 owns:
+
+- SEO configuration.
+- Metadata generation rules.
+- Canonical URL policy.
+- Slug generation and validation.
+- Redirect management.
+- Sitemap generation.
+- Robots policy generation.
+- Structured-data generation framework.
+- Open Graph/social metadata.
+- Content entities and publishing lifecycle.
+- Content revisions.
+- Landing pages.
+- Static pages.
+- Blog/article foundations.
+- Content blocks.
+- SEO analysis foundations.
+- Internal-linking metadata.
+- Search-engine verification configuration.
+- Content-related URL resolution.
+
+Module 16 does NOT own:
+
+- Product master data — Module 06.
+- Categories/brands/attributes — Module 07.
+- Storefront rendering — Module 05.
+- Theme implementation — Module 17.
+- Animation behavior — Module 18.
+- Domain ownership/DNS — Module 19.
+- Hosting infrastructure — Module 20.
+- Marketing campaign delivery — Module 15.
+- Communication delivery — Module 21.
+- Analytics warehouse ownership — Module 22.
+
+Other modules remain authoritative for their respective domains.
+
+
+4. SEO SCOPE
+--------------------------------------------------------------------
+Supported SEO targets:
+
+- Store homepage.
+- Product detail pages.
+- Category pages.
+- Collection pages.
+- Brand pages.
+- Search result pages.
+- Static pages.
+- Landing pages.
+- Blog index.
+- Blog article pages.
+- Blog category/tag pages.
+- Custom content pages.
+- Future campaign/marketplace pages.
+
+Each SEO target must resolve inside the current tenant context.
+
+
+5. TENANT SEO CONFIGURATION
+--------------------------------------------------------------------
+Each store may configure:
+
+- Site title.
+- Site description.
+- Default title suffix/prefix.
+- Default meta description.
+- Default social image.
+- Default favicon reference.
+- Default language.
+- Default locale.
+- Default canonical domain.
+- Preferred URL scheme.
+- Trailing-slash policy.
+- Lowercase URL policy.
+- Default robots policy.
+- Sitemap inclusion policy.
+- Search-engine verification settings.
+- Social sharing defaults.
+- Organization information.
+- Website identity.
+- Logo reference.
+- Contact information where appropriate.
+- Breadcrumb configuration.
+- Structured-data settings.
+- Pagination policy.
+- Indexing defaults.
+
+Configuration must be versionable and auditable.
+
+Dangerous SEO settings must require explicit confirmation and
+appropriate permissions.
+
+
+6. TITLE GENERATION
+--------------------------------------------------------------------
+The engine shall support deterministic title templates.
+
+Examples:
+
+{product_name} | {store_name}
+{category_name} | {store_name}
+{page_title} | {store_name}
+
+Supported tokens may include:
+
+- store_name
+- product_name
+- category_name
+- brand_name
+- collection_name
+- page_title
+- site_name
+- current_page
+- total_pages
+
+Rules:
+
+1. Explicit page SEO title overrides generated title.
+2. Missing variables must never produce broken markup.
+3. Excessively long titles may produce an advisory warning.
+4. Title generation must be tenant-scoped.
+5. Template changes must not rewrite historical order snapshots.
+
+
+7. META DESCRIPTION
+--------------------------------------------------------------------
+The system shall support:
+
+- Explicit meta descriptions.
+- Generated descriptions.
+- Page-type templates.
+- Fallback hierarchy.
+- Character-length advisory.
+- Localization.
+- HTML stripping.
+- Unsafe markup removal.
+
+Fallback example:
+
+Page SEO description
+→ Content excerpt
+→ Product/category description
+→ Tenant default description
+
+Meta descriptions are presentation metadata and must never affect
+financial, inventory, order, or payment logic.
+
+
+8. SLUG MANAGEMENT
+--------------------------------------------------------------------
+Slugs must be:
+
+- Tenant-scoped.
+- URL-safe.
+- Deterministic.
+- Unique within the relevant URL namespace.
+- Normalized.
+- Reserved-word aware.
+- Case-consistent.
+
+Slug sources may include:
+
+- Product name.
+- Category name.
+- Brand name.
+- Collection name.
+- Page title.
+- Article title.
+
+When a slug changes:
+
+1. Existing URL must be preserved as a historical reference.
+2. A redirect may be created automatically.
+3. Redirect loops must be prevented.
+4. Redirect chains should be collapsed where safe.
+5. Existing canonical URL must be updated.
+6. Sitemap output must use the current canonical URL.
+7. Audit history must record the change.
+
+Slug deletion must not silently orphan important URLs.
+
+
+9. URL NAMESPACE MANAGEMENT
+--------------------------------------------------------------------
+The platform must reserve namespaces such as:
+
+/products/
+/categories/
+/collections/
+/brands/
+/pages/
+/blog/
+/search/
+/cart/
+/checkout/
+/account/
+
+The exact storefront URL structure must remain configurable within
+safe boundaries.
+
+URL conflict detection must prevent:
+
+- Duplicate routes.
+- Cross-entity collisions.
+- Reserved-path collisions.
+- Tenant collisions.
+- Malformed paths.
+- Unsafe encoded paths.
+
+URL resolution must always identify the correct tenant first.
+
+
+10. CANONICAL URL ENGINE
+--------------------------------------------------------------------
+Canonical URLs must be generated server-side.
+
+The engine must support:
+
+- Product canonical URL.
+- Category canonical URL.
+- Brand canonical URL.
+- Collection canonical URL.
+- Static page canonical URL.
+- Article canonical URL.
+- Pagination canonical strategy.
+- Filter/sort canonical strategy.
+- Query-string handling.
+
+Default principle:
+
+One indexable page should have one preferred canonical URL.
+
+Canonical URLs must:
+
+- Use the tenant's resolved public domain.
+- Use HTTPS in production.
+- Respect configured path rules.
+- Avoid session/cart/query parameters.
+- Avoid tracking parameters.
+- Never point to another tenant unless explicitly configured
+  through a controlled external canonical feature.
+
+Self-canonical is the default for indexable pages.
+
+
+11. INDEXING DIRECTIVES
+--------------------------------------------------------------------
+Supported directives:
+
+- index.
+- noindex.
+- follow.
+- nofollow.
+- noarchive.
+- nosnippet where supported.
+- max-snippet where supported.
+- max-image-preview where supported.
+- max-video-preview where supported.
+
+Safe defaults:
+
+- Public product/category/content pages: index, follow.
+- Cart: noindex.
+- Checkout: noindex.
+- Customer account: noindex.
+- Internal search results: configurable, generally noindex.
+- Admin routes: never public/indexable.
+- Authentication routes: noindex.
+- Error pages: noindex.
+
+Store suspension/maintenance states must be handled safely and
+must not accidentally expose private administrative content.
+
+
+12. ROBOTS.TXT
+--------------------------------------------------------------------
+The module shall generate tenant-aware robots.txt content.
+
+Default disallowed areas may include:
+
+/admin/
+/account/
+/cart/
+/checkout/
+/api/
+
+The exact rules must be configurable only through authorized
+settings.
+
+The engine must prevent:
+
+- Invalid syntax.
+- Cross-tenant URLs.
+- Accidental exposure of private paths.
+- Blocking the entire storefront unintentionally without warning.
+
+Robots.txt must not be treated as a security boundary.
+
+
+13. XML SITEMAPS
+--------------------------------------------------------------------
+The system shall support:
+
+- Sitemap index.
+- Product sitemap.
+- Category sitemap.
+- Brand sitemap.
+- Collection sitemap.
+- Page sitemap.
+- Blog/article sitemap.
+- Image sitemap foundation where useful.
+
+Only eligible URLs should appear.
+
+Eligibility may depend on:
+
+- Published status.
+- Public visibility.
+- Indexability.
+- Canonical status.
+- Tenant state.
+- Package entitlement.
+- Content availability.
+
+Excluded examples:
+
+- Cart.
+- Checkout.
+- Account.
+- Admin.
+- Noindex content.
+- Private content.
+- Invalid/deleted routes.
+
+Large stores must support sitemap partitioning.
+
+Sitemaps should be generated asynchronously and cached.
+
+
+14. STRUCTURED DATA / SCHEMA.ORG
+--------------------------------------------------------------------
+Provide a structured-data framework supporting:
+
+- Organization.
+- WebSite.
+- WebPage.
+- BreadcrumbList.
+- Product.
+- Offer.
+- AggregateRating foundation.
+- Review foundation.
+- Article.
+- BlogPosting.
+- ItemList.
+- LocalBusiness foundation where appropriate.
+- SearchAction foundation where supported.
+
+Structured data must be generated from authoritative module data.
+
+Examples:
+
+Product data → Module 06.
+Price/availability → authoritative catalog/inventory data.
+Reviews → approved review source.
+Breadcrumbs → taxonomy/content hierarchy.
+Organization data → store configuration.
+
+Never trust arbitrary client-submitted structured-data values.
+
+The system should avoid duplicate conflicting schema blocks.
+
+
+15. OPEN GRAPH & SOCIAL METADATA
+--------------------------------------------------------------------
+Support:
+
+- og:title.
+- og:description.
+- og:image.
+- og:url.
+- og:type.
+- site_name.
+- locale.
+
+Also provide Twitter/X card foundations where applicable.
+
+Fallback hierarchy:
+
+Page-specific social metadata
+→ SEO metadata
+→ tenant defaults.
+
+Images must be validated for:
+
+- Ownership/reference.
+- File type.
+- Size.
+- Safe URL.
+- Tenant isolation.
+- Alt-text metadata where applicable.
+
+
+16. IMAGE SEO
+--------------------------------------------------------------------
+Image handling shall support:
+
+- Alt text.
+- Optional title/caption.
+- SEO-friendly filenames where generated.
+- Responsive derivatives.
+- Compression/optimization.
+- Lazy loading through storefront integration.
+- Width/height metadata.
+- Tenant-safe media URLs.
+
+Alt text must be accessible and descriptive, not keyword-stuffed.
+
+Decorative images may explicitly be marked decorative.
+
+
+17. BREADCRUMBS & INTERNAL LINKING
+--------------------------------------------------------------------
+The engine shall provide breadcrumb metadata based on:
+
+- Category hierarchy.
+- Collection hierarchy.
+- Brand context.
+- Page hierarchy.
+- Blog hierarchy.
+
+Breadcrumb output must be consistent between:
+
+- Visible storefront navigation.
+- Structured data.
+
+Internal linking foundations may include:
+
+- Related products.
+- Related categories.
+- Related content.
+- Brand links.
+- Collection links.
+- Contextual content links.
+
+The system must avoid generating excessive or circular links.
+
+
+18. PAGINATION & FILTER SEO
+--------------------------------------------------------------------
+The storefront may generate URLs for:
+
+- Pagination.
+- Sorting.
+- Filters.
+- Search queries.
+
+The SEO engine must define rules for:
+
+- Canonicalization.
+- Index/noindex.
+- Parameter handling.
+- Duplicate-content prevention.
+- Crawl control.
+
+Examples of generally non-indexable parameter states:
+
+- Session identifiers.
+- Tracking parameters.
+- Arbitrary sorting.
+- Internal search parameters.
+
+Commercial stores may explicitly opt into indexable filtered
+landing pages when content quality and uniqueness justify it.
+
+
+19. STATIC PAGES
+--------------------------------------------------------------------
+Support configurable pages such as:
+
+- About Us.
+- Contact Us.
+- FAQ.
+- Privacy Policy.
+- Terms & Conditions.
+- Shipping Policy.
+- Return Policy.
+- Refund Policy.
+- Warranty Policy.
+- Cookie Policy.
+- Custom informational pages.
+
+Each page may have:
+
+- Title.
+- Slug.
+- Content.
+- SEO title.
+- SEO description.
+- Social image.
+- Canonical URL.
+- Indexing directives.
+- Publish state.
+- Schedule.
+- Revision history.
+
+
+20. LANDING PAGE ENGINE
+--------------------------------------------------------------------
+Provide reusable landing page foundations.
+
+Supported concepts:
+
+- Hero section.
+- Text section.
+- Image section.
+- Product grid.
+- Category grid.
+- Collection grid.
+- Promotional section.
+- FAQ section.
+- Testimonials foundation.
+- Call-to-action.
+- Rich content.
+- Custom content blocks.
+
+Landing pages must use safe configuration rather than arbitrary
+server-side code.
+
+
+21. CONTENT BLOCK ENGINE
+--------------------------------------------------------------------
+Content blocks should support:
+
+- Heading.
+- Rich text.
+- Image.
+- Video embed.
+- Product collection.
+- Category collection.
+- Button/link.
+- Banner.
+- FAQ.
+- Divider.
+- Gallery.
+- Custom safe component.
+
+Each block must have:
+
+- Stable ID.
+- Type.
+- Configuration.
+- Ordering.
+- Visibility.
+- Localization.
+- Validation.
+- Revision support.
+
+Arbitrary JavaScript must never be permitted through ordinary
+content blocks.
+
+
+22. BLOG / ARTICLE FOUNDATION
+--------------------------------------------------------------------
+If enabled by package entitlement, support:
+
+- Articles.
+- Authors.
+- Categories.
+- Tags.
+- Featured images.
+- Excerpts.
+- Rich content.
+- SEO metadata.
+- Social metadata.
+- Publish date.
+- Updated date.
+- Slugs.
+- Canonicals.
+- Indexing directives.
+- Related articles.
+- Revision history.
+
+Article states:
+
+DRAFT
+REVIEW
+SCHEDULED
+PUBLISHED
+UNPUBLISHED
+ARCHIVED
+
+Future support may include:
+
+- Author profiles.
+- Editorial calendar.
+- Reading time.
+- Article series.
+- Content recommendations.
+
+
+23. CONTENT WORKFLOW
+--------------------------------------------------------------------
+Supported lifecycle:
+
+DRAFT
+→ REVIEW
+→ APPROVED
+→ SCHEDULED
+→ PUBLISHED
+→ UNPUBLISHED
+→ ARCHIVED
+
+Not every content type must use every state.
+
+Publishing rules:
+
+1. Draft content is not public.
+2. Preview requires authenticated authorization.
+3. Scheduled content becomes public at the configured time.
+4. Unpublish removes public visibility.
+5. Archive preserves historical data.
+6. Publish operations are audited.
+7. Failed publishing must not leave partially updated public state.
+
+
+24. PREVIEW SYSTEM
+--------------------------------------------------------------------
+Authorized users must be able to preview:
+
+- Draft pages.
+- Draft products where supported.
+- Draft landing pages.
+- Draft articles.
+- Scheduled content.
+
+Preview access must use:
+
+- Short-lived signed tokens.
+- Tenant-scoped authorization.
+- Expiration.
+- Revocation capability where required.
+
+Preview URLs must not become publicly indexable.
+
+
+25. VERSIONING & REVISIONS
+--------------------------------------------------------------------
+Content revisions must preserve:
+
+- Author.
+- Timestamp.
+- Content snapshot.
+- SEO snapshot.
+- Publish state.
+- Change reason where provided.
+
+Support:
+
+- Compare revisions.
+- Restore revision.
+- Publish restored revision.
+- Audit restoration.
+
+Revision restoration must not silently overwrite unrelated newer
+changes.
+
+
+26. SCHEDULING
+--------------------------------------------------------------------
+Scheduled content must respect the store timezone.
+
+Support:
+
+- Publish at date/time.
+- Unpublish at date/time.
+- Campaign landing-page scheduling.
+- Article scheduling.
+- Promotional content scheduling.
+
+Scheduled jobs must be:
+
+- Idempotent.
+- Retryable.
+- Tenant-aware.
+- Auditable.
+
+Clock/timezone changes must not cause duplicate publishing.
+
+
+27. MULTILINGUAL & RTL
+--------------------------------------------------------------------
+The content engine must support localized content foundations.
+
+Supported concepts:
+
+- Locale.
+- Language.
+- Translation group.
+- Localized title.
+- Localized description.
+- Localized slug where supported.
+- Localized SEO metadata.
+- Localized social metadata.
+
+SEO support should provide:
+
+- hreflang foundation.
+- Language-aware canonical strategy.
+- Language-aware sitemap entries where applicable.
+
+RTL content must be supported without corrupting URL or metadata
+normalization.
+
+
+28. CUSTOM HTML / HEAD / SCRIPT MANAGEMENT
+--------------------------------------------------------------------
+Authorized administrators may configure controlled custom code such
+as:
+
+- Verification meta tags.
+- Analytics snippets.
+- Approved third-party scripts.
+
+Requirements:
+
+- Strict permission.
+- Store-scoped configuration.
+- CSP-aware architecture.
+- Audit logging.
+- Script classification.
+- Optional approval workflow.
+- Sanitization for fields that do not explicitly require raw markup.
+
+Never allow ordinary content editors to inject unrestricted scripts.
+
+Raw HTML/JS capability must be treated as privileged.
+
+
+29. SEARCH ENGINE VERIFICATION
+--------------------------------------------------------------------
+Support configuration foundations for:
+
+- Google Search Console verification.
+- Bing Webmaster verification.
+- Other future verification methods.
+
+Methods may include:
+
+- Meta tag.
+- DNS verification reference.
+- Uploaded verification file reference.
+
+DNS ownership itself belongs to Module 19.
+
+
+30. ANALYTICS INTEGRATION FOUNDATION
+--------------------------------------------------------------------
+Module 16 may expose SEO/content events to Module 22.
+
+Possible events:
+
+- Page viewed.
+- Search result viewed.
+- Landing page viewed.
+- Article viewed.
+- CTA clicked.
+- Internal link clicked.
+- SEO configuration changed.
+- Content published.
+- Content unpublished.
+
+Analytics identifiers must remain tenant-scoped.
+
+Module 16 does not own the analytics warehouse.
+
+
+31. 404 & ERROR PAGE MANAGEMENT
+--------------------------------------------------------------------
+Support:
+
+- Custom 404 page.
+- Missing product handling.
+- Missing category handling.
+- Missing content handling.
+- Expired landing page handling.
+- Redirect lookup.
+
+Rules:
+
+1. Deleted URL may redirect only when a relevant destination exists.
+2. Otherwise return a correct 404.
+3. Do not redirect every missing URL to homepage.
+4. 404 pages must not be indexable.
+5. Redirect loops must be prevented.
+6. Redirect chains should be monitored.
+
+
+32. REDIRECT ENGINE
+--------------------------------------------------------------------
+Supported redirect types:
+
+- 301 Permanent.
+- 302 Temporary.
+- Future standards where required.
+
+Redirect rules are tenant-scoped.
+
+Each rule should include:
+
+- Source path.
+- Destination path/URL.
+- Type.
+- Status.
+- Created by.
+- Created timestamp.
+- Reason.
+- Hit count foundation.
+- Last-used timestamp foundation.
+
+Security controls must prevent open redirects.
+
+External redirects require appropriate validation and permissions.
+
+
+33. SEO HEALTH / ANALYSIS FOUNDATION
+--------------------------------------------------------------------
+The module may provide rule-based SEO diagnostics.
+
+Possible checks:
+
+- Missing title.
+- Missing meta description.
+- Duplicate title.
+- Duplicate description.
+- Missing canonical.
+- Broken internal link.
+- Missing alt text.
+- Excessive redirect chain.
+- Orphan page.
+- Non-indexable public page.
+- Sitemap mismatch.
+- Invalid structured-data configuration.
+- Duplicate slug.
+- Very thin content advisory.
+
+These are advisory diagnostics, not guarantees of search ranking.
+
+
+34. SEO SCORE POLICY
+--------------------------------------------------------------------
+If a score is implemented, it must be presented as an internal
+configuration/completeness indicator only.
+
+It must NOT claim:
+
+- Guaranteed ranking.
+- Guaranteed traffic.
+- Search-engine approval.
+- Guaranteed indexing.
+
+The platform should prefer actionable findings over simplistic
+numeric scoring.
+
+
+35. CONTENT SAFETY & SANITIZATION
+--------------------------------------------------------------------
+All rich content must be protected against:
+
+- XSS.
+- Stored script injection.
+- Malicious HTML.
+- Dangerous URLs.
+- iframe abuse.
+- SVG/script injection.
+- Event-handler injection.
+
+Allowed HTML should be explicitly defined.
+
+Links should support safe schemes.
+
+Dangerous schemes such as javascript: must be rejected.
+
+
+36. MEDIA & FILE SECURITY
+--------------------------------------------------------------------
+Content media must follow tenant isolation.
+
+Requirements:
+
+- Tenant-specific storage namespace.
+- Safe filenames.
+- MIME validation.
+- File-size limits.
+- Image dimension checks.
+- Malware/security scanning foundation.
+- Signed/private URLs where needed.
+- Public CDN URLs only for intentionally public assets.
+- No cross-tenant media references.
+
+Deleting a media asset must consider references before removal.
+
+
+37. PERMISSIONS
+--------------------------------------------------------------------
+Example permissions:
+
+seo.view
+seo.manage
+seo.publish
+seo.redirects.manage
+seo.sitemap.manage
+seo.robots.manage
+seo.structured_data.manage
+content.view
+content.create
+content.edit
+content.review
+content.publish
+content.schedule
+content.archive
+content.restore
+content.delete
+content.media.manage
+content.custom_code.manage
+content.analytics.view
+
+Store Owner and Store Administrator may receive broad access.
+
+Content editors should not automatically receive:
+
+- Custom script access.
+- Robots policy access.
+- Global canonical configuration.
+- Domain-level settings.
+
+
+38. PACKAGE ENTITLEMENTS
+--------------------------------------------------------------------
+Module 04 remains authoritative for commercial entitlements.
+
+Possible entitlement keys:
+
+seo.basic
+seo.advanced
+seo.custom_metadata
+seo.redirects
+seo.sitemap
+seo.structured_data
+seo.advanced_indexing
+seo.multilingual
+seo.advanced_landing_pages
+content.pages
+content.blog
+content.blocks
+content.scheduling
+content.versioning
+content.custom_code
+content.analytics
+content.advanced_seo_analysis
+
+Possible limits:
+
+- Static pages.
+- Landing pages.
+- Blog articles.
+- Content blocks.
+- Revisions.
+- Redirect rules.
+- Media storage.
+- Scheduled publications.
+- Custom code entries.
+- Locales.
+- SEO audit frequency.
+
+
+39. API REQUIREMENTS
+--------------------------------------------------------------------
+APIs must be tenant-aware and permission-protected.
+
+Example endpoint families:
+
+/api/stores/{storeId}/seo/settings
+/api/stores/{storeId}/seo/redirects
+/api/stores/{storeId}/seo/sitemap
+/api/stores/{storeId}/seo/analysis
+/api/stores/{storeId}/content/pages
+/api/stores/{storeId}/content/landing-pages
+/api/stores/{storeId}/content/blocks
+/api/stores/{storeId}/content/articles
+/api/stores/{storeId}/content/revisions
+
+The exact route structure may follow the final platform API
+conventions.
+
+No endpoint may trust a client-supplied store ID without verifying
+membership and tenant authorization.
+
+
+40. EVENTS & OUTBOX
+--------------------------------------------------------------------
+Important domain events may include:
+
+SeoSettingsUpdated
+SlugChanged
+CanonicalUpdated
+RedirectCreated
+RedirectUpdated
+RedirectDeleted
+ContentCreated
+ContentUpdated
+ContentSubmittedForReview
+ContentApproved
+ContentScheduled
+ContentPublished
+ContentUnpublished
+ContentArchived
+ContentRestored
+SitemapRegenerationRequested
+RobotsPolicyUpdated
+StructuredDataUpdated
+SeoDiagnosticGenerated
+
+Events must use the platform outbox pattern where required.
+
+
+41. CACHE & PERFORMANCE
+--------------------------------------------------------------------
+SEO/content output is heavily cacheable.
+
+Cache keys must include:
+
+- Tenant/store identity.
+- Domain/locale where applicable.
+- Content version.
+- Relevant configuration version.
+
+Never share cached HTML, metadata, sitemap data, robots rules,
+redirect results, or structured data between tenants.
+
+Use:
+
+- HTTP caching.
+- CDN caching.
+- Application caching.
+- Regeneration queues.
+- Incremental invalidation.
+
+Publishing content must invalidate affected caches.
+
+
+42. SEARCH INDEX INTEGRATION
+--------------------------------------------------------------------
+If the platform uses a search engine, content indexing must be
+tenant-aware.
+
+Index documents must contain:
+
+- Tenant ID.
+- Content ID.
+- Entity type.
+- Locale.
+- Publication state.
+- Visibility.
+
+Deleted/unpublished content must be removed or marked unavailable
+according to the search architecture.
+
+
+43. SECURITY REQUIREMENTS
+--------------------------------------------------------------------
+Mandatory controls:
+
+- Tenant isolation.
+- RBAC.
+- Least privilege.
+- CSRF protection where applicable.
+- XSS protection.
+- HTML sanitization.
+- Open-redirect protection.
+- Signed preview URLs.
+- Rate limiting.
+- Audit logs.
+- Input validation.
+- Output encoding.
+- Secure file handling.
+- Secret protection.
+- CSP compatibility.
+- Safe URL normalization.
+- SSRF-safe external URL handling.
+- No arbitrary server-side execution.
+- No direct database access from clients.
+
+Custom code features require elevated authorization.
+
+
+44. OBSERVABILITY
+--------------------------------------------------------------------
+Track:
+
+- Content publish failures.
+- Scheduled job failures.
+- Sitemap generation failures.
+- Redirect errors.
+- Broken-link diagnostics.
+- Cache invalidation failures.
+- SEO configuration errors.
+- Content rendering failures.
+- Unauthorized configuration attempts.
+- External verification failures.
+
+Metrics may include:
+
+- Published content count.
+- Indexable URL count.
+- Sitemap generation duration.
+- Redirect volume.
+- 404 volume.
+- Content publishing latency.
+- SEO diagnostic counts.
+
+
+45. DATA MODEL — HIGH LEVEL
+--------------------------------------------------------------------
+Core entities may include:
+
+StoreSeoSettings
+SeoTemplate
+SeoMetadata
+SeoSocialMetadata
+SeoCanonical
+SeoDirective
+SeoStructuredData
+SeoVerification
+SeoDiagnostic
+SeoDiagnosticRun
+Slug
+UrlRoute
+RedirectRule
+Sitemap
+SitemapEntry
+RobotsPolicy
+
+ContentPage
+LandingPage
+ContentBlock
+ContentBlockType
+ContentRevision
+ContentPublication
+ContentSchedule
+ContentMediaReference
+ContentTranslation
+ContentAuthor
+
+Article
+ArticleCategory
+ArticleTag
+ArticleRelation
+
+BreadcrumbNode
+InternalLinkReference
+ContentExperimentFoundation
+
+ExternalVerification
+CustomHeadEntry
+CustomScriptEntry
+
+All tenant-owned entities must contain or inherit tenant context.
+
+
+46. DATA INTEGRITY RULES
+--------------------------------------------------------------------
+1. Tenant ID must be immutable for tenant-owned records.
+2. Slugs must be unique within the correct tenant namespace.
+3. Published content must have a valid public route.
+4. Indexable content must have a resolvable canonical URL.
+5. Sitemap entries must reference eligible URLs only.
+6. Redirect source and destination must be normalized.
+7. Redirect loops must be rejected.
+8. Redirects must not expose private tenant paths.
+9. Draft content must never leak into normal public rendering.
+10. Revision restore must be transactional.
+11. Scheduled publishing must be idempotent.
+12. Deleted content must not remain accidentally indexable.
+13. Cross-tenant references must be rejected.
+14. Locale references must be valid.
+15. Custom code must have appropriate authorization.
+16. Historical revisions must remain auditable.
+
+
+47. CONTENT RENDERING RULES
+--------------------------------------------------------------------
+The public storefront should render content through a controlled
+renderer.
+
+Rendering must:
+
+- Validate content configuration.
+- Sanitize rich text.
+- Resolve tenant assets.
+- Resolve localized content.
+- Apply theme components.
+- Respect package entitlements.
+- Respect publication state.
+- Respect visibility.
+- Respect SEO directives.
+- Generate metadata consistently.
+
+Content should never execute arbitrary server-side code.
+
+
+48. DEPENDENCIES
+--------------------------------------------------------------------
+Module 16 depends on:
+
+Module 01 — Complete Platform Structure
+Module 02 — Authentication, Users, Roles & Permissions
+Module 03 — Multi-Tenant & Store Management
+Module 04 — Subscription, Packages & Feature Entitlements
+Module 05 — Storefront / Customer Website
+Module 06 — Product & Catalog Management
+Module 07 — Category, Brand & Attribute Management
+Module 10 — Customer Management
+Module 14 — Discounts, Coupons & Promotions
+Module 15 — Marketing & Customer Engagement
+Module 17 — Theme, Branding & Design System
+Module 19 — Domain Management
+Module 21 — Notifications & Communication
+Module 22 — Reports, Analytics & Dashboard
+Module 24 — Store Health, Monitoring & Resource Usage
+Module 25 — PWA / Mobile Experience
+Module 27 — App / Plugin Marketplace & Integrations
+Module 32 — Security, Audit & Compliance
+Module 33 — System Settings & Configuration
+
+Dependency direction must remain controlled to prevent circular
+business logic.
+
+
+49. ADMIN UI REQUIREMENTS
+--------------------------------------------------------------------
+Admin areas should include:
+
+SEO Dashboard
+SEO Settings
+Metadata Templates
+URL / Slug Management
+Redirect Manager
+Sitemap Manager
+Robots Manager
+Structured Data Settings
+Search Engine Verification
+SEO Diagnostics
+Content Pages
+Landing Pages
+Content Blocks
+Blog / Articles
+Categories / Tags
+Media References
+Drafts / Review
+Scheduled Content
+Revisions
+Publishing History
+Custom Head / Scripts
+Content Analytics Foundation
+
+The UI must show tenant context clearly.
+
+Dangerous settings should include warnings and confirmation.
+
+
+50. STOREFRONT SEO OUTPUT
+--------------------------------------------------------------------
+For each eligible page, server-side rendering/output should be able
+to produce:
+
+- HTML title.
+- Meta description.
+- Canonical link.
+- Robots meta.
+- Open Graph metadata.
+- Social card metadata.
+- Structured data.
+- Breadcrumb structured data.
+- Language metadata.
+- hreflang foundation where enabled.
+- Optimized image metadata.
+
+Metadata generation must be deterministic and testable.
+
+
+51. SEO / CONTENT IMPORT & EXPORT
+--------------------------------------------------------------------
+Where supported:
+
+Import:
+
+- Pages.
+- Articles.
+- Categories.
+- Tags.
+- SEO metadata.
+- Redirects.
+
+Export:
+
+- SEO settings.
+- Metadata.
+- Slugs.
+- Redirects.
+- Content.
+- Revisions where permitted.
+
+Imports must use:
+
+- Validation.
+- Tenant scoping.
+- Idempotency where possible.
+- Duplicate detection.
+- Dry-run/preview foundation.
+- Error reporting.
+
+Never allow imported data to bypass security controls.
+
+
+52. BACKUP & RESTORE
+--------------------------------------------------------------------
+Module 23 must include:
+
+- SEO settings.
+- Redirects.
+- Content.
+- Revisions.
+- Publishing state.
+- Scheduled content.
+- Structured-data configuration.
+
+Restore must preserve tenant boundaries.
+
+Restoring SEO settings must not accidentally change another
+tenant's public URLs or metadata.
+
+
+53. AUDIT REQUIREMENTS
+--------------------------------------------------------------------
+Audit significant actions:
+
+- SEO settings changes.
+- Robots changes.
+- Sitemap configuration changes.
+- Canonical changes.
+- Slug changes.
+- Redirect changes.
+- Content creation.
+- Content edits.
+- Review decisions.
+- Publishing.
+- Scheduling.
+- Unpublishing.
+- Archiving.
+- Restoring revisions.
+- Custom code changes.
+- Verification changes.
+
+Audit records should contain actor, tenant, action, target,
+timestamp, result, and relevant before/after references.
+
+
+54. TESTING REQUIREMENTS
+--------------------------------------------------------------------
+A comprehensive automated test suite is required.
+
+Tenant isolation tests:
+- SEO settings isolation.
+- Content isolation.
+- Redirect isolation.
+- Sitemap isolation.
+- Robots isolation.
+- Cache isolation.
+- Media isolation.
+
+SEO tests:
+- Title generation.
+- Description fallback.
+- Canonical generation.
+- Slug normalization.
+- Duplicate slug detection.
+- Redirect creation.
+- Redirect loop prevention.
+- Sitemap eligibility.
+- Robots generation.
+- Structured data.
+- Open Graph.
+- hreflang foundations.
+- Pagination.
+- Filter canonicalization.
+- noindex rules.
+- 404 handling.
+
+Content tests:
+- Draft visibility.
+- Review workflow.
+- Scheduled publication.
+- Unpublish.
+- Archive.
+- Restore.
+- Revision comparison.
+- Revision restoration.
+- Localization.
+- RTL content.
+- Content block validation.
+- Landing page rendering.
+- Article rendering.
+
+Security tests:
+- XSS.
+- Stored XSS.
+- Open redirect.
+- SSRF-safe URL handling.
+- Unauthorized custom code.
+- Unauthorized publishing.
+- Preview token abuse.
+- Cross-tenant access.
+- Privilege escalation.
+- Malicious file references.
+
+Performance tests:
+- Sitemap generation.
+- Metadata generation.
+- High-content stores.
+- Large redirect tables.
+- Cache invalidation.
+- Concurrent publishing.
+
+Failure tests:
+- Queue failure.
+- Scheduler failure.
+- Sitemap generation failure.
+- Database retry.
+- Partial publishing failure.
+- Cache invalidation failure.
+
+
+55. ACCEPTANCE CRITERIA
+--------------------------------------------------------------------
+Module 16 is considered complete only when:
+
+1. SEO configuration is tenant-safe.
+2. Public metadata is deterministic.
+3. Canonical URL generation works.
+4. Slug and redirect management works.
+5. Sitemap generation works.
+6. Robots output works.
+7. Structured-data foundations work.
+8. Social metadata works.
+9. Image SEO works.
+10. Static pages work.
+11. Landing pages work.
+12. Content blocks work.
+13. Publishing workflows work.
+14. Scheduling works.
+15. Revisions work.
+16. Preview security works.
+17. Multilingual/RTL foundations work.
+18. 404/redirect behavior works.
+19. Custom code is privileged and safe.
+20. APIs are tenant-aware.
+21. Events/outbox integration works.
+22. Caching is tenant-safe.
+23. Entitlements are enforced.
+24. Audit logging works.
+25. Backup/restore compatibility works.
+26. Automated tests pass.
+27. No cross-tenant SEO/content leakage exists.
+28. Build and deployment checks pass.
+
+
+56. REQUIRED FOLLOW-UP ARTIFACTS
+--------------------------------------------------------------------
+After implementation, create and maintain:
+
+1. Module 16 implementation checklist.
+2. SEO/content database blueprint.
+3. SEO/content API contract.
+4. Content rendering specification.
+5. SEO URL and canonical rules document.
+6. Redirect behavior specification.
+7. Sitemap/robots specification.
+8. Structured-data mapping specification.
+9. Content block schema specification.
+10. Publishing workflow/state diagram.
+11. Permission matrix.
+12. Package entitlement matrix.
+13. Automated test matrix.
+14. Security audit checklist.
+15. Performance/cache strategy.
+16. Migration plan.
+17. Production deployment checklist.
+18. Module 16 completion report.
+19. Repository checkpoint/progress note.
+
+
+57. CLAUDE DEVELOPMENT REQUIREMENTS
+--------------------------------------------------------------------
+Claude must:
+
+1. Read the complete Project Bible and all finalized module
+   blueprints before implementation.
+2. Treat Module 16 as the authoritative specification for SEO and
+   content responsibilities.
+3. Inspect the existing repository before changing code.
+4. Reuse established architecture and patterns.
+5. Never create a parallel architecture unnecessarily.
+6. Preserve tenant isolation.
+7. Never perform destructive database operations without explicit
+   authorization.
+8. Never hard-code package-specific business logic outside the
+   entitlement system.
+9. Implement database migrations safely.
+10. Add automated tests before declaring completion.
+11. Run backend/web/frontend tests and builds.
+12. Run lint/static analysis where applicable.
+13. Verify SEO output through actual rendered storefront pages.
+14. Test multiple tenants with different domains/configurations.
+15. Test draft/published/scheduled content.
+16. Test redirects and canonical behavior.
+17. Test sitemap and robots output.
+18. Test malicious content and XSS cases.
+19. Record all fixes.
+20. Commit only after validation.
+21. Push only when instructed by the project workflow.
+22. Preserve a concise repository checkpoint after the module.
+
+
+58. PRODUCTION READINESS
+--------------------------------------------------------------------
+Before production:
+
+- Confirm tenant isolation.
+- Confirm public/private route separation.
+- Confirm canonical domain resolution.
+- Confirm HTTPS.
+- Confirm sitemap accessibility.
+- Confirm robots accessibility.
+- Confirm no accidental noindex on public pages.
+- Confirm private pages are noindex.
+- Confirm redirect loops are impossible.
+- Confirm open redirects are blocked.
+- Confirm custom code permissions.
+- Confirm CSP/security headers.
+- Confirm cache isolation.
+- Confirm CDN behavior.
+- Confirm media isolation.
+- Confirm content publishing jobs.
+- Confirm scheduler reliability.
+- Confirm sitemap regeneration.
+- Confirm monitoring.
+- Confirm audit logs.
+- Confirm backups.
+- Confirm restore procedure.
+- Confirm package entitlements.
+- Confirm multilingual/RTL output.
+- Confirm 404 behavior.
+- Confirm structured data validity through appropriate tooling.
+- Confirm representative product/category/page/article URLs.
+
+
+59. FINAL ARCHITECTURAL RULES
+--------------------------------------------------------------------
+RULE 01:
+Module 16 is tenant-scoped.
+
+RULE 02:
+SEO metadata is never a source of truth for catalog, inventory,
+orders, payments, or customer financial data.
+
+RULE 03:
+Canonical URLs are server-generated and tenant-aware.
+
+RULE 04:
+Client-supplied canonical, price, availability, or structured-data
+values must never override authoritative business data.
+
+RULE 05:
+Historical URLs should be preserved through redirects where
+appropriate.
+
+RULE 06:
+Robots.txt is not a security mechanism.
+
+RULE 07:
+Noindex is not a substitute for authentication/authorization.
+
+RULE 08:
+Draft content must never become public accidentally.
+
+RULE 09:
+Preview access must be temporary and authorized.
+
+RULE 10:
+Custom HTML/JavaScript is privileged functionality.
+
+RULE 11:
+All rich content must be sanitized.
+
+RULE 12:
+All public URLs must resolve within the correct tenant context.
+
+RULE 13:
+Sitemap output must contain only eligible canonical URLs.
+
+RULE 14:
+Content changes must invalidate affected caches.
+
+RULE 15:
+Package entitlements control premium SEO/content capabilities.
+
+RULE 16:
+One core codebase serves all packages.
+
+RULE 17:
+No tenant may read or write another tenant's SEO/content data.
+
+RULE 18:
+SEO diagnostics are advisory and never promise search rankings.
+
+RULE 19:
+All publishing, redirect, SEO configuration, and privileged
+content actions must be auditable.
+
+RULE 20:
+Module 16 must integrate with the rest of the platform through
+defined contracts, events, APIs, and authoritative module ownership.
+
+====================================================================
+END OF MODULE 16 — SEO & CONTENT MANAGEMENT
+====================================================================

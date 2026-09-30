@@ -1,0 +1,2397 @@
+============================================================
+UMAR TECHY
+E-COMMERCE PLATFORM
+MASTER PROJECT BLUEPRINT
+MODULE 31 — API & DEVELOPER PLATFORM
+VERSION 1.0
+============================================================
+
+DOCUMENT PURPOSE
+------------------------------------------------------------
+This module defines the complete API and Developer Platform
+architecture for the Umar Techy Core Multi-Tenant E-Commerce SaaS.
+
+The API layer is a formal contract boundary between the Core
+Platform and:
+- Storefront applications
+- Mobile/PWA clients
+- Umar Techy Admin
+- Tenant administration
+- Registered third-party applications
+- Marketplace apps/plugins
+- Partners and resellers
+- Internal services
+- Future external integrations
+
+The API platform MUST preserve the Core Platform as the
+authoritative source of business rules, permissions, tenancy,
+pricing, inventory, orders, payments, billing, and security.
+
+This module does not replace the business modules. It exposes
+their approved capabilities through secure, versioned, observable,
+tenant-aware interfaces.
+
+DOCUMENT LANGUAGE
+------------------------------------------------------------
+All technical specifications in this module are intentionally
+written in English.
+
+============================================================
+1. MODULE OBJECTIVES
+============================================================
+
+1.1 Provide a secure, scalable, versioned API platform.
+1.2 Support first-party and approved third-party integrations.
+1.3 Enforce strict tenant isolation at every API boundary.
+1.4 Provide consistent authentication and authorization.
+1.5 Provide public, authenticated, admin, partner, and internal
+    API boundaries without mixing their trust levels.
+1.6 Provide reliable webhooks and event delivery.
+1.7 Provide developer registration, application management,
+    credentials, documentation, sandbox, usage, and support.
+1.8 Enforce package-based API entitlements and quotas.
+1.9 Support safe asynchronous operations for large workloads.
+1.10 Provide complete API observability, auditability, and abuse
+     protection.
+1.11 Preserve backward compatibility through controlled API
+     versioning and deprecation.
+1.12 Enable future SDKs, marketplace integrations, partner APIs,
+     GraphQL, gRPC, and other protocols without redesigning the
+     core domain model.
+
+============================================================
+2. ARCHITECTURAL PRINCIPLES
+============================================================
+
+2.1 API is a contract, not a shortcut around domain services.
+2.2 Core business modules remain authoritative.
+2.3 No API endpoint may directly bypass domain validation.
+2.4 Every authenticated request MUST resolve an authorized tenant
+    context where tenant-scoped data is involved.
+2.5 Tenant context MUST never be accepted solely from an
+    untrusted client-provided tenant identifier.
+2.6 Credentials MUST be cryptographically protected.
+2.7 Sensitive secrets MUST never be stored in plaintext.
+2.8 API responses MUST expose only fields authorized by the caller.
+2.9 Public APIs MUST expose only intentionally public data.
+2.10 Admin APIs MUST be isolated from ordinary tenant APIs.
+2.11 Internal service APIs MUST use service identity and stronger
+     controls than public APIs.
+2.12 Financial operations MUST be idempotent where applicable.
+2.13 Retries MUST be safe and predictable.
+2.14 API versions MUST be explicit and governed.
+2.15 Breaking changes MUST require a new major API version or an
+     explicitly governed compatibility strategy.
+2.16 Rate limits MUST be enforced server-side.
+2.17 Usage limits MUST be tenant-aware and application-aware.
+2.18 Webhooks MUST be signed and replay-resistant.
+2.19 Long-running work MUST support asynchronous job processing.
+2.20 Large exports/imports MUST not block normal API requests.
+2.21 API logs MUST redact secrets and sensitive personal data.
+2.22 Every request SHOULD have a correlation/request identifier.
+2.23 Every externally visible error MUST follow the standard
+     error contract.
+2.24 API documentation MUST be generated from authoritative
+     contracts where practical.
+2.25 Production credentials MUST never be reused in sandbox.
+2.26 Sandbox data MUST remain isolated from production.
+2.27 API access MUST be revocable without deleting the tenant.
+2.28 Disabling an application MUST immediately prevent new access.
+2.29 Package upgrades/downgrades MUST preserve application and
+     tenant identity.
+2.30 API architecture MUST support horizontal scaling.
+
+============================================================
+3. API SURFACES
+============================================================
+
+The platform SHALL support the following logical API surfaces:
+
+3.1 Storefront/Public API
+- Published catalog data
+- Published categories
+- Brands
+- Public content
+- Search
+- Store configuration safe for public exposure
+- Public availability indicators where intentionally exposed
+- Public promotions
+- Public shipping information
+- Public SEO/content metadata
+
+3.2 Customer API
+- Customer registration/login
+- Profile
+- Addresses
+- Cart
+- Wishlist
+- Checkout
+- Customer orders
+- Order tracking
+- Notifications
+- Approved customer-specific features
+
+3.3 Tenant Admin API
+- Products
+- Categories
+- Brands
+- Attributes
+- Inventory
+- Orders
+- Customers
+- Promotions
+- Shipping
+- Payments
+- Content
+- SEO
+- Analytics
+- Notifications
+- Store settings
+- Theme configuration
+- Domain settings
+- AI features where entitled
+
+3.4 Umar Techy Super Admin API
+- Tenant management
+- Package management
+- Entitlements
+- Subscription/billing administration
+- Application approval
+- API products
+- Global configuration
+- Security administration
+- Usage monitoring
+- Health monitoring
+- Platform-level audit operations
+
+3.5 Partner API
+- Approved partner operations
+- Restricted tenant/store operations
+- Reseller operations
+- Integration-specific operations
+
+3.6 Marketplace App API
+- App installation context
+- Authorized scopes
+- Tenant-approved resources
+- Webhooks
+- App configuration
+- Marketplace billing integration
+
+3.7 Internal Service API
+- Service-to-service operations
+- Background processing
+- Internal orchestration
+- Event processing
+- Internal read models where approved
+
+============================================================
+4. API TECHNOLOGY FOUNDATION
+============================================================
+
+4.1 Primary protocol:
+- HTTPS
+- REST
+- JSON
+
+4.2 API specification:
+- OpenAPI as the authoritative contract format.
+
+4.3 Encoding:
+- UTF-8.
+
+4.4 Authentication:
+- OAuth 2.0 for application/user authorization.
+- API keys for approved server-to-server integrations.
+- JWT/service tokens for controlled internal or service contexts.
+- Future mTLS for high-trust service communication.
+
+4.5 Future protocol compatibility:
+- GraphQL may be introduced as a controlled read/query layer.
+- gRPC may be introduced for internal service communication.
+- Neither may bypass authorization, tenancy, audit, or domain rules.
+
+============================================================
+5. API VERSIONING
+============================================================
+
+5.1 Version APIs explicitly.
+5.2 Recommended initial public format:
+    /api/v1/...
+5.3 Major versions represent compatibility boundaries.
+5.4 Non-breaking additions SHOULD remain within the same major
+    version.
+5.5 Breaking changes require a new major version unless a formal
+    compatibility mechanism is approved.
+5.6 Deprecated versions MUST have:
+- Deprecation date
+- Replacement version
+- Migration documentation
+- Sunset date where applicable
+- Usage monitoring
+5.7 Deprecated endpoints MUST NOT disappear without an approved
+    migration period unless required for security or legal reasons.
+5.8 API changelog MUST document behavior changes.
+5.9 Contract tests MUST exist for supported versions.
+
+============================================================
+6. API APPLICATION AND DEVELOPER MODEL
+============================================================
+
+6.1 Developer Account
+A developer account represents an individual or organization
+allowed to create API applications.
+
+6.2 Developer Organization
+A developer organization may contain:
+- Owners
+- Administrators
+- Developers
+- Support users
+- Billing users
+
+6.3 Developer Application
+Each registered application MUST contain:
+- Application ID
+- Developer organization ID
+- Name
+- Description
+- Environment
+- Status
+- Redirect URIs where applicable
+- Allowed origins where applicable
+- Requested scopes
+- Approved scopes
+- Webhook configuration
+- Rate-limit plan
+- API product
+- Created timestamp
+- Updated timestamp
+- Last-used timestamp
+
+6.4 Application lifecycle:
+- Draft
+- Pending Review
+- Approved
+- Active
+- Suspended
+- Revoked
+- Archived
+
+6.5 Application suspension MUST preserve audit history.
+6.6 Revocation MUST invalidate active credentials according to
+    the configured credential policy.
+
+============================================================
+7. CREDENTIAL MANAGEMENT
+============================================================
+
+7.1 Supported credential types:
+- API key
+- OAuth client ID
+- OAuth client secret
+- Access token
+- Refresh token
+- Service token
+- Future certificate identity
+
+7.2 Secrets MUST be shown only when necessary and preferably only
+    once at creation.
+7.3 Secrets MUST be stored hashed or encrypted according to their
+    intended verification/use model.
+7.4 API keys SHOULD be stored as a cryptographic hash with a
+    searchable public prefix.
+7.5 OAuth client secrets MUST never be exposed in normal logs.
+7.6 Credentials MUST support:
+- Creation
+- Rotation
+- Revocation
+- Expiration where applicable
+- Last-used information
+- Audit history
+
+7.7 Credential rotation MUST not require tenant recreation.
+7.8 Old credentials may have a controlled overlap period during
+    rotation.
+7.9 Compromised credentials MUST be revocable immediately.
+7.10 Credentials MUST never be committed to source control.
+
+============================================================
+8. AUTHENTICATION
+============================================================
+
+8.1 Public endpoints:
+- No authentication where intentionally public.
+- Must still enforce abuse protection and tenant/store resolution.
+
+8.2 Customer authentication:
+- Session/token-based authentication as defined by Module 02.
+
+8.3 OAuth:
+- Authorization Code flow for user-delegated access.
+- PKCE MUST be used for public clients.
+- Client Credentials MAY be used for approved server-to-server
+  applications.
+
+8.4 API keys:
+- Only for approved use cases.
+- Must be scoped and tenant-bound.
+- Must not replace user authorization where user consent is required.
+
+8.5 JWT:
+- Validate signature.
+- Issuer.
+- Audience.
+- Expiration.
+- Not-before where applicable.
+- Required claims.
+- Tenant binding.
+- Scope/role constraints.
+
+8.6 Internal service authentication:
+- Service identity.
+- Short-lived credentials where possible.
+- Future mTLS for high-trust boundaries.
+
+============================================================
+9. AUTHORIZATION AND SCOPES
+============================================================
+
+9.1 Authorization MUST combine:
+- Identity
+- Tenant
+- Role
+- Permission
+- Scope
+- Resource ownership
+- Package entitlement
+- Application status
+
+9.2 Example scopes:
+- products:read
+- products:write
+- categories:read
+- categories:write
+- inventory:read
+- inventory:write
+- orders:read
+- orders:write
+- customers:read
+- customers:write
+- promotions:read
+- promotions:write
+- shipping:read
+- shipping:write
+- analytics:read
+- storefront:read
+- themes:read
+- themes:write
+- domains:read
+- domains:write
+- billing:read
+- billing:write
+- webhooks:manage
+- ai:use
+
+9.3 Sensitive scopes MUST require elevated approval.
+9.4 Customer PII scopes MUST be explicit.
+9.5 Payment-related scopes MUST be restricted.
+9.6 Administrative scopes MUST never be granted implicitly.
+9.7 Scope escalation MUST require reauthorization.
+9.8 Removing a scope MUST take effect without recreating the app.
+
+============================================================
+10. MULTI-TENANT ISOLATION
+============================================================
+
+10.1 Every tenant-scoped API operation MUST resolve a tenant context.
+10.2 Tenant context MUST originate from trusted authentication,
+     application installation context, or validated store/domain
+     resolution.
+10.3 Client-supplied tenant IDs MUST NOT be trusted as authorization.
+10.4 Repository/service queries MUST include tenant boundaries.
+10.5 Object-level authorization MUST prevent cross-tenant object access.
+10.6 Cache keys MUST include tenant identity where tenant data is cached.
+10.7 Search indexes MUST preserve tenant isolation.
+10.8 Background jobs MUST carry tenant context.
+10.9 Webhook subscriptions MUST be tenant-scoped.
+10.10 Export jobs MUST be tenant-scoped.
+10.11 Analytics queries MUST be tenant-scoped.
+10.12 Logs MUST include safe tenant/application identifiers without
+      exposing sensitive data.
+10.13 File storage paths and signed URLs MUST enforce tenant isolation.
+10.14 Cross-tenant access tests are mandatory.
+
+============================================================
+11. PUBLIC STOREFRONT API
+============================================================
+
+11.1 Public APIs may expose:
+- Published products
+- Published categories
+- Published brands
+- Published attributes
+- Public store branding
+- Published pages
+- Public SEO metadata
+- Public promotions
+- Public shipping information
+- Public search results
+
+11.2 Public APIs MUST NOT expose:
+- Passwords
+- Private customer data
+- Internal notes
+- Supplier information
+- Private inventory data
+- Payment credentials
+- Private financial records
+- Admin audit logs
+- Internal API credentials
+- Hidden/unpublished resources
+
+11.3 Public APIs MUST respect:
+- Store status
+- Product publication status
+- Inventory visibility settings
+- Package entitlements
+- Storefront configuration
+
+============================================================
+12. PRODUCT AND CATALOG APIs
+============================================================
+
+12.1 Product APIs:
+- Create
+- Read
+- Update
+- Archive
+- Publish/unpublish
+- Variant management
+- Media management
+- Pricing configuration
+- SEO fields
+- Attributes
+
+12.2 Category APIs:
+- CRUD
+- Hierarchy
+- Ordering
+- Publication
+- SEO metadata
+
+12.3 Brand APIs:
+- CRUD
+- Publication
+- Media
+- SEO metadata
+
+12.4 Attribute APIs:
+- Attribute definitions
+- Values
+- Product assignment
+- Variant options
+
+12.5 Bulk operations:
+- Bulk import
+- Bulk update
+- Bulk publish
+- Bulk archive
+
+12.6 Bulk writes MUST:
+- Validate limits
+- Process asynchronously where necessary
+- Return operation/job ID
+- Report per-item results safely
+
+============================================================
+13. INVENTORY APIs
+============================================================
+
+13.1 Inventory APIs MUST use Module 08 as authority.
+13.2 Supported operations:
+- Stock read
+- Stock adjustment
+- Stock reservation
+- Stock release
+- Warehouse/location read
+- Low-stock configuration
+- Inventory history where entitled
+
+13.3 Stock-changing APIs MUST:
+- Require explicit write permission.
+- Validate product/variant existence.
+- Validate tenant ownership.
+- Use transactional domain services.
+- Record inventory history.
+- Support idempotency where retryable.
+
+13.4 External clients MUST NOT directly overwrite authoritative
+     stock values without domain validation.
+
+============================================================
+14. ORDER APIs
+============================================================
+
+14.1 Order APIs MUST use Module 09 as authority.
+14.2 Supported operations may include:
+- Create order through approved checkout flow
+- Read orders
+- Update permitted order fields
+- Status transitions
+- Fulfillment operations
+- Notes where authorized
+- Cancellation where permitted
+- Return/refund initiation where permitted
+
+14.3 Order status MUST NOT be arbitrarily set by a client.
+14.4 Valid status transitions MUST be enforced server-side.
+14.5 Historical order records MUST remain auditable.
+14.6 Financial totals MUST be server-authoritative.
+
+============================================================
+15. CUSTOMER APIs
+============================================================
+
+15.1 Customer APIs MUST enforce least privilege.
+15.2 Supported operations:
+- Customer profile
+- Addresses
+- Customer orders
+- Preferences
+- Consent
+- Notifications
+- Store-specific customer data
+
+15.3 PII fields MUST be protected by explicit permissions/scopes.
+15.4 Bulk customer export MUST require elevated permission.
+15.5 Customer data MUST not be returned across tenant boundaries.
+15.6 Sensitive fields MUST be masked or excluded when unnecessary.
+
+============================================================
+16. CART AND CHECKOUT APIs
+============================================================
+
+16.1 Cart APIs:
+- Create cart
+- Read cart
+- Add item
+- Update quantity
+- Remove item
+- Apply coupon
+- Estimate shipping
+- Estimate totals
+
+16.2 Checkout APIs:
+- Validate cart
+- Address
+- Shipping method
+- Payment method selection
+- Order creation
+- Confirmation
+
+16.3 Client-provided totals MUST never become authoritative.
+16.4 Server MUST recalculate:
+- Product price
+- Discounts
+- Tax where applicable
+- Shipping
+- Final total
+- Eligibility
+
+16.5 Checkout operations MUST be protected against replay and
+     duplicate order creation.
+
+============================================================
+17. PAYMENT APIs
+============================================================
+
+17.1 Payment APIs MUST use Module 12 as authority.
+17.2 Raw card data MUST never pass through or be stored by the
+     platform unless a formally approved PCI architecture requires it.
+17.3 Prefer hosted/tokenized gateway flows.
+17.4 APIs may expose:
+- Payment initiation
+- Payment intent/status
+- Gateway selection
+- Approved transaction metadata
+- Refund initiation where authorized
+
+17.5 APIs MUST NOT allow arbitrary payment status overrides.
+17.6 Refunds MUST be domain-authorized and auditable.
+17.7 Invoice totals MUST not be directly mutated through generic APIs.
+17.8 Webhook signatures from payment providers MUST be validated.
+17.9 Payment operations MUST be idempotent.
+
+============================================================
+18. SHIPPING APIs
+============================================================
+
+18.1 Shipping APIs MUST use Module 13 as authority.
+18.2 Supported operations:
+- Shipping zones
+- Methods
+- Rates
+- Delivery estimates
+- Shipment creation
+- Tracking
+- Carrier integration
+- Shipment status
+
+18.3 Carrier credentials MUST remain server-side.
+18.4 Shipping status changes MUST be validated.
+18.5 Webhook-driven carrier updates MUST be idempotent.
+
+============================================================
+19. PROMOTION AND MARKETING APIs
+============================================================
+
+19.1 Promotion APIs MUST use Module 14.
+19.2 Marketing APIs MUST use Module 15.
+19.3 Support:
+- Coupons
+- Campaigns
+- Discounts
+- Customer segments
+- Marketing events
+- Campaign analytics
+- Consent-aware communications
+
+19.4 Coupon validation MUST occur server-side.
+19.5 Discount calculation MUST remain server-authoritative.
+19.6 Marketing APIs MUST honor consent and communication preferences.
+
+============================================================
+20. SEO AND CONTENT APIs
+============================================================
+
+20.1 SEO/content APIs MUST use Module 16.
+20.2 Support:
+- Pages
+- Blog/content
+- Metadata
+- Redirects
+- Structured data configuration
+- Sitemap configuration
+- SEO settings
+
+20.3 Published content may be exposed publicly.
+20.4 Draft/private content requires authorization.
+20.5 Dangerous HTML/script injection MUST be sanitized or prohibited.
+
+============================================================
+21. THEME AND DESIGN APIs
+============================================================
+
+21.1 Theme APIs MUST use Module 17.
+21.2 Support:
+- Theme listing
+- Theme configuration
+- Branding
+- Typography
+- Colors
+- Layout configuration
+- Component settings
+- Preview
+
+21.3 Theme configuration MUST be schema-validated.
+21.4 Arbitrary executable code MUST NOT be accepted as theme configuration.
+21.5 Package entitlements MUST control premium themes/features.
+
+============================================================
+22. ANIMATION AND INTERACTION APIs
+============================================================
+
+22.1 Animation APIs MUST use Module 18.
+22.2 Support:
+- Animation profile
+- Component interaction settings
+- Motion preferences
+- Performance profile
+- Reduced-motion behavior
+
+22.3 Animation configuration MUST remain data/configuration driven.
+22.4 Reduced-motion preferences MUST be respected.
+
+============================================================
+23. DOMAIN APIs
+============================================================
+
+23.1 Domain APIs MUST use Module 19.
+23.2 Support:
+- Domain listing
+- Verification status
+- DNS requirements
+- Primary domain selection
+- SSL status
+- Redirect configuration
+
+23.3 Domain ownership verification MUST be authoritative.
+23.4 Sensitive DNS operations MUST require elevated authorization.
+23.5 Domain credentials MUST never be exposed through normal APIs.
+
+============================================================
+24. STORE AND SUBSCRIPTION APIs
+============================================================
+
+24.1 Store APIs MUST use Module 03.
+24.2 Subscription APIs MUST use Module 04.
+24.3 Billing APIs MUST use Module 29.
+24.4 Support:
+- Store profile
+- Store settings
+- Current package
+- Entitlements
+- Usage limits
+- Subscription status
+- Renewal status
+- Billing records
+- Upgrade/downgrade requests
+
+24.5 Package entitlement checks MUST occur server-side.
+24.6 Downgrade MUST not silently delete protected data.
+24.7 Locked features MUST fail with a clear entitlement error.
+
+============================================================
+25. NOTIFICATION APIs
+============================================================
+
+25.1 Notification APIs MUST use Module 21.
+25.2 Support:
+- Notification templates
+- Delivery status
+- User preferences
+- Approved channel configuration
+- Notification history where authorized
+
+25.3 Provider credentials MUST remain server-side.
+25.4 Bulk messaging MUST respect package limits and consent.
+25.5 Rate limits MUST protect external providers from abuse.
+
+============================================================
+26. ANALYTICS APIs
+============================================================
+
+26.1 Analytics APIs MUST use Module 22.
+26.2 Support:
+- Sales metrics
+- Orders
+- Customers
+- Conversion
+- Product performance
+- Inventory metrics
+- Marketing metrics
+- API usage metrics
+
+26.3 Analytics access MUST be tenant-scoped.
+26.4 PII MUST be minimized.
+26.5 Heavy reports SHOULD use asynchronous jobs.
+
+============================================================
+27. BACKUP AND DATA PROTECTION APIs
+============================================================
+
+27.1 Backup APIs MUST use Module 23.
+27.2 Restore operations MUST be heavily restricted.
+27.3 Restore APIs MUST require:
+- Elevated authorization
+- Explicit confirmation
+- Audit event
+- Validation
+- Safe recovery workflow
+
+27.4 Arbitrary destructive restore endpoints MUST NOT be public.
+27.5 Backup download URLs MUST be short-lived and access-controlled.
+
+============================================================
+28. HEALTH AND RESOURCE USAGE APIs
+============================================================
+
+28.1 Health APIs MUST use Module 24.
+28.2 Support:
+- API request usage
+- Storage usage
+- Resource usage
+- Error rate
+- Queue status
+- Health state
+- Quota consumption
+
+28.3 Tenant users receive only their own tenant metrics.
+28.4 Super Admin may receive platform-wide metrics.
+
+============================================================
+29. PWA AND MOBILE APIs
+============================================================
+
+29.1 Mobile/PWA clients MUST use the same governed API contracts.
+29.2 No separate business logic copy should exist solely for mobile.
+29.3 Offline synchronization APIs MUST use explicit conflict rules.
+29.4 Sync endpoints MUST be idempotent where applicable.
+29.5 Device/session identifiers MUST be validated.
+29.6 Offline clients MUST never become authoritative for financial
+     or security-sensitive state.
+
+============================================================
+30. AI APIs
+============================================================
+
+30.1 AI APIs MUST use Module 26.
+30.2 AI access MUST be controlled by package entitlement.
+30.3 AI usage MUST support:
+- Token/cost limits
+- Request limits
+- Model entitlement
+- Feature entitlement
+- Usage metering
+
+30.4 AI-generated actions MUST still pass normal authorization and
+     domain validation.
+30.5 AI MUST NOT bypass permissions.
+30.6 AI APIs MUST not expose secrets or unrestricted internal data.
+30.7 High-cost AI operations SHOULD support usage budgets.
+30.8 AI tool calls MUST be auditable.
+
+============================================================
+31. MARKETPLACE AND INTEGRATION APIs
+============================================================
+
+31.1 Marketplace APIs MUST integrate with Module 27.
+31.2 Installed apps MUST receive only approved scopes.
+31.3 App uninstall MUST revoke app access.
+31.4 App installation MUST establish:
+- Tenant
+- App
+- Scopes
+- Credentials
+- Webhook subscriptions
+- Installation status
+
+31.5 Marketplace apps MUST not automatically gain access to all
+     tenant resources.
+
+============================================================
+32. AFFILIATE AND RESELLER APIs
+============================================================
+
+32.1 APIs may support Module 28.
+32.2 Approved reseller APIs may expose:
+- Referral information
+- Customer/store provisioning
+- Package information
+- Commission information
+- Allowed management operations
+
+32.3 Resellers MUST only access stores within their authorized scope.
+32.4 Reseller access MUST be auditable.
+32.5 Reseller APIs MUST not expose unrelated tenant data.
+
+============================================================
+33. BILLING APIs
+============================================================
+
+33.1 Billing APIs MUST use Module 29.
+33.2 Support:
+- Invoices
+- Subscription status
+- Payment history
+- Renewal
+- Package changes
+- Usage charges
+- Billing configuration where authorized
+
+33.3 Invoice records MUST remain authoritative.
+33.4 Client applications MUST not directly alter paid invoice state.
+33.5 Financial API operations MUST be idempotent and auditable.
+
+============================================================
+34. WEBHOOK PLATFORM
+============================================================
+
+34.1 Webhooks are first-class API platform capabilities.
+
+34.2 Event examples:
+- store.created
+- store.updated
+- store.suspended
+- product.created
+- product.updated
+- product.published
+- inventory.updated
+- inventory.low_stock
+- order.created
+- order.updated
+- order.cancelled
+- order.fulfilled
+- payment.created
+- payment.updated
+- payment.refunded
+- customer.created
+- customer.updated
+- shipment.created
+- shipment.updated
+- subscription.updated
+- invoice.created
+- invoice.paid
+- invoice.failed
+- domain.verified
+- app.installed
+- app.uninstalled
+
+34.3 Every event MUST include:
+- Event ID
+- Event type
+- Event version
+- Tenant ID
+- Application ID where applicable
+- Resource ID
+- Created timestamp
+- Delivery attempt metadata where appropriate
+- Payload
+
+34.4 Webhook registration:
+- Endpoint URL
+- Selected events
+- Secret
+- Status
+- Retry policy
+- Created/updated timestamps
+
+34.5 Webhook security:
+- HMAC signature
+- Timestamp
+- Replay protection
+- HTTPS requirement
+- Secret rotation
+
+34.6 Delivery:
+- Retry with exponential backoff
+- Maximum attempts
+- Dead-letter state
+- Delivery history
+- Manual replay
+- Disable after repeated failures according to policy
+
+34.7 Receiver idempotency:
+- Event ID MUST be unique.
+- Consumers SHOULD store processed event IDs.
+
+34.8 Webhook payloads MUST not contain unnecessary secrets or PII.
+34.9 Large payloads SHOULD be replaced by resource references where
+     appropriate.
+
+============================================================
+35. EVENT CATALOG AND EVENT VERSIONING
+============================================================
+
+35.1 Maintain a centralized event catalog.
+35.2 Every event MUST have a documented schema.
+35.3 Event versions MUST be independently governed from REST API
+     versions when necessary.
+35.4 Breaking event payload changes require a new event version.
+35.5 Consumers MUST be able to identify event version.
+35.6 Event contracts MUST have automated tests.
+
+============================================================
+36. RATE LIMITING AND QUOTAS
+============================================================
+
+36.1 Rate limiting MUST exist at:
+- IP
+- Credential
+- Application
+- Tenant
+- Endpoint
+- API product
+- Platform level where needed
+
+36.2 Support:
+- Requests per minute
+- Requests per hour
+- Daily quota
+- Monthly quota
+- Burst capacity
+- Concurrent request limits
+
+36.3 Rate limits MUST be package-aware.
+36.4 Rate-limit headers SHOULD communicate:
+- Limit
+- Remaining
+- Reset
+
+36.5 HTTP 429 MUST be used for rate-limit exhaustion.
+36.6 Abuse protection MAY impose temporary stricter limits.
+36.7 Internal services MUST have separate limits.
+
+============================================================
+37. API USAGE METERING
+============================================================
+
+37.1 Meter:
+- Request count
+- Successful requests
+- Error requests
+- Endpoint usage
+- Application usage
+- Tenant usage
+- Bandwidth where needed
+- Async jobs
+- Webhook deliveries
+- AI usage
+- Export/import usage
+
+37.2 Usage records MUST be linked to:
+- Tenant
+- Application
+- API product
+- Endpoint
+- Time period
+
+37.3 Metering MUST support Module 29 billing.
+37.4 Metering MUST support Module 24 resource monitoring.
+37.5 Metering MUST support Module 22 analytics.
+
+============================================================
+38. API PRODUCT AND PLAN MODEL
+============================================================
+
+38.1 API Products define bundles of:
+- Endpoints
+- Scopes
+- Rate limits
+- Quotas
+- Support level
+- SLA where applicable
+
+38.2 API products may be:
+- Public
+- Private
+- Partner-only
+- Marketplace-only
+- Internal
+
+38.3 Tenant package entitlements MUST determine which API products
+     are available.
+38.4 Premium API access may require separate entitlement or billing.
+38.5 API product changes MUST be auditable.
+
+============================================================
+39. STANDARD REQUEST CONVENTIONS
+============================================================
+
+39.1 HTTP methods:
+- GET
+- POST
+- PUT where replacement semantics are appropriate
+- PATCH for partial updates
+- DELETE only where deletion is safe and authorized
+
+39.2 Pagination:
+- Prefer cursor pagination for large/volatile datasets.
+- Page-based pagination may be supported for simple use cases.
+
+39.3 Filtering:
+- Explicit documented fields only.
+- No arbitrary SQL-like filtering.
+
+39.4 Sorting:
+- Explicit allowlisted fields only.
+
+39.5 Search:
+- Dedicated search endpoints or query parameters.
+- Search MUST remain tenant-aware.
+
+39.6 Bulk:
+- Explicit bulk endpoints.
+- Safe maximum batch size.
+- Partial-result reporting.
+
+============================================================
+40. RESPONSE CONTRACT
+============================================================
+
+40.1 Standard successful responses SHOULD contain:
+- Data
+- Pagination metadata where applicable
+- Request/correlation ID where appropriate
+
+40.2 Standard errors MUST contain:
+- Error code
+- Human-readable message
+- Request/correlation ID
+- Optional field errors
+- Optional documentation reference
+
+40.3 Do not expose:
+- Stack traces
+- SQL errors
+- Secrets
+- Internal file paths
+- Infrastructure credentials
+- Sensitive debugging details
+
+============================================================
+41. HTTP STATUS CONVENTIONS
+============================================================
+
+Use standard HTTP semantics including:
+- 200 OK
+- 201 Created
+- 202 Accepted
+- 204 No Content
+- 400 Bad Request
+- 401 Unauthorized
+- 403 Forbidden
+- 404 Not Found
+- 409 Conflict
+- 410 Gone where appropriate
+- 412 Precondition Failed
+- 422 Unprocessable Entity
+- 429 Too Many Requests
+- 500 Internal Server Error
+- 502/503/504 for controlled upstream/service failures
+
+Business-specific error codes MUST provide additional precision.
+
+============================================================
+42. IDEMPOTENCY
+============================================================
+
+42.1 Write operations that can be retried MUST support idempotency
+     where duplicate execution could cause harm.
+42.2 Recommended header:
+    Idempotency-Key
+
+42.3 Idempotency records MUST include:
+- Tenant
+- Application/actor
+- Endpoint
+- Key
+- Request fingerprint
+- Result/status
+- Expiration
+
+42.4 Reusing a key with a materially different request MUST fail.
+42.5 Required use cases include:
+- Order creation
+- Payment initiation
+- Refunds
+- Inventory adjustments
+- Subscription operations
+- Billing operations
+- Webhook processing
+- External provisioning
+
+============================================================
+43. CONCURRENCY CONTROL
+============================================================
+
+43.1 Support optimistic concurrency where appropriate.
+43.2 ETag/If-Match MAY be used.
+43.3 Version fields SHOULD be used for mutable resources.
+43.4 Concurrent updates MUST not silently overwrite important data.
+43.5 Inventory, payments, orders, and billing require especially
+     strong concurrency handling.
+
+============================================================
+44. CACHING
+============================================================
+
+44.1 Public catalog APIs may use caching.
+44.2 Private/customer/admin responses MUST not be cached publicly.
+44.3 Cache keys MUST include tenant/store context where applicable.
+44.4 Sensitive responses MUST use appropriate cache-control headers.
+44.5 Cache invalidation MUST be event-driven where practical.
+44.6 Stale cached data MUST never authorize a security-sensitive
+     operation.
+
+============================================================
+45. ASYNCHRONOUS OPERATIONS
+============================================================
+
+45.1 Long-running operations SHOULD return:
+- 202 Accepted
+- Operation/job ID
+- Status endpoint
+
+45.2 Supported async workloads:
+- Large exports
+- Imports
+- Bulk updates
+- Analytics reports
+- Backups
+- Restore workflows
+- Large media processing
+- AI batch processing
+- Marketplace synchronization
+
+45.3 Job status MUST be tenant-scoped.
+45.4 Job cancellation MUST be authorized.
+45.5 Failed jobs MUST expose safe failure information.
+45.6 Retryable jobs MUST have controlled retry semantics.
+
+============================================================
+46. EXPORT AND IMPORT APIs
+============================================================
+
+46.1 Exports MUST be authorized and tenant-scoped.
+46.2 Large exports MUST be asynchronous.
+46.3 Generated files SHOULD use short-lived signed URLs.
+46.4 Export data MUST be encrypted at rest.
+46.5 Sensitive exports MUST be audited.
+46.6 Import processing MUST validate:
+- File type
+- File size
+- Schema
+- Tenant
+- Permissions
+- Row limits
+- Duplicate/conflict behavior
+
+46.7 Import jobs MUST not partially corrupt authoritative data.
+
+============================================================
+47. MEDIA AND FILE APIs
+============================================================
+
+47.1 File uploads MUST use secure upload mechanisms.
+47.2 Prefer signed upload URLs for large objects.
+47.3 Validate:
+- MIME type
+- Extension
+- File size
+- Tenant
+- Resource ownership
+
+47.4 Security scanning/malware scanning SHOULD be supported.
+47.5 File names MUST not be trusted for path construction.
+47.6 Object storage paths MUST be tenant-isolated.
+47.7 Download URLs MUST expire.
+47.8 Private files MUST never become public through predictable URLs.
+
+============================================================
+48. DEVELOPER PORTAL
+============================================================
+
+48.1 Developer Portal MUST provide:
+- Registration
+- Developer organization management
+- Application creation
+- Credential management
+- OAuth setup
+- Scope selection
+- API documentation
+- OpenAPI/reference docs
+- Sandbox access
+- Webhook management
+- Usage dashboard
+- Rate-limit information
+- API logs
+- Changelog
+- Deprecation notices
+- Support
+- App review status
+
+48.2 Developer Portal must clearly separate:
+- Sandbox
+- Production
+
+48.3 Production secrets MUST not appear in sandbox.
+48.4 Developers MUST be able to revoke credentials.
+48.5 Documentation MUST show required scopes and examples.
+
+============================================================
+49. SANDBOX ENVIRONMENT
+============================================================
+
+49.1 Provide a logically isolated sandbox.
+49.2 Sandbox MUST have:
+- Separate credentials
+- Separate data
+- Separate webhook destinations/configuration
+- Safe test payments
+- Test customers
+- Test products
+- Test orders
+- Test inventory
+- Test API quotas
+
+49.3 Sandbox MUST never affect production.
+49.4 Sandbox data MUST be clearly marked.
+49.5 Sandbox reset tools may be provided with appropriate safeguards.
+
+============================================================
+50. SDK AND CODE GENERATION FOUNDATION
+============================================================
+
+50.1 OpenAPI contracts MUST support future SDK generation.
+50.2 Initial SDK targets may include:
+- JavaScript/TypeScript
+- PHP
+- Python
+- Dart
+- C#
+
+50.3 SDKs MUST:
+- Respect API versioning
+- Handle authentication safely
+- Support retries only where safe
+- Support idempotency
+- Surface typed errors
+- Expose request IDs
+
+50.4 Generated SDKs MUST never embed production secrets.
+
+============================================================
+51. API DOCUMENTATION
+============================================================
+
+51.1 Every public API endpoint MUST document:
+- Purpose
+- Authentication
+- Required scopes
+- Tenant behavior
+- Parameters
+- Request body
+- Response body
+- Error codes
+- Rate limits
+- Idempotency requirements
+- Examples
+
+51.2 Documentation MUST identify:
+- Current version
+- Deprecated versions
+- Changelog
+- Migration guides
+
+51.3 OpenAPI should be the source for generated reference documentation.
+
+============================================================
+52. API GATEWAY AND EDGE CONTROLS
+============================================================
+
+52.1 API traffic SHOULD pass through an API gateway or equivalent
+     edge layer.
+52.2 Edge controls may include:
+- TLS termination
+- WAF
+- Rate limiting
+- DDoS protection
+- IP restrictions
+- Request size limits
+- Authentication middleware
+- Header validation
+- CORS policy
+
+52.3 Security controls MUST not be bypassable through alternate
+     public routes.
+52.4 Internal APIs MUST not accidentally become publicly reachable.
+
+============================================================
+53. CORS AND CSRF
+============================================================
+
+53.1 CORS MUST use explicit allowlists.
+53.2 Wildcard origins MUST not be used for authenticated sensitive
+     APIs.
+53.3 Credentials-enabled CORS MUST use explicit trusted origins.
+53.4 Browser cookie-based authentication MUST use CSRF protection.
+53.5 Token-based APIs must still protect browser clients from
+     token theft and unsafe storage patterns.
+
+============================================================
+54. IP RESTRICTIONS
+============================================================
+
+54.1 Support optional IP allowlists for:
+- Partner applications
+- Enterprise applications
+- High-risk admin integrations
+- Internal services
+
+54.2 IP restrictions MUST be evaluated server-side.
+54.3 Changes to IP restrictions MUST be audited.
+54.4 Emergency access procedures MUST be documented.
+
+============================================================
+55. OBSERVABILITY
+============================================================
+
+55.1 Record:
+- Request count
+- Response status
+- Latency
+- Endpoint
+- Application
+- Tenant
+- Error rate
+- Rate-limit events
+- Authentication failures
+- Webhook delivery
+- Async job state
+
+55.2 Use:
+- Structured logs
+- Metrics
+- Distributed traces where supported
+- Correlation IDs
+
+55.3 Sensitive fields MUST be redacted.
+55.4 Authorization failures SHOULD be observable without exposing
+     sensitive details.
+55.5 API logs MUST support operational troubleshooting.
+
+============================================================
+56. SECURITY MONITORING AND ABUSE PROTECTION
+============================================================
+
+56.1 Detect:
+- Credential abuse
+- Brute force
+- Excessive requests
+- Unusual geographic patterns where appropriate
+- Repeated authorization failures
+- Cross-tenant access attempts
+- Suspicious webhook activity
+- Abnormal export behavior
+
+56.2 Controls may include:
+- Temporary blocks
+- Credential revocation
+- Application suspension
+- IP restrictions
+- Increased rate limits only after explicit approval
+- Security alerts
+
+56.3 Security events MUST be auditable.
+
+============================================================
+57. AUDIT LOGGING
+============================================================
+
+57.1 Audit important API actions:
+- Login/authentication events
+- Credential creation/revocation
+- Scope changes
+- App approval
+- App suspension
+- Data exports
+- Product writes
+- Inventory changes
+- Order status changes
+- Payment actions
+- Refunds
+- Subscription changes
+- Domain changes
+- Backup/restore actions
+- Super Admin actions
+
+57.2 Audit records SHOULD contain:
+- Event ID
+- Actor
+- Tenant
+- Application
+- Action
+- Resource
+- Timestamp
+- Result
+- Request/correlation ID
+- Safe metadata
+
+57.3 Audit records MUST not contain secrets.
+
+============================================================
+58. DATA PRIVACY
+============================================================
+
+58.1 API data minimization is mandatory.
+58.2 Return only fields necessary for the requested operation.
+58.3 Sensitive PII MUST require explicit permission.
+58.4 Customer exports MUST be restricted.
+58.5 Data deletion/export requests MUST integrate with platform
+     privacy workflows.
+58.6 Logs MUST have appropriate retention and redaction.
+58.7 API responses MUST respect tenant privacy boundaries.
+
+============================================================
+59. API BILLING INTEGRATION
+============================================================
+
+59.1 API usage may be:
+- Included in package
+- Limited by package
+- Metered
+- Billable add-on
+
+59.2 Usage metering MUST integrate with Module 29.
+59.3 Billing MUST never rely on client-reported usage.
+59.4 Metering records MUST be server-generated.
+59.5 Disputed usage MUST remain traceable to request/application/
+     tenant records.
+
+============================================================
+60. ERROR AND RETRY SEMANTICS
+============================================================
+
+60.1 Clients MUST distinguish:
+- Validation errors
+- Authentication errors
+- Authorization errors
+- Conflict errors
+- Rate-limit errors
+- Temporary service failures
+- Permanent business failures
+
+60.2 Retry only when:
+- Endpoint semantics permit retry
+- Error indicates temporary failure
+- Idempotency is guaranteed where needed
+
+60.3 4xx business errors generally SHOULD NOT be blindly retried.
+60.4 5xx and upstream temporary failures MAY be retried with backoff.
+
+============================================================
+61. API HEALTH AND RELIABILITY
+============================================================
+
+61.1 APIs MUST support health checks appropriate to their layer.
+61.2 Health endpoints MUST not expose sensitive infrastructure data.
+61.3 Readiness and liveness MUST be distinguishable where the
+     infrastructure supports them.
+61.4 Dependency failures SHOULD produce controlled degraded behavior.
+61.5 Critical API dependencies MUST have timeout and circuit-breaker
+     strategies where appropriate.
+
+============================================================
+62. PERFORMANCE REQUIREMENTS
+============================================================
+
+62.1 API endpoints MUST have defined performance targets.
+62.2 Avoid N+1 database queries.
+62.3 Use pagination for large collections.
+62.4 Use caching for safe public read workloads.
+62.5 Heavy computation MUST move to async jobs.
+62.6 Bulk APIs MUST enforce safe limits.
+62.7 Database queries MUST remain tenant-indexed.
+62.8 API gateway limits MUST prevent resource exhaustion.
+
+============================================================
+63. SECURITY REQUIREMENTS
+============================================================
+
+63.1 Enforce HTTPS.
+63.2 Validate all input.
+63.3 Sanitize unsafe content.
+63.4 Use parameterized database access.
+63.5 Prevent SQL injection.
+63.6 Prevent XSS through API-provided content.
+63.7 Prevent SSRF in URL-fetching features.
+63.8 Validate redirect URIs.
+63.9 Protect OAuth state and PKCE.
+63.10 Protect against replay attacks.
+63.11 Protect against broken object-level authorization.
+63.12 Protect against mass assignment.
+63.13 Allowlist writable fields.
+63.14 Enforce payload size limits.
+63.15 Prevent excessive query complexity.
+63.16 Prevent insecure file uploads.
+63.17 Redact secrets.
+63.18 Rotate credentials.
+63.19 Maintain audit logs.
+63.20 Conduct dependency/security scanning.
+
+============================================================
+64. API GOVERNANCE
+============================================================
+
+64.1 Every endpoint MUST have an owner.
+64.2 Every endpoint MUST have a documented purpose.
+64.3 Every endpoint MUST define authorization.
+64.4 Every endpoint MUST define tenant behavior.
+64.5 Every endpoint MUST define error behavior.
+64.6 Every public endpoint MUST have an OpenAPI contract.
+64.7 Breaking changes require review.
+64.8 Deprecated endpoints require migration guidance.
+64.9 Unused/deprecated endpoints MUST be monitored before removal.
+64.10 API governance MUST be integrated into CI/CD.
+
+============================================================
+65. CI/CD AND CONTRACT VALIDATION
+============================================================
+
+65.1 CI MUST validate:
+- OpenAPI syntax
+- Schema consistency
+- Breaking changes
+- Contract tests
+- Unit tests
+- Integration tests
+- Security tests
+- Tenant isolation tests
+- Authentication tests
+- Authorization tests
+
+65.2 Deployment MUST fail when critical API contracts are broken.
+65.3 Database migrations required by APIs MUST be reviewed.
+65.4 API version changes MUST be explicit in source control.
+
+============================================================
+66. TESTING STRATEGY
+============================================================
+
+66.1 Unit Testing
+Test:
+- Authorization
+- Scope checks
+- Tenant resolution
+- Validation
+- Business rules
+- Error mapping
+- Idempotency
+
+66.2 Integration Testing
+Test:
+- API + database
+- API + domain services
+- API + authentication
+- API + gateway
+- API + queue
+- API + webhook
+- API + billing
+- API + marketplace
+
+66.3 Contract Testing
+Test:
+- Request schema
+- Response schema
+- Error schema
+- Version compatibility
+- Webhook contracts
+
+66.4 Security Testing
+Test:
+- Broken access control
+- Cross-tenant access
+- Token manipulation
+- API key misuse
+- Replay
+- Rate limits
+- Injection
+- SSRF
+- File upload abuse
+- CORS
+- CSRF
+- Credential exposure
+
+66.5 Load Testing
+Test:
+- Normal traffic
+- Burst traffic
+- High concurrency
+- Large catalog
+- Large order volume
+- Webhook bursts
+- Async job bursts
+
+66.6 Failure Testing
+Test:
+- Database unavailable
+- Queue unavailable
+- Cache unavailable
+- Payment provider unavailable
+- Shipping provider unavailable
+- Webhook destination unavailable
+- AI provider unavailable
+
+============================================================
+67. TENANT ISOLATION TEST MATRIX
+============================================================
+
+For at least two independent test tenants verify:
+
+67.1 Product cannot cross tenant.
+67.2 Category cannot cross tenant.
+67.3 Inventory cannot cross tenant.
+67.4 Order cannot cross tenant.
+67.5 Customer cannot cross tenant.
+67.6 Coupon cannot cross tenant.
+67.7 Analytics cannot cross tenant.
+67.8 File cannot cross tenant.
+67.9 Webhook cannot cross tenant.
+67.10 API key cannot cross tenant.
+67.11 OAuth installation cannot cross tenant.
+67.12 Async job cannot cross tenant.
+67.13 Export cannot cross tenant.
+67.14 Cache cannot leak tenant data.
+67.15 Search cannot leak tenant data.
+67.16 Logs cannot expose another tenant's sensitive data.
+
+============================================================
+68. MODULE 31 DATA MODEL FOUNDATION
+============================================================
+
+The implementation SHOULD include entities equivalent to:
+
+DeveloperOrganization
+DeveloperMember
+DeveloperApplication
+ApplicationCredential
+ApplicationScope
+ApplicationApiProduct
+ApplicationInstallation
+ApiProduct
+ApiPlan
+ApiVersion
+ApiEndpoint
+ApiUsageRecord
+ApiQuota
+ApiRateLimit
+ApiRequestLog
+ApiAuditEvent
+WebhookSubscription
+WebhookEvent
+WebhookDelivery
+WebhookDeliveryAttempt
+WebhookSecret
+AsyncOperation
+ApiIdempotencyRecord
+ApiKey
+OAuthClient
+OAuthAuthorization
+OAuthConsent
+SandboxEnvironment
+DeveloperSupportTicket
+ApiChangelog
+ApiDeprecation
+ApiIpRestriction
+ApiUsageAggregate
+
+Every tenant-related entity MUST have appropriate tenant binding
+or an explicit reason why it is platform-level.
+
+============================================================
+69. API DATA MODEL RULES
+============================================================
+
+69.1 Primary keys MUST be stable.
+69.2 Tenant foreign keys MUST be indexed.
+69.3 Application IDs MUST be globally unique.
+69.4 Credential IDs MUST be globally unique.
+69.5 Event IDs MUST be globally unique.
+69.6 Idempotency keys MUST be scoped correctly.
+69.7 Usage records MUST be append-friendly.
+69.8 Audit records MUST be append-only or protected against
+     unauthorized modification.
+69.9 Secrets MUST never be stored in plaintext unless cryptographic
+     design explicitly requires encrypted storage.
+69.10 Soft deletion/archival MUST be used where audit/history
+     requires preservation.
+
+============================================================
+70. API ROUTING AND TENANT RESOLUTION
+============================================================
+
+70.1 Supported tenant resolution methods may include:
+- Authenticated tenant context
+- Store/domain mapping
+- Application installation binding
+- Explicit trusted platform context
+
+70.2 Public storefront domain requests MUST resolve to exactly one
+     active store.
+70.3 Custom domain collisions MUST be prevented.
+70.4 Tenant resolution MUST occur before resource authorization.
+70.5 Invalid tenant resolution MUST fail safely.
+70.6 Never fall back to a default tenant for a failed authenticated
+     tenant resolution.
+
+============================================================
+71. INTERNAL SERVICE API RULES
+============================================================
+
+71.1 Internal APIs MUST not be treated as automatically trusted.
+71.2 Service identity is mandatory.
+71.3 Internal APIs MUST enforce:
+- Authentication
+- Authorization
+- Service allowlists
+- Timeouts
+- Audit where sensitive
+- Rate limits where necessary
+
+71.4 Service-to-service calls SHOULD use short-lived credentials.
+71.5 Future mTLS SHOULD be supported for sensitive service boundaries.
+
+============================================================
+72. ADMIN API ISOLATION
+============================================================
+
+72.1 Super Admin endpoints MUST use separate authorization policy.
+72.2 Tenant administrators MUST never gain Super Admin scope through
+     ordinary tenant roles.
+72.3 Super Admin APIs SHOULD use separate route groups and policies.
+72.4 Sensitive Super Admin operations SHOULD require additional
+     authentication controls.
+72.5 Super Admin operations MUST be audited.
+
+============================================================
+73. PARTNER API GOVERNANCE
+============================================================
+
+73.1 Partner access requires explicit registration.
+73.2 Partner applications MUST have documented business purpose.
+73.3 Partner scopes MUST be minimal.
+73.4 Partner credentials MUST be individually identifiable.
+73.5 Partner access MUST be revocable.
+73.6 Partner usage MUST be measurable.
+73.7 Partner APIs MUST have contractual rate and support policies.
+
+============================================================
+74. MARKETPLACE APP GOVERNANCE
+============================================================
+
+74.1 Marketplace apps MUST declare requested scopes.
+74.2 Apps MUST receive only approved scopes.
+74.3 High-risk scopes may require manual review.
+74.4 App uninstall MUST revoke access.
+74.5 App suspension MUST revoke/disable active calls.
+74.6 App webhook subscriptions MUST be removed or disabled on
+     uninstall.
+74.7 Marketplace app usage MAY be billable through Module 29.
+
+============================================================
+75. API SUPPORT AND DEVELOPER EXPERIENCE
+============================================================
+
+75.1 Provide:
+- Getting started guide
+- Authentication guide
+- Tenant/store concepts
+- API reference
+- Webhook guide
+- Error guide
+- Rate-limit guide
+- Versioning guide
+- SDK examples
+- Sandbox guide
+- Security guide
+- Migration guides
+
+75.2 Developer support SHOULD expose request IDs for troubleshooting.
+75.3 Developers MUST never be asked to send secrets in support tickets.
+75.4 Support tools MUST redact credentials.
+
+============================================================
+76. DISASTER RECOVERY
+============================================================
+
+76.1 API configuration MUST be backed up according to Module 23.
+76.2 Critical API metadata MUST be recoverable.
+76.3 Webhook delivery state SHOULD be recoverable.
+76.4 Idempotency records MUST have a documented retention policy.
+76.5 Recovery procedures MUST be tested.
+76.6 Recovery MUST preserve tenant/application relationships.
+
+============================================================
+77. RETENTION POLICIES
+============================================================
+
+Define configurable retention for:
+- API request logs
+- Usage records
+- Webhook delivery attempts
+- Audit events
+- Idempotency records
+- Sandbox data
+- Developer support records
+
+Retention MUST respect:
+- Security requirements
+- Privacy requirements
+- Billing requirements
+- Compliance requirements
+- Operational needs
+
+============================================================
+78. REQUIRED CLAUDE DEVELOPMENT BEHAVIOR
+============================================================
+
+Claude MUST:
+
+78.1 Read Module 01–30 before implementing Module 31.
+78.2 Treat all existing module blueprints as authoritative.
+78.3 Never create an alternate tenant model.
+78.4 Never duplicate business logic that belongs to Core modules.
+78.5 Never bypass authorization for convenience.
+78.6 Never expose secrets in code, logs, fixtures, or documentation.
+78.7 Never hardcode production credentials.
+78.8 Implement migrations safely.
+78.9 Preserve backward compatibility.
+78.10 Add tests for every endpoint group.
+78.11 Add tenant isolation tests.
+78.12 Add authentication/authorization tests.
+78.13 Add webhook delivery tests.
+78.14 Add idempotency tests.
+78.15 Add rate-limit tests.
+78.16 Add contract tests.
+78.17 Add security regression tests.
+78.18 Run all relevant builds and analyzers.
+78.19 Report exact failures rather than hiding them.
+78.20 Do not perform destructive production database operations.
+78.21 Do not weaken security to make tests pass.
+78.22 Do not remove existing tests without documented justification.
+78.23 Do not modify unrelated modules unnecessarily.
+78.24 Keep API contracts documented.
+78.25 Preserve a concise implementation checkpoint after each
+      development session.
+
+============================================================
+79. IMPLEMENTATION ORDER
+============================================================
+
+Phase 1:
+- API architecture foundation
+- API gateway
+- Request pipeline
+- Error contract
+- Correlation IDs
+- OpenAPI foundation
+
+Phase 2:
+- Authentication
+- OAuth
+- API keys
+- Service identity
+- Credential management
+
+Phase 3:
+- Authorization
+- Scopes
+- Tenant binding
+- Object-level authorization
+- Package entitlement enforcement
+
+Phase 4:
+- Core resource APIs
+- Store
+- Catalog
+- Inventory
+- Orders
+- Customers
+- Cart/checkout
+
+Phase 5:
+- Payment
+- Shipping
+- Promotions
+- Marketing
+- SEO/content
+- Themes
+- Domains
+
+Phase 6:
+- Usage metering
+- Rate limits
+- API products
+- Quotas
+- Billing integration
+
+Phase 7:
+- Webhooks
+- Event catalog
+- Retry system
+- Dead-letter handling
+- Replay
+
+Phase 8:
+- Async operations
+- Export/import
+- File/media APIs
+
+Phase 9:
+- Developer portal
+- Sandbox
+- SDK/code-generation foundation
+- Documentation
+
+Phase 10:
+- Marketplace/partner APIs
+- AI APIs
+- Reseller APIs
+
+Phase 11:
+- Security hardening
+- Load testing
+- Failure testing
+- Tenant isolation testing
+- Production readiness
+
+============================================================
+80. REQUIRED DEVELOPMENT ARTIFACTS
+============================================================
+
+The implementation SHOULD produce:
+
+1. API Architecture Document
+2. OpenAPI Specification
+3. Authentication Specification
+4. Authorization/Scope Matrix
+5. Tenant Isolation Design
+6. API Resource Matrix
+7. API Versioning Policy
+8. Error Contract
+9. Idempotency Specification
+10. Rate Limit Specification
+11. Usage Metering Specification
+12. Webhook Event Catalog
+13. Webhook Delivery Specification
+14. Developer Portal Specification
+15. Sandbox Specification
+16. SDK Generation Specification
+17. API Security Checklist
+18. API Threat Model
+19. API Test Plan
+20. Contract Test Suite
+21. Tenant Isolation Test Suite
+22. API Migration Guide
+23. API Changelog
+24. Deprecation Policy
+25. Production Runbook
+26. API Monitoring Dashboard Specification
+
+============================================================
+81. REQUIRED INTEGRATIONS
+============================================================
+
+Module 31 MUST integrate with:
+
+Module 01 — Platform Structure
+Module 02 — Authentication, Users, Roles & Permissions
+Module 03 — Multi-Tenant & Store Management
+Module 04 — Subscription, Packages & Feature Entitlements
+Module 05 — Storefront
+Module 06 — Products & Catalog
+Module 07 — Categories, Brands & Attributes
+Module 08 — Inventory
+Module 09 — Orders
+Module 10 — Customers
+Module 11 — Cart, Wishlist & Checkout
+Module 12 — Payments
+Module 13 — Shipping
+Module 14 — Discounts & Promotions
+Module 15 — Marketing
+Module 16 — SEO & Content
+Module 17 — Theme & Branding
+Module 18 — Animation
+Module 19 — Domains
+Module 20 — Hosting & Infrastructure
+Module 21 — Notifications
+Module 22 — Analytics
+Module 23 — Backup & Data Protection
+Module 24 — Health & Resource Usage
+Module 25 — PWA/Mobile
+Module 26 — AI
+Module 27 — Marketplace & Integrations
+Module 28 — Affiliate & Reseller
+Module 29 — Billing
+Module 30 — Umar Techy Super Admin
+
+============================================================
+82. ACCEPTANCE CRITERIA
+============================================================
+
+Module 31 is accepted only when:
+
+82.1 API architecture is documented.
+82.2 OpenAPI contracts exist for supported public APIs.
+82.3 Authentication is implemented and tested.
+82.4 Authorization is implemented and tested.
+82.5 Tenant isolation is tested.
+82.6 Package entitlements are enforced.
+82.7 API keys can be created, rotated, and revoked.
+82.8 OAuth is secure and tested where implemented.
+82.9 Rate limits are enforced.
+82.10 Usage metering works.
+82.11 Idempotency works for required operations.
+82.12 Standard errors are implemented.
+82.13 Pagination/filtering/sorting conventions are consistent.
+82.14 Async jobs work for required long-running operations.
+82.15 Webhooks are signed.
+82.16 Webhook retries work.
+82.17 Webhook duplicate handling is safe.
+82.18 Dead-letter handling exists.
+82.19 Developer portal foundation is operational.
+82.20 Sandbox is isolated from production.
+82.21 API documentation is available.
+82.22 API security tests pass.
+82.23 Contract tests pass.
+82.24 Load/performance tests meet agreed targets.
+82.25 No critical tenant-isolation vulnerability remains.
+82.26 No secrets are exposed.
+82.27 Audit logging works for sensitive operations.
+82.28 Billing/usage integration works where enabled.
+82.29 Monitoring dashboards expose operational health.
+82.30 Production deployment has rollback procedures.
+
+============================================================
+83. PRODUCTION READINESS CHECKLIST
+============================================================
+
+Before production:
+
+[ ] HTTPS enforced
+[ ] WAF/edge protection configured
+[ ] Rate limits enabled
+[ ] Authentication verified
+[ ] Authorization verified
+[ ] Tenant isolation verified
+[ ] Object-level authorization verified
+[ ] Secrets protected
+[ ] Credential rotation tested
+[ ] CORS configured
+[ ] CSRF protections verified where applicable
+[ ] Request size limits enabled
+[ ] File upload protections enabled
+[ ] API logging enabled
+[ ] Sensitive log redaction verified
+[ ] Audit logging enabled
+[ ] Correlation IDs enabled
+[ ] Metrics enabled
+[ ] Tracing enabled where supported
+[ ] OpenAPI published
+[ ] API versioning policy published
+[ ] Deprecation policy published
+[ ] Webhook signing enabled
+[ ] Webhook retry handling verified
+[ ] Dead-letter handling verified
+[ ] Idempotency verified
+[ ] Rate-limit headers verified
+[ ] Usage metering verified
+[ ] Billing integration verified
+[ ] Sandbox isolated
+[ ] Production credentials isolated
+[ ] Backup verified
+[ ] Restore procedure tested
+[ ] Disaster recovery tested
+[ ] Load testing completed
+[ ] Security testing completed
+[ ] Dependency scanning completed
+[ ] Contract testing completed
+[ ] Failure testing completed
+[ ] Rollback plan verified
+[ ] Monitoring alerts configured
+[ ] Support documentation published
+
+============================================================
+84. FUTURE EXPANSION
+============================================================
+
+The API platform MUST be designed to support future:
+
+84.1 GraphQL read APIs.
+84.2 gRPC internal services.
+84.3 Enterprise SSO-integrated applications.
+84.4 Advanced partner APIs.
+84.5 Marketplace API monetization.
+84.6 API usage billing.
+84.7 AI agent APIs.
+84.8 Real-time event streaming.
+84.9 WebSocket/SSE where justified.
+84.10 Advanced data export APIs.
+84.11 International payment integrations.
+84.12 International shipping integrations.
+84.13 Regional compliance controls.
+84.14 Developer marketplace.
+84.15 API analytics marketplace.
+84.16 Custom enterprise API plans.
+84.17 Dedicated API environments.
+84.18 Customer-managed encryption options where justified.
+84.19 Service mesh integration.
+84.20 Advanced fraud/abuse detection.
+
+============================================================
+85. FINAL ARCHITECTURAL RULES
+============================================================
+
+1. API is a contract boundary.
+2. Core domain modules remain authoritative.
+3. No API bypasses domain rules.
+4. Tenant isolation is mandatory.
+5. Tenant IDs from clients are never trusted by themselves.
+6. Object-level authorization is mandatory.
+7. Least privilege is mandatory.
+8. Public APIs expose only public data.
+9. Admin APIs are isolated.
+10. Internal APIs are authenticated.
+11. Credentials are protected.
+12. Secrets never enter source control.
+13. OAuth must use secure flows.
+14. PKCE is required for public OAuth clients.
+15. API keys are tenant-bound and scoped.
+16. JWT validation is mandatory.
+17. Short-lived tokens are preferred.
+18. Credential rotation is supported.
+19. Credential revocation is immediate.
+20. API versions are explicit.
+21. Breaking changes are governed.
+22. Deprecated APIs are documented.
+23. Rate limits are server-enforced.
+24. Quotas are server-enforced.
+25. Usage is server-metered.
+26. Billing cannot trust client usage.
+27. Idempotency protects duplicate writes.
+28. Financial operations require strong idempotency.
+29. Inventory writes require domain validation.
+30. Order status is server-authoritative.
+31. Payment status cannot be arbitrarily overridden.
+32. Raw card data must not enter normal APIs.
+33. Refunds are authorized and audited.
+34. Invoice state is authoritative.
+35. Checkout totals are server-calculated.
+36. Coupon rules are server-calculated.
+37. Shipping rates are server-authoritative.
+38. Customer PII is minimized.
+39. Sensitive fields require explicit permission.
+40. Large exports are asynchronous.
+41. Export URLs expire.
+42. File uploads are validated.
+43. Private files are tenant-isolated.
+44. Async jobs carry tenant context.
+45. Async job access is authorized.
+46. Search is tenant-aware.
+47. Cache keys are tenant-aware.
+48. Public caching cannot expose private data.
+49. Webhooks are signed.
+50. Webhooks are replay-resistant.
+51. Webhook consumers must support idempotency.
+52. Webhook retries are controlled.
+53. Failed webhooks enter dead-letter handling.
+54. Webhook events are versioned.
+55. Event schemas are documented.
+56. Event IDs are unique.
+57. Sandbox and production are isolated.
+58. Sandbox credentials never access production.
+59. Developer applications have lifecycle states.
+60. App uninstall revokes access.
+61. App suspension blocks access.
+62. Marketplace apps receive only approved scopes.
+63. Partner apps receive only approved scopes.
+64. Resellers receive only authorized tenant access.
+65. AI cannot bypass authorization.
+66. AI actions pass domain validation.
+67. AI usage is metered.
+68. Package entitlements apply to API access.
+69. Feature locks are enforced server-side.
+70. Downgrades do not silently destroy data.
+71. API documentation is mandatory.
+72. OpenAPI is authoritative for supported REST contracts.
+73. Contract tests are mandatory.
+74. Security tests are mandatory.
+75. Tenant isolation tests are mandatory.
+76. Load testing is mandatory for production-critical APIs.
+77. Failure testing is mandatory.
+78. Logs use structured formats.
+79. Logs redact secrets.
+80. Correlation IDs are used.
+81. Audit logs record sensitive actions.
+82. Audit logs contain no secrets.
+83. Error responses do not expose internals.
+84. HTTP semantics remain consistent.
+85. Pagination is mandatory for large collections.
+86. Filtering is allowlisted.
+87. Sorting is allowlisted.
+88. Bulk operations have safe limits.
+89. Mass assignment is prevented.
+90. SSRF is prevented.
+91. Injection attacks are prevented.
+92. CORS is explicit.
+93. CSRF is addressed where browser cookies are used.
+94. Request sizes are limited.
+95. Rate limiting protects infrastructure.
+96. Timeouts protect dependencies.
+97. Circuit breakers may protect critical dependencies.
+98. API health does not expose secrets.
+99. Backups include critical API metadata.
+100. Recovery preserves tenant/application relationships.
+101. API governance has ownership.
+102. Every endpoint has a purpose.
+103. Every endpoint has authorization rules.
+104. Every endpoint has tenant behavior defined.
+105. Every endpoint has documented errors.
+106. Every public endpoint has an API contract.
+107. Breaking changes require review.
+108. Security changes require regression testing.
+109. Production deployment requires rollback capability.
+110. No security control may be removed merely to pass tests.
+111. No unrelated module should be changed unnecessarily.
+112. API changes must remain backward compatible unless versioned.
+113. API access must be revocable without deleting the tenant.
+114. Application identity must survive package changes.
+115. Tenant identity must survive package changes.
+116. Webhook subscriptions are tenant/application scoped.
+117. Usage records are tenant/application scoped.
+118. API analytics are tenant-aware.
+119. API billing is traceable.
+120. Super Admin access is separately governed.
+121. Internal service identity is explicit.
+122. High-risk service communication can evolve to mTLS.
+123. Future protocols must preserve the same authorization model.
+124. GraphQL, if introduced, cannot bypass REST domain policies.
+125. gRPC, if introduced, cannot bypass service authorization.
+126. API gateways cannot become the only source of authorization truth.
+127. Domain services remain the source of business truth.
+128. API contracts must be testable.
+129. API behavior must be observable.
+130. API failures must be diagnosable.
+131. Sensitive operations must be auditable.
+132. Developer experience must not weaken security.
+133. Convenience must never override tenant isolation.
+134. Performance optimizations must not weaken correctness.
+135. Caching must never change authorization decisions.
+136. Retries must never create duplicate financial effects.
+137. External webhooks must never be blindly trusted.
+138. External provider data must be validated.
+139. Provider credentials remain server-side.
+140. Public endpoints must be abuse-resistant.
+141. API products must have explicit scope boundaries.
+142. API quotas must be measurable.
+143. API deprecation must be communicated.
+144. Migration paths must be documented.
+145. API versions must be supportable operationally.
+146. Developer applications must be auditable.
+147. Credential lifecycle must be auditable.
+148. Scope changes must be auditable.
+149. Export operations must be auditable.
+150. Restore operations must be auditable.
+151. API architecture must support horizontal scaling.
+152. API architecture must support future marketplace growth.
+153. API architecture must support future mobile/PWA growth.
+154. API architecture must support future AI integrations.
+155. API architecture must support future enterprise integrations.
+156. API architecture must support future international expansion.
+157. API architecture must remain modular.
+158. API architecture must avoid duplicated business logic.
+159. API architecture must remain configuration-driven where appropriate.
+160. API architecture must remain tenant-aware at every layer.
+161. API architecture must remain secure by default.
+162. API architecture must fail safely.
+163. API architecture must preserve data integrity.
+164. API architecture must preserve auditability.
+165. API architecture must preserve backward compatibility.
+166. API architecture must preserve developer usability.
+167. API architecture must preserve operational visibility.
+168. API architecture must preserve package/entitlement enforcement.
+169. API architecture must preserve billing integrity.
+170. API architecture must preserve customer privacy.
+171. API architecture must preserve platform availability.
+172. API architecture must preserve disaster recoverability.
+173. API architecture must support controlled extensibility.
+174. API architecture must never create a hidden second platform.
+175. Module 31 is complete only when the API layer is secure,
+     tenant-isolated, versioned, observable, documented, testable,
+     and production-ready.
+
+============================================================
+END OF MODULE 31
+============================================================

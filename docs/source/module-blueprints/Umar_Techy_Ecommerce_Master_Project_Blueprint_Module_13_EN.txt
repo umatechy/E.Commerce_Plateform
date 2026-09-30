@@ -1,0 +1,1796 @@
+UMAR TECHY
+E-COMMERCE PLATFORM
+MASTER PROJECT BLUEPRINT
+
+MODULE 13 — SHIPPING & DELIVERY MANAGEMENT
+Version: 1.0
+Status: Planning / Blueprint
+
+============================================================
+1. MODULE PURPOSE
+============================================================
+
+This module defines the Core Shipping and Delivery Management
+architecture for the Umar Techy multi-tenant E-Commerce Platform.
+
+The shipping system must allow every store to configure and
+operate its own delivery rules while sharing one core shipping
+engine.
+
+The module manages:
+
+- Shipping Zones
+- Countries
+- Provinces / States
+- Cities
+- Areas / Postal Codes
+- Shipping Methods
+- Delivery Rates
+- Free Shipping
+- Flat Rate Shipping
+- Weight-Based Shipping
+- Price-Based Shipping
+- Quantity-Based Shipping
+- Local Delivery
+- Store Pickup
+- Courier Integration
+- Shipment Creation
+- Tracking
+- Delivery Status
+- Estimated Delivery
+- Shipping Restrictions
+- COD Serviceability
+- Multiple Warehouses
+- Split Fulfillment Foundation
+- Returns Shipping Foundation
+- Shipping Labels Foundation
+- Shipping Analytics
+- Shipping Events
+- Shipping Webhooks
+- Tenant Isolation
+- Future Carrier Expansion
+
+============================================================
+2. CORE ARCHITECTURAL PRINCIPLE
+============================================================
+
+ONE CORE SHIPPING ENGINE
++
+STORE-SPECIFIC SHIPPING CONFIGURATION
++
+MULTIPLE SHIPPING METHODS
++
+MULTIPLE CARRIERS
++
+MULTIPLE WAREHOUSES
++
+TENANT ISOLATION
++
+SERVER-AUTHORITATIVE SHIPPING CALCULATION
+
+must serve all stores.
+
+Basic, Business, and Premium packages use the same engine.
+
+Package differences are enforced through Module 04.
+
+============================================================
+3. SHIPPING VS DELIVERY
+============================================================
+
+Shipping refers to the commercial and operational process of
+moving an order from store/warehouse to customer.
+
+Delivery refers to the final movement and completion of the
+shipment.
+
+The architecture must keep:
+
+- Shipping Method
+- Shipment
+- Carrier
+- Tracking
+- Delivery Status
+
+as related but separate concepts.
+
+============================================================
+4. SHIPPING SCOPE
+============================================================
+
+Shipping configuration is store-scoped.
+
+Store A may use:
+
+- Courier A
+- Flat Rate
+- Free Shipping
+
+Store B may use:
+
+- Courier B
+- Local Delivery
+- Store Pickup
+
+No store may access another store's shipping configuration,
+carrier credentials, rates, shipments, or tracking data.
+
+============================================================
+5. SHIPPING CONFIGURATION
+============================================================
+
+Each store may configure:
+
+- Origin Address
+- Warehouse
+- Shipping Zones
+- Shipping Methods
+- Rates
+- Delivery Areas
+- Free Shipping Rules
+- COD Rules
+- Carrier Accounts
+- Package Rules
+- Weight Rules
+- Delivery Time
+- Pickup Options
+
+============================================================
+6. SHIPPING ORIGIN
+============================================================
+
+Shipping origin may be:
+
+- Store Address
+- Warehouse
+- Multiple Warehouses
+
+Origin determines:
+
+- Shipping availability
+- Delivery distance
+- Carrier service
+- Shipping rate
+- Estimated delivery
+
+============================================================
+7. WAREHOUSE INTEGRATION
+============================================================
+
+Module 08 provides warehouse inventory.
+
+Shipping must consume:
+
+- Warehouse
+- Available Stock
+- Fulfillment Location
+
+Shipping must not directly modify inventory.
+
+============================================================
+8. SHIPPING ZONES
+============================================================
+
+Stores may define shipping zones.
+
+Examples:
+
+- Pakistan
+- Punjab
+- Islamabad
+- Lahore
+- Sargodha
+- Local City
+- Remote Areas
+
+Zones should support configurable geographic rules.
+
+============================================================
+9. ZONE PRIORITY
+============================================================
+
+If multiple zones match a destination, the system must use
+deterministic priority.
+
+Example:
+
+Exact Area
+>
+City
+>
+Province
+>
+Country
+>
+Default Zone
+
+No random rule selection is permitted.
+
+============================================================
+10. SHIPPING DESTINATION
+============================================================
+
+Shipping destination may use:
+
+- Country
+- Province/State
+- City
+- Area
+- Postal Code
+- Address
+
+Exact supported geographic granularity should be configurable.
+
+============================================================
+11. COUNTRY SUPPORT
+============================================================
+
+The platform should support international shipping architecture.
+
+Initial focus may be Pakistan.
+
+Future countries should be added through configuration rather
+than code rewrites.
+
+============================================================
+12. PAKISTAN DELIVERY FOUNDATION
+============================================================
+
+The architecture should support:
+
+- Provinces
+- Cities
+- Districts
+- Tehsils where required
+- Areas
+- Postal Codes
+
+The system should not hard-code only a single city list.
+
+============================================================
+13. SHIPPING AREA
+============================================================
+
+A shipping area may define:
+
+- Name
+- Geographic Scope
+- Postal Codes
+- City
+- Province
+- Country
+- Serviceability
+- Rate
+- Delivery Estimate
+- COD Availability
+
+============================================================
+14. SERVICEABILITY
+============================================================
+
+Before checkout shows shipping methods, the server must determine:
+
+Is this destination serviceable?
+
+Inputs may include:
+
+- Store
+- Warehouse
+- Destination
+- Product
+- Weight
+- Dimensions
+- Order Value
+- Customer Type
+- Payment Method
+
+============================================================
+15. SHIPPING METHOD
+============================================================
+
+Potential methods:
+
+- Flat Rate
+- Free Shipping
+- Weight Based
+- Price Based
+- Quantity Based
+- Local Delivery
+- Courier
+- Store Pickup
+- Same-Day
+- Express
+- Standard
+
+============================================================
+16. FLAT RATE SHIPPING
+============================================================
+
+Example:
+
+Standard Delivery = PKR 200
+
+The rate may vary by zone.
+
+============================================================
+17. FREE SHIPPING
+============================================================
+
+Free shipping may be triggered by:
+
+- Minimum Order Value
+- Customer Group
+- Coupon
+- Promotion
+- Product
+- Category
+- Zone
+- Package
+
+Free shipping must be evaluated server-side.
+
+============================================================
+18. WEIGHT-BASED SHIPPING
+============================================================
+
+Example:
+
+0–1 kg = PKR 200
+1–3 kg = PKR 300
+3–5 kg = PKR 450
+
+The engine must calculate total shipment weight from authoritative
+product/variant data.
+
+Client-submitted weight must never be trusted.
+
+============================================================
+19. PRICE-BASED SHIPPING
+============================================================
+
+Example:
+
+Order < PKR 3,000 → PKR 250
+Order ≥ PKR 3,000 → PKR 0
+
+Rules must be configurable.
+
+============================================================
+20. QUANTITY-BASED SHIPPING
+============================================================
+
+Example:
+
+1–2 Items = PKR 200
+3–5 Items = PKR 350
+
+Quantity must be calculated from validated cart items.
+
+============================================================
+21. PRODUCT-SPECIFIC SHIPPING
+============================================================
+
+Products may require special shipping rules.
+
+Examples:
+
+- Oversized Product
+- Fragile Product
+- Heavy Product
+- Refrigerated Product
+- Digital Product
+- No-Shipping Product
+
+============================================================
+22. CATEGORY SHIPPING RULES
+============================================================
+
+Future rules may apply to categories.
+
+Example:
+
+Furniture → Special Shipping
+
+Shipping rules must have clear priority.
+
+============================================================
+23. SHIPPING CLASS
+============================================================
+
+Products may be assigned a Shipping Class.
+
+Examples:
+
+- Standard
+- Heavy
+- Fragile
+- Oversized
+- Free Shipping
+- Refrigerated
+
+Shipping Class may influence rate calculation.
+
+============================================================
+24. MIXED SHIPPING CART
+============================================================
+
+If a cart contains products with different shipping classes,
+the engine must calculate shipping according to configured
+combination rules.
+
+Possible strategies:
+
+- Highest Rate
+- Sum Rates
+- Group by Shipment
+- Carrier Calculation
+
+============================================================
+25. DIGITAL PRODUCTS
+============================================================
+
+Digital-only carts may require:
+
+Shipping:
+NOT REQUIRED
+
+The checkout engine must identify this automatically.
+
+============================================================
+26. SERVICE PRODUCTS
+============================================================
+
+Service products may require:
+
+- No physical shipping
+- Service area validation
+- Appointment delivery
+- Local service zone
+
+Future service scheduling may integrate with another module.
+
+============================================================
+27. STORE PICKUP
+============================================================
+
+Stores may offer:
+
+- Store Pickup
+- Warehouse Pickup
+- Branch Pickup
+
+Customer may select an eligible pickup location.
+
+============================================================
+28. PICKUP LOCATION
+============================================================
+
+Pickup location may contain:
+
+- Name
+- Address
+- Contact
+- Opening Hours
+- Pickup Instructions
+- Inventory Availability
+
+============================================================
+29. PICKUP ORDER FLOW
+============================================================
+
+Checkout
+↓
+Select Store Pickup
+↓
+Select Pickup Location
+↓
+Validate Stock
+↓
+Create Order
+↓
+Fulfillment
+↓
+Ready for Pickup
+↓
+Customer Collection
+↓
+Completed
+
+============================================================
+30. LOCAL DELIVERY
+============================================================
+
+Stores may operate their own delivery.
+
+Configuration may include:
+
+- Delivery Area
+- Fee
+- Minimum Order
+- Maximum Distance
+- Delivery Hours
+- Delivery Days
+- Estimated Time
+
+============================================================
+31. SAME-DAY DELIVERY
+============================================================
+
+Future same-day delivery may depend on:
+
+- Order cutoff
+- Warehouse location
+- Product availability
+- Delivery area
+- Courier capacity
+- Current time
+
+The system must calculate eligibility server-side.
+
+============================================================
+32. EXPRESS DELIVERY
+============================================================
+
+Express may have:
+
+- Higher fee
+- Shorter estimated delivery
+- Specific zones
+- Product restrictions
+- Carrier restrictions
+
+============================================================
+33. STANDARD DELIVERY
+============================================================
+
+Standard delivery is the default economical method.
+
+Configuration may include:
+
+- Rate
+- Zone
+- Estimated delivery
+- Carrier
+- Restrictions
+
+============================================================
+34. DELIVERY ESTIMATE
+============================================================
+
+Estimate may include:
+
+- Minimum Days
+- Maximum Days
+- Cutoff Time
+- Holidays
+- Weekend Rules
+- Processing Time
+- Transit Time
+
+Display should be treated as an estimate, not a guaranteed
+delivery promise unless explicitly configured.
+
+============================================================
+35. PROCESSING TIME
+============================================================
+
+Delivery estimate may be:
+
+Order Processing Time
++
+Carrier Transit Time
+
+Processing time may depend on:
+
+- Product
+- Warehouse
+- Order time
+- Day
+- Store configuration
+
+============================================================
+36. CUTOFF TIME
+============================================================
+
+Example:
+
+Orders before 2 PM:
+Processing Day 0
+
+Orders after 2 PM:
+Processing Day 1
+
+Cutoff logic must use the store timezone.
+
+============================================================
+37. HOLIDAY CALENDAR
+============================================================
+
+Future shipping calendars may define:
+
+- Public Holidays
+- Store Holidays
+- Carrier Holidays
+- Non-working Days
+
+These may affect estimated delivery.
+
+============================================================
+38. SHIPPING RATE ENGINE
+============================================================
+
+Conceptual:
+
+Cart
+↓
+Validate Products
+↓
+Determine Fulfillment Location
+↓
+Determine Destination
+↓
+Match Zone
+↓
+Calculate Weight/Value/Quantity
+↓
+Evaluate Rules
+↓
+Check Carrier
+↓
+Return Eligible Methods
+↓
+Return Rates
+
+============================================================
+39. SERVER-AUTHORITATIVE RATE
+============================================================
+
+Client-submitted shipping prices must never be trusted.
+
+The server must recalculate shipping before Order creation.
+
+============================================================
+40. SHIPPING METHOD ELIGIBILITY
+============================================================
+
+A shipping method may be unavailable because of:
+
+- Destination
+- Product
+- Weight
+- Dimensions
+- Order Value
+- Payment Method
+- Customer Type
+- Store Status
+- Package Entitlement
+- Carrier Availability
+
+============================================================
+41. COD + SHIPPING
+============================================================
+
+COD availability may depend on:
+
+- Shipping Zone
+- Order Value
+- Customer Risk
+- Product
+- Carrier
+- Store Policy
+
+Payment Module 12 owns COD payment state.
+
+Shipping Module 13 owns delivery serviceability.
+
+============================================================
+42. CARRIER INTEGRATION
+============================================================
+
+The platform should use a Carrier Adapter architecture.
+
+Conceptual:
+
+Shipping Core
+│
+├── Local Delivery
+├── Store Pickup
+├── Courier Adapter A
+├── Courier Adapter B
+├── Courier Adapter C
+└── Future Carrier
+
+New carriers should not require rewriting the core shipping
+engine.
+
+============================================================
+43. CARRIER CAPABILITIES
+============================================================
+
+A carrier may support:
+
+- Rate Quote
+- Shipment Creation
+- Label Creation
+- Tracking
+- Pickup Request
+- Cancellation
+- Delivery Confirmation
+- Return Shipment
+- COD
+- COD Settlement
+
+Each carrier must declare its capabilities.
+
+============================================================
+44. CARRIER ACCOUNT
+============================================================
+
+Store-specific carrier account may contain:
+
+- Account ID
+- API Key
+- Secret
+- Client ID
+- Environment
+- Account Number
+- Service Configuration
+
+Secrets must be securely stored.
+
+============================================================
+45. CARRIER TENANT ISOLATION
+============================================================
+
+Store A carrier credentials must never be accessible by Store B.
+
+Carrier API requests must resolve the correct store account.
+
+============================================================
+46. SANDBOX / PRODUCTION
+============================================================
+
+Where supported:
+
+- SANDBOX
+- PRODUCTION
+
+must be separate.
+
+Production credentials must not be used in automated testing.
+
+============================================================
+47. SHIPMENT ENTITY
+============================================================
+
+Potential fields:
+
+- Shipment ID
+- Store ID
+- Order ID
+- Fulfillment ID
+- Warehouse ID
+- Carrier
+- Shipping Method
+- Tracking Number
+- Status
+- Weight
+- Dimensions
+- Shipping Cost
+- Estimated Delivery
+- Created At
+- Shipped At
+- Delivered At
+
+============================================================
+48. SHIPMENT VS ORDER
+============================================================
+
+One Order may contain:
+
+- One Shipment
+- Multiple Shipments
+- Partial Shipments
+- Multiple Warehouses
+
+Order lifecycle remains controlled by Module 09.
+
+Shipment lifecycle is controlled by Module 13.
+
+============================================================
+49. SHIPMENT STATES
+============================================================
+
+Suggested states:
+
+- DRAFT
+- READY
+- LABEL_CREATED
+- PICKUP_REQUESTED
+- PICKED_UP
+- IN_TRANSIT
+- OUT_FOR_DELIVERY
+- DELIVERED
+- DELIVERY_FAILED
+- RETURNING
+- RETURNED
+- CANCELLED
+- LOST
+- DAMAGED
+
+============================================================
+50. TRACKING NUMBER
+============================================================
+
+Tracking number may be:
+
+- Carrier-generated
+- Store-generated for local delivery
+
+It must be unique within the appropriate scope.
+
+============================================================
+51. TRACKING EVENTS
+============================================================
+
+Potential events:
+
+- Shipment Created
+- Label Created
+- Picked Up
+- In Transit
+- Arrived at Hub
+- Out for Delivery
+- Delivery Attempted
+- Delivered
+- Failed
+- Returned
+
+============================================================
+52. TRACKING HISTORY
+============================================================
+
+Tracking history should preserve:
+
+- Status
+- Location where available
+- Timestamp
+- Carrier Event Code
+- Description
+- Source
+
+Historical events should not be overwritten.
+
+============================================================
+53. CARRIER WEBHOOKS
+============================================================
+
+Carrier webhooks must validate:
+
+- Signature
+- Carrier Account
+- Tracking Number
+- Store
+- Shipment
+- Event
+
+Webhook processing must be idempotent.
+
+============================================================
+54. TRACKING POLLING
+============================================================
+
+If webhooks are unavailable, scheduled polling may retrieve
+tracking updates.
+
+Polling must use:
+
+- Rate limits
+- Retry
+- Backoff
+- Last known status
+- Idempotency
+
+============================================================
+55. SHIPPING LABELS
+============================================================
+
+Future carrier integrations may generate labels.
+
+Potential formats:
+
+- PDF
+- Thermal label
+- Image
+
+Labels should be stored securely and linked to shipments.
+
+============================================================
+56. LABEL SECURITY
+============================================================
+
+Shipping labels may contain personal information.
+
+Access must be:
+
+- Permission-controlled
+- Tenant-scoped
+- Audited
+- Securely stored
+
+============================================================
+57. PACKAGING
+============================================================
+
+Future package configuration may include:
+
+- Box
+- Envelope
+- Bag
+- Custom Package
+- Weight Limit
+- Dimensions
+
+Packaging data can support carrier rate calculations.
+
+============================================================
+58. DIMENSIONAL WEIGHT
+============================================================
+
+Future carriers may calculate dimensional weight.
+
+The architecture should support:
+
+- Actual Weight
+- Volumetric Weight
+- Billable Weight
+
+The exact formula must be configurable per carrier.
+
+============================================================
+59. SHIPPING COST
+============================================================
+
+Shipping cost should distinguish:
+
+- Customer Shipping Charge
+- Actual Carrier Cost
+- Store Shipping Subsidy
+- Shipping Profit/Margin
+
+This distinction supports profitability analytics.
+
+============================================================
+60. SHIPPING SUBSIDY
+============================================================
+
+Store may subsidize part or all of shipping.
+
+Example:
+
+Carrier Cost = PKR 350
+Customer Charge = PKR 200
+Store Subsidy = PKR 150
+
+These values should remain separately traceable.
+
+============================================================
+61. FREE SHIPPING COST
+============================================================
+
+Free shipping for customer does not necessarily mean carrier
+cost is zero.
+
+The system should preserve actual shipping cost separately.
+
+============================================================
+62. SHIPPING TAX
+============================================================
+
+Shipping charges may be taxable depending on configured tax rules.
+
+The shipping/tax integration must be server-authoritative.
+
+============================================================
+63. SHIPPING DISCOUNTS
+============================================================
+
+Promotions may provide:
+
+- Free shipping
+- Discounted shipping
+- Zone-specific shipping discount
+- Customer-group shipping discount
+
+Module 14 owns promotion eligibility.
+
+============================================================
+64. MULTI-WAREHOUSE SHIPPING
+============================================================
+
+Future architecture:
+
+Order
+↓
+Allocation
+↓
+Warehouse A
+Shipment A
+
+Warehouse B
+Shipment B
+
+The order may become:
+
+PARTIALLY_FULFILLED
+until all required shipments are completed.
+
+============================================================
+65. WAREHOUSE ALLOCATION
+============================================================
+
+Allocation may consider:
+
+- Stock availability
+- Warehouse proximity
+- Shipping cost
+- Delivery zone
+- Product restrictions
+- Store rules
+
+Inventory Module 08 remains authoritative for stock.
+
+============================================================
+66. SPLIT SHIPMENTS
+============================================================
+
+A single order may produce multiple shipments.
+
+Each shipment must have:
+
+- Shipment ID
+- Fulfillment Items
+- Warehouse
+- Carrier
+- Tracking
+- Status
+
+============================================================
+67. PARTIAL DELIVERY
+============================================================
+
+The platform must support:
+
+- Partial shipment
+- Partial delivery
+- Remaining shipment
+
+Order status should be updated through Module 09 according to
+fulfillment state.
+
+============================================================
+68. FAILED DELIVERY
+============================================================
+
+Possible reasons:
+
+- Customer unavailable
+- Wrong address
+- Service unavailable
+- Customer refusal
+- Carrier issue
+- Weather
+- Other operational reason
+
+Failure should be recorded without deleting shipment history.
+
+============================================================
+69. DELIVERY RETRY
+============================================================
+
+Carrier/local delivery may support retry.
+
+Retry should create an auditable event and may update the
+shipment schedule.
+
+============================================================
+70. RETURN SHIPPING
+============================================================
+
+Returns may require:
+
+- Return Shipment
+- Customer-paid return
+- Store-paid return
+- Carrier pickup
+- Drop-off
+
+Module 09 owns the Return business lifecycle.
+
+Module 13 owns return shipment operations.
+
+============================================================
+71. EXCHANGE SHIPPING
+============================================================
+
+Future exchange workflows may require:
+
+- Return shipment
+- Replacement shipment
+
+Both must remain separately traceable.
+
+============================================================
+72. SHIPPING CANCELLATION
+============================================================
+
+Cancellation may be possible before pickup.
+
+Carrier capability must be checked.
+
+A cancelled shipment must not automatically cancel the Order
+unless Order rules require it.
+
+============================================================
+73. SHIPPING ADDRESS SNAPSHOT
+============================================================
+
+The shipment must use the historical order shipping address
+snapshot.
+
+Later customer profile/address changes must not modify the
+shipment destination.
+
+============================================================
+74. CUSTOMER TRACKING
+============================================================
+
+Customers may view:
+
+- Shipment Status
+- Tracking Number
+- Carrier
+- Estimated Delivery
+- Tracking Events
+
+Sensitive internal carrier metadata must remain hidden.
+
+============================================================
+75. ADMIN SHIPPING VIEW
+============================================================
+
+Authorized store users may view:
+
+- Orders
+- Shipments
+- Carrier
+- Tracking
+- Shipping Cost
+- Delivery Status
+- Exceptions
+- Returns
+- Labels
+
+============================================================
+76. SHIPPING DASHBOARD
+============================================================
+
+Store dashboard may show:
+
+- Pending Shipments
+- In Transit
+- Out for Delivery
+- Delivered
+- Failed Deliveries
+- Returned Shipments
+- Average Delivery Time
+- Shipping Cost
+- COD Deliveries
+
+Detailed analytics belong to Module 22.
+
+============================================================
+77. SHIPPING RULE PRIORITY
+============================================================
+
+When multiple rules match, use deterministic precedence.
+
+Suggested:
+
+1. Product-specific rule
+2. Shipping class
+3. Exact postal/area rule
+4. City rule
+5. Province rule
+6. Country rule
+7. Default rule
+
+Exact precedence must be finalized in the Rules Blueprint.
+
+============================================================
+78. SHIPPING RULE CONFLICTS
+============================================================
+
+Conflicting rules must be detected during configuration.
+
+Admin UI should warn about:
+
+- Overlapping zones
+- Duplicate priorities
+- Impossible conditions
+- Negative rates
+- Invalid ranges
+
+============================================================
+79. SHIPPING CONFIGURATION VALIDATION
+============================================================
+
+Before publishing shipping configuration, validate:
+
+- At least one eligible method
+- Valid rates
+- Valid zones
+- Valid carrier
+- Valid origin
+- Valid credentials
+- Valid delivery rules
+
+============================================================
+80. SHIPPING DRAFT / PUBLISH
+============================================================
+
+Shipping configuration should support:
+
+- Draft
+- Preview
+- Publish
+- Versioning
+- Rollback where feasible
+
+This prevents incomplete configuration from affecting live
+checkout.
+
+============================================================
+81. SHIPPING API
+============================================================
+
+Potential endpoints:
+
+GET  /shipping/methods
+POST /shipping/quote
+GET  /shipments/{id}
+POST /shipments
+POST /shipments/{id}/cancel
+GET  /shipments/{id}/tracking
+POST /shipping/webhooks/{carrier}
+
+Exact routes will be finalized in the API Blueprint.
+
+============================================================
+82. SHIPPING QUOTE API
+============================================================
+
+Quote request may include:
+
+- Cart
+- Destination
+- Customer
+- Warehouse
+- Payment Method
+
+The server must recalculate all relevant values.
+
+============================================================
+83. SHIPPING QUOTE EXPIRY
+============================================================
+
+Carrier quotes may expire.
+
+The checkout must not assume a quote remains valid indefinitely.
+
+Final shipping price must be revalidated before order creation.
+
+============================================================
+84. SHIPPING EVENTS
+============================================================
+
+Potential events:
+
+- ShippingQuoteRequested
+- ShippingMethodSelected
+- ShipmentCreated
+- ShipmentLabelCreated
+- ShipmentPickedUp
+- ShipmentInTransit
+- ShipmentOutForDelivery
+- ShipmentDelivered
+- ShipmentFailed
+- ShipmentReturned
+- ShipmentCancelled
+
+============================================================
+85. SHIPPING OUTBOX
+============================================================
+
+Important shipping events should use reliable Outbox processing.
+
+Failures in notifications must not corrupt shipment state.
+
+============================================================
+86. SHIPPING NOTIFICATIONS
+============================================================
+
+Customer notifications may include:
+
+- Shipment Created
+- Shipped
+- Out for Delivery
+- Delivered
+- Delivery Failed
+- Returned
+
+Channels may include:
+
+- Email
+- SMS
+- WhatsApp
+- Push
+
+Module 21 owns communication delivery.
+
+============================================================
+87. SHIPPING SECURITY
+============================================================
+
+Protect against:
+
+- Tenant crossing
+- Shipment IDOR
+- Tracking manipulation
+- Carrier credential leakage
+- Webhook forgery
+- Tracking event injection
+- Unauthorized label access
+- Address exposure
+
+============================================================
+88. CARRIER SECRET MANAGEMENT
+============================================================
+
+Carrier credentials must:
+
+- Never be stored in frontend code
+- Never be committed to Git
+- Never be exposed through APIs
+- Be encrypted/securely managed
+- Be rotated where supported
+- Be access-controlled
+
+============================================================
+89. SHIPPING PRIVACY
+============================================================
+
+Shipping data may contain:
+
+- Name
+- Phone
+- Address
+- Tracking
+- Delivery instructions
+
+Access must follow least privilege.
+
+============================================================
+90. SHIPPING CACHE
+============================================================
+
+Safe cache candidates:
+
+- Public shipping configuration
+- Zone metadata
+- Non-sensitive rate configuration
+
+Do not cache customer private shipment information publicly.
+
+============================================================
+91. SHIPPING DATABASE INDEXING
+============================================================
+
+Potential indexes:
+
+- Store + Shipment ID
+- Store + Order ID
+- Store + Warehouse ID
+- Store + Carrier
+- Store + Tracking Number
+- Store + Status
+- Store + Created At
+- Store + Estimated Delivery
+
+Tracking event indexes should support shipment timeline retrieval.
+
+============================================================
+92. SHIPPING DATA RETENTION
+============================================================
+
+Shipment and tracking history should be retained according to
+business and legal requirements.
+
+Personal information should not be retained longer than
+necessary.
+
+============================================================
+93. PACKAGE ENTITLEMENTS
+============================================================
+
+Potential package model:
+
+Basic:
+- Flat Rate
+- Free Shipping
+- Basic shipping zones
+- Store pickup foundation
+
+Business:
+- Advanced shipping rules
+- Multiple methods
+- Courier integrations
+- Tracking
+- Advanced zones
+
+Premium:
+- Multiple carriers
+- Advanced shipping automation
+- Multi-warehouse shipping
+- Advanced routing
+- Advanced shipping analytics
+
+Exact package mapping must be finalized in Module 04.
+
+============================================================
+94. SHIPPING LIMITS
+============================================================
+
+Potential limits:
+
+- Shipping Methods
+- Shipping Zones
+- Carriers
+- Warehouses
+- Pickup Locations
+- Delivery Rules
+- Active Shipments
+- Tracking Requests
+
+Limits must be configurable.
+
+============================================================
+95. SHIPPING MONITORING
+============================================================
+
+Module 24 may monitor:
+
+- Carrier Availability
+- API Latency
+- Quote Failures
+- Shipment Creation Failures
+- Tracking Delays
+- Webhook Failures
+- Delivery Exceptions
+
+============================================================
+96. SHIPPING ANALYTICS
+============================================================
+
+Module 22 may report:
+
+- Shipping Cost
+- Customer Shipping Revenue
+- Shipping Subsidy
+- Delivery Time
+- Delivery Success Rate
+- Failed Deliveries
+- Return Shipping
+- Carrier Performance
+- Zone Performance
+- COD Delivery Performance
+
+Analytics must remain tenant-scoped.
+
+============================================================
+97. FAILURE RECOVERY
+============================================================
+
+Handle:
+
+- Carrier API timeout
+- Shipment creation timeout
+- Duplicate shipment request
+- Webhook failure
+- Tracking API failure
+- Label generation failure
+- Database failure
+
+Use:
+
+- Idempotency
+- Retry
+- Backoff
+- Reconciliation
+- Manual recovery tools
+
+============================================================
+98. RECONCILIATION
+============================================================
+
+Reconcile:
+
+Internal Shipment
+vs
+Carrier Shipment
+vs
+Tracking
+vs
+Order Fulfillment
+
+Detect:
+
+- Missing shipment
+- Duplicate shipment
+- Status mismatch
+- Tracking mismatch
+- Delivery mismatch
+
+============================================================
+99. TESTING — SHIPPING RULES
+============================================================
+
+Test:
+
+- Flat rate
+- Free shipping
+- Weight-based
+- Price-based
+- Quantity-based
+- Product-specific
+- Shipping class
+- Zone priority
+- Overlapping zones
+- Invalid rules
+- Mixed cart
+
+============================================================
+100. TESTING — SERVICEABILITY
+============================================================
+
+Test:
+
+- Country
+- Province
+- City
+- Area
+- Postal code
+- Unsupported area
+- COD area
+- Product restrictions
+- Weight restrictions
+
+============================================================
+101. TESTING — SHIPMENTS
+============================================================
+
+Test:
+
+- Shipment creation
+- Multiple shipments
+- Partial shipment
+- Tracking
+- Delivery
+- Failed delivery
+- Return shipment
+- Cancellation
+- Retry
+
+============================================================
+102. SECURITY TESTING
+============================================================
+
+Mandatory:
+
+- Cross-tenant shipment access
+- Shipment IDOR
+- Tracking manipulation
+- Carrier credential exposure
+- Webhook forgery
+- Unauthorized label access
+- Address leakage
+- Shipping price tampering
+
+============================================================
+103. CONCURRENCY TESTING
+============================================================
+
+Test:
+
+- Duplicate shipment creation
+- Concurrent fulfillment
+- Simultaneous tracking webhooks
+- Shipment cancellation during pickup
+- Inventory allocation changes
+- Multiple warehouse allocation
+
+============================================================
+104. PERFORMANCE TESTING
+============================================================
+
+Test:
+
+- Large shipping rule sets
+- Large zone databases
+- High quote volume
+- Large shipment history
+- High webhook volume
+- Multiple carriers
+- Multiple stores
+
+============================================================
+105. HIGH-LEVEL DATA ENTITIES
+============================================================
+
+Potential entities:
+
+- ShippingZone
+- ShippingZoneRule
+- ShippingArea
+- ShippingMethod
+- ShippingRate
+- ShippingRateRule
+- ShippingClass
+- ShippingRule
+- ShippingConfiguration
+- ShippingConfigurationVersion
+- ShippingQuote
+- ShippingQuoteItem
+- Carrier
+- CarrierCapability
+- CarrierAccount
+- CarrierService
+- Shipment
+- ShipmentItem
+- ShipmentPackage
+- ShipmentLabel
+- ShipmentTrackingEvent
+- ShipmentWebhookEvent
+- ShipmentWebhookDelivery
+- ShipmentException
+- ShipmentReturn
+- PickupLocation
+- LocalDeliveryConfiguration
+- DeliverySchedule
+- HolidayCalendar
+- ShippingOutboxEvent
+- ShippingReconciliation
+
+Exact schema will be finalized in the Database Blueprint.
+
+============================================================
+106. MODULE DEPENDENCIES
+============================================================
+
+Required:
+
+- Module 01 — Complete Platform Structure
+- Module 02 — Authentication, Users, Roles & Permissions
+- Module 03 — Multi-Tenant & Store Management
+- Module 04 — Subscription, Packages & Feature Entitlements
+- Module 05 — Storefront
+- Module 06 — Product & Catalog
+- Module 08 — Inventory & Stock
+- Module 09 — Order Management
+- Module 10 — Customer Management
+- Module 11 — Cart, Wishlist & Checkout
+- Module 12 — Payment Management & Gateways
+
+Strong integration with:
+
+- Module 14 — Discounts, Coupons & Promotions
+- Module 15 — Marketing & Customer Engagement
+- Module 21 — Notifications & Communication
+- Module 22 — Reports & Analytics
+- Module 24 — Store Health & Resource Usage
+- Module 27 — App / Plugin Marketplace
+- Module 31 — API & Developer Platform
+- Module 32 — Security, Audit & Compliance
+
+============================================================
+107. REQUIRED FOLLOW-UP ARTIFACTS
+============================================================
+
+1. Shipping Database Blueprint
+2. Shipping Zone Blueprint
+3. Shipping Rate Engine Blueprint
+4. Shipping Rules Priority Blueprint
+5. Shipping Serviceability Blueprint
+6. Carrier Abstraction Blueprint
+7. Carrier Capability Matrix
+8. Carrier Account Blueprint
+9. Shipment State Machine
+10. Shipment Tracking Blueprint
+11. Carrier Webhook Blueprint
+12. Shipping Label Blueprint
+13. Multi-Warehouse Shipping Blueprint
+14. Split Shipment Blueprint
+15. Store Pickup Blueprint
+16. Local Delivery Blueprint
+17. Shipping Quote Blueprint
+18. Shipping Reconciliation Blueprint
+19. Shipping API Contract
+20. Shipping Event / Outbox Blueprint
+21. Shipping Security Blueprint
+22. Shipping Test Matrix
+23. Shipping Monitoring Blueprint
+
+============================================================
+108. FINAL ARCHITECTURAL RULES
+============================================================
+
+1. One Core Shipping Engine.
+2. Shipping configuration is tenant-scoped.
+3. Shipping rates must be calculated server-side.
+4. Client-submitted shipping prices must never be trusted.
+5. Shipping serviceability must be server-authoritative.
+6. Shipping rules must have deterministic priority.
+7. Product, shipping class, zone, and carrier rules must be
+   composable.
+8. Digital-only carts must not require physical shipping.
+9. Store pickup must be a first-class shipping/fulfillment method.
+10. Local delivery must use the same core shipping architecture.
+11. Carrier integrations must use provider/adapter abstraction.
+12. Carrier credentials must remain tenant-scoped and secure.
+13. Carrier webhooks must be verified and idempotent.
+14. Tracking history must be preserved.
+15. Shipment and Order are separate but integrated entities.
+16. One Order may contain multiple Shipments.
+17. Split shipments must be supported by the architecture.
+18. Inventory remains authoritative in Module 08.
+19. Historical order/shipping address snapshots must not change
+    when customer addresses change.
+20. Shipping quotes may expire and must be revalidated before
+    final Order creation.
+21. Actual carrier cost and customer shipping charge must remain
+    separately traceable.
+22. Free shipping does not mean carrier cost is zero.
+23. Shipping refunds/return shipping must integrate with Module 09.
+24. Shipment failures must not destroy historical shipment data.
+25. Duplicate shipment creation must be prevented with idempotency.
+26. Payment and shipping state must remain separate.
+27. Package entitlements may control shipping features and limits.
+28. Shipping architecture must remain ready for multiple
+    warehouses, multiple carriers, international delivery,
+    automated routing, pickup, returns, and future logistics APIs.
+29. Security, privacy, tenant isolation, auditability, and
+    failure recovery are mandatory.
+
+============================================================
+109. STATUS
+============================================================
+
+Module 13 Status:
+SHIPPING & DELIVERY MANAGEMENT — INITIALIZED
+
+Version:
+1.0
+
+This module establishes the multi-tenant shipping and delivery
+foundation for zones, rates, serviceability, local delivery,
+store pickup, carriers, shipments, tracking, labels, COD
+serviceability, multi-warehouse fulfillment, returns shipping,
+analytics, reconciliation, and future logistics integrations.
+
+The next module will define:
+
+MODULE 14 — DISCOUNTS, COUPONS & PROMOTIONS
+
+============================================================
+END OF MODULE 13
+============================================================

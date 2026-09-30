@@ -1,0 +1,1800 @@
+====================================================================
+UMAR TECHY E-COMMERCE PLATFORM
+MASTER PROJECT BLUEPRINT — MODULE 17
+THEME, BRANDING & DESIGN SYSTEM
+Technical Specification — English Only
+Version 1.0
+====================================================================
+
+1. MODULE PURPOSE
+--------------------------------------------------------------------
+Module 17 provides the Core Theme, Branding, Design System, and
+Storefront Visual Configuration Engine for the Umar Techy
+Multi-Tenant E-Commerce Platform.
+
+The module allows every tenant/store to establish its own visual
+identity while remaining on the same core platform and codebase.
+
+The system must support:
+
+- Ready-made themes.
+- Theme variants.
+- Store-specific branding.
+- Configurable colors.
+- Typography.
+- Layouts.
+- Components.
+- Navigation presentation.
+- Buttons.
+- Cards.
+- Forms.
+- Product presentation.
+- Checkout presentation.
+- Footer/header configurations.
+- Responsive behavior.
+- Accessibility.
+- Dark/light modes where supported.
+- RTL/LTR.
+- Localization-aware presentation.
+- Design tokens.
+- Storefront presets.
+- Draft/preview/publish workflow.
+- Theme versioning.
+- Safe customization.
+- Package-based theme capabilities.
+
+Core principle:
+
+ONE CORE STOREFRONT ENGINE
+        +
+ONE CONFIG-DRIVEN DESIGN SYSTEM
+        +
+READY-MADE THEMES
+        +
+TENANT-SPECIFIC BRAND CONFIGURATION
+        +
+PACKAGE ENTITLEMENTS
+
+No tenant-specific source-code forks are permitted.
+
+
+2. PRIMARY OBJECTIVES
+--------------------------------------------------------------------
+The module shall:
+
+1. Provide a centralized design-token system.
+2. Support multiple reusable themes.
+3. Allow tenant-specific theme selection.
+4. Allow tenant-specific branding.
+5. Support configurable colors, typography, spacing, radius,
+   shadows, borders, and visual density.
+6. Support configurable storefront layouts.
+7. Provide reusable UI component configurations.
+8. Support responsive desktop/tablet/mobile behavior.
+9. Support RTL/LTR presentation.
+10. Support light/dark mode foundations.
+11. Support accessibility requirements.
+12. Integrate with the Animation System in Module 18.
+13. Integrate with Storefront rendering in Module 05.
+14. Integrate with SEO/content rendering in Module 16.
+15. Integrate with packages/entitlements in Module 04.
+16. Support draft, preview, publish, schedule, and rollback.
+17. Preserve theme configuration during package changes.
+18. Support safe custom CSS capabilities where entitled.
+19. Prevent cross-tenant theme/configuration leakage.
+20. Provide performance-friendly rendering.
+21. Support future theme marketplace architecture.
+22. Provide comprehensive testing and production validation.
+
+
+3. ARCHITECTURAL POSITION
+--------------------------------------------------------------------
+Module 17 owns:
+
+- Theme definitions.
+- Theme versions.
+- Theme variants.
+- Design tokens.
+- Brand configuration.
+- Store visual identity.
+- Layout configuration.
+- Component configuration.
+- Theme settings.
+- Responsive presentation settings.
+- Typography configuration.
+- Color system configuration.
+- Storefront visual presets.
+- Theme preview configuration.
+- Theme publishing/versioning.
+- Theme compatibility metadata.
+- Custom style configuration.
+
+Module 17 does NOT own:
+
+- Storefront business pages — Module 05.
+- Product data — Module 06.
+- Categories/brands/attributes — Module 07.
+- SEO rules/content — Module 16.
+- Animation behavior engine — Module 18.
+- Domain ownership — Module 19.
+- Hosting infrastructure — Module 20.
+- Marketing campaigns — Module 15.
+- Payment UI business rules — Module 12.
+- Shipping business rules — Module 13.
+
+Those modules remain authoritative for their domains.
+
+
+4. CORE DESIGN SYSTEM
+--------------------------------------------------------------------
+The platform shall use a token-driven design system.
+
+Token categories:
+
+- Color.
+- Typography.
+- Spacing.
+- Sizing.
+- Border.
+- Radius.
+- Shadow.
+- Elevation.
+- Iconography.
+- Motion.
+- Breakpoints.
+- Z-index.
+- Opacity.
+- Component states.
+
+Tokens must be semantic rather than hard-coded wherever possible.
+
+Example semantic tokens:
+
+color.primary
+color.primary_foreground
+color.secondary
+color.accent
+color.background
+color.surface
+color.text
+color.muted_text
+color.border
+color.success
+color.warning
+color.error
+color.info
+
+The exact token naming convention may follow the final technical
+architecture.
+
+
+5. COLOR SYSTEM
+--------------------------------------------------------------------
+Each store may configure:
+
+- Primary color.
+- Secondary color.
+- Accent color.
+- Background.
+- Surface.
+- Text.
+- Muted text.
+- Border.
+- Success.
+- Warning.
+- Error.
+- Information.
+- Product badge colors.
+- Discount colors.
+- Stock-status colors.
+
+The system should generate accessible derived variants where
+possible.
+
+Color configuration must validate:
+
+- Valid color format.
+- Contrast requirements.
+- Light/dark compatibility.
+- Disabled states.
+- Hover/focus states.
+
+The system should warn when selected combinations fail important
+accessibility contrast thresholds.
+
+
+6. BRAND IDENTITY
+--------------------------------------------------------------------
+Each store may define:
+
+- Store name.
+- Logo.
+- Alternate logo.
+- Symbol/icon mark.
+- Favicon.
+- App icon foundation.
+- Brand colors.
+- Brand typography.
+- Brand imagery.
+- Social sharing image.
+- Brand tagline.
+- Short description.
+- Business identity.
+
+Brand assets must be tenant-scoped.
+
+The platform must support:
+
+- Light-background logo.
+- Dark-background logo.
+- Compact logo.
+- Mobile logo.
+- Fallback text branding.
+
+Missing assets must fall back safely without breaking the storefront.
+
+
+7. LOGO & MEDIA RULES
+--------------------------------------------------------------------
+Supported formats may include:
+
+- SVG.
+- PNG.
+- WebP.
+- JPEG where appropriate.
+
+SVG handling must include security sanitization.
+
+The platform must prevent:
+
+- Embedded scripts.
+- Malicious SVG payloads.
+- Unsafe external references.
+- Cross-tenant media references.
+
+Images should support optimized derivatives where applicable.
+
+Media must integrate with the platform media architecture.
+
+
+8. TYPOGRAPHY SYSTEM
+--------------------------------------------------------------------
+Each theme may define:
+
+- Primary font family.
+- Secondary font family.
+- Heading font.
+- Body font.
+- UI font.
+- Arabic/Urdu font.
+- Fallback fonts.
+
+Typography tokens:
+
+- Display.
+- H1.
+- H2.
+- H3.
+- H4.
+- Body.
+- Small.
+- Caption.
+- Button.
+- Navigation.
+- Label.
+- Price.
+- Product title.
+
+Configurable properties:
+
+- Font size.
+- Weight.
+- Line height.
+- Letter spacing.
+- Text transform.
+
+Font loading must be performance-conscious.
+
+External font providers must be configurable and privacy-aware.
+
+
+9. RTL / LTR
+--------------------------------------------------------------------
+The design system must support:
+
+- LTR.
+- RTL.
+- Mixed-direction content.
+
+RTL behavior must correctly handle:
+
+- Navigation.
+- Sidebars.
+- Breadcrumbs.
+- Product grids.
+- Cart.
+- Checkout.
+- Forms.
+- Icons.
+- Directional arrows.
+- Pagination.
+- Modals.
+- Tables where applicable.
+
+Logical CSS properties should be preferred over hard-coded
+left/right rules.
+
+Text direction must not alter URL normalization.
+
+
+10. SPACING SYSTEM
+--------------------------------------------------------------------
+Provide standardized spacing tokens.
+
+Example scale:
+
+space.0
+space.1
+space.2
+space.3
+space.4
+space.5
+space.6
+space.8
+space.10
+space.12
+space.16
+space.20
+
+The actual values must be defined centrally.
+
+Components should use tokens rather than arbitrary spacing values.
+
+
+11. BORDER & RADIUS SYSTEM
+--------------------------------------------------------------------
+Support configurable:
+
+- Border width.
+- Border style.
+- Border color.
+- Small radius.
+- Medium radius.
+- Large radius.
+- Full/pill radius.
+
+Theme presets may include:
+
+- Sharp.
+- Soft.
+- Rounded.
+- Pill-oriented.
+
+All components must consume semantic tokens.
+
+
+12. SHADOW & ELEVATION SYSTEM
+--------------------------------------------------------------------
+Support:
+
+- None.
+- Subtle.
+- Medium.
+- Strong.
+- Modal.
+- Dropdown.
+- Floating action.
+
+Shadows must remain performance-friendly and visually consistent.
+
+
+13. ICONOGRAPHY
+--------------------------------------------------------------------
+Support a standardized icon system.
+
+Requirements:
+
+- Consistent visual style.
+- Accessible labels.
+- RTL-aware directional icons.
+- Size tokens.
+- Stroke/fill variants where supported.
+- Fallback icons.
+
+Theme-specific icons may be supported through configuration.
+
+Arbitrary untrusted SVG icons must be sanitized.
+
+
+14. RESPONSIVE DESIGN SYSTEM
+--------------------------------------------------------------------
+The storefront must support:
+
+- Mobile.
+- Tablet.
+- Desktop.
+- Large desktop.
+
+Themes must define responsive behavior for:
+
+- Header.
+- Navigation.
+- Hero.
+- Product grids.
+- Category grids.
+- Filters.
+- Sidebar.
+- Footer.
+- Product detail.
+- Cart.
+- Checkout.
+- Account pages.
+
+Breakpoints must be centralized.
+
+The system must avoid device-specific duplicated templates whenever
+possible.
+
+
+15. THEME ARCHITECTURE
+--------------------------------------------------------------------
+A theme consists of:
+
+Theme Metadata
+Theme Version
+Design Tokens
+Brand Defaults
+Layout Definitions
+Component Configurations
+Page Templates
+Responsive Rules
+Accessibility Rules
+SEO Presentation Defaults
+Animation Profile Reference
+Compatibility Metadata
+
+Theme metadata should include:
+
+- Theme ID.
+- Name.
+- Description.
+- Version.
+- Author.
+- License.
+- Preview images.
+- Supported modules.
+- Supported storefront capabilities.
+- Minimum platform version.
+- Maximum tested platform version.
+- Supported locales.
+- RTL support.
+- Dark-mode support.
+- Accessibility level.
+- Performance profile.
+
+
+16. THEME LIFECYCLE
+--------------------------------------------------------------------
+Theme states:
+
+DRAFT
+TESTING
+PUBLISHED
+DEPRECATED
+DISABLED
+ARCHIVED
+
+Only compatible published themes should be available for normal
+tenant selection.
+
+A deprecated theme may remain active for existing stores while
+migration is prepared.
+
+
+17. THEME VERSIONING
+--------------------------------------------------------------------
+Theme versions must be immutable after publication.
+
+A new version must create a new version record.
+
+Each version should include:
+
+- Version number.
+- Release notes.
+- Compatibility information.
+- Migration notes.
+- Required assets.
+- Token changes.
+- Component changes.
+- Known issues.
+
+Store configurations must retain the selected theme version.
+
+Automatic upgrades should not silently alter a production store's
+appearance without an explicit policy/approval.
+
+
+18. THEME SELECTION
+--------------------------------------------------------------------
+Each tenant may select an available theme according to package
+entitlements.
+
+Theme selection workflow:
+
+Choose Theme
+→ Validate Compatibility
+→ Create Preview Configuration
+→ Preview
+→ Confirm
+→ Publish
+
+The system must preserve the previous active theme configuration
+for rollback.
+
+
+19. THEME PREVIEW
+--------------------------------------------------------------------
+Authorized users may preview a theme before publishing.
+
+Preview must support:
+
+- Real catalog data in safe read-only mode.
+- Sample data fallback.
+- Different storefront pages.
+- Desktop/tablet/mobile viewport simulation.
+- RTL/LTR preview.
+- Light/dark preview where supported.
+
+Preview must not modify production storefront state.
+
+Preview tokens must be:
+
+- Short-lived.
+- Tenant-scoped.
+- Permission-protected.
+- Non-indexable.
+
+
+20. THEME ROLLBACK
+--------------------------------------------------------------------
+A store must be able to return to a previous compatible theme
+version/configuration.
+
+Rollback must preserve:
+
+- Store ID.
+- Product data.
+- Category data.
+- Order data.
+- Customer data.
+- SEO data.
+- Domain configuration.
+
+Only visual/presentation configuration should change.
+
+
+21. LAYOUT ENGINE
+--------------------------------------------------------------------
+Support configurable layouts for:
+
+- Header.
+- Navigation.
+- Homepage.
+- Product listing.
+- Product detail.
+- Category.
+- Collection.
+- Brand.
+- Search.
+- Cart.
+- Checkout.
+- Customer account.
+- Footer.
+
+Layout concepts:
+
+- Container width.
+- Column count.
+- Grid gap.
+- Sidebar position.
+- Content alignment.
+- Section spacing.
+- Header height.
+- Footer columns.
+
+Layout configuration must be schema-validated.
+
+
+22. HEADER SYSTEM
+--------------------------------------------------------------------
+Header configuration may include:
+
+- Logo position.
+- Announcement bar.
+- Main navigation.
+- Search.
+- Account.
+- Wishlist.
+- Cart.
+- CTA button.
+- Mobile menu.
+- Sticky header.
+- Header variant.
+
+The header must remain responsive and accessible.
+
+Business functionality must remain owned by relevant modules.
+
+
+23. FOOTER SYSTEM
+--------------------------------------------------------------------
+Support:
+
+- Logo.
+- About text.
+- Navigation columns.
+- Contact information.
+- Social links.
+- Newsletter area.
+- Payment icons.
+- Legal links.
+- Copyright.
+- App/PWA links.
+
+Footer content should integrate with Module 16 where applicable.
+
+
+24. NAVIGATION SYSTEM
+--------------------------------------------------------------------
+Support:
+
+- Primary navigation.
+- Secondary navigation.
+- Mega menu foundation.
+- Mobile navigation.
+- Category navigation.
+- Footer navigation.
+- Breadcrumb presentation.
+
+Navigation must respect:
+
+- Permissions for admin editing.
+- Content publication state.
+- Tenant context.
+- RTL.
+- Accessibility.
+
+
+25. HOMEPAGE SECTION SYSTEM
+--------------------------------------------------------------------
+Homepage layouts should be composition-based.
+
+Supported sections may include:
+
+- Hero.
+- Announcement.
+- Featured products.
+- New arrivals.
+- Best sellers.
+- Categories.
+- Collections.
+- Brands.
+- Promotional banner.
+- Product carousel.
+- Testimonials.
+- FAQ.
+- Blog/articles.
+- Newsletter.
+- CTA.
+- Custom content blocks.
+
+Sections must be reorderable where entitled.
+
+Each section must have:
+
+- Stable ID.
+- Type.
+- Configuration.
+- Visibility.
+- Responsive behavior.
+- Localization.
+- Revision support.
+
+
+26. PRODUCT CARD SYSTEM
+--------------------------------------------------------------------
+Product cards must support:
+
+- Product image.
+- Secondary image.
+- Product title.
+- Price.
+- Sale price.
+- Discount badge.
+- Stock badge.
+- Rating foundation.
+- Wishlist action.
+- Quick-view foundation.
+- Add-to-cart action.
+- Variant indicator.
+
+The card must adapt to:
+
+- Theme.
+- Device.
+- RTL.
+- Product type.
+- Availability.
+- Package entitlements.
+
+
+27. PRODUCT DETAIL PRESENTATION
+--------------------------------------------------------------------
+Support configurable presentation for:
+
+- Gallery.
+- Product title.
+- Rating.
+- Price.
+- Sale price.
+- Variant selector.
+- Quantity.
+- Add to cart.
+- Buy now.
+- Wishlist.
+- Description.
+- Specifications.
+- Shipping information.
+- Stock state.
+- Related products.
+- Cross-sell.
+- Up-sell.
+- Reviews foundation.
+
+Business rules remain owned by catalog, inventory, checkout,
+promotion, shipping, and payment modules.
+
+
+28. BUTTON SYSTEM
+--------------------------------------------------------------------
+Provide semantic button variants:
+
+- Primary.
+- Secondary.
+- Tertiary.
+- Outline.
+- Ghost.
+- Destructive.
+- Success.
+- Link.
+
+States:
+
+- Default.
+- Hover.
+- Focus.
+- Active.
+- Disabled.
+- Loading.
+
+Buttons must support keyboard accessibility and visible focus.
+
+
+29. FORM SYSTEM
+--------------------------------------------------------------------
+Standardize:
+
+- Input.
+- Select.
+- Multi-select.
+- Checkbox.
+- Radio.
+- Toggle.
+- Textarea.
+- File input.
+- Date/time controls.
+- Search fields.
+
+Support:
+
+- Labels.
+- Help text.
+- Error text.
+- Required indicators.
+- Validation states.
+- RTL.
+
+Form validation remains authoritative in backend/business modules.
+
+
+30. CARD, MODAL & OVERLAY SYSTEM
+--------------------------------------------------------------------
+Support reusable:
+
+- Cards.
+- Drawers.
+- Dialogs.
+- Modals.
+- Tooltips.
+- Dropdowns.
+- Popovers.
+- Toasts.
+- Alerts.
+
+Requirements:
+
+- Keyboard navigation.
+- Focus management.
+- Escape behavior.
+- Screen-reader support.
+- Mobile adaptation.
+
+
+31. ACCESSIBILITY
+--------------------------------------------------------------------
+The design system must target WCAG-aligned accessibility.
+
+Requirements include:
+
+- Semantic HTML.
+- Keyboard navigation.
+- Visible focus.
+- Sufficient contrast.
+- Accessible names.
+- Form labels.
+- Error identification.
+- Reduced motion support.
+- Screen-reader compatibility.
+- Touch target sizing.
+- No color-only communication.
+- Accessible modal focus management.
+
+Accessibility regressions must be tested.
+
+
+32. DARK MODE
+--------------------------------------------------------------------
+Where supported, themes may provide:
+
+- Light mode.
+- Dark mode.
+- System preference.
+- Store default.
+- User preference.
+
+Color tokens must have mode-specific values.
+
+Dark mode must not reduce contrast or accessibility.
+
+
+33. DESIGN DENSITY
+--------------------------------------------------------------------
+Support visual density presets:
+
+- Comfortable.
+- Standard.
+- Compact.
+
+Density must affect:
+
+- Spacing.
+- Component height.
+- Table density.
+- Card padding.
+- Form controls.
+
+It must not change business rules.
+
+
+34. ANIMATION INTEGRATION
+--------------------------------------------------------------------
+Module 17 provides visual references and component-level motion
+tokens.
+
+Module 18 owns actual animation profiles and runtime behavior.
+
+Theme may select:
+
+- Animation profile.
+- Transition intensity.
+- Hover effects.
+- Page transition preference.
+
+All motion must support reduced-motion behavior.
+
+No animation may block core business actions.
+
+
+35. THEME PERFORMANCE
+--------------------------------------------------------------------
+Themes must be performance-conscious.
+
+Requirements:
+
+- Minimal unnecessary JavaScript.
+- Optimized CSS.
+- Code splitting where appropriate.
+- Lazy loading.
+- Image optimization.
+- Font optimization.
+- Avoid excessive DOM depth.
+- Avoid layout shifts.
+- Avoid expensive visual effects by default.
+
+Themes should define a performance profile:
+
+LIGHT
+STANDARD
+RICH
+with safeguards against resource-heavy configurations.
+
+
+36. CUSTOM CSS
+--------------------------------------------------------------------
+Advanced packages may allow controlled custom CSS.
+
+Requirements:
+
+- Tenant-scoped.
+- Permission-protected.
+- Sanitized/validated where technically possible.
+- Size-limited.
+- Versioned.
+- Audited.
+- Previewable.
+- Rollback-capable.
+
+Custom CSS must not allow access to server secrets or data.
+
+The platform should warn that unsupported custom CSS may break
+future theme updates.
+
+
+37. CUSTOM COMPONENT FOUNDATION
+--------------------------------------------------------------------
+Future advanced plans may support controlled custom components.
+
+Such components must use:
+
+- Approved component APIs.
+- Schema validation.
+- Tenant isolation.
+- Resource limits.
+- Safe rendering.
+- Versioning.
+- Compatibility declarations.
+
+Arbitrary server-side executable code is prohibited.
+
+
+38. THEME CUSTOMIZER
+--------------------------------------------------------------------
+The admin customizer should expose:
+
+Brand
+Colors
+Typography
+Layout
+Header
+Navigation
+Homepage
+Product Cards
+Product Detail
+Buttons
+Forms
+Footer
+Responsive Settings
+Dark Mode
+Animation Profile
+SEO Presentation Defaults
+Custom CSS where entitled
+
+The customizer must support:
+
+- Live preview.
+- Undo/redo foundation.
+- Draft state.
+- Save.
+- Publish.
+- Reset to theme defaults.
+- Reset section.
+- Revision history.
+
+
+39. CONFIGURATION INHERITANCE
+--------------------------------------------------------------------
+Configuration hierarchy:
+
+Platform Defaults
+→ Theme Defaults
+→ Theme Variant
+→ Store Defaults
+→ Store Customization
+→ Page/Section Override
+
+Higher-level configuration must not mutate lower-level source
+definitions.
+
+Resolved configuration should be computed deterministically.
+
+
+40. CONFIGURATION VALIDATION
+--------------------------------------------------------------------
+Every theme configuration must be schema-validated.
+
+Validate:
+
+- Token types.
+- Color formats.
+- Font references.
+- Layout values.
+- Component settings.
+- Breakpoints.
+- Asset references.
+- Localization references.
+- Animation profile references.
+- Entitlement requirements.
+
+Invalid configurations must not be published.
+
+
+41. PACKAGE ENTITLEMENTS
+--------------------------------------------------------------------
+Module 04 remains authoritative.
+
+Possible entitlement keys:
+
+themes.basic
+themes.premium
+themes.multiple
+themes.customization.basic
+themes.customization.advanced
+branding.custom_logo
+branding.custom_colors
+branding.custom_typography
+layout.advanced
+homepage.sections
+homepage.advanced_sections
+custom_css
+custom_components
+dark_mode
+theme_scheduling
+theme_version_control
+theme_preview
+theme_rollback
+rtl
+multilingual
+advanced_responsive
+design_presets
+
+Possible limits:
+
+- Available themes.
+- Active theme variants.
+- Homepage sections.
+- Custom blocks.
+- Custom CSS size.
+- Custom fonts.
+- Brand assets.
+- Saved theme revisions.
+- Scheduled theme changes.
+
+
+42. THEME MARKETPLACE FOUNDATION
+--------------------------------------------------------------------
+The architecture must support future theme marketplace features.
+
+Future concepts:
+
+- Theme listing.
+- Theme author.
+- Theme license.
+- Free theme.
+- Paid theme.
+- Theme subscription.
+- Theme ratings foundation.
+- Theme installation.
+- Theme update.
+- Compatibility checks.
+- Theme dependency metadata.
+
+Marketplace functionality should be implemented later through
+Module 27.
+
+
+43. THEME IMPORT / EXPORT
+--------------------------------------------------------------------
+Support future safe theme configuration export/import.
+
+Export may contain:
+
+- Token configuration.
+- Layout configuration.
+- Component settings.
+- Brand configuration references.
+- Section definitions.
+
+It must not automatically export:
+
+- Customer data.
+- Orders.
+- Payment secrets.
+- Shipping secrets.
+- Private credentials.
+- Other tenant data.
+
+Imports must be validated and tenant-scoped.
+
+
+44. MULTI-TENANT ISOLATION
+--------------------------------------------------------------------
+Every theme-related object must be classified as:
+
+GLOBAL PLATFORM DATA
+or
+TENANT DATA.
+
+Global examples:
+
+- Theme definitions.
+- Published theme versions.
+- Global component schemas.
+- Platform design-token schema.
+
+Tenant examples:
+
+- Selected theme.
+- Store token overrides.
+- Brand assets.
+- Custom CSS.
+- Homepage configuration.
+- Theme revisions.
+- Customization history.
+
+Tenant data must never be readable or writable across stores.
+
+
+45. CACHE STRATEGY
+--------------------------------------------------------------------
+Theme-resolved configuration should be cacheable.
+
+Cache keys must include:
+
+- Tenant/store ID.
+- Theme ID.
+- Theme version.
+- Configuration version.
+- Locale.
+- Mode where applicable.
+
+Publishing a theme configuration must invalidate relevant caches.
+
+Never share tenant-resolved theme configuration through a global
+cache key.
+
+
+46. API REQUIREMENTS
+--------------------------------------------------------------------
+Example endpoint families:
+
+/api/stores/{storeId}/theme
+/api/stores/{storeId}/theme/preview
+/api/stores/{storeId}/theme/publish
+/api/stores/{storeId}/theme/rollback
+/api/stores/{storeId}/theme/revisions
+/api/stores/{storeId}/branding
+/api/stores/{storeId}/design-tokens
+/api/stores/{storeId}/layout
+/api/stores/{storeId}/custom-css
+
+Theme catalog endpoints may be platform-scoped.
+
+Every store endpoint must verify authenticated tenant membership.
+
+
+47. EVENTS & OUTBOX
+--------------------------------------------------------------------
+Important events may include:
+
+ThemeSelected
+ThemePreviewCreated
+ThemeConfigurationUpdated
+ThemePublished
+ThemeRolledBack
+ThemeRevisionCreated
+BrandingUpdated
+DesignTokensUpdated
+LayoutUpdated
+CustomCssUpdated
+ThemeScheduled
+ThemeScheduleExecuted
+ThemeCompatibilityFailed
+
+Events must follow the platform outbox/event architecture.
+
+
+48. AUDIT REQUIREMENTS
+--------------------------------------------------------------------
+Audit:
+
+- Theme selection.
+- Theme installation where applicable.
+- Theme configuration changes.
+- Brand changes.
+- Logo changes.
+- Color changes.
+- Typography changes.
+- Layout changes.
+- Custom CSS changes.
+- Publishing.
+- Scheduling.
+- Rollback.
+- Reset operations.
+- Privileged custom component changes.
+
+Audit records should include:
+
+- Tenant.
+- Actor.
+- Action.
+- Target.
+- Timestamp.
+- Result.
+- Revision reference.
+- Before/after references where appropriate.
+
+
+49. PERMISSIONS
+--------------------------------------------------------------------
+Example permissions:
+
+theme.view
+theme.select
+theme.customize
+theme.preview
+theme.publish
+theme.schedule
+theme.rollback
+theme.revisions.view
+branding.view
+branding.manage
+design_system.view
+design_system.manage
+layout.manage
+custom_css.manage
+custom_components.manage
+
+Privileged permissions must be separate from ordinary content
+editing.
+
+
+50. ADMIN UI REQUIREMENTS
+--------------------------------------------------------------------
+Admin areas should include:
+
+Theme Library
+Active Theme
+Theme Preview
+Theme Customizer
+Brand Identity
+Colors
+Typography
+Layout
+Header
+Navigation
+Homepage Sections
+Product Presentation
+Footer
+Responsive Settings
+Dark Mode
+Animation Profile
+Custom CSS
+Theme Revisions
+Scheduled Changes
+Rollback
+Theme Compatibility
+
+The UI must clearly show:
+
+- Current theme.
+- Current version.
+- Draft vs published configuration.
+- Package limitations.
+- Unsaved changes.
+- Preview state.
+- Rollback availability.
+
+
+51. STOREFRONT RENDERING INTEGRATION
+--------------------------------------------------------------------
+Module 05 should consume a resolved theme configuration.
+
+Rendering flow:
+
+Resolve Tenant
+→ Resolve Theme
+→ Resolve Theme Version
+→ Resolve Store Overrides
+→ Resolve Locale/Direction
+→ Resolve Entitlements
+→ Resolve Page Configuration
+→ Resolve Component Configuration
+→ Render Storefront
+
+The rendering engine must not query unrelated tenants.
+
+
+52. SEO INTEGRATION
+--------------------------------------------------------------------
+Module 16 may consume theme-level defaults for:
+
+- Typography does not affect SEO logic.
+- Logo references.
+- Social image defaults.
+- Breadcrumb presentation.
+- Structured-data visual references where applicable.
+- Page layout metadata where required.
+
+Module 17 must never override authoritative SEO rules.
+
+
+53. CONTENT INTEGRATION
+--------------------------------------------------------------------
+Module 16 content blocks must render through approved theme
+components.
+
+Theme changes must not destroy content data.
+
+If a theme does not support a legacy block:
+
+- Provide fallback rendering.
+- Mark compatibility issue.
+- Preserve underlying content.
+- Do not silently delete content.
+
+
+54. DOMAIN INTEGRATION
+--------------------------------------------------------------------
+Module 19 owns:
+
+- Domain.
+- DNS.
+- Verification.
+- SSL.
+
+Module 17 only consumes the resolved public storefront context.
+
+No theme configuration may assume a hard-coded production domain.
+
+
+55. PWA INTEGRATION
+--------------------------------------------------------------------
+Module 25 may consume:
+
+- Theme colors.
+- App icon.
+- Splash/branding configuration.
+- Typography where supported.
+- Light/dark mode.
+- Navigation patterns.
+
+PWA configuration remains owned by Module 25.
+
+
+56. MONITORING & HEALTH
+--------------------------------------------------------------------
+Module 24 should monitor:
+
+- Theme rendering failures.
+- Invalid configuration attempts.
+- Asset loading failures.
+- CSS failures.
+- Theme publishing failures.
+- Scheduled theme failures.
+- Preview failures.
+- Performance regressions.
+- Accessibility diagnostics where integrated.
+
+Health events must be tenant-scoped.
+
+
+57. SECURITY REQUIREMENTS
+--------------------------------------------------------------------
+Mandatory controls:
+
+- Tenant isolation.
+- RBAC.
+- Least privilege.
+- Configuration schema validation.
+- XSS protection.
+- SVG sanitization.
+- CSS safety controls.
+- Asset validation.
+- Signed preview URLs.
+- Rate limiting.
+- Audit logs.
+- Safe external resource handling.
+- No arbitrary server-side execution.
+- No secret exposure.
+- No cross-tenant media references.
+
+Custom CSS and component features must be privileged.
+
+
+58. DATA MODEL — HIGH LEVEL
+--------------------------------------------------------------------
+Core entities may include:
+
+Theme
+ThemeVersion
+ThemeVariant
+ThemeCompatibility
+ThemeAsset
+ThemeComponent
+ThemeComponentSchema
+DesignTokenDefinition
+DesignTokenValue
+StoreTheme
+StoreThemeConfiguration
+StoreThemeRevision
+StoreBrand
+BrandAsset
+TypographyConfiguration
+ColorConfiguration
+LayoutConfiguration
+ResponsiveConfiguration
+ComponentConfiguration
+HomepageSection
+ThemeSchedule
+ThemePreview
+CustomCssEntry
+CustomComponentConfiguration
+ThemeMigration
+ThemeCompatibilityIssue
+ThemeAuditReference
+
+All tenant-owned entities must contain or inherit tenant context.
+
+
+59. DATA INTEGRITY RULES
+--------------------------------------------------------------------
+1. Published theme versions are immutable.
+2. Store theme selection must reference a valid compatible version.
+3. Tenant overrides must reference valid tokens.
+4. Invalid configurations cannot be published.
+5. Theme changes cannot mutate catalog/order/customer data.
+6. Theme rollback must be reversible.
+7. Theme preview cannot modify production state.
+8. Tenant assets cannot reference another tenant's private assets.
+9. Custom CSS must remain tenant-scoped.
+10. Theme scheduling must be idempotent.
+11. Published configuration must have a valid revision.
+12. Theme migrations must be explicit and auditable.
+
+
+60. PERFORMANCE REQUIREMENTS
+--------------------------------------------------------------------
+The design system should support:
+
+- Server-side or static-friendly rendering where architecture allows.
+- CSS token resolution without excessive runtime overhead.
+- Efficient component hydration.
+- Image lazy loading.
+- Responsive images.
+- Font subsetting/loading optimization.
+- Minimal blocking resources.
+- CDN compatibility.
+- Cacheable theme configuration.
+
+Performance budgets should be defined per storefront class.
+
+
+61. TESTING REQUIREMENTS
+--------------------------------------------------------------------
+Theme tests:
+
+- Theme selection.
+- Theme compatibility.
+- Theme configuration.
+- Theme versioning.
+- Preview.
+- Publish.
+- Rollback.
+- Scheduling.
+- Revision restore.
+- Configuration inheritance.
+
+Design system tests:
+
+- Color tokens.
+- Typography.
+- Spacing.
+- Borders.
+- Radius.
+- Shadows.
+- Responsive behavior.
+- RTL/LTR.
+- Dark mode.
+- Accessibility states.
+
+Component tests:
+
+- Header.
+- Navigation.
+- Footer.
+- Product card.
+- Product detail.
+- Forms.
+- Buttons.
+- Modals.
+- Drawers.
+- Homepage sections.
+
+Security tests:
+
+- Cross-tenant configuration access.
+- XSS.
+- SVG injection.
+- CSS abuse.
+- Malicious asset references.
+- Preview token abuse.
+- Privilege escalation.
+- Custom component authorization.
+
+Performance tests:
+
+- Theme load time.
+- CSS size.
+- Asset load.
+- Large catalog rendering.
+- Mobile rendering.
+- Cache isolation.
+- Theme configuration resolution.
+
+Regression tests:
+
+- Existing theme behavior.
+- Package upgrade/downgrade.
+- Theme rollback.
+- Content compatibility.
+- SEO output compatibility.
+
+
+62. ACCEPTANCE CRITERIA
+--------------------------------------------------------------------
+Module 17 is complete only when:
+
+1. Multiple themes can coexist in the core platform.
+2. A store can select a compatible theme.
+3. Store branding is configurable.
+4. Design tokens work.
+5. Color configuration works.
+6. Typography configuration works.
+7. Layout configuration works.
+8. Header/navigation/footer configuration works.
+9. Homepage sections work.
+10. Product presentation works.
+11. Responsive behavior works.
+12. RTL/LTR works.
+13. Accessibility requirements are met.
+14. Dark mode works where entitled.
+15. Animation integration works.
+16. Preview works safely.
+17. Publishing works.
+18. Scheduling works.
+19. Versioning works.
+20. Rollback works.
+21. Custom CSS is controlled.
+22. Theme configuration is tenant-isolated.
+23. Package entitlements are enforced.
+24. API and events work.
+25. Audit logging works.
+26. Caching is tenant-safe.
+27. Theme marketplace compatibility foundation exists.
+28. Automated tests pass.
+29. No production business data is affected by theme changes.
+30. Build and deployment checks pass.
+
+
+63. REQUIRED FOLLOW-UP ARTIFACTS
+--------------------------------------------------------------------
+After implementation, create and maintain:
+
+1. Module 17 implementation checklist.
+2. Design token specification.
+3. Theme schema specification.
+4. Theme versioning specification.
+5. Theme compatibility specification.
+6. Branding asset specification.
+7. Typography specification.
+8. Responsive breakpoint specification.
+9. Component library specification.
+10. Homepage section schema.
+11. Theme customizer specification.
+12. Preview security specification.
+13. Publishing/rollback state diagram.
+14. Theme migration specification.
+15. Permission matrix.
+16. Package entitlement matrix.
+17. Accessibility checklist.
+18. Performance budget.
+19. Automated test matrix.
+20. Security audit checklist.
+21. Marketplace compatibility specification.
+22. Production deployment checklist.
+23. Module 17 completion report.
+24. Repository checkpoint/progress note.
+
+
+64. CLAUDE DEVELOPMENT REQUIREMENTS
+--------------------------------------------------------------------
+Claude must:
+
+1. Read the Project Bible and all finalized module blueprints.
+2. Treat Module 17 as authoritative for theme/branding/design
+   responsibilities.
+3. Inspect the existing repository before modifying code.
+4. Reuse the established architecture.
+5. Avoid unnecessary rewrites.
+6. Preserve strict tenant isolation.
+7. Never create separate codebases for Basic/Business/Premium.
+8. Use configuration and entitlements instead.
+9. Never perform destructive database operations without explicit
+   authorization.
+10. Implement migrations safely.
+11. Add automated tests.
+12. Validate themes against schemas.
+13. Test actual storefront rendering.
+14. Test multiple tenants with different themes.
+15. Test RTL and LTR.
+16. Test mobile/tablet/desktop.
+17. Test preview/publish/rollback.
+18. Test package entitlement enforcement.
+19. Test malicious SVG/CSS/content cases.
+20. Verify accessibility behavior.
+21. Verify performance.
+22. Record all fixes.
+23. Run all relevant builds and tests.
+24. Commit only after validation.
+25. Push only according to the project workflow.
+26. Preserve a concise repository checkpoint after the module.
+
+
+65. PRODUCTION READINESS
+--------------------------------------------------------------------
+Before production:
+
+- Confirm tenant theme isolation.
+- Confirm theme version compatibility.
+- Confirm asset isolation.
+- Confirm HTTPS asset delivery.
+- Confirm responsive layouts.
+- Confirm RTL/LTR.
+- Confirm accessibility.
+- Confirm dark mode if enabled.
+- Confirm preview security.
+- Confirm publish workflow.
+- Confirm rollback.
+- Confirm scheduled changes.
+- Confirm cache invalidation.
+- Confirm CDN behavior.
+- Confirm custom CSS limits.
+- Confirm SVG sanitization.
+- Confirm package entitlements.
+- Confirm theme rendering on representative pages.
+- Confirm SEO/content compatibility.
+- Confirm PWA compatibility where enabled.
+- Confirm monitoring.
+- Confirm audit logs.
+- Confirm backups.
+- Confirm restore behavior.
+
+
+66. FINAL ARCHITECTURAL RULES
+--------------------------------------------------------------------
+RULE 01:
+Module 17 is tenant-scoped for all store-owned configuration.
+
+RULE 02:
+One core codebase serves all commercial packages.
+
+RULE 03:
+Themes are configuration-driven and versioned.
+
+RULE 04:
+Published theme versions are immutable.
+
+RULE 05:
+Theme changes must not mutate business data.
+
+RULE 06:
+Theme preview must never modify production state.
+
+RULE 07:
+Theme rollback must preserve all business data.
+
+RULE 08:
+Tenant assets and configurations must never cross tenant
+boundaries.
+
+RULE 09:
+Design tokens are the preferred mechanism for visual consistency.
+
+RULE 10:
+Hard-coded tenant-specific visual logic should be avoided.
+
+RULE 11:
+Theme customization must remain compatible with the core
+storefront engine.
+
+RULE 12:
+Package entitlements determine access to advanced theme features.
+
+RULE 13:
+Custom CSS is privileged functionality.
+
+RULE 14:
+Arbitrary server-side executable code is prohibited.
+
+RULE 15:
+SVG and rich visual assets must be sanitized and validated.
+
+RULE 16:
+Accessibility is a first-class requirement, not an optional
+afterthought.
+
+RULE 17:
+RTL/LTR behavior must be designed into components rather than
+patched per page.
+
+RULE 18:
+Responsive behavior must be configuration-driven and tested.
+
+RULE 19:
+Theme-level defaults must never override authoritative business
+logic owned by other modules.
+
+RULE 20:
+Module 18 owns runtime animation behavior; Module 17 only selects
+and configures the visual integration.
+
+RULE 21:
+Module 16 owns SEO business rules; Module 17 provides only
+presentation/configuration inputs.
+
+RULE 22:
+Theme configuration must be cacheable but cache keys must always
+preserve tenant identity.
+
+RULE 23:
+Theme marketplace support must be possible without redesigning the
+core architecture.
+
+RULE 24:
+All privileged visual configuration changes must be auditable.
+
+RULE 25:
+No theme update may silently break existing store content.
+
+RULE 26:
+The underlying store identity, Store ID, and Tenant ID remain
+unchanged when themes are changed.
+
+RULE 27:
+Theme upgrades must support compatibility checks and migration
+paths.
+
+RULE 28:
+Performance must be treated as a product requirement.
+
+RULE 29:
+The design system must remain reusable across storefront, PWA, and
+future supported sales channels where appropriate.
+
+RULE 30:
+Module 17 must integrate through explicit contracts, APIs, events,
+schemas, and authoritative ownership boundaries.
+
+====================================================================
+END OF MODULE 17 — THEME, BRANDING & DESIGN SYSTEM
+====================================================================

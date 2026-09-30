@@ -1,0 +1,1686 @@
+====================================================================
+UMAR TECHY E-COMMERCE PLATFORM
+MASTER PROJECT BLUEPRINT — MODULE 22
+REPORTS, ANALYTICS & DASHBOARD
+Technical Specification — English Only
+Version 1.0
+====================================================================
+
+1. MODULE PURPOSE
+--------------------------------------------------------------------
+Module 22 provides the Core Reporting, Analytics, Metrics,
+Dashboards, Business Intelligence, Usage Reporting, and Data
+Visualization foundation for the Umar Techy Multi-Tenant
+E-Commerce Platform.
+
+The module transforms authoritative platform events and business
+data into tenant-scoped operational reports, dashboards, analytics,
+KPIs, trends, exports, scheduled reports, and platform-level
+analytics.
+
+The system must support:
+
+- Store dashboards.
+- Platform/Super Admin dashboards.
+- Sales analytics.
+- Order analytics.
+- Product analytics.
+- Customer analytics.
+- Inventory analytics.
+- Marketing analytics.
+- Payment analytics.
+- Shipping analytics.
+- Communication analytics.
+- Subscription/package analytics.
+- Domain/infrastructure usage analytics.
+- SEO/content analytics.
+- Theme/interaction analytics.
+- AI usage analytics.
+- Financial reporting foundations.
+- Custom report foundations.
+- Scheduled reports.
+- Data exports.
+- Comparative analysis.
+- Forecasting foundations.
+- Near-real-time metrics.
+- Historical reporting.
+- Tenant-safe analytics.
+
+Core principle:
+
+AUTHORITATIVE SOURCE DATA
+        +
+TENANT-SCOPED ANALYTICS PIPELINE
+        +
+STANDARDIZED METRICS
+        +
+REPORTING LAYER
+        +
+DASHBOARD PRESENTATION
+        +
+SECURE EXPORTS
+
+Analytics must never become a second source of truth for
+transactional business state.
+
+
+2. PRIMARY OBJECTIVES
+--------------------------------------------------------------------
+The module shall:
+
+1. Provide centralized analytics architecture.
+2. Provide tenant dashboards.
+3. Provide platform dashboards.
+4. Define standardized KPIs.
+5. Aggregate orders and sales.
+6. Aggregate product performance.
+7. Aggregate customer behavior.
+8. Aggregate inventory performance.
+9. Aggregate marketing performance.
+10. Aggregate payment performance.
+11. Aggregate shipping performance.
+12. Aggregate communication performance.
+13. Aggregate SEO/content performance.
+14. Aggregate domain/infrastructure usage.
+15. Aggregate package/subscription usage.
+16. Support date/time filtering.
+17. Support comparative periods.
+18. Support export.
+19. Support scheduled reports.
+20. Support role-based report visibility.
+21. Preserve tenant isolation.
+22. Support data freshness indicators.
+23. Support future predictive analytics.
+24. Provide auditable metric definitions.
+25. Provide comprehensive testing.
+
+
+3. ARCHITECTURAL POSITION
+--------------------------------------------------------------------
+Module 22 owns:
+
+- Analytics event ingestion contracts.
+- Metric definitions.
+- Aggregation logic.
+- Reporting models.
+- Dashboard definitions.
+- Report definitions.
+- Scheduled reports.
+- Analytics exports.
+- KPI calculations.
+- Analytics permissions.
+- Data freshness metadata.
+- Analytics retention configuration.
+- Visualization metadata.
+
+Module 22 does NOT own:
+
+- Orders — Module 09.
+- Products — Module 06.
+- Inventory — Module 08.
+- Customers — Module 10.
+- Marketing campaigns — Module 15.
+- Communication delivery — Module 21.
+- Payments — Module 12.
+- Shipping — Module 13.
+- Subscription state — Module 04/29.
+- Infrastructure execution — Module 20.
+- Security/compliance policy — Module 32.
+
+Source modules remain authoritative.
+
+
+4. ANALYTICS DATA PRINCIPLE
+--------------------------------------------------------------------
+Every metric must have:
+
+- Defined name.
+- Definition.
+- Source.
+- Calculation.
+- Time basis.
+- Currency basis where applicable.
+- Tenant scope.
+- Dimensions.
+- Filters.
+- Refresh/freshness expectation.
+- Known limitations.
+
+Metrics must not be created through undocumented calculations.
+
+
+5. DATA SOURCES
+--------------------------------------------------------------------
+Potential sources:
+
+Module 03:
+Store lifecycle.
+
+Module 04:
+Package/subscription/entitlements.
+
+Module 06:
+Products/catalog.
+
+Module 07:
+Categories/brands/attributes.
+
+Module 08:
+Inventory.
+
+Module 09:
+Orders.
+
+Module 10:
+Customers.
+
+Module 11:
+Cart/checkout.
+
+Module 12:
+Payments.
+
+Module 13:
+Shipping.
+
+Module 14:
+Promotions.
+
+Module 15:
+Marketing.
+
+Module 16:
+SEO/content.
+
+Module 17:
+Theme.
+
+Module 18:
+Interactions.
+
+Module 19:
+Domains.
+
+Module 20:
+Infrastructure.
+
+Module 21:
+Communication.
+
+Module 23:
+Backup/restore status.
+
+Module 24:
+Health/resource usage.
+
+Module 25:
+PWA/mobile.
+
+Module 26:
+AI.
+
+Module 27:
+Integrations.
+
+Module 28:
+Affiliate/reseller.
+
+Module 29:
+Billing.
+
+Module 30:
+Super Admin.
+
+
+6. ANALYTICS EVENTS
+--------------------------------------------------------------------
+Common event categories:
+
+Store
+Product
+Category
+Customer
+Session
+Cart
+Checkout
+Order
+Payment
+Shipping
+Promotion
+Marketing
+Communication
+Content
+SEO
+Theme
+Interaction
+Domain
+Infrastructure
+Subscription
+Billing
+PWA
+AI
+Integration
+Affiliate
+
+Events should include:
+
+- Event ID.
+- Event type.
+- Tenant ID where applicable.
+- Actor/user/customer reference where permitted.
+- Anonymous/session reference where appropriate.
+- Timestamp.
+- Source.
+- Context.
+- Dimensions.
+- Correlation ID.
+
+
+7. EVENT IDENTITY & IDEMPOTENCY
+--------------------------------------------------------------------
+Each event requires a unique identifier.
+
+Duplicate events must be detected.
+
+Analytics ingestion must be idempotent.
+
+Event ordering should be preserved where the metric depends on
+sequence.
+
+
+8. TENANT ISOLATION
+--------------------------------------------------------------------
+Tenant analytics must be isolated across:
+
+- Raw events.
+- Aggregated metrics.
+- Dashboards.
+- Reports.
+- Exports.
+- Scheduled reports.
+- Cache.
+- Search/indexes.
+- Data warehouse tables.
+
+Every tenant-scoped event and aggregation must preserve tenant
+identity.
+
+
+9. PLATFORM ANALYTICS
+--------------------------------------------------------------------
+Super Admin/platform analytics may include:
+
+- Total stores.
+- Active stores.
+- Trial stores.
+- Suspended stores.
+- Orders across platform.
+- Platform GMV foundation.
+- Package distribution.
+- Subscription revenue foundation.
+- Usage.
+- Infrastructure utilization.
+- Communication volume.
+- Domain count.
+- Feature adoption.
+- Error trends.
+
+Platform reports must not expose unnecessary tenant-sensitive
+details to unauthorized staff.
+
+
+10. STORE DASHBOARD
+--------------------------------------------------------------------
+Store dashboard may include:
+
+- Revenue.
+- Orders.
+- Average order value.
+- Customers.
+- Conversion foundation.
+- Top products.
+- Low-stock products.
+- Returns/refunds.
+- Payment success.
+- Shipping status.
+- Marketing performance.
+- Communication performance.
+- Traffic/session foundation.
+- SEO/content performance.
+- Store health summary.
+- Package usage.
+
+
+11. DASHBOARD ARCHITECTURE
+--------------------------------------------------------------------
+Dashboards consist of configurable widgets.
+
+Widget types:
+
+- KPI.
+- Number.
+- Percentage.
+- Trend.
+- Line chart.
+- Bar chart.
+- Area chart.
+- Pie/donut where appropriate.
+- Table.
+- Funnel.
+- Heatmap foundation.
+- Map foundation.
+- Status summary.
+- Alert summary.
+
+Widgets must have:
+
+- Metric.
+- Dimension.
+- Time range.
+- Filters.
+- Refresh policy.
+- Permission requirement.
+
+
+12. DATE & TIME FILTERS
+--------------------------------------------------------------------
+Support:
+
+- Today.
+- Yesterday.
+- Last 7 days.
+- Last 30 days.
+- This week.
+- Last week.
+- This month.
+- Last month.
+- This quarter.
+- This year.
+- Custom range.
+
+All tenant reports must use the store timezone by default.
+
+Platform reports may use a platform timezone while retaining UTC
+internally.
+
+
+13. COMPARATIVE PERIODS
+--------------------------------------------------------------------
+Support comparisons:
+
+- Previous period.
+- Previous year.
+- Same period last year.
+- Custom comparison.
+
+Comparison must clearly identify:
+
+- Current period.
+- Comparison period.
+- Difference.
+- Percentage change.
+
+
+14. CURRENCY HANDLING
+--------------------------------------------------------------------
+Financial reports must respect store currency.
+
+Support future multi-currency foundations.
+
+Financial metrics must define whether values are:
+
+- Transaction currency.
+- Store reporting currency.
+- Converted reporting currency.
+
+Currency conversion rates must be versioned when used.
+
+Do not mix currencies without explicit conversion logic.
+
+
+15. REVENUE METRICS
+--------------------------------------------------------------------
+Possible metrics:
+
+- Gross sales.
+- Discounts.
+- Returns.
+- Refunds.
+- Shipping charged.
+- Taxes.
+- Fees.
+- Net sales.
+- Order count.
+- Average order value.
+- Revenue per customer.
+
+Every metric must have a documented calculation.
+
+Example:
+
+Net Sales =
+Gross Item Sales
+- Discounts
+- Returns/Refund Adjustments
+
+Exact accounting definitions must align with business requirements.
+
+
+16. ORDER ANALYTICS
+--------------------------------------------------------------------
+Report:
+
+- Orders by day/week/month.
+- Order status.
+- Fulfillment status.
+- Cancellation rate.
+- Return rate.
+- Refund rate.
+- Average order value.
+- Orders by source.
+- Orders by payment method.
+- Orders by shipping method.
+- Orders by product/category.
+- Orders by customer segment.
+
+
+17. PRODUCT ANALYTICS
+--------------------------------------------------------------------
+Report:
+
+- Units sold.
+- Revenue.
+- Orders containing product.
+- Average selling price.
+- Discount amount.
+- Return quantity.
+- Refund amount.
+- Product conversion foundation.
+- Views where available.
+- Add-to-cart rate.
+- Wishlist rate.
+- Best sellers.
+- Slow movers.
+
+
+18. CATEGORY / BRAND ANALYTICS
+--------------------------------------------------------------------
+Support:
+
+- Revenue by category.
+- Units by category.
+- Orders by category.
+- Revenue by brand.
+- Units by brand.
+- Category growth.
+- Brand growth.
+
+Taxonomy remains authoritative in Module 07.
+
+
+19. CUSTOMER ANALYTICS
+--------------------------------------------------------------------
+Support:
+
+- New customers.
+- Returning customers.
+- Guest orders.
+- Registered customer orders.
+- Customer lifetime value foundation.
+- Average order value.
+- Orders/customer.
+- Retention foundation.
+- Repeat purchase rate.
+- Customer segment performance.
+- Customer group performance.
+
+
+20. CUSTOMER PRIVACY
+--------------------------------------------------------------------
+Analytics must minimize personal data.
+
+Reports should prefer aggregated data.
+
+Customer-level analytics require appropriate permissions.
+
+Sensitive personal data must not appear in ordinary dashboards unless
+explicitly necessary and authorized.
+
+
+21. CART & CHECKOUT ANALYTICS
+--------------------------------------------------------------------
+Support:
+
+- Cart creation.
+- Cart abandonment.
+- Checkout started.
+- Checkout completion.
+- Checkout failure.
+- Payment failure.
+- Average cart value.
+- Cart-to-order conversion.
+- Checkout-to-order conversion.
+
+Module 11 remains authoritative for cart/checkout state.
+
+
+22. CONVERSION ANALYTICS
+--------------------------------------------------------------------
+Define conversion events such as:
+
+- Product viewed.
+- Added to cart.
+- Checkout started.
+- Order completed.
+
+Conversion rate definitions must state the denominator and
+population.
+
+Example:
+
+Checkout Conversion =
+Completed Orders / Checkout Sessions
+
+Avoid presenting conversion metrics without their definition.
+
+
+23. MARKETING ANALYTICS
+--------------------------------------------------------------------
+Support:
+
+- Campaign reach.
+- Sent.
+- Delivered.
+- Opened.
+- Clicked.
+- Conversion.
+- Revenue.
+- Orders.
+- Coupon redemption.
+- Unsubscribe.
+- Bounce/failure.
+- ROI/ROAS foundations.
+
+Module 15 remains authoritative for campaign events.
+
+
+24. COMMUNICATION ANALYTICS
+--------------------------------------------------------------------
+Support:
+
+- Email volume.
+- SMS volume.
+- WhatsApp volume.
+- Push volume.
+- Delivery rate.
+- Failure rate.
+- Bounce rate.
+- Complaint rate.
+- Provider performance.
+- Cost.
+
+Module 21 remains authoritative for delivery state.
+
+
+25. PROMOTION ANALYTICS
+--------------------------------------------------------------------
+Support:
+
+- Coupon uses.
+- Promotion uses.
+- Discount amount.
+- Orders with promotion.
+- Revenue associated.
+- Customer acquisition foundation.
+- Promotion conversion.
+- Promotion cost.
+
+Historical promotion snapshots remain authoritative in Module 09.
+
+
+26. PAYMENT ANALYTICS
+--------------------------------------------------------------------
+Support:
+
+- Payment attempts.
+- Successful payments.
+- Failed payments.
+- Payment success rate.
+- Refunds.
+- Partial refunds.
+- Payment method performance.
+- Provider performance.
+- Reconciliation mismatches.
+- COD collection performance.
+
+Module 12 remains authoritative for payment state.
+
+
+27. SHIPPING ANALYTICS
+--------------------------------------------------------------------
+Support:
+
+- Shipments.
+- Delivered shipments.
+- Failed deliveries.
+- Return shipments.
+- Average fulfillment time.
+- Delivery time.
+- Carrier performance.
+- Shipping cost.
+- Shipping revenue.
+- COD settlement foundation.
+
+Module 13 remains authoritative.
+
+
+28. INVENTORY ANALYTICS
+--------------------------------------------------------------------
+Support:
+
+- Stock value foundation.
+- Units on hand.
+- Reserved units.
+- Available units.
+- Low-stock items.
+- Out-of-stock rate.
+- Inventory turnover foundation.
+- Dead stock.
+- Stock aging.
+- Stock adjustments.
+- Damaged stock.
+- Warehouse performance.
+
+Module 08 remains authoritative.
+
+
+29. SEO & CONTENT ANALYTICS
+--------------------------------------------------------------------
+Support:
+
+- Page views.
+- Landing page views.
+- Article views.
+- Search traffic foundation.
+- Internal search usage.
+- 404 volume.
+- Redirect volume.
+- Content engagement.
+- CTA clicks.
+- SEO diagnostics trend.
+
+Search-engine-specific data may require external integration.
+
+
+30. THEME & INTERACTION ANALYTICS
+--------------------------------------------------------------------
+Support:
+
+- Theme usage.
+- Theme version adoption.
+- Animation profile usage.
+- Interaction events.
+- Reduced-motion adoption.
+- Component engagement.
+- Performance fallback frequency.
+
+Module 17/18 remain authoritative for presentation configuration.
+
+
+31. DOMAIN ANALYTICS
+--------------------------------------------------------------------
+Support:
+
+- Active domains.
+- Verification failures.
+- SSL failures.
+- Domain health.
+- Migration activity.
+
+Module 19 remains authoritative.
+
+
+32. INFRASTRUCTURE ANALYTICS
+--------------------------------------------------------------------
+Support:
+
+- Requests.
+- Latency.
+- Errors.
+- Storage.
+- Bandwidth.
+- Queue usage.
+- Worker usage.
+- Search usage.
+- AI usage.
+
+Module 20 remains authoritative for infrastructure execution.
+
+
+33. PACKAGE / ENTITLEMENT ANALYTICS
+--------------------------------------------------------------------
+Support:
+
+- Package distribution.
+- Feature adoption.
+- Usage vs limits.
+- Upgrade/downgrade activity.
+- Trial conversion foundation.
+- Entitlement utilization.
+
+Module 04 remains authoritative for entitlement state.
+
+
+34. BILLING ANALYTICS
+--------------------------------------------------------------------
+Support:
+
+- Subscription revenue.
+- Invoice count.
+- Payment status.
+- Renewal rate.
+- Churn foundation.
+- Refunds.
+- Outstanding amounts.
+
+Module 29 remains authoritative for billing state.
+
+
+35. PWA / MOBILE ANALYTICS
+--------------------------------------------------------------------
+Support:
+
+- PWA installs.
+- Mobile sessions.
+- Push opt-in.
+- Device type.
+- Mobile conversion.
+- Mobile performance.
+
+Module 25 remains authoritative for PWA/mobile functionality.
+
+
+36. AI ANALYTICS
+--------------------------------------------------------------------
+Support:
+
+- AI feature usage.
+- AI requests.
+- AI cost.
+- Recommendation interactions.
+- AI chatbot sessions.
+- AI conversion foundation.
+
+AI analytics must not expose sensitive prompts or personal data
+unnecessarily.
+
+Module 26 remains authoritative for AI feature execution.
+
+
+37. AFFILIATE / RESELLER ANALYTICS
+--------------------------------------------------------------------
+Support:
+
+- Referral clicks.
+- Leads.
+- Orders.
+- Revenue.
+- Commission.
+- Conversion.
+
+Module 28 remains authoritative for affiliate business state.
+
+
+38. REPORT DEFINITIONS
+--------------------------------------------------------------------
+Every report must define:
+
+- Report ID.
+- Name.
+- Description.
+- Data source.
+- Metrics.
+- Dimensions.
+- Filters.
+- Permissions.
+- Refresh frequency.
+- Export formats.
+- Retention.
+
+
+39. CUSTOM REPORT BUILDER
+--------------------------------------------------------------------
+Future advanced capability may allow users to choose:
+
+- Dataset.
+- Metrics.
+- Dimensions.
+- Filters.
+- Date range.
+- Grouping.
+- Sorting.
+- Visualization.
+
+Custom report builder must use allowlisted datasets and fields.
+
+Users must not receive arbitrary database query access.
+
+
+40. REPORT FILTERS
+--------------------------------------------------------------------
+Supported filters may include:
+
+- Date.
+- Product.
+- Category.
+- Brand.
+- Customer group.
+- Customer segment.
+- Order status.
+- Payment method.
+- Shipping method.
+- Promotion.
+- Channel.
+- Storefront source.
+
+Filters must be tenant-scoped.
+
+
+41. SAVED REPORTS
+--------------------------------------------------------------------
+Users may save report configurations where entitled.
+
+Saved reports contain:
+
+- Report definition.
+- Filters.
+- Owner.
+- Tenant.
+- Visibility.
+- Schedule.
+- Output format.
+
+No saved report may reference another tenant.
+
+
+42. SCHEDULED REPORTS
+--------------------------------------------------------------------
+Support:
+
+- Daily.
+- Weekly.
+- Monthly.
+- Custom schedule.
+
+Delivery may use Module 21.
+
+Scheduling must respect:
+
+- Store timezone.
+- Permissions.
+- Package entitlement.
+- Recipient preferences.
+- Failure handling.
+
+
+43. REPORT EXPORTS
+--------------------------------------------------------------------
+Support:
+
+- CSV.
+- XLSX foundation.
+- PDF foundation.
+- JSON for API use where appropriate.
+
+Exports must be:
+
+- Tenant-scoped.
+- Permission-protected.
+- Rate-limited.
+- Asynchronous for large reports.
+- Expiring where stored temporarily.
+
+
+44. EXPORT SECURITY
+--------------------------------------------------------------------
+Export files may contain sensitive business information.
+
+Requirements:
+
+- Signed URLs.
+- Expiration.
+- Access control.
+- Tenant isolation.
+- Audit.
+- Encryption where appropriate.
+
+Never place exports in publicly guessable paths.
+
+
+45. REAL-TIME VS HISTORICAL DATA
+--------------------------------------------------------------------
+Each metric must define freshness:
+
+REAL_TIME
+NEAR_REAL_TIME
+HOURLY
+DAILY
+HISTORICAL
+
+The UI must display freshness when meaningful.
+
+A report must not imply real-time accuracy when using delayed
+aggregations.
+
+
+46. ANALYTICS PIPELINE
+--------------------------------------------------------------------
+Conceptual pipeline:
+
+Business Event
+→ Event Validation
+→ Tenant Validation
+→ Deduplication
+→ Normalization
+→ Enrichment
+→ Aggregation
+→ Metric Store
+→ Reporting API
+→ Dashboard
+
+Pipeline failures must not alter authoritative business data.
+
+
+47. RAW EVENT RETENTION
+--------------------------------------------------------------------
+Retention should be configurable.
+
+Separate:
+
+- Raw events.
+- Aggregated metrics.
+- Report definitions.
+- Export files.
+
+Retention must balance analytics usefulness, privacy, and cost.
+
+
+48. AGGREGATION STRATEGY
+--------------------------------------------------------------------
+Support:
+
+- Daily aggregates.
+- Hourly aggregates.
+- Monthly aggregates.
+- On-demand calculations.
+
+Pre-aggregation should be used for high-volume dashboards.
+
+Aggregation jobs must be idempotent.
+
+
+49. DATA FRESHNESS & RECONCILIATION
+--------------------------------------------------------------------
+Analytics should be reconciled periodically against authoritative
+transactional data.
+
+Examples:
+
+- Analytics order count vs Module 09.
+- Payment totals vs Module 12.
+- Inventory summaries vs Module 08.
+
+Differences should generate reconciliation diagnostics.
+
+
+50. DATA QUALITY
+--------------------------------------------------------------------
+Track:
+
+- Missing events.
+- Duplicate events.
+- Late events.
+- Invalid dimensions.
+- Aggregation failures.
+- Reconciliation mismatches.
+
+Data quality status may be:
+
+HEALTHY
+WARNING
+DEGRADED
+FAILED
+
+
+51. ATTRIBUTION
+--------------------------------------------------------------------
+Marketing/conversion attribution must define:
+
+- Attribution source.
+- Attribution window.
+- First-touch/last-touch/multi-touch foundation.
+- Direct/organic/referral classification.
+- Campaign reference.
+
+Attribution is analytical and must not alter order financial data.
+
+
+52. SESSION & TRAFFIC ANALYTICS
+--------------------------------------------------------------------
+Where consent/legal architecture allows, support:
+
+- Sessions.
+- Visitors foundation.
+- Page views.
+- Traffic source.
+- Device category.
+- Landing page.
+- Exit page.
+- Internal search.
+
+Privacy-aware analytics must avoid unnecessary individual tracking.
+
+
+53. DASHBOARD PERSONALIZATION
+--------------------------------------------------------------------
+Users may configure:
+
+- Widget order.
+- Visible widgets.
+- Default date range.
+- Saved filters.
+- Dashboard layout.
+
+Personalization is tenant/user scoped.
+
+
+54. ROLE-BASED DASHBOARDS
+--------------------------------------------------------------------
+Examples:
+
+Owner:
+Broad business dashboard.
+
+Manager:
+Operational and sales dashboard.
+
+Order Manager:
+Order/fulfillment dashboard.
+
+Inventory Manager:
+Inventory dashboard.
+
+Marketing Staff:
+Marketing/content dashboard.
+
+Finance Staff:
+Financial/payment dashboard.
+
+Staff:
+Restricted operational dashboard.
+
+Permissions remain authoritative in Module 02.
+
+
+55. SUPER ADMIN DASHBOARD
+--------------------------------------------------------------------
+Super Admin dashboard may include:
+
+- Platform health.
+- Store growth.
+- Subscription/package metrics.
+- Platform revenue.
+- Infrastructure usage.
+- Provider health.
+- Communication volume.
+- Domain health.
+- Security/operational alerts.
+- Feature adoption.
+
+Tenant-sensitive information must be restricted by staff role.
+
+
+56. DASHBOARD CACHE
+--------------------------------------------------------------------
+Dashboard responses may be cached.
+
+Cache keys must include:
+
+- Tenant ID.
+- User/role where required.
+- Dashboard ID.
+- Filters.
+- Date range.
+- Metric version.
+- Data freshness version.
+
+Never share tenant dashboard data through global cache keys.
+
+
+57. API REQUIREMENTS
+--------------------------------------------------------------------
+Example endpoint families:
+
+/api/stores/{storeId}/analytics/dashboard
+/api/stores/{storeId}/analytics/metrics
+/api/stores/{storeId}/analytics/reports
+/api/stores/{storeId}/analytics/reports/{reportId}
+/api/stores/{storeId}/analytics/exports
+/api/stores/{storeId}/analytics/schedules
+/api/stores/{storeId}/analytics/usage
+/api/platform/analytics/dashboard
+/api/platform/analytics/metrics
+
+All tenant APIs must enforce authorization.
+
+
+58. DATA MODEL — HIGH LEVEL
+--------------------------------------------------------------------
+Core entities may include:
+
+AnalyticsEvent
+AnalyticsEventProperty
+AnalyticsSession
+AnalyticsMetricDefinition
+AnalyticsMetricVersion
+AnalyticsDimension
+AnalyticsAggregate
+AnalyticsAggregateDaily
+AnalyticsAggregateHourly
+AnalyticsReport
+AnalyticsReportVersion
+AnalyticsReportFilter
+AnalyticsDashboard
+AnalyticsDashboardWidget
+AnalyticsSavedView
+AnalyticsSchedule
+AnalyticsExport
+AnalyticsExportFile
+AnalyticsAttribution
+AnalyticsReconciliation
+AnalyticsDataQuality
+AnalyticsFreshness
+AnalyticsUsage
+AnalyticsAuditReference
+
+Tenant-owned entities must contain or inherit tenant context.
+
+
+59. PERMISSIONS
+--------------------------------------------------------------------
+Example permissions:
+
+analytics.view
+analytics.advanced_view
+analytics.reports.view
+analytics.reports.create
+analytics.reports.edit
+analytics.reports.delete
+analytics.reports.export
+analytics.reports.schedule
+analytics.dashboard.manage
+analytics.customer_level
+analytics.finance
+analytics.platform_view
+analytics.usage.view
+
+Sensitive customer-level and financial analytics require elevated
+permissions.
+
+
+60. PACKAGE ENTITLEMENTS
+--------------------------------------------------------------------
+Module 04 remains authoritative.
+
+Possible entitlement keys:
+
+analytics.basic
+analytics.advanced
+analytics.realtime
+analytics.custom_reports
+analytics.scheduled_reports
+analytics.advanced_exports
+analytics.customer_insights
+analytics.marketing_analytics
+analytics.inventory_analytics
+analytics.finance_analytics
+analytics.attribution
+analytics.forecasting
+analytics.platform_api
+
+Possible limits:
+
+- Report count.
+- Saved dashboards.
+- Scheduled reports.
+- Export volume.
+- Data retention.
+- Analytics events.
+- Custom dimensions.
+- Refresh frequency.
+
+
+61. SECURITY REQUIREMENTS
+--------------------------------------------------------------------
+Mandatory controls:
+
+- Tenant isolation.
+- RBAC.
+- Least privilege.
+- PII minimization.
+- Financial-data protection.
+- Export access control.
+- Signed export URLs.
+- Rate limiting.
+- Query complexity limits.
+- Safe custom report builder.
+- No arbitrary SQL.
+- Audit logging.
+- Secure temporary files.
+- Encryption where appropriate.
+
+Analytics must never provide a path around business authorization.
+
+
+62. PRIVACY
+--------------------------------------------------------------------
+Support:
+
+- Consent-aware tracking where required.
+- Data minimization.
+- Retention rules.
+- Anonymization foundation.
+- Customer data deletion integration.
+- Export/privacy request integration.
+
+Analytics must respect applicable privacy requirements.
+
+
+63. PERFORMANCE
+--------------------------------------------------------------------
+The analytics system must support:
+
+- Pre-aggregation.
+- Indexed dimensions.
+- Efficient time-series queries.
+- Pagination.
+- Async exports.
+- Queue-based heavy calculations.
+- Cache.
+- Incremental refresh.
+
+Large reports must not block transactional application requests.
+
+
+64. COST CONTROL
+--------------------------------------------------------------------
+Monitor analytics resource usage:
+
+- Events.
+- Storage.
+- Queries.
+- Aggregations.
+- Exports.
+- Retention.
+- Scheduled reports.
+
+High-cost reports may require:
+
+- Async execution.
+- Query limits.
+- Package entitlement.
+- Rate limits.
+
+
+65. OBSERVABILITY
+--------------------------------------------------------------------
+Track:
+
+- Event ingestion rate.
+- Event failures.
+- Duplicate rate.
+- Aggregation latency.
+- Report latency.
+- Dashboard latency.
+- Export queue.
+- Export failures.
+- Data freshness.
+- Reconciliation mismatch.
+- Query cost.
+
+
+66. ALERTING
+--------------------------------------------------------------------
+Alerts may include:
+
+- Analytics pipeline failure.
+- Large event drop.
+- High duplicate rate.
+- Aggregate failure.
+- Data freshness degradation.
+- Reconciliation mismatch.
+- Export backlog.
+- Excessive query load.
+- Tenant data isolation anomaly.
+
+
+67. BACKUP & RESTORE
+--------------------------------------------------------------------
+Module 23 may back up:
+
+- Report definitions.
+- Dashboard configurations.
+- Metric definitions.
+- Aggregation metadata.
+- Scheduled report configuration.
+- Analytics data according to retention policy.
+
+Restoration must preserve tenant boundaries.
+
+Analytics aggregates may be rebuilt from authoritative source data
+where architecture permits.
+
+
+68. DISASTER RECOVERY
+--------------------------------------------------------------------
+Analytics should be recoverable independently from transactional
+business operations.
+
+If analytics is temporarily unavailable:
+
+- Storefront must continue operating.
+- Checkout must continue operating.
+- Orders must continue operating.
+- Payments must continue operating.
+
+Analytics recovery should process delayed events safely.
+
+
+69. TESTING REQUIREMENTS
+--------------------------------------------------------------------
+Metric tests:
+
+- Revenue.
+- Orders.
+- AOV.
+- Conversion.
+- Customer counts.
+- Inventory metrics.
+- Payment metrics.
+- Shipping metrics.
+- Marketing metrics.
+
+Isolation tests:
+
+- Cross-tenant event.
+- Cross-tenant aggregate.
+- Cross-tenant dashboard.
+- Cross-tenant report.
+- Cross-tenant export.
+- Cross-tenant cache.
+
+Pipeline tests:
+
+- Event ingestion.
+- Deduplication.
+- Late events.
+- Out-of-order events.
+- Aggregation.
+- Reconciliation.
+- Recovery.
+
+Report tests:
+
+- Filters.
+- Permissions.
+- Date ranges.
+- Comparisons.
+- Exports.
+- Scheduling.
+
+Security tests:
+
+- Arbitrary SQL attempts.
+- Query injection.
+- Export access.
+- Signed URL abuse.
+- Customer-level permission escalation.
+- Financial report escalation.
+
+Performance tests:
+
+- High-volume events.
+- Large date ranges.
+- Large tenant.
+- Concurrent dashboards.
+- Concurrent exports.
+- Heavy aggregation jobs.
+
+
+70. ACCEPTANCE CRITERIA
+--------------------------------------------------------------------
+Module 22 is complete only when:
+
+1. Core analytics architecture exists.
+2. Event ingestion works.
+3. Event idempotency works.
+4. Tenant isolation is verified.
+5. Standard KPI definitions exist.
+6. Store dashboard works.
+7. Platform dashboard works.
+8. Sales analytics works.
+9. Order analytics works.
+10. Product analytics works.
+11. Customer analytics works.
+12. Inventory analytics works.
+13. Marketing analytics works.
+14. Payment analytics works.
+15. Shipping analytics works.
+16. Communication analytics works.
+17. SEO/content analytics works.
+18. Domain/infrastructure usage analytics works.
+19. Package/billing analytics foundations work.
+20. Date/time filtering works.
+21. Comparative periods work.
+22. Saved reports work where entitled.
+23. Scheduled reports work.
+24. Exports work securely.
+25. Data freshness is visible.
+26. Reconciliation works.
+27. RBAC works.
+28. Package entitlements work.
+29. Security tests pass.
+30. Performance and recovery tests pass.
+
+
+71. REQUIRED FOLLOW-UP ARTIFACTS
+--------------------------------------------------------------------
+After implementation, create and maintain:
+
+1. Module 22 implementation checklist.
+2. Analytics event taxonomy.
+3. Metric dictionary.
+4. KPI calculation specification.
+5. Dashboard specification.
+6. Report schema specification.
+7. Custom report builder specification.
+8. Attribution specification.
+9. Data freshness specification.
+10. Aggregation pipeline specification.
+11. Reconciliation specification.
+12. Data retention specification.
+13. Privacy/anonymization specification.
+14. Export security specification.
+15. Permission matrix.
+16. Package entitlement matrix.
+17. API contract.
+18. Event/outbox analytics contract.
+19. Automated test matrix.
+20. Performance/query budget.
+21. Analytics security audit checklist.
+22. Disaster recovery plan.
+23. Production monitoring checklist.
+24. Module 22 completion report.
+25. Repository checkpoint/progress note.
+
+
+72. CLAUDE DEVELOPMENT REQUIREMENTS
+--------------------------------------------------------------------
+Claude must:
+
+1. Read the Project Bible and all finalized module blueprints.
+2. Treat Module 22 as authoritative for reporting and analytics.
+3. Inspect the repository before implementation.
+4. Reuse existing event/outbox infrastructure.
+5. Preserve tenant isolation.
+6. Never create arbitrary SQL access for report users.
+7. Define every metric explicitly.
+8. Use authoritative source modules.
+9. Add automated metric tests.
+10. Add reconciliation tests.
+11. Test delayed/out-of-order events.
+12. Test exports.
+13. Test scheduled reports.
+14. Test dashboard permissions.
+15. Test financial-report permissions.
+16. Test customer-level permissions.
+17. Test cross-tenant isolation.
+18. Test cache isolation.
+19. Test performance under high event volume.
+20. Test analytics failure without affecting commerce.
+21. Run all relevant builds/tests/static analysis.
+22. Record all fixes.
+23. Commit only after validation.
+24. Push only according to the established workflow.
+25. Preserve a concise repository checkpoint after the module.
+
+
+73. PRODUCTION READINESS
+--------------------------------------------------------------------
+Before production:
+
+- Confirm authoritative data sources.
+- Confirm metric definitions.
+- Confirm event idempotency.
+- Confirm tenant isolation.
+- Confirm dashboard permissions.
+- Confirm financial permissions.
+- Confirm customer privacy.
+- Confirm export security.
+- Confirm signed URLs.
+- Confirm cache isolation.
+- Confirm aggregation jobs.
+- Confirm data freshness monitoring.
+- Confirm reconciliation.
+- Confirm scheduled reports.
+- Confirm queue capacity.
+- Confirm query limits.
+- Confirm analytics failure isolation.
+- Confirm backups.
+- Confirm recovery.
+- Confirm monitoring and alerts.
+- Confirm package entitlements.
+- Confirm representative dashboards and reports.
+
+
+74. FINAL ARCHITECTURAL RULES
+--------------------------------------------------------------------
+RULE 01:
+Module 22 owns reporting and analytics, not transactional business
+truth.
+
+RULE 02:
+Source modules remain authoritative for their business states.
+
+RULE 03:
+Every analytics event must preserve tenant context where applicable.
+
+RULE 04:
+Analytics data must never cross tenant boundaries.
+
+RULE 05:
+Every metric must have a documented definition.
+
+RULE 06:
+Financial metrics must define their accounting basis.
+
+RULE 07:
+Currency must never be mixed without explicit conversion.
+
+RULE 08:
+Store dashboards must use store timezone by default.
+
+RULE 09:
+Platform dashboards must apply platform-level authorization.
+
+RULE 10:
+Customer-level analytics require elevated permission.
+
+RULE 11:
+Analytics must minimize personal data.
+
+RULE 12:
+No arbitrary SQL access is permitted through custom reports.
+
+RULE 13:
+Report exports must be tenant-scoped and access-controlled.
+
+RULE 14:
+Temporary export files must expire.
+
+RULE 15:
+Analytics cache keys must preserve tenant identity.
+
+RULE 16:
+Heavy reports must execute asynchronously.
+
+RULE 17:
+Analytics failures must not stop storefront, checkout, orders, or
+payments.
+
+RULE 18:
+Event ingestion must be idempotent.
+
+RULE 19:
+Aggregation jobs must be idempotent.
+
+RULE 20:
+Late and duplicate events must be handled safely.
+
+RULE 21:
+Data freshness must be transparent where relevant.
+
+RULE 22:
+Analytics must be periodically reconciled against authoritative
+transactional data.
+
+RULE 23:
+Attribution is analytical and must never rewrite financial order
+data.
+
+RULE 24:
+Package entitlements control advanced analytics capabilities.
+
+RULE 25:
+Infrastructure execution belongs to Module 20.
+
+RULE 26:
+Communication delivery belongs to Module 21.
+
+RULE 27:
+Marketing strategy belongs to Module 15.
+
+RULE 28:
+Billing truth belongs to Module 29.
+
+RULE 29:
+Security/compliance policy belongs to Module 32.
+
+RULE 30:
+Module 22 must integrate through explicit event contracts, APIs,
+schemas, permissions, aggregation pipelines, and authoritative
+ownership boundaries.
+
+====================================================================
+END OF MODULE 22 — REPORTS, ANALYTICS & DASHBOARD
+====================================================================
