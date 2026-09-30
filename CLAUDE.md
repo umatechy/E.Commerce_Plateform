@@ -21,6 +21,9 @@ Premium are entitlement tiers of one codebase.
 
 ## Progress records
 
+- What is built vs the specs, and the prioritized gap list:
+  `docs/development/requirement-gap-matrix.md`. Update it when a phase closes a gap.
+
 - Phase checkpoints: `docs/checkpoints/checkpoint-bNN.md` (latest = highest NN).
 - Per-phase architecture, security review and inspection findings:
   `docs/architecture/`, `docs/security/`, `docs/development/`.
