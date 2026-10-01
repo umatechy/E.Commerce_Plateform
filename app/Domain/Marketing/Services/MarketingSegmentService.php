@@ -9,6 +9,7 @@ use App\Domain\Marketing\Models\MarketingSegment;
 use App\Domain\Orders\Models\Customer;
 use App\Domain\Orders\Models\Order;
 use App\Domain\Orders\Models\OrderStatus;
+use App\Domain\Settings\Services\StoreClock;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 
@@ -92,7 +93,8 @@ final class MarketingSegmentService
     {
         if ($actual instanceof \DateTimeInterface) {
             $actual = Carbon::instance($actual)->timestamp;
-            $expected = Carbon::parse($expected)->timestamp;
+            // A rule date without an offset is a date in the store's timezone (Module 33 §50).
+            $expected = app(StoreClock::class)->parse((string) $expected)->timestamp;
         }
 
         if ($actual === null) {

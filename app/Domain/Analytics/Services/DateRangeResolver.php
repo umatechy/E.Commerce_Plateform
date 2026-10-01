@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Domain\Analytics\Services;
 
 use App\Domain\Analytics\Exceptions\InvalidDateRangeException;
+use App\Domain\Settings\Services\StoreClock;
 use Illuminate\Support\Carbon;
 
 /**
@@ -15,9 +16,9 @@ use Illuminate\Support\Carbon;
  * 9: "prevent extremely expensive unrestricted queries" — a documented
  * guard, not an invented package/commercial limit).
  *
- * TIMEZONE (see docs/development/b12-inspection-findings.md): all
- * ranges are computed against server/UTC time — no Store.timezone
- * column exists (the same gap Phase B10 already documented).
+ * TIMEZONE (Module 33 §50, Phase B28): every period starts and ends at
+ * midnight in the store's timezone (StoreClock). The boundaries are
+ * returned in UTC, ready for a query against the UTC timestamps.
  */
 final class DateRangeResolver
 {
@@ -28,8 +29,10 @@ final class DateRangeResolver
         'this_week', 'last_week', 'this_month', 'last_month', 'this_quarter', 'this_year',
     ];
 
+    public function __construct(private readonly StoreClock $clock) {}
+
     /**
-     * @return array{0: Carbon, 1: Carbon} [start, end] — both inclusive boundaries
+     * @return array{0: Carbon, 1: Carbon} [start, end] — both inclusive boundaries, in UTC
      * @throws InvalidDateRangeException
      */
     public function resolve(string $preset, ?string $customStart = null, ?string $customEnd = null): array
@@ -42,9 +45,9 @@ final class DateRangeResolver
             throw new InvalidDateRangeException("Unsupported date filter: {$preset}");
         }
 
-        $now = Carbon::now();
+        $now = $this->clock->now();
 
-        return match ($preset) {
+        [$start, $end] = match ($preset) {
             'today' => [$now->copy()->startOfDay(), $now->copy()->endOfDay()],
             'yesterday' => [$now->copy()->subDay()->startOfDay(), $now->copy()->subDay()->endOfDay()],
             'last_7_days' => [$now->copy()->subDays(6)->startOfDay(), $now->copy()->endOfDay()],
@@ -56,6 +59,8 @@ final class DateRangeResolver
             'this_quarter' => [$now->copy()->firstOfQuarter(), $now->copy()->lastOfQuarter()],
             'this_year' => [$now->copy()->startOfYear(), $now->copy()->endOfYear()],
         };
+
+        return [$start->utc(), $end->utc()];
     }
 
     /**
@@ -84,8 +89,8 @@ final class DateRangeResolver
         }
 
         try {
-            $start = Carbon::parse($customStart)->startOfDay();
-            $end = Carbon::parse($customEnd)->endOfDay();
+            $start = $this->clock->parseLocal($customStart)->startOfDay();
+            $end = $this->clock->parseLocal($customEnd)->endOfDay();
         } catch (\Throwable) {
             throw new InvalidDateRangeException('Invalid date format.');
         }
@@ -98,6 +103,6 @@ final class DateRangeResolver
             throw new InvalidDateRangeException('The custom date range cannot exceed '.self::MAXIMUM_CUSTOM_RANGE_DAYS.' days.');
         }
 
-        return [$start, $end];
+        return [$start->utc(), $end->utc()];
     }
 }

@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { formatDate as formatUtcDate } from '@/lib/datetime';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import LoadingState from '@/Components/LoadingState';
 import ErrorState from '@/Components/ErrorState';
@@ -30,8 +31,9 @@ type UsageEntry = { limit: number | null; current: number; unlimited: boolean; r
 
 const json = (url: string) => fetch(url, { headers: { Accept: 'application/json' } }).then((r) => (r.ok ? r.json() : Promise.reject(r)));
 
+// Billing dates are UTC dates (Module 33 §50.5), shown as such.
 function formatDate(iso: string | null): string {
-  return iso ? new Date(iso).toLocaleDateString() : '—';
+  return iso ? formatUtcDate(iso, 'UTC') : '—';
 }
 
 export default function Overview() {

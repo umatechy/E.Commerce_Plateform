@@ -1,3 +1,4 @@
+import { formatDate, formatDateTime } from '@/lib/datetime';
 import { Link } from '@inertiajs/react';
 import { useEffect, useState } from 'react';
 import AccountLayout from '@/Components/Storefront/AccountLayout';
@@ -40,7 +41,7 @@ export default function Order({ storefront, seo, order_id }: StorefrontPageProps
       {order && (
         <div className="mt-4 space-y-8">
           <p className="text-sm text-sf-muted">
-            Placed {new Date(order.placed_at).toLocaleString()} · <span className="font-medium text-sf-text">{statusLabel(order.status)}</span>
+            Placed {formatDateTime(order.placed_at)} · <span className="font-medium text-sf-text">{statusLabel(order.status)}</span>
             {order.cancellation_reason && ` (${order.cancellation_reason.replace(/_/g, ' ')})`}
             {' · '}
             <Link href={`${base}/account/support/new?order=${encodeURIComponent(order.id)}`} className="text-sf-accent">
@@ -96,7 +97,7 @@ export default function Order({ storefront, seo, order_id }: StorefrontPageProps
                     <span className="font-medium">{shipment.carrier ?? 'Shipment'}</span> · {shipment.status.replace(/_/g, ' ')}
                     {shipment.tracking_number && <span className="block text-sf-muted">Tracking number: {shipment.tracking_number}</span>}
                     {shipment.estimated_delivery_at && !shipment.delivered_at && (
-                      <span className="block text-sf-muted">Expected by {new Date(shipment.estimated_delivery_at).toLocaleDateString()}</span>
+                      <span className="block text-sf-muted">Expected by {formatDate(shipment.estimated_delivery_at)}</span>
                     )}
                   </li>
                 ))}

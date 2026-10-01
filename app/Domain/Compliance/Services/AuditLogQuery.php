@@ -6,6 +6,7 @@ namespace App\Domain\Compliance\Services;
 
 use App\Domain\Compliance\Models\AuditActorType;
 use App\Domain\Compliance\Models\AuditLog;
+use App\Domain\Settings\Services\StoreClock;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -37,13 +38,17 @@ final class AuditLogQuery
      */
     public static function apply(Builder $query, array $filters): Builder
     {
+        // "From" and "to" are calendar days in the store's timezone (UTC on
+        // the platform's own listing) — Module 33 §50.
+        $clock = app(StoreClock::class);
+
         return $query
             ->when($filters['action'] ?? null, fn ($q, $action) => $q->where('action', 'like', addcslashes($action, '%_\\').'%'))
             ->when($filters['actor_type'] ?? null, fn ($q, $type) => $q->where('actor_type', $type))
             ->when($filters['actor'] ?? null, fn ($q, $actor) => $q->where('actor_public_id', $actor))
             ->when($filters['subject_type'] ?? null, fn ($q, $type) => $q->where('subject_type', $type))
-            ->when($filters['from'] ?? null, fn ($q, $from) => $q->where('created_at', '>=', \Illuminate\Support\Carbon::parse($from)->startOfDay()))
-            ->when($filters['to'] ?? null, fn ($q, $to) => $q->where('created_at', '<=', \Illuminate\Support\Carbon::parse($to)->endOfDay()))
+            ->when($filters['from'] ?? null, fn ($q, $from) => $q->where('created_at', '>=', $clock->parseLocal($from)->startOfDay()->utc()))
+            ->when($filters['to'] ?? null, fn ($q, $to) => $q->where('created_at', '<=', $clock->parseLocal($to)->endOfDay()->utc()))
             ->orderByDesc('created_at')
             ->orderByDesc('id');
     }

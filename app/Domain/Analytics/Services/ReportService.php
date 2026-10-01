@@ -13,6 +13,7 @@ use App\Domain\Promotions\Models\PromotionUsage;
 use App\Domain\Marketing\Models\CampaignRecipient;
 use App\Domain\Notifications\Models\NotificationMessage;
 use App\Domain\Inventory\Models\Inventory;
+use App\Domain\Settings\Services\StoreClock;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 
@@ -27,24 +28,39 @@ use Illuminate\Support\Facades\DB;
  */
 final class ReportService
 {
-    /** Module 22 §16 "Order Analytics" — grouped by day (Order.created_at, per the documented per-report date-basis decision). */
+    public function __construct(private readonly StoreClock $clock) {}
+
+    /**
+     * Module 22 §16 "Order Analytics" — grouped by day (Order.created_at,
+     * per the documented per-report date-basis decision). A "day" is a
+     * day in the store's timezone (Module 33 §50): each piece of the range
+     * with a constant UTC offset is grouped in SQL with that offset, and a
+     * day that a daylight-saving change splits is added up here.
+     */
     public function salesReport(Carbon $start, Carbon $end): array
     {
-        $rows = Order::query()
-            ->whereBetween('created_at', [$start, $end])
-            ->where('status', '!=', OrderStatus::Cancelled->value)
-            ->selectRaw('DATE(created_at) as date, COUNT(*) as order_count, SUM(grand_total_minor) as revenue_minor, SUM(discount_total_minor) as discounts_minor')
-            ->groupBy('date')
-            ->orderBy('date')
-            ->toBase() // aggregate rows, not models: aliases like order_count are not model attributes
-            ->get();
+        $days = [];
 
-        return $rows->map(fn ($row) => [
-            'date' => $row->date,
-            'order_count' => (int) $row->order_count,
-            'revenue_minor' => (int) $row->revenue_minor,
-            'discounts_minor' => (int) $row->discounts_minor,
-        ])->all();
+        foreach ($this->clock->constantOffsetSegments($start, $end) as $segment) {
+            $rows = Order::query()
+                ->whereBetween('created_at', [$segment['start'], $segment['end']])
+                ->where('status', '!=', OrderStatus::Cancelled->value)
+                ->selectRaw('DATE(DATE_ADD(created_at, INTERVAL ? SECOND)) as date, COUNT(*) as order_count, SUM(grand_total_minor) as revenue_minor, SUM(discount_total_minor) as discounts_minor', [$segment['offset_seconds']])
+                ->groupBy('date')
+                ->toBase() // aggregate rows, not models: aliases like order_count are not model attributes
+                ->get();
+
+            foreach ($rows as $row) {
+                $days[$row->date] ??= ['date' => $row->date, 'order_count' => 0, 'revenue_minor' => 0, 'discounts_minor' => 0];
+                $days[$row->date]['order_count'] += (int) $row->order_count;
+                $days[$row->date]['revenue_minor'] += (int) $row->revenue_minor;
+                $days[$row->date]['discounts_minor'] += (int) $row->discounts_minor;
+            }
+        }
+
+        ksort($days);
+
+        return array_values($days);
     }
 
     /** Module 22 §17 "Product Analytics" — best-selling by revenue, whitelisted sort. */

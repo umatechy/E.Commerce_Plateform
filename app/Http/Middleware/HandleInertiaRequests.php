@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Middleware;
 
 use App\Domain\Identity\Http\Resources\UserResource;
+use App\Domain\Settings\Services\StoreClock;
 use App\Domain\Tenancy\Models\Store;
 use Inertia\Middleware;
 
@@ -33,6 +34,9 @@ final class HandleInertiaRequests extends Middleware
                 'activeStore' => $activeStoreId
                     ? Store::query()->withoutGlobalScopes()->find($activeStoreId)?->only(['id', 'name', 'slug'])
                     : null,
+                // The timezone admin pages show dates in (Module 33 §50.3):
+                // the store's, or UTC when no store is in context.
+                'timezone' => app(StoreClock::class)->timezoneName(),
             ],
         ];
     }

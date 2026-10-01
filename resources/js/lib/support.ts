@@ -1,3 +1,5 @@
+import { formatDate } from './datetime';
+
 /**
  * Module 34 (Phase B26) — shapes of the support API (SupportPresenter)
  * and the display helpers shared by the storefront and admin pages.
@@ -141,7 +143,7 @@ export function formatDuration(ms: number): string {
 export function timeAgo(iso: string, now: Date = new Date()): string {
   const ms = now.getTime() - new Date(iso).getTime();
   if (ms < 60000) return 'just now';
-  if (ms > 7 * 24 * 3600 * 1000) return new Date(iso).toLocaleDateString();
+  if (ms > 7 * 24 * 3600 * 1000) return formatDate(iso);
 
   return `${formatDuration(ms)} ago`;
 }

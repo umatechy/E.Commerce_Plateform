@@ -19,7 +19,7 @@ final class DateRangeResolverTest extends TestCase
 {
     public function test_today_resolves_to_the_current_day_boundaries(): void
     {
-        [$start, $end] = (new DateRangeResolver())->resolve('today');
+        [$start, $end] = app(DateRangeResolver::class)->resolve('today');
 
         $this->assertTrue($start->isToday());
         $this->assertTrue($end->isToday());
@@ -28,30 +28,30 @@ final class DateRangeResolverTest extends TestCase
     public function test_unknown_preset_is_rejected(): void
     {
         $this->expectException(InvalidDateRangeException::class);
-        (new DateRangeResolver())->resolve('not_a_real_preset');
+        app(DateRangeResolver::class)->resolve('not_a_real_preset');
     }
 
     public function test_custom_range_requires_both_dates(): void
     {
         $this->expectException(InvalidDateRangeException::class);
-        (new DateRangeResolver())->resolve('custom', '2026-01-01', null);
+        app(DateRangeResolver::class)->resolve('custom', '2026-01-01', null);
     }
 
     public function test_custom_range_rejects_start_after_end(): void
     {
         $this->expectException(InvalidDateRangeException::class);
-        (new DateRangeResolver())->resolve('custom', '2026-02-01', '2026-01-01');
+        app(DateRangeResolver::class)->resolve('custom', '2026-02-01', '2026-01-01');
     }
 
     public function test_custom_range_rejects_exceeding_the_maximum_cap(): void
     {
         $this->expectException(InvalidDateRangeException::class);
-        (new DateRangeResolver())->resolve('custom', '2020-01-01', '2026-01-01');
+        app(DateRangeResolver::class)->resolve('custom', '2020-01-01', '2026-01-01');
     }
 
     public function test_valid_custom_range_is_accepted(): void
     {
-        [$start, $end] = (new DateRangeResolver())->resolve('custom', '2026-01-01', '2026-01-31');
+        [$start, $end] = app(DateRangeResolver::class)->resolve('custom', '2026-01-01', '2026-01-31');
 
         $this->assertSame('2026-01-01', $start->toDateString());
         $this->assertSame('2026-01-31', $end->toDateString());
@@ -62,7 +62,7 @@ final class DateRangeResolverTest extends TestCase
         $start = Carbon::parse('2026-01-08 00:00:00');
         $end = Carbon::parse('2026-01-14 23:59:59');
 
-        [$prevStart, $prevEnd] = (new DateRangeResolver())->previousPeriod($start, $end);
+        [$prevStart, $prevEnd] = app(DateRangeResolver::class)->previousPeriod($start, $end);
 
         $this->assertSame('2026-01-01 00:00:00', $prevStart->toDateTimeString());
         $this->assertSame('2026-01-07 23:59:59', $prevEnd->toDateTimeString());

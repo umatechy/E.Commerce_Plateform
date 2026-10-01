@@ -1,4 +1,5 @@
 import EmptyState from '@/Components/EmptyState';
+import { formatDate as formatUtcDate } from '@/lib/datetime';
 import { formatMoney } from '@/lib/money';
 
 export { formatMoney };
@@ -21,8 +22,10 @@ export type Invoice = {
   due_at: string;
 };
 
+// Billing periods and due dates are UTC dates (platform billing runs on
+// UTC periods, Module 33 §50.5), so they are shown as UTC dates.
 function formatDate(iso: string): string {
-  return new Date(iso).toLocaleDateString();
+  return formatUtcDate(iso, 'UTC');
 }
 
 const STATUS_STYLE: Record<Invoice['status'], string> = {

@@ -1,3 +1,4 @@
+import { formatDateTime } from '@/lib/datetime';
 import { useState, type FormEvent } from 'react';
 import MessageThread from './MessageThread';
 import { categoryLabel, statusLabel, type TicketDetail } from '@/lib/support';
@@ -95,7 +96,7 @@ export default function RequesterTicket({
           {ticket.order && <span className={s.muted}>· Order {ticket.order.number}</span>}
         </div>
         <h2 className="mt-2 text-2xl font-bold">{ticket.subject}</h2>
-        <p className={`mt-1 text-sm ${s.muted}`}>Opened {new Date(ticket.created_at).toLocaleString()}</p>
+        <p className={`mt-1 text-sm ${s.muted}`}>Opened {formatDateTime(ticket.created_at)}</p>
       </div>
 
       <MessageThread messages={ticket.messages} perspective="requester" tone={tone} />

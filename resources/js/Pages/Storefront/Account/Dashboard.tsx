@@ -1,3 +1,4 @@
+import { formatDate } from '@/lib/datetime';
 import { Link } from '@inertiajs/react';
 import { useEffect, useState } from 'react';
 import AccountLayout from '@/Components/Storefront/AccountLayout';
@@ -50,7 +51,7 @@ export default function Dashboard({ storefront, seo }: StorefrontPageProps) {
             <Link href={`${base}/account/orders/${order.id}`} className="flex justify-between gap-4 py-3 hover:text-sf-accent">
               <span>
                 <span className="font-medium">{order.number}</span>
-                <span className="ml-3 text-sm text-sf-muted">{new Date(order.placed_at).toLocaleDateString()}</span>
+                <span className="ml-3 text-sm text-sf-muted">{formatDate(order.placed_at)}</span>
               </span>
               <span className="text-sm">
                 {statusLabel(order.status)} · {formatMoney(order.grand_total_minor, order.currency)}

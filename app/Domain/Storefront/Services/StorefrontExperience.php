@@ -53,6 +53,7 @@ final class StorefrontExperience
                     'slug' => $store->slug,
                     'currency' => $this->presenter->currency(),
                     'locale' => $this->config->get('store.default_locale'),
+                    'timezone' => $this->config->get('store.timezone'), // dates are shown in the store's timezone (Module 33 §50.3)
                     'tagline' => $branding['tagline'] ?? null,
                     'logo_url' => $branding['logo_url'] ?? null,
                     'favicon_url' => $branding['favicon_url'] ?? null,

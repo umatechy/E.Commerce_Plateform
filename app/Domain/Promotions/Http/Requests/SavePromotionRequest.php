@@ -4,10 +4,32 @@ declare(strict_types=1);
 
 namespace App\Domain\Promotions\Http\Requests;
 
+use App\Domain\Settings\Services\StoreClock;
 use Illuminate\Foundation\Http\FormRequest;
 
 final class SavePromotionRequest extends FormRequest
 {
+    /**
+     * The validated attributes for the Promotion row. A start or end
+     * typed without an offset is wall-clock time in the store's timezone
+     * (Module 33 §50); it is stored in UTC like every timestamp.
+     *
+     * @return array<string, mixed>
+     */
+    public function promotionAttributes(): array
+    {
+        $attributes = $this->safe()->except('target_ids');
+        $clock = app(StoreClock::class);
+
+        foreach (['starts_at', 'ends_at'] as $field) {
+            if (isset($attributes[$field])) {
+                $attributes[$field] = $clock->parse((string) $attributes[$field]);
+            }
+        }
+
+        return $attributes;
+    }
+
     public function authorize(): bool
     {
         return true; // enforced via Gate::authorize()/direct Policy call in the controller

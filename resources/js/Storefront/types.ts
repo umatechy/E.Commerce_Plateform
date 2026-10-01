@@ -61,6 +61,7 @@ export type Shell = {
     slug: string;
     currency: string;
     locale: string | null;
+    timezone: string;
     tagline: string | null;
     logo_url: string | null;
     favicon_url: string | null;

@@ -1,3 +1,4 @@
+import { formatDateTime } from '@/lib/datetime';
 import { useEffect, useState } from 'react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import LoadingState from '@/Components/LoadingState';
@@ -38,7 +39,7 @@ export default function Index() {
       {report && (
         <div className="mt-4 space-y-2">
           <HealthCheckList checks={report.checks} />
-          <p className="text-xs text-gray-500">Checked {new Date(report.checked_at).toLocaleString()}</p>
+          <p className="text-xs text-gray-500">Checked {formatDateTime(report.checked_at)}</p>
         </div>
       )}
     </AuthenticatedLayout>

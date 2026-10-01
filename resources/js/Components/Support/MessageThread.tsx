@@ -1,3 +1,4 @@
+import { formatDateTime } from '@/lib/datetime';
 import type { TicketMessage } from '@/lib/support';
 
 /**
@@ -40,7 +41,7 @@ export default function MessageThread({
                 {message.author_type === 'requester' && perspective === 'agent' && <span>· Requester</span>}
                 {message.internal && <span className="rounded bg-amber-200 px-1.5 py-0.5 font-medium text-amber-900">Internal note</span>}
                 <time dateTime={message.created_at} className="ml-auto">
-                  {new Date(message.created_at).toLocaleString()}
+                  {formatDateTime(message.created_at)}
                 </time>
               </div>
               <p className="whitespace-pre-wrap break-words text-sm">{message.body}</p>

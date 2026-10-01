@@ -1,3 +1,4 @@
+import { formatDateTime } from '@/lib/datetime';
 import { useState, type FormEvent } from 'react';
 import MessageThread from './MessageThread';
 import SlaBadge from './SlaBadge';
@@ -122,15 +123,15 @@ export default function AgentTicketPanel({
           )}
           <div>
             <dt className="inline text-gray-500">Opened </dt>
-            <dd className="inline">{new Date(ticket.created_at).toLocaleString()}</dd>
+            <dd className="inline">{formatDateTime(ticket.created_at)}</dd>
           </div>
           <div>
             <dt className="inline text-gray-500">First reply </dt>
             <dd className="inline">
               {ticket.sla.first_responded_at
-                ? new Date(ticket.sla.first_responded_at).toLocaleString()
+                ? formatDateTime(ticket.sla.first_responded_at)
                 : ticket.sla.first_response_due_at
-                  ? `due ${new Date(ticket.sla.first_response_due_at).toLocaleString()}`
+                  ? `due ${formatDateTime(ticket.sla.first_response_due_at)}`
                   : '—'}
             </dd>
           </div>

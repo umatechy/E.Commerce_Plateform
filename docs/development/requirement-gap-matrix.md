@@ -355,7 +355,7 @@ Architecture v1.0 arrived after this review was written and are now in
 |---|---|---|---|
 | DATA-001–006, 008–009 | ✅ | ADR-003, FKs, snapshots, retention for erasure | P0 |
 | DATA-007 | ➖ | No import workflows exist | P1 |
-| DATA-010 | 🟡 | Money in minor units ✅; **store timezone not consumed** | P0 |
+| DATA-010 | ✅ | Money in minor units; store timezone consumed through `StoreClock` (B28, gap G5) | P0 |
 | NFR-001–003, 005–006, 008, 010–012 | ✅ | Modular monolith, tests, outbox | P1 |
 | NFR-004, 009 | ⚪ | Deployment-dependent | P1 |
 | NFR-007 | 🟡 | No image renditions, no page CSP | P1 |
@@ -367,7 +367,7 @@ Architecture v1.0 arrived after this review was written and are now in
 | REL-001–007 | ✅ | Transactions, idempotency, outbox dead-letter, health checks, docs | P0 |
 | LOC-001–002, 006 | ❌ | **No i18n / RTL** | P1 |
 | LOC-003 | ➖ | — | — |
-| LOC-004 | 🟡 | Timezone setting unused | P1 |
+| LOC-004 | 🟡 | Timezone respected (B28). Formats follow the browser locale, not the store locale (G11) | P1 |
 | LOC-005 | ✅ | Store currency | P1 |
 | A11Y-001–004, 006 | ⚪ | No accessibility audit | P1 |
 | A11Y-005 | ➖ | No animations yet | P1 |
@@ -400,7 +400,7 @@ existing pattern: feature tests plus tenant-isolation tests for every endpoint.
 | G2 | Security baseline: MFA, Super Admin step-up, request IDs, dependency scanning in CI, incident runbook | AUTH-006/007/012, SA-004, API-011, SEC-013/014/015, M32 §8, M30 §6 | Account takeover of privileged users; blind operations | MFA (TOTP) + recovery codes, re-auth for sensitive actions, correlation-ID middleware, `composer audit`/`npm audit` CI step, runbook | P0 | — |
 | G3 | Tax calculation | CHK-007, M11 §28 | Incorrect totals if tax applies | **Business decision first**: tax rules (inclusive/exclusive, rates, regions) | P0 | Owner decision |
 | G4 | Scheduled backups + restore rehearsal + alerting | BKP-001/007, HEALTH-005, TEST-011 | Data loss; failures go unnoticed | Schedule backups, rehearsal command, alert channel for critical health | P0 | Alert channel choice |
-| G5 | Store timezone consumption | DATA-010, LOC-004, M33 §50 | Wrong dates for scheduled promos/campaigns/SLA | Wire `store.timezone` into B10/B12/B13/B26 date logic | P0 | — |
+| G5 | ✅ **Closed in B28** (checkpoint-b28). Store timezone consumption | DATA-010, LOC-004, M33 §50 | Wrong dates for scheduled promos/campaigns/SLA | Wire `store.timezone` into B10/B12/B13/B26 date logic | P0 | — |
 | G6 | Admin UI for API-only modules | Admin Capabilities in M06–M17, M19, M21–M23, M29–M31, M33 | Owners cannot operate the store | UI phases, highest value first: catalog, customers, shipping/payments settings, promotions, SEO/content, theme, domains, settings | P1 | G1 |
 | G7 | Module 10 completion (groups, tags, notes, blocking, merge, import, guest conversion, email verification) | M10 §9, §24–33, §47–57, AUTH-002 | Blocks targeted promotions (M14 §17–20) and marketing | Complete Module 10 | P1 | — |
 | G8 | Returns, exchanges, refunds flow | ORD-008, M09 §45–54, M13 §70 | Manual handling only | Return request → inspection → refund/restock | P1 | — |

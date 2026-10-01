@@ -47,7 +47,7 @@ final class PromotionController
         }
 
         $promotion = DB::transaction(function () use ($request, $targetScope) {
-            $promotion = Promotion::query()->create($request->safe()->except('target_ids'));
+            $promotion = Promotion::query()->create($request->promotionAttributes());
 
             foreach ($request->input('target_ids', []) as $targetId) {
                 PromotionTarget::query()->create([
@@ -70,7 +70,7 @@ final class PromotionController
         $targetScope = $request->input('target_scope', $promotion->target_scope->value);
 
         DB::transaction(function () use ($request, $promotion, $targetScope) {
-            $promotion->update($request->safe()->except('target_ids'));
+            $promotion->update($request->promotionAttributes());
 
             if ($request->has('target_ids')) {
                 $promotion->targets()->delete();

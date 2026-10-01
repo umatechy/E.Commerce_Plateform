@@ -1,3 +1,4 @@
+import { formatDate } from '@/lib/datetime';
 import { useCallback, useEffect, useState } from 'react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import ErrorState from '@/Components/ErrorState';
@@ -103,7 +104,7 @@ export default function Index() {
                 <div>
                   <span className="font-medium">{invitation.email}</span>
                   <span className="ml-2 text-gray-500">
-                    {invitation.role.name} · {invitation.status === 'expired' ? 'expired' : `expires ${new Date(invitation.expires_at).toLocaleDateString()}`}
+                    {invitation.role.name} · {invitation.status === 'expired' ? 'expired' : `expires ${formatDate(invitation.expires_at)}`}
                   </span>
                 </div>
                 {summary.abilities.invite && (

@@ -1,3 +1,4 @@
+import { formatDate } from '@/lib/datetime';
 import { Link, router } from '@inertiajs/react';
 import { useEffect, useState, type FormEvent } from 'react';
 import AccountLayout from '@/Components/Storefront/AccountLayout';
@@ -73,7 +74,7 @@ export default function SupportNew({ storefront, seo }: StorefrontPageProps) {
               <option value="">Not about a specific order</option>
               {orders.map((o) => (
                 <option key={o.id} value={o.id}>
-                  {o.number} — {new Date(o.placed_at).toLocaleDateString()}
+                  {o.number} — {formatDate(o.placed_at)}
                 </option>
               ))}
             </select>

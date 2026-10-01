@@ -1,3 +1,4 @@
+import { formatDate } from '@/lib/datetime';
 import { Link } from '@inertiajs/react';
 import { useEffect, useState } from 'react';
 import AccountLayout from '@/Components/Storefront/AccountLayout';
@@ -44,7 +45,7 @@ export default function Orders({ storefront, seo }: StorefrontPageProps) {
                       {order.number}
                     </Link>
                   </td>
-                  <td className="py-3">{new Date(order.placed_at).toLocaleDateString()}</td>
+                  <td className="py-3">{formatDate(order.placed_at)}</td>
                   <td className="py-3">{statusLabel(order.status)}</td>
                   <td className="py-3 text-right">{order.item_count}</td>
                   <td className="py-3 text-right">{formatMoney(order.grand_total_minor, order.currency)}</td>

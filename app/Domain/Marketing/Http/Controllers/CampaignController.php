@@ -12,6 +12,7 @@ use App\Domain\Marketing\Http\Resources\CampaignResource;
 use App\Domain\Marketing\Models\Campaign;
 use App\Domain\Marketing\Policies\MarketingPolicy;
 use App\Domain\Marketing\Services\CampaignService;
+use App\Domain\Settings\Services\StoreClock;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
@@ -50,12 +51,13 @@ final class CampaignController
     }
 
     /** Module 15 §7/Step 6 — Draft/Scheduled -> Active (immediately or at a future scheduled_at). */
-    public function activate(ActivateCampaignRequest $request, Campaign $campaign, CampaignService $campaigns): JsonResponse
+    public function activate(ActivateCampaignRequest $request, Campaign $campaign, CampaignService $campaigns, StoreClock $clock): JsonResponse
     {
         $this->authorizeManage($request, $campaign);
 
         try {
-            $scheduledAt = $request->filled('scheduled_at') ? Carbon::parse($request->input('scheduled_at')) : null;
+            // A time typed without an offset is wall-clock time in the store's timezone (Module 33 §50).
+            $scheduledAt = $request->filled('scheduled_at') ? $clock->parse((string) $request->input('scheduled_at')) : null;
             $updated = $campaigns->activate($campaign, $scheduledAt);
         } catch (InvalidCampaignStateTransitionException $e) {
             return response()->json(['message' => $e->getMessage(), 'code' => 'invalid_transition'], 422);
