@@ -33,6 +33,13 @@ final class AuditHasher
             $fields[$column] = $value === null ? null : (in_array($column, self::INTEGER_COLUMNS, true) ? (int) $value : (string) $value);
         }
 
+        // Added in Phase B29. Hashed only when present, so entries written
+        // before the column existed still verify, and one written with a
+        // request ID cannot have it changed or removed unnoticed.
+        if (($row['request_id'] ?? null) !== null) {
+            $fields['request_id'] = (string) $row['request_id'];
+        }
+
         return hash('sha256', json_encode($fields, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR));
     }
 

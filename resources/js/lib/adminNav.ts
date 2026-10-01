@@ -12,4 +12,5 @@ export const adminNav: AdminNavItem[] = [
   { href: '/billing', label: 'Billing', description: 'Your package, subscription and invoices.' },
   { href: '/store-health', label: 'Store health', description: 'Health checks for your store.' },
   { href: '/support', label: 'Support', description: 'Customer tickets and your requests to the platform.' },
+  { href: '/security', label: 'Security', description: 'Two-step sign-in for your account.' },
 ];

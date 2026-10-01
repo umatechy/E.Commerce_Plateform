@@ -69,6 +69,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/orders', fn () => Inertia::render('Orders/Index'));
     Route::get('/store-health', fn () => Inertia::render('StoreHealth/Index')); // Module 24 (Phase B21)
     Route::get('/team', fn () => Inertia::render('Team/Index')); // Module 02 §18–19 (Phase G1)
+    Route::get('/security', fn () => Inertia::render('Security/Index')); // Module 32 §8 (Phase B29): the user's own two-step sign-in
     // Module 34 (Phase B26): the store's inbox, and its own requests to the platform.
     Route::get('/support', fn () => Inertia::render('Support/Index'));
     Route::get('/support/platform', fn () => Inertia::render('Support/Platform'));

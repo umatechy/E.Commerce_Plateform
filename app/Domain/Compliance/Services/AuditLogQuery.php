@@ -26,6 +26,7 @@ final class AuditLogQuery
             'actor_type' => ['nullable', Rule::enum(AuditActorType::class)],
             'actor' => ['nullable', 'string', 'size:26'], // an actor public_id
             'subject_type' => ['nullable', 'string', 'max:64'],
+            'request_id' => ['nullable', 'string', 'max:64'],
             'from' => ['nullable', 'date'],
             'to' => ['nullable', 'date', 'after_or_equal:from'],
             'per_page' => ['nullable', 'integer', 'min:1', 'max:100'],
@@ -47,6 +48,7 @@ final class AuditLogQuery
             ->when($filters['actor_type'] ?? null, fn ($q, $type) => $q->where('actor_type', $type))
             ->when($filters['actor'] ?? null, fn ($q, $actor) => $q->where('actor_public_id', $actor))
             ->when($filters['subject_type'] ?? null, fn ($q, $type) => $q->where('subject_type', $type))
+            ->when($filters['request_id'] ?? null, fn ($q, $id) => $q->where('request_id', $id))
             ->when($filters['from'] ?? null, fn ($q, $from) => $q->where('created_at', '>=', $clock->parseLocal($from)->startOfDay()->utc()))
             ->when($filters['to'] ?? null, fn ($q, $to) => $q->where('created_at', '<=', $clock->parseLocal($to)->endOfDay()->utc()))
             ->orderByDesc('created_at')

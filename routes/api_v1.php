@@ -63,10 +63,20 @@ use Illuminate\Support\Facades\Route;
 // --- Authentication (ADR-002 Surface A — Sanctum SPA session) ---
 Route::post('/auth/register', [AuthController::class, 'register'])->middleware('throttle:5,1');
 Route::post('/auth/login', [AuthController::class, 'login'])->middleware('throttle:10,1');
+// The second step of a sign-in for accounts with MFA (Module 32 §8 — Phase B29).
+Route::post('/auth/login/mfa', [AuthController::class, 'loginMfa'])->middleware('throttle:10,1');
 
 Route::middleware(['auth:sanctum', 'staff.principal'])->group(function () {
     Route::post('/auth/logout', [AuthController::class, 'logout']);
     Route::get('/auth/me', [AuthController::class, 'me']);
+
+    // --- The signed-in user's own MFA and step-up (Module 32 §8, Module 30 §6 — Phase B29) ---
+    Route::get('/auth/mfa', [\App\Domain\Identity\Http\Controllers\MfaController::class, 'show']);
+    Route::post('/auth/mfa/setup', [\App\Domain\Identity\Http\Controllers\MfaController::class, 'setup'])->middleware('throttle:10,1');
+    Route::post('/auth/mfa/confirm', [\App\Domain\Identity\Http\Controllers\MfaController::class, 'confirm'])->middleware('throttle:10,1');
+    Route::post('/auth/mfa/recovery-codes', [\App\Domain\Identity\Http\Controllers\MfaController::class, 'regenerateRecoveryCodes'])->middleware('throttle:10,1');
+    Route::delete('/auth/mfa', [\App\Domain\Identity\Http\Controllers\MfaController::class, 'destroy'])->middleware('throttle:10,1');
+    Route::post('/auth/step-up', [\App\Domain\Identity\Http\Controllers\MfaController::class, 'stepUp'])->middleware('throttle:10,1');
 
     // --- Tenant switching ---
     Route::post('/store/switch', StoreSwitchController::class);
@@ -273,17 +283,17 @@ Route::middleware(['auth:sanctum', 'staff.principal'])->group(function () {
     // --- Backup, Restore & Data Protection, staff-facing (Module 23, Phase B19) ---
     Route::get('/backups', [BackupController::class, 'index']);
     Route::post('/backups', [BackupController::class, 'store']);
-    Route::post('/backups/{backup}/restore-request', [BackupController::class, 'requestRestore']);
+    Route::post('/backups/{backup}/restore-request', [BackupController::class, 'requestRestore'])->middleware('step_up');
 
     // --- Super Admin: platform-global actions (no target store — Phase
     // B16 fix, see docs/development/b16-inspection-findings.md
     // "Critical Bug Found") ---
-    Route::middleware(['can:super-admin.platform', 'super_admin.platform'])
+    Route::middleware(['can:super-admin.platform', 'privileged.mfa', 'super_admin.platform'])
         ->prefix('super-admin')
         ->group(function () {
             Route::get('/packages', [SuperAdminPackageController::class, 'index']);
-            Route::post('/packages', [SuperAdminPackageController::class, 'store']);
-            Route::put('/packages/{package}', [SuperAdminPackageController::class, 'update']);
+            Route::post('/packages', [SuperAdminPackageController::class, 'store'])->middleware('step_up');
+            Route::put('/packages/{package}', [SuperAdminPackageController::class, 'update'])->middleware('step_up');
 
             Route::get('/themes', [SuperAdminThemeController::class, 'index']);
             Route::post('/themes', [SuperAdminThemeController::class, 'store']);
@@ -293,22 +303,22 @@ Route::middleware(['auth:sanctum', 'staff.principal'])->group(function () {
             Route::get('/stores', [SuperAdminStoreController::class, 'index']);
             Route::get('/users', [SuperAdminUserController::class, 'index']);
             Route::get('/users/{user}', [SuperAdminUserController::class, 'show']);
-            Route::post('/users/{user}/deactivate', [SuperAdminUserController::class, 'deactivate']);
-            Route::post('/users/{user}/reactivate', [SuperAdminUserController::class, 'reactivate']);
+            Route::post('/users/{user}/deactivate', [SuperAdminUserController::class, 'deactivate'])->middleware('step_up');
+            Route::post('/users/{user}/reactivate', [SuperAdminUserController::class, 'reactivate'])->middleware('step_up');
             Route::get('/payments/failures', [SuperAdminPaymentController::class, 'failures']);
             Route::get('/notifications/failures', [SuperAdminNotificationController::class, 'failures']);
             Route::get('/domains', [SuperAdminDomainController::class, 'indexAll']);
 
             Route::get('/settings', [SuperAdminSettingController::class, 'index']);
-            Route::put('/settings/{key}', [SuperAdminSettingController::class, 'update']);
+            Route::put('/settings/{key}', [SuperAdminSettingController::class, 'update'])->middleware('step_up');
 
             Route::get('/developer/applications', [SuperAdminDeveloperPlatformController::class, 'index']);
-            Route::post('/developer/applications/{application}/suspend', [SuperAdminDeveloperPlatformController::class, 'suspend']);
+            Route::post('/developer/applications/{application}/suspend', [SuperAdminDeveloperPlatformController::class, 'suspend'])->middleware('step_up');
 
             Route::get('/backups', [SuperAdminBackupController::class, 'index']);
             Route::post('/backups', [SuperAdminBackupController::class, 'storePlatformBackup']);
             Route::get('/restore-jobs', [SuperAdminBackupController::class, 'restoreJobs']);
-            Route::post('/restore-jobs/{backupRestoreJob}/authorize', [SuperAdminBackupController::class, 'authorizeRestore']);
+            Route::post('/restore-jobs/{backupRestoreJob}/authorize', [SuperAdminBackupController::class, 'authorizeRestore'])->middleware('step_up');
 
             Route::get('/infrastructure/health', [SuperAdminInfrastructureController::class, 'health']);
 
@@ -332,21 +342,21 @@ Route::middleware(['auth:sanctum', 'staff.principal'])->group(function () {
             // Module 29 (Phase B23): platform billing.
             Route::get('/billing/summary', [SuperAdminBillingController::class, 'summary']);
             Route::get('/billing/prices', [SuperAdminBillingController::class, 'prices']);
-            Route::post('/billing/prices', [SuperAdminBillingController::class, 'upsertPrice']);
-            Route::patch('/billing/prices/{price}', [SuperAdminBillingController::class, 'updatePrice']);
+            Route::post('/billing/prices', [SuperAdminBillingController::class, 'upsertPrice'])->middleware('step_up');
+            Route::patch('/billing/prices/{price}', [SuperAdminBillingController::class, 'updatePrice'])->middleware('step_up');
             Route::get('/billing/invoices', [SuperAdminBillingController::class, 'invoices']);
             Route::get('/billing/invoices/{invoice}', [SuperAdminBillingController::class, 'invoice']);
-            Route::post('/billing/invoices/{invoice}/payments', [SuperAdminBillingController::class, 'recordPayment']);
-            Route::post('/billing/invoices/{invoice}/void', [SuperAdminBillingController::class, 'void']);
-            Route::post('/billing/invoices/{invoice}/extend-due-date', [SuperAdminBillingController::class, 'extendDueDate']);
+            Route::post('/billing/invoices/{invoice}/payments', [SuperAdminBillingController::class, 'recordPayment'])->middleware('step_up');
+            Route::post('/billing/invoices/{invoice}/void', [SuperAdminBillingController::class, 'void'])->middleware('step_up');
+            Route::post('/billing/invoices/{invoice}/extend-due-date', [SuperAdminBillingController::class, 'extendDueDate'])->middleware('step_up');
             Route::get('/monitoring/api-usage', [SuperAdminMonitoringController::class, 'apiUsage']);
         });
 
     // --- Super Admin cross-tenant (ADR-001 Layer 7) ---
-    Route::middleware(['can:super-admin.impersonate', 'super_admin.impersonate'])
+    Route::middleware(['can:super-admin.impersonate', 'privileged.mfa', 'super_admin.impersonate'])
         ->prefix('super-admin')
         ->group(function () {
-            Route::get('/stores/{store}/impersonate', [SuperAdminStoreController::class, 'impersonate']);
+            Route::get('/stores/{store}/impersonate', [SuperAdminStoreController::class, 'impersonate'])->middleware('step_up'); // SRS SA-004
             Route::get('/stores/{store}', [SuperAdminStoreController::class, 'show']);
             Route::get('/stores/{store}/health', [SuperAdminMonitoringController::class, 'storeHealth']);
 

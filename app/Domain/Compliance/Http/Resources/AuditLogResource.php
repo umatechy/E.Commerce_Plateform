@@ -32,6 +32,7 @@ final class AuditLogResource extends JsonResource
             'context' => $this->contextData(),
             'ip_address' => $this->ip_address,
             'user_agent' => $this->user_agent,
+            'request_id' => $this->request_id,
             'store' => $this->whenLoaded('store', fn () => $this->store !== null ? ['id' => $this->store->public_id, 'name' => $this->store->name] : null),
             'hash' => $this->hash,
             'created_at' => $this->created_at->toIso8601String(),

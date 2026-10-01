@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Domain\Identity\Http\Requests;
 
+use App\Domain\Identity\Models\User;
+use Illuminate\Auth\Events\Failed;
 use Illuminate\Auth\Events\Lockout;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\Auth;
@@ -31,30 +33,37 @@ final class LoginRequest extends FormRequest
         ];
     }
 
-    public function authenticate(): void
+    /**
+     * Checks the password and, when that is all the account needs, signs
+     * the user in.
+     *
+     * @return ?User  null when signed in; otherwise the user whose
+     *                password was right and who still owes a second
+     *                factor (Module 32 §8). That user is NOT signed in.
+     */
+    public function authenticate(): ?User
     {
         $this->ensureIsNotRateLimited();
 
         // Explicitly the staff session guard (ADR-002 Surface A): the
-        // default guard can have been switched to a token guard, which has
-        // no attempt() at all.
-        if (! Auth::guard('web')->attempt($this->only('email', 'password'), true)) {
-            RateLimiter::hit($this->throttleKey());
+        // default guard can have been switched to a token guard.
+        $guard = Auth::guard('web');
+        $credentials = $this->only('email', 'password');
 
-            throw ValidationException::withMessages([
-                'email' => trans('auth.failed'),
-            ]);
-        }
+        // The password is checked against the staff user provider WITHOUT
+        // signing in, so an account with MFA never holds a session or a
+        // remember-me cookie on the strength of its password alone.
+        $provider = Auth::createUserProvider((string) config('auth.guards.web.provider'))
+            ?? throw new \LogicException('The staff user provider is not configured.');
+        $user = $provider->retrieveByCredentials($credentials);
+        $valid = $user instanceof User && $provider->validateCredentials($user, $credentials);
 
         // Module 30 §12 "User & Staff Oversight" (Phase B16) — a
-        // platform-wide account lock a Super Admin can apply. Checked
-        // AFTER a successful credential match (never reveals whether an
-        // email/password pair was correct if the account happens to be
-        // deactivated — same generic failure message either way) and
-        // the session is torn down immediately if the account is
-        // inactive, never left half-authenticated.
-        if (! Auth::guard('web')->user()->is_active) {
-            Auth::guard('web')->logout();
+        // platform-wide account lock a Super Admin can apply. The answer
+        // is the same generic failure as a wrong password, so it never
+        // reveals whether the email/password pair was correct.
+        if (! $valid || ! $user->is_active) {
+            event(new Failed('web', $valid ? $user : null, $credentials));
             RateLimiter::hit($this->throttleKey());
 
             throw ValidationException::withMessages([
@@ -63,6 +72,15 @@ final class LoginRequest extends FormRequest
         }
 
         RateLimiter::clear($this->throttleKey());
+        $provider->rehashPasswordIfRequired($user, $credentials);
+
+        if ($user->hasMfaEnabled()) {
+            return $user;
+        }
+
+        $guard->login($user, true);
+
+        return null;
     }
 
     private function ensureIsNotRateLimited(): void

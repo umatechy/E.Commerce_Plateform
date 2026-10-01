@@ -41,6 +41,8 @@ final class User extends Authenticatable
     protected $hidden = [
         'password',
         'remember_token',
+        'mfa_secret',
+        'mfa_last_used_step',
     ];
 
     protected function casts(): array
@@ -49,6 +51,9 @@ final class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'is_active' => 'boolean',
+            'mfa_secret' => 'encrypted', // Module 32 §8: the TOTP secret is never stored in the clear
+            'mfa_confirmed_at' => 'datetime',
+            'mfa_last_used_step' => 'integer',
         ];
     }
 
@@ -81,5 +86,11 @@ final class User extends Authenticatable
     public function isPlatformStaff(): bool
     {
         return $this->platform_role !== null;
+    }
+
+    /** MFA counts only once the authenticator app has been confirmed (MfaService). */
+    public function hasMfaEnabled(): bool
+    {
+        return $this->mfa_secret !== null && $this->mfa_confirmed_at !== null;
     }
 }

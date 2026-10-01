@@ -163,13 +163,13 @@ Architecture v1.0 arrived after this review was written and are now in
 | AUTH-003 | ✅ | Laravel hashing | P0 |
 | AUTH-004 | ✅ | Staff and customer reset tokens | P0 |
 | AUTH-005 | 🟡 | Logout only; no session list / revoke-all | P1 |
-| AUTH-006 | ❌ | No MFA | P1 |
-| AUTH-007 | ❌ | No MFA recovery | P1 |
+| AUTH-006 | ✅ | TOTP MFA for staff accounts (B29, gap G2) | P1 |
+| AUTH-007 | ✅ | Single-use recovery codes, stored hashed (B29) | P1 |
 | AUTH-008 | ✅ | Login throttling | P0 |
 | AUTH-009 | ✅ | `RecordAuthenticationEvents` → audit log | P0 |
 | AUTH-010 | ✅ | Secrets not logged (B22 review) | P0 |
 | AUTH-011 | 🟡 | API keys only; OAuth deferred by ADR-002 | P2 |
-| AUTH-012 | ❌ | Super Admin uses the same login; no MFA/step-up | P0 |
+| AUTH-012 | ✅ | MFA mandatory for platform staff on every Super Admin route; step-up for sensitive actions (B29) | P0 |
 
 ### 3.3 Roles & authorization (RBAC)
 
@@ -320,14 +320,14 @@ Architecture v1.0 arrived after this review was written and are now in
 | BILL-005 | ➖ | No billing gateway, so no billing webhooks | P1 |
 | BILL-006 | 🟡 | Voids authorized; refunds/credit notes not built | P1 |
 | SA-001–003 | ✅ | B16 (API only) | P0 |
-| SA-004 | 🟡 | Reason required for impersonation; no re-authentication | P0 |
+| SA-004 | ✅ | Reason required; step-up re-authentication on impersonation and 13 other actions (B29) | P0 |
 | SA-005 | 🟡 | No mass-action safeguards (no bulk actions yet) | P1 |
 | SA-006 | ➖ | No break-glass feature | P2 |
 | API-001–005, 008–009, 013–014, 016 | ✅ | Versioned routes, auth, tenant, rate limits, pagination, allowlists, signed webhooks with retries, key rotation | P0 |
 | API-006 | 🟡 | Per-key rate limits; no package API quotas | P1 |
 | API-007 | 🟡 | Checkout/order idempotency; not general | P1 |
 | API-010 | 🟡 | JSON errors, but not the Master Prompt §15 shape `{code,message,details,requestId}` everywhere | P1 |
-| API-011 | ❌ | **No request/correlation IDs** | P1 |
+| API-011 | ✅ | `X-Request-Id` on every response, in logs and audit entries (B29) | P1 |
 | API-012 | ❌ | No OpenAPI | P1 |
 | API-015 | 🟡 | Attempt ledger; dead-letter semantics to confirm | P1 |
 | API-017 | ❌ | No sandbox | P2 |
@@ -339,9 +339,9 @@ Architecture v1.0 arrived after this review was written and are now in
 | SEC-001–003, 006–012 | ✅ | B22, encrypted settings, validated uploads, rate limits, audit | P0 |
 | SEC-004 | ⚪ | HTTPS is a deployment concern (Nginx template redirects) | P0 |
 | SEC-005 | 🟡 | No data-classification register | P1 |
-| SEC-013 | ❌ | **No dependency scanning** (`composer audit` / `npm audit` not in CI) | P0 |
-| SEC-014 | 🟡 | CI runs PHPStan, lint and tests; no security gate | P0 |
-| SEC-015 | ❌ | **No incident-response procedure** | P1 |
+| SEC-013 | ✅ | `composer audit` and `npm audit` in CI (B29). Build tooling advisories open | P0 |
+| SEC-014 | 🟡 | Dependency gate added (B29). No secret scanning or static security analysis | P0 |
+| SEC-015 | ✅ | `docs/security/incident-response-runbook.md` (B29). Contacts to be filled by the owner | P1 |
 | CFG-001–004, 006–009 | ✅ | B17 | P1 |
 | CFG-005 | ❌ | No feature flags | P2 |
 | SUP-001 | ❌ | **No documentation/help architecture** | P1 |
@@ -397,7 +397,7 @@ existing pattern: feature tests plus tenant-isolation tests for every endpoint.
 | # | Gap | Sources | Risk if left | Proposed action | Pri | Depends on |
 |---|---|---|---|---|---|---|
 | G1 | ✅ **Closed in B27** (checkpoint-b27). Store staff management (invite, roles, remove, 7 predefined roles, custom roles) | STORE-007, RBAC-002, M02 §6, §17–19, §29 | A store cannot add its team | Build invitations, membership API + UI, role catalog | P0 | — |
-| G2 | Security baseline: MFA, Super Admin step-up, request IDs, dependency scanning in CI, incident runbook | AUTH-006/007/012, SA-004, API-011, SEC-013/014/015, M32 §8, M30 §6 | Account takeover of privileged users; blind operations | MFA (TOTP) + recovery codes, re-auth for sensitive actions, correlation-ID middleware, `composer audit`/`npm audit` CI step, runbook | P0 | — |
+| G2 | ✅ **Closed in B29** (checkpoint-b29; open findings in docs/security/b29-security-baseline.md). Security baseline: MFA, Super Admin step-up, request IDs, dependency scanning in CI, incident runbook | AUTH-006/007/012, SA-004, API-011, SEC-013/014/015, M32 §8, M30 §6 | Account takeover of privileged users; blind operations | MFA (TOTP) + recovery codes, re-auth for sensitive actions, correlation-ID middleware, `composer audit`/`npm audit` CI step, runbook | P0 | — |
 | G3 | Tax calculation | CHK-007, M11 §28 | Incorrect totals if tax applies | **Business decision first**: tax rules (inclusive/exclusive, rates, regions) | P0 | Owner decision |
 | G4 | Scheduled backups + restore rehearsal + alerting | BKP-001/007, HEALTH-005, TEST-011 | Data loss; failures go unnoticed | Schedule backups, rehearsal command, alert channel for critical health | P0 | Alert channel choice |
 | G5 | ✅ **Closed in B28** (checkpoint-b28). Store timezone consumption | DATA-010, LOC-004, M33 §50 | Wrong dates for scheduled promos/campaigns/SLA | Wire `store.timezone` into B10/B12/B13/B26 date logic | P0 | — |

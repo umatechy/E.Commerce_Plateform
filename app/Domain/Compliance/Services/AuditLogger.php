@@ -72,6 +72,7 @@ final class AuditLogger
             'context' => AuditHasher::canonicalJson($this->redact($context)),
             'ip_address' => $request?->ip(),
             'user_agent' => $request?->userAgent() !== null ? Str::limit($request->userAgent(), 250, '') : null,
+            'request_id' => $request?->attributes->get(\App\Http\Middleware\AssignRequestId::ATTRIBUTE), // SRS API-011
             'created_at' => now()->format('Y-m-d H:i:s'),
         ];
 

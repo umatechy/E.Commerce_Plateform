@@ -2,7 +2,7 @@ name: CI
 
 on:
   push:
-    branches: [main, develop]
+    branches: [main, develop, v1.1]
   pull_request:
 
 jobs:
@@ -60,6 +60,41 @@ jobs:
           DB_USERNAME: root
           DB_PASSWORD: ""
           REDIS_HOST: 127.0.0.1
+
+  # SRS SEC-013 / SEC-014, Module 32 §48 (Phase B29): known-vulnerability
+  # scan of the dependencies. A finding fails the build.
+  security:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.3"
+          coverage: none
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      # Reads composer.lock; fails on any advisory, in any PHP package.
+      - name: PHP dependencies (composer audit)
+        run: composer audit --locked
+
+      # The packages that ship to browsers and servers. High and critical
+      # advisories fail the build.
+      - name: JavaScript dependencies that ship (npm audit)
+        run: npm audit --omit=dev --audit-level=high
+
+      # Build and test tooling (Vite, Vitest, esbuild) never ships. Its
+      # advisories are listed on every run but do not fail the build until
+      # the toolchain upgrade recorded in
+      # docs/security/b29-security-baseline.md is done.
+      - name: JavaScript build tooling (report only)
+        run: npm audit --audit-level=high
+        continue-on-error: true
 
   frontend:
     runs-on: ubuntu-24.04

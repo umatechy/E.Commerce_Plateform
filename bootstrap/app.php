@@ -79,6 +79,10 @@ return Application::configure(basePath: dirname(__DIR__))
         // Module 32 (Phase B22): baseline security headers on every response.
         $middleware->append(\App\Http\Middleware\AddSecurityHeaders::class);
 
+        // SRS API-011 (Phase B29): one request ID per request, first in line
+        // so every later log line and audit entry carries it.
+        $middleware->prepend(\App\Http\Middleware\AssignRequestId::class);
+
         // ADR-001: tenant resolution runs on every web + api request,
         // AFTER auth (so it can read the authenticated user's store
         // membership) and BEFORE any controller/policy/model code runs.
@@ -112,7 +116,12 @@ return Application::configure(basePath: dirname(__DIR__))
         // route's `can:` gate never skips an authorization check.
         $middleware->appendToPriorityList(ResolveTenantContext::class, EnsureStaffPrincipal::class);
         $middleware->appendToPriorityList(EnsureStaffPrincipal::class, EnsureCustomerPrincipal::class);
-        $middleware->appendToPriorityList(EnsureCustomerPrincipal::class, \App\Http\Middleware\EnsureSuperAdminPlatformAction::class);
+        // Phase B29: MFA and step-up are checked BEFORE the Super Admin
+        // context switches, so a request they refuse never starts (or
+        // audits) an impersonation.
+        $middleware->appendToPriorityList(EnsureCustomerPrincipal::class, \App\Http\Middleware\EnsurePrivilegedMfa::class);
+        $middleware->appendToPriorityList(\App\Http\Middleware\EnsurePrivilegedMfa::class, \App\Http\Middleware\RequireStepUp::class);
+        $middleware->appendToPriorityList(\App\Http\Middleware\RequireStepUp::class, \App\Http\Middleware\EnsureSuperAdminPlatformAction::class);
         $middleware->appendToPriorityList(\App\Http\Middleware\EnsureSuperAdminPlatformAction::class, EnsureSuperAdminImpersonation::class);
 
         // Developer API: an API key lacking the endpoint's scope is refused
@@ -126,6 +135,8 @@ return Application::configure(basePath: dirname(__DIR__))
             'api_key.scope' => \App\Http\Middleware\EnsureApiScope::class,
             'api_key.log' => \App\Http\Middleware\LogApiRequest::class,
             'staff.principal' => EnsureStaffPrincipal::class,
+            'privileged.mfa' => \App\Http\Middleware\EnsurePrivilegedMfa::class,
+            'step_up' => \App\Http\Middleware\RequireStepUp::class,
             'customer.principal' => EnsureCustomerPrincipal::class,
             'customer.optional' => AttemptCustomerAuthentication::class,
             'storefront.store' => \App\Domain\Storefront\Http\Middleware\ResolveStorefrontStore::class,

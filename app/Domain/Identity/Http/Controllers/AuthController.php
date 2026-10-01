@@ -9,6 +9,9 @@ use App\Domain\Identity\Http\Requests\RegisterRequest;
 use App\Domain\Identity\Http\Resources\UserResource;
 use App\Domain\Identity\Models\Role;
 use App\Domain\Identity\Models\User;
+use App\Domain\Identity\Services\InvalidMfaCodeException;
+use App\Domain\Identity\Services\MfaService;
+use App\Domain\Identity\Support\SecuritySession;
 use App\Domain\Packages\Services\SubscriptionLifecycleService;
 use App\Domain\Tenancy\Models\Store;
 use App\Domain\Tenancy\Models\StoreStatus;
@@ -17,6 +20,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 
 /**
  * ADR-002 Surface A (Sanctum) authentication endpoints. Session-cookie
@@ -70,23 +74,58 @@ final class AuthController
 
         // Session-fixation protection applies to the stateful SPA flow
         // (ADR-002 Surface A). A non-stateful request carries no session
-        // at all, and calling ->session() on it threw a 500.
-        if ($request->hasSession()) {
-            $request->session()->regenerate();
-        }
+        // at all (SecuritySession checks), and calling ->session() on it
+        // threw a 500.
+        SecuritySession::signedIn($request, withMfa: false);
 
         return (new UserResource($user))->response()->setStatusCode(201);
     }
 
     public function login(LoginRequest $request): JsonResponse
     {
-        $request->authenticate();
+        $owesSecondFactor = $request->authenticate();
 
-        if ($request->hasSession()) {
-            $request->session()->regenerate();
+        // Module 32 §8: the password was right, but this account has MFA.
+        // Nobody is signed in yet; the session only remembers who must
+        // still enter a code (POST /auth/login/mfa).
+        if ($owesSecondFactor !== null) {
+            if (! $request->hasSession()) {
+                throw ValidationException::withMessages(['email' => 'This account uses two-step sign-in, which needs a browser session.']);
+            }
+
+            SecuritySession::beginMfaChallenge($request, $owesSecondFactor);
+
+            return response()->json(['data' => ['mfa_required' => true]], 202);
         }
 
+        SecuritySession::signedIn($request, withMfa: false);
+
         return (new UserResource(Auth::guard('web')->user()))->response();
+    }
+
+    /** The second step of a sign-in: an authenticator or recovery code. */
+    public function loginMfa(Request $request, MfaService $mfa): JsonResponse
+    {
+        $request->validate(['code' => ['required', 'string', 'max:32']]);
+
+        $userId = SecuritySession::pendingUserId($request);
+        $user = $userId !== null ? User::query()->find($userId) : null;
+
+        // No open challenge, or it timed out: start again from the password.
+        if ($user === null || ! $user->is_active || ! $user->hasMfaEnabled()) {
+            return response()->json(['message' => 'Sign in again.', 'code' => 'mfa_challenge_expired'], 409);
+        }
+
+        try {
+            $mfa->verify($user, $request->string('code')->toString(), 'login');
+        } catch (InvalidMfaCodeException $e) {
+            throw ValidationException::withMessages(['code' => $e->getMessage()]);
+        }
+
+        Auth::guard('web')->login($user, true);
+        SecuritySession::signedIn($request, withMfa: true);
+
+        return (new UserResource($user))->response();
     }
 
     public function logout(Request $request): JsonResponse

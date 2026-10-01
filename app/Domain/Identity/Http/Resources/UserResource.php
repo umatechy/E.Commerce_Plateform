@@ -26,6 +26,7 @@ final class UserResource extends JsonResource
             'email' => $this->email,
             'email_verified' => $this->email_verified_at !== null,
             'is_platform_staff' => $this->isPlatformStaff(),
+            'mfa_enabled' => $this->hasMfaEnabled(),
         ];
     }
 }

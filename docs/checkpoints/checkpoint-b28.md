@@ -57,7 +57,7 @@ localization (G11).
 
 Known limits:
 - There is no admin screen for changing the timezone. It is set through
-  the settings API (PUT /api/v1/settings/store.timezone). The screen
+  the settings API (PUT /api/v1/store/settings/store.timezone). The screen
   comes with the admin UI work (G6).
 - A new store's timezone is UTC until it is set.
 
