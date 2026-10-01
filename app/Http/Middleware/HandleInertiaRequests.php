@@ -37,6 +37,14 @@ final class HandleInertiaRequests extends Middleware
                 // The timezone admin pages show dates in (Module 33 §50.3):
                 // the store's, or UTC when no store is in context.
                 'timezone' => app(StoreClock::class)->timezoneName(),
+                // True while EnsureRequiredMfa keeps this user out of the Store
+                // Admin: a Store Owner who has not turned on two-step sign-in.
+                // The layout uses it to say so, instead of letting every link
+                // bounce back to the Security page without a word.
+                'mfa_enrollment_required' => $user !== null
+                    && (bool) config('security.mfa.required_for_store_owners')
+                    && ! $user->hasMfaEnabled()
+                    && $user->ownsAStore(),
             ],
         ];
     }

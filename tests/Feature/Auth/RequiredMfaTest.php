@@ -72,7 +72,9 @@ final class RequiredMfaTest extends TestCase
         // ...and its pages lead to enrollment.
         $this->withoutVite()->get('/')->assertRedirect('/security');
         $this->withoutVite()->get('/orders')->assertRedirect('/security');
-        $this->withoutVite()->get('/security')->assertOk();
+        // The Security page opens, and tells the layout that the rest is closed.
+        $this->withoutVite()->get('/security')->assertOk()
+            ->assertInertia(fn ($page) => $page->component('Security/Index')->where('auth.mfa_enrollment_required', true));
 
         // What enrollment needs stays open.
         $this->getJson('/api/v1/auth/me')->assertOk();
@@ -83,7 +85,7 @@ final class RequiredMfaTest extends TestCase
 
         // Enrolled in this session: the surface opens without signing in again.
         $this->getJson('/api/v1/team/summary')->assertOk();
-        $this->withoutVite()->get('/orders')->assertOk();
+        $this->withoutVite()->get('/orders')->assertOk()->assertInertia(fn ($page) => $page->where('auth.mfa_enrollment_required', false));
     }
 
     public function test_an_owner_with_mfa_signs_in_with_two_steps_and_gets_no_remember_me_cookie(): void
@@ -129,7 +131,7 @@ final class RequiredMfaTest extends TestCase
             $this->signIn($member)->assertOk();
             $this->getJson('/api/v1/orders')->assertOk();
             $this->getJson('/api/v1/auth/mfa')->assertJsonPath('data.required', false);
-            $this->withoutVite()->get('/orders')->assertOk();
+            $this->withoutVite()->get('/orders')->assertOk()->assertInertia(fn ($page) => $page->where('auth.mfa_enrollment_required', false));
             $this->signOut();
         }
     }

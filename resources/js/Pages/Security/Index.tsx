@@ -1,4 +1,5 @@
 import { FormEvent, useCallback, useEffect, useState } from 'react';
+import { router } from '@inertiajs/react';
 import QRCode from 'qrcode';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import ErrorState from '@/Components/ErrorState';
@@ -60,8 +61,20 @@ export default function Index() {
   const [errors, setErrors] = useState<FieldErrors>({});
   const [busy, setBusy] = useState(false);
 
+  // Never an endless "Loading…": no answer within 15 seconds, or an answer
+  // without the status in it, is shown as a failure with a way to try again.
   const load = useCallback(() => {
-    adminFetch<{ data: Status }>('/auth/mfa').then((body) => setStatus(body.data)).catch((error) => setLoadError(adminErrorMessage(error)));
+    setLoadError(null);
+    const timeout = new Promise<never>((_, reject) => {
+      window.setTimeout(() => reject(new Error('The server did not answer. Check that it is running, then try again.')), 15000);
+    });
+
+    Promise.race([adminFetch<{ data?: Status }>('/auth/mfa'), timeout])
+      .then((body) => {
+        if (!body.data) throw new Error('The server answered without your security settings. Try again, or sign in again.');
+        setStatus(body.data);
+      })
+      .catch((error) => setLoadError(adminErrorMessage(error, error instanceof Error ? error.message : undefined)));
   }, []);
 
   useEffect(load, [load]);
@@ -97,6 +110,8 @@ export default function Index() {
       setCodes(body.data.recovery_codes);
       setStatus(body.data);
       setSetup(null);
+      // The rest of the admin is open now: refresh what the layout knows.
+      router.reload({ only: ['auth'] });
     });
   };
 
@@ -118,7 +133,12 @@ export default function Index() {
     <AuthenticatedLayout>
       <h1 className="text-xl font-semibold">Security</h1>
 
-      {loadError && <ErrorState message={loadError} />}
+      {loadError && !status && (
+        <div className="mt-4 space-y-3">
+          <ErrorState message={loadError} />
+          <button onClick={load} className="rounded border px-4 py-2 text-sm">Try again</button>
+        </div>
+      )}
       {!status && !loadError && <LoadingState />}
 
       {status && (
@@ -133,9 +153,15 @@ export default function Index() {
             After your password, you enter a code from an authenticator app on your phone. Someone who learns your password still cannot sign in.
           </p>
           {status.required && !status.enabled && (
-            <p className="mt-2 rounded border border-amber-300 bg-amber-50 p-3 text-sm text-amber-800">
-              Your account must have two-step sign-in. Turn it on to continue: the rest of the admin stays closed until you do.
-            </p>
+            <div className="mt-2 rounded border border-amber-300 bg-amber-50 p-3 text-sm text-amber-800">
+              <p>Your account must have two-step sign-in. The rest of the admin stays closed until it is on. It takes about a minute:</p>
+              <ol className="mt-2 list-decimal space-y-1 pl-5">
+                <li>Install an authenticator app on your phone (Google Authenticator, Microsoft Authenticator or Authy).</li>
+                <li>Enter your password below and press “Turn on two-step sign-in”.</li>
+                <li>Scan the QR code with the app and enter the 6-digit code it shows.</li>
+                <li>Save the recovery codes you are given.</li>
+              </ol>
+            </div>
           )}
 
           <div className="mt-5 space-y-4">

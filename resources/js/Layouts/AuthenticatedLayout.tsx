@@ -20,6 +20,7 @@ type PageProps = {
   auth: {
     user: { id: string; name: string; email: string; is_platform_staff?: boolean } | null;
     activeStore: { id: string; name: string } | null;
+    mfa_enrollment_required?: boolean;
   };
 };
 
@@ -27,6 +28,7 @@ export default function AuthenticatedLayout({ children }: PropsWithChildren) {
   const page = usePage<PageProps>();
   const { auth } = page.props;
   const path = page.url.split('?')[0];
+  const locked = auth.mfa_enrollment_required === true;
 
   // The logout endpoint is a JSON API, not an Inertia one. A full load
   // afterwards drops the old session from the shared props.
@@ -70,6 +72,22 @@ export default function AuthenticatedLayout({ children }: PropsWithChildren) {
             {[{ href: '/', label: 'Dashboard' }, ...adminNav, ...(auth.user.is_platform_staff ? platformNav : [])].map((item) => {
               const active = item.href === '/' ? path === '/' : path.startsWith(item.href);
 
+              // Until two-step sign-in is on, the server sends every other page
+              // back to Security. Show those entries as closed instead of
+              // letting each click bounce.
+              if (locked && item.href !== '/security') {
+                return (
+                  <span
+                    key={item.href}
+                    aria-disabled="true"
+                    title="Turn on two-step sign-in first"
+                    className="cursor-not-allowed whitespace-nowrap border-b-2 border-transparent px-3 py-2 text-gray-300"
+                  >
+                    {item.label}
+                  </span>
+                );
+              }
+
               return (
                 <Link
                   key={item.href}
@@ -87,6 +105,15 @@ export default function AuthenticatedLayout({ children }: PropsWithChildren) {
           </nav>
         )}
       </header>
+
+      {locked && (
+        <div role="status" className="border-b border-amber-300 bg-amber-50">
+          <p className="mx-auto max-w-6xl px-4 py-3 text-sm text-amber-900">
+            <strong>One step before you can manage your store:</strong> turn on two-step sign-in below. Store owners must have it. The other pages
+            open as soon as it is on.
+          </p>
+        </div>
+      )}
 
       <main className="mx-auto max-w-6xl px-4 py-6">{children}</main>
     </div>
