@@ -8,6 +8,7 @@ use App\Domain\Compliance\Services\AuditLogger;
 use App\Domain\Identity\Models\MfaRecoveryCode;
 use App\Domain\Identity\Models\User;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Str;
 use PragmaRX\Google2FA\Google2FA;
@@ -126,6 +127,44 @@ final class MfaService
         });
 
         $this->audit->record('auth.mfa.disabled', [], $user, actor: $user, platform: true);
+    }
+
+    /**
+     * The emergency reset, for an account whose authenticator and recovery
+     * codes are both lost. Called only by the mfa:emergency-reset console
+     * command (runbook "Emergency MFA reset") — never from an HTTP route.
+     *
+     * The old secret and codes are destroyed unread. The account is left
+     * without MFA, so wherever MFA is required it must enrol again before
+     * it can do anything else. Remembered sign-ins are revoked.
+     */
+    public function emergencyReset(User $user, string $operator, string $reason): void
+    {
+        $codesRemoved = DB::transaction(function () use ($user) {
+            $removed = MfaRecoveryCode::query()->where('user_id', $user->id)->delete();
+            $user->forceFill([
+                'mfa_secret' => null,
+                'mfa_confirmed_at' => null,
+                'mfa_last_used_step' => null,
+                'remember_token' => Str::random(60),
+            ])->save();
+
+            return $removed;
+        });
+
+        RateLimiter::clear($this->attemptKey($user));
+
+        $context = [
+            'severity' => 'high',
+            'operator' => $operator,
+            'reason' => $reason,
+            'account_type' => $user->isPlatformStaff() ? 'platform_staff' : ($user->ownsAStore() ? 'store_owner' : 'store_staff'),
+            'recovery_codes_removed' => $codesRemoved,
+            'reenrollment_required' => $user->mustUseMfa(),
+        ];
+
+        $this->audit->record('auth.mfa.emergency_reset', $context, $user, platform: true);
+        Log::critical('MFA emergency reset', ['user_id' => $user->id, ...$context]);
     }
 
     public function remainingRecoveryCodes(User $user): int

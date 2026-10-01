@@ -133,7 +133,9 @@ export default function Index() {
             After your password, you enter a code from an authenticator app on your phone. Someone who learns your password still cannot sign in.
           </p>
           {status.required && !status.enabled && (
-            <p className="mt-2 text-sm text-amber-700">Your account needs two-step sign-in to use the platform administration.</p>
+            <p className="mt-2 rounded border border-amber-300 bg-amber-50 p-3 text-sm text-amber-800">
+              Your account must have two-step sign-in. Turn it on to continue: the rest of the admin stays closed until you do.
+            </p>
           )}
 
           <div className="mt-5 space-y-4">

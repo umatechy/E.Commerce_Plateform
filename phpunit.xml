@@ -36,6 +36,7 @@
         <env name="QUEUE_CONNECTION" value="sync"/>
         <env name="SESSION_DRIVER" value="array"/>
         <env name="MFA_REQUIRED_FOR_PLATFORM_STAFF" value="false"/>
+        <env name="MFA_REQUIRED_FOR_STORE_OWNERS" value="false"/>
         <env name="STEP_UP_ENABLED" value="false"/>
         <env name="PULSE_ENABLED" value="false"/>
         <env name="TELESCOPE_ENABLED" value="false"/>

@@ -122,7 +122,9 @@ final class AuthController
             throw ValidationException::withMessages(['code' => $e->getMessage()]);
         }
 
-        Auth::guard('web')->login($user, true);
+        // No remember-me cookie: it would later start a session that never
+        // passed the second factor.
+        Auth::guard('web')->login($user);
         SecuritySession::signedIn($request, withMfa: true);
 
         return (new UserResource($user))->response();

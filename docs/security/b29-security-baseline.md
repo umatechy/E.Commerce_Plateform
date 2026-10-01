@@ -11,6 +11,8 @@ API-011, SEC-013, SEC-014, SEC-015.
 | MFA with an authenticator app (TOTP) | AUTH-006, M32 §8.1–8.2 | `MfaService`, `MfaController`, `/security` page |
 | Single-use recovery codes | AUTH-007, M32 §8.3–8.4 | `user_mfa_recovery_codes` |
 | MFA mandatory for platform staff | AUTH-012, M32 §65.2–65.3 | `EnsurePrivilegedMfa` on both Super Admin route groups |
+| MFA mandatory for Store Owners | Owner decision 2026-10-01, M32 §8.1 | `EnsureRequiredMfa` on the staff API group and the admin pages |
+| Emergency MFA reset | Owner decision 2026-10-01, M32 §8.3, §66 | `mfa:emergency-reset` console command |
 | Step-up for sensitive actions | SA-004, M30 §6, M32 §65.5 | `RequireStepUp`, `POST /api/v1/auth/step-up` |
 | Request / correlation IDs | API-011, M32 §63.3 | `AssignRequestId`, `audit_logs.request_id` |
 | Dependency scan in CI | SEC-013, SEC-014, M32 §48 | `security` job in `.github/workflows/ci.yml` |
@@ -43,7 +45,25 @@ database from being searched offline.
 then a 15-minute pause that a right code does not shorten. The counter covers
 TOTP and recovery codes together.
 
-**Turning MFA off** needs the password and a current code (M32 §8.6).
+**Turning MFA off** needs the password and a current code (M32 §8.6). An
+account that must have MFA can still turn it off, and is then sent straight
+back to enrollment; it cannot use anything else in between.
+
+**Store Owners must have MFA** (owner decision 2026-10-01). An owner is an
+account that holds the Owner role in at least one store with an active
+membership; the rule is per account because MFA is per account. Without MFA
+an owner reaches only its own `/auth/*` endpoints, the store switch and the
+Security page: API calls answer `403 mfa_enrollment_required` and pages
+redirect to `/security`. A new owner lands there right after registering.
+Store staff are not required to use MFA.
+
+**No remember-me cookie for MFA accounts.** A remembered sign-in starts a
+session that never passed the second factor. An owner or platform staff
+session without that mark is refused and sent back to sign in.
+
+**Emergency reset.** Only `MfaService::emergencyReset()`, called only by the
+console command. `RequiredMfaTest` asserts that no HTTP route can reset
+another account's MFA.
 
 **MFA state lives in the server-side session.** A request without a session
 (a bearer token) cannot satisfy the MFA or step-up check, so it cannot reach
@@ -75,14 +95,16 @@ The specifications require the controls and set no durations.
 
 | # | Finding | Severity | Status |
 |---|---|---|---|
-| 1 | **The test suite runs with MFA enforcement and step-up switched off** (`phpunit.xml`). The older tests reach Super Admin routes through `actingAs()`, which never signs in and so has no MFA or step-up state. The new tests switch both on. A route added later without `step_up` is caught only by the route list in `StepUpTest`. | Medium | Open. Convert the older tests to a signed-in helper. |
+| 1 | **The test suite runs with MFA enforcement (platform staff and store owners) and step-up switched off** (`phpunit.xml`). The older tests reach Super Admin routes through `actingAs()`, which never signs in and so has no MFA or step-up state. The new tests switch both on. A route added later without `step_up` is caught only by the route list in `StepUpTest`. | Medium | Open. Convert the older tests to a signed-in helper. |
 | 2 | **Build tooling has known advisories**: `npm audit` reports 5 (1 critical, 1 high, 3 moderate) in Vite, Vitest and esbuild. None ships to production (`npm audit --omit=dev` is clean). Fixing them needs Vite 5 → 8 and Vitest 2 → 5, a breaking upgrade. CI reports them without failing. | Medium | Open. Upgrade the toolchain, then make that CI step blocking. |
 | 3 | **No UI asks for step-up.** The guarded actions are API-only today. A caller gets `403 {"code":"step_up_required"}` and must call `POST /auth/step-up`. | Low | Open. Add the prompt with the admin screens (G6). |
-| 4 | **Platform staff who lose their authenticator and their recovery codes** can only be restored from the server (runbook, "Break-glass access"). There is no audited in-app reset by another Super Admin. | Medium | Open. Needs a decision on who may reset whom. |
+| 4 | **A lost authenticator plus lost recovery codes.** Owner decision 2026-10-01: recovery only through a controlled server-side procedure. Built as the `mfa:emergency-reset` console command (no HTTP route, operator + reason + typed confirmation, high-severity audit entry, re-enrollment required). Runbook: "Emergency MFA reset". | Medium | Closed |
 | 5 | **Shorter sessions for privileged users** (M32 §65.4) and session/device listing (AUTH-005) are not built. | Low | Open. |
 | 6 | **No alert on security events** (many failed logins, MFA disabled on a platform account). Owner decision §4 requires email alerts. | Medium | Open (G4). |
 | 7 | Sign-in previously re-hashed a password on login through `attempt()`. The new path calls `rehashPasswordIfRequired()` itself, so this is unchanged. | — | Verified |
 | 8 | Passkeys / WebAuthn, SMS and email one-time codes (M02 §13) are not built. TOTP is the only method. | Low | Open, by design for this phase. |
+| 10 | **The emergency reset does not end sessions that are already signed in** (it revokes remember-me only). The runbook says to deactivate the account first when it may be compromised. Ending one user's sessions needs session management (AUTH-005). | Low | Open |
+| 11 | **Existing Store Owners are locked out of the Store Admin until they enrol.** This is the decision, and it takes effect on deployment. Owners should be told before the release. | — | Noted |
 | 9 | The local development database gained test accounts while checking this phase in a browser (`check…`, `mfa…`, `dbg…@example.com`). Local only. | — | Noted |
 
 ## Verification
@@ -90,6 +112,10 @@ The specifications require the controls and set no durations.
 - `tests/Feature/Auth/MfaTest.php` — 10 tests: enrollment, two-step sign-in,
   replay, recovery codes, lockout, challenge timeout, turning off, new
   recovery codes, platform staff enforcement, store staff unaffected.
+- `tests/Feature/Auth/RequiredMfaTest.php` — 9 tests: an owner without MFA
+  can only enrol, two-step sign-in without a remember-me cookie, a session
+  that skipped MFA is refused, store staff unaffected, every staff route is
+  covered, the emergency reset and its refusals, no HTTP reset route.
 - `tests/Feature/Auth/StepUpTest.php` — 6 tests, including the list of
   guarded routes and that a refused impersonation leaves no audit entry.
 - `tests/Feature/Infrastructure/RequestIdTest.php` — 3 tests, including

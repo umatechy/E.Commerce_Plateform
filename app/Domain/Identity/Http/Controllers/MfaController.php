@@ -123,8 +123,8 @@ final class MfaController
             'enabled' => $user->hasMfaEnabled(),
             'confirmed_at' => $user->mfa_confirmed_at?->toIso8601String(),
             'recovery_codes_remaining' => $user->hasMfaEnabled() ? $this->mfa->remainingRecoveryCodes($user) : 0,
-            // Platform staff cannot use the Super Admin surface without it (Module 32 §65.3).
-            'required' => $user->isPlatformStaff() && (bool) config('security.mfa.required_for_platform_staff'),
+            // Platform staff and store owners must have it (User::mustUseMfa).
+            'required' => $user->mustUseMfa(),
         ];
     }
 

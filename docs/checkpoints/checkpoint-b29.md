@@ -83,11 +83,21 @@ AUTH-006, AUTH-007, AUTH-012, SA-004, API-011, SEC-013, SEC-015.
 SEC-014 is partly closed: the dependency gate exists; other security
 gates (secret scanning, static security analysis) do not.
 
-Decisions needed from the owner:
-1. Names and contacts for the incident runbook's roles table.
-2. Who may reset a platform staff member's MFA when the authenticator
-   and the recovery codes are both lost (today: server access only).
-3. Whether store owners should be required, not only able, to use MFA.
+Owner decisions of 2026-10-01 (built in the following commit):
+1. Runbook roles are fixed (Incident Commander, Technical/Infrastructure
+   Lead, Security Lead, Backup/Recovery Lead, Communications/Notification
+   Lead). People and contacts stay TBD until provided.
+2. A lost authenticator plus lost recovery codes is recovered only by a
+   controlled server-side procedure: the `mfa:emergency-reset` console
+   command. No screen, no endpoint. High-severity audit entry.
+3. Store Owners must have MFA. An owner without it reaches only the
+   enrollment flow. Store staff stay optional. Accounts with MFA get no
+   remember-me cookie.
+
+Still needed from the owner:
+- The people and contacts for the runbook roles.
+- Existing owners should be told before this is deployed: they must
+  enrol at their next sign-in.
 
 Open findings (docs/security/b29-security-baseline.md):
 - The older tests run with MFA enforcement and step-up switched off.

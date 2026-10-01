@@ -30,6 +30,7 @@ return Application::configure(basePath: dirname(__DIR__))
         app_path('Domain/Infrastructure/Console'),
         app_path('Domain/Monitoring/Console'),
         app_path('Domain/Compliance/Console'),
+        app_path('Domain/Identity/Console'),
         app_path('Domain/Billing/Console'),
         app_path('Domain/Support/Console'),
     ])
@@ -119,7 +120,8 @@ return Application::configure(basePath: dirname(__DIR__))
         // Phase B29: MFA and step-up are checked BEFORE the Super Admin
         // context switches, so a request they refuse never starts (or
         // audits) an impersonation.
-        $middleware->appendToPriorityList(EnsureCustomerPrincipal::class, \App\Http\Middleware\EnsurePrivilegedMfa::class);
+        $middleware->appendToPriorityList(EnsureCustomerPrincipal::class, \App\Http\Middleware\EnsureRequiredMfa::class);
+        $middleware->appendToPriorityList(\App\Http\Middleware\EnsureRequiredMfa::class, \App\Http\Middleware\EnsurePrivilegedMfa::class);
         $middleware->appendToPriorityList(\App\Http\Middleware\EnsurePrivilegedMfa::class, \App\Http\Middleware\RequireStepUp::class);
         $middleware->appendToPriorityList(\App\Http\Middleware\RequireStepUp::class, \App\Http\Middleware\EnsureSuperAdminPlatformAction::class);
         $middleware->appendToPriorityList(\App\Http\Middleware\EnsureSuperAdminPlatformAction::class, EnsureSuperAdminImpersonation::class);
@@ -136,6 +138,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'api_key.log' => \App\Http\Middleware\LogApiRequest::class,
             'staff.principal' => EnsureStaffPrincipal::class,
             'privileged.mfa' => \App\Http\Middleware\EnsurePrivilegedMfa::class,
+            'required.mfa' => \App\Http\Middleware\EnsureRequiredMfa::class,
             'step_up' => \App\Http\Middleware\RequireStepUp::class,
             'customer.principal' => EnsureCustomerPrincipal::class,
             'customer.optional' => AttemptCustomerAuthentication::class,

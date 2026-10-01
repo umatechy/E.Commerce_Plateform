@@ -66,7 +66,9 @@ Route::post('/auth/login', [AuthController::class, 'login'])->middleware('thrott
 // The second step of a sign-in for accounts with MFA (Module 32 §8 — Phase B29).
 Route::post('/auth/login/mfa', [AuthController::class, 'loginMfa'])->middleware('throttle:10,1');
 
-Route::middleware(['auth:sanctum', 'staff.principal'])->group(function () {
+// 'required.mfa': a Store Owner without MFA reaches only its own /auth/*
+// endpoints here, so it can enrol (owner decision 2026-10-01).
+Route::middleware(['auth:sanctum', 'staff.principal', 'required.mfa'])->group(function () {
     Route::post('/auth/logout', [AuthController::class, 'logout']);
     Route::get('/auth/me', [AuthController::class, 'me']);
 

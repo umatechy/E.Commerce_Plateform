@@ -16,6 +16,10 @@ return [
         // surface without MFA. Turn off only for local development.
         'required_for_platform_staff' => (bool) env('MFA_REQUIRED_FOR_PLATFORM_STAFF', true),
 
+        // Owner decision 2026-10-01: a Store Owner cannot use the Store
+        // Admin surface with a password alone. Store staff stay optional.
+        'required_for_store_owners' => (bool) env('MFA_REQUIRED_FOR_STORE_OWNERS', true),
+
         'recovery_codes' => 10,
 
         // How long a password-verified sign-in may wait for its code.

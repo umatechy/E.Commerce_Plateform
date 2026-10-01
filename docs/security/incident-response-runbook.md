@@ -1,6 +1,6 @@
 # Security Incident Response Runbook
 
-Status: first version, 2026-09-30 (Phase B29, gap G2).
+Status: 2026-10-01 (Phase B29, gap G2; roles and emergency MFA reset per the owner's decisions of 2026-10-01).
 Sources: Module 32 §60–64 and §66, SRS SEC-015, owner decisions
 (`docs/source/decisions/2026-09-30-project-decisions.txt` §4, §5).
 
@@ -9,26 +9,30 @@ security of the platform: someone got into an account or a store's data, a
 secret leaked, or the audit trail no longer verifies. It names the tools that
 exist in the platform today. Where a tool does not exist yet, it says so.
 
-## Before the first incident: fill these in
+## Roles and contacts
 
-The specifications do not name people or contacts, and none are invented here.
-The owner must fill in this table. Until then the runbook cannot be followed
-out of hours.
+The roles are fixed. The people and their contacts are **TBD**: they have not
+been provided, and none are invented here (owner decision, 2026-10-01). Fill
+them in when they are explicitly provided. Until then the runbook cannot be
+followed out of hours.
 
-| Role | Who | How to reach them |
-|---|---|---|
-| Incident lead (decides severity, runs the response) | _to be named_ | _to be filled_ |
-| Technical responder (has production access) | _to be named_ | _to be filled_ |
-| Communicator (talks to merchants and customers) | _to be named_ | _to be filled_ |
-| Legal / contractual advice (notification duties) | _to be named_ | _to be filled_ |
-| Hosting provider support | _to be filled_ | _to be filled_ |
+| Role | Responsibility | Who | Contact |
+|---|---|---|---|
+| Incident Commander | Declares the incident, sets the severity, runs the response, decides when it is closed | TBD | TBD |
+| Technical/Infrastructure Lead | Production access; containment and fixes on servers, deployments and secrets | TBD | TBD |
+| Security Lead | Investigation, evidence, audit trail; authorizes emergency procedures such as the MFA reset | TBD | TBD |
+| Backup/Recovery Lead | Backups, restores, and proving that restored data is right | TBD | TBD |
+| Communications/Notification Lead | Speaks for the platform to merchants and customers; prepares notifications | TBD | TBD |
 
-Also to decide: where the incident record is kept (a private document or ticket
-that only the people above can open — Module 32 §63.7).
+One person may hold more than one role. The Security Lead and the person who
+runs an emergency procedure on the server should be two different people.
+
+Also TBD: where the incident record is kept (a private document or ticket that
+only the people in these roles can open — Module 32 §63.7).
 
 ## Severity
 
-From Module 32 §61. The incident lead sets it and may change it as facts arrive.
+From Module 32 §61. The Incident Commander sets it and may change it as facts arrive.
 
 | Severity | Examples | First response |
 |---|---|---|
@@ -51,7 +55,8 @@ An incident can start from:
 - The audit trail: `GET /api/v1/super-admin/audit-logs` (filters: `action`,
   `actor`, `actor_type`, `subject_type`, `request_id`, `from`, `to`).
   Actions worth watching: `auth.login.failed`, `auth.mfa.failed`,
-  `auth.mfa.disabled`, `auth.password_confirmation.failed`,
+  `auth.mfa.disabled`, `auth.mfa.emergency_reset`,
+  `auth.password_confirmation.failed`,
   `super_admin.impersonation.started`, `super_admin.store.impersonated`.
 - The audit chain check: `php artisan audit:verify`, or
   `GET /api/v1/super-admin/audit-logs/integrity`. A "broken" chain means
@@ -89,7 +94,7 @@ evidence (step 4) before anything destructive.
 | A team member of one store is compromised | The store owner suspends the member on the Team page (`POST /api/v1/team/members/{member}/suspend`). |
 | An API key is leaked or abused | The store revokes the key (`DELETE /api/v1/developer/applications/{application}/keys/{apiKey}`). Platform staff suspend the whole application: `POST /api/v1/super-admin/developer/applications/{application}/suspend`. |
 | Storefronts must be closed platform-wide | `platform.maintenance_mode` setting (`PUT /api/v1/super-admin/settings/platform.maintenance_mode`, needs step-up). It closes every storefront. It does not close the admin or the API. |
-| A secret is exposed (`APP_KEY`, database password, provider credentials) | Rotate it in the hosting environment and redeploy. **Rotating `APP_KEY` invalidates every session, every encrypted setting, every MFA secret and every sealed notification body** — plan it with the technical responder; do not do it casually. |
+| A secret is exposed (`APP_KEY`, database password, provider credentials) | Rotate it in the hosting environment and redeploy. **Rotating `APP_KEY` invalidates every session, every encrypted setting, every MFA secret and every sealed notification body** — plan it with the Technical/Infrastructure Lead; do not do it casually. |
 | A vulnerable endpoint | Deploy a fix or block the path at the web server. There is no per-endpoint switch in the application. |
 | An attacker's IP address | Block it at the web server or hosting firewall. The application has no IP block list. |
 
@@ -144,7 +149,7 @@ every secret that may have been seen, update the vulnerable dependency
 
 ### 8. Communication and review
 
-During the incident, one person (the communicator) speaks for the platform.
+During the incident, one person (the Communications/Notification Lead) speaks for the platform.
 Tell affected merchants what happened, what data was involved, what was done
 and what they should do. Say what is known and what is not.
 
@@ -162,20 +167,79 @@ Within a week of closing the incident, write a short review: timeline, cause,
 what worked, what did not, and the changes to make. Add each change to the
 gap matrix or the issue tracker with an owner.
 
-## Break-glass access (Module 32 §66)
+## Emergency MFA reset
 
-There is no separate emergency account in the application. If no platform
-staff member can sign in (for example every authenticator is lost), access is
-restored from the server by someone with production shell access, and that
-action is itself an incident:
+For one case only: a staff member has lost the authenticator device **and**
+every recovery code, so they cannot sign in. (Owner decision, 2026-10-01;
+Module 32 §8.3, §66.)
 
-1. Record who did it, when and why in the incident record.
-2. Prefer a recovery code. Each platform staff member must keep theirs.
-3. As a last resort, clear the user's MFA on the server
-   (`mfa_secret`, `mfa_confirmed_at`, the user's rows in
-   `user_mfa_recovery_codes`) and have them enrol again at once. This is
-   not audited by the application, so the record in step 1 is the audit.
-4. Afterwards, rotate that user's password.
+There is no way to do this through the application. No screen and no API
+endpoint can turn off another account's MFA, and no user, including a Super
+Admin, can do it for someone else. The reset is a console command on the
+server. Using it is an incident and is recorded as one.
+
+It applies to platform staff. Store Owners must also have MFA, so the same
+procedure is the only recovery for an owner who has lost both; the command
+accepts any staff account.
+
+**Who.** The Security Lead authorizes it. The Technical/Infrastructure Lead,
+or another person with production shell access, runs it. These should be two
+different people.
+
+**Procedure.**
+
+1. Open an incident record. Note who asked, when, and through which channel.
+2. Verify the person's identity through a channel that does not depend on the
+   locked account's email alone (a call to a known number, in person, or a
+   second staff member who knows them). A request that arrives only by email
+   or chat is not enough: this procedure is exactly what an attacker who has
+   the password would ask for.
+3. Check first whether a recovery code exists. If one does, use it. Stop here.
+4. The Security Lead approves the reset in the incident record.
+5. On the production server, as the deploy user:
+
+   ```
+   php artisan mfa:emergency-reset person@example.com \
+       --operator="Your Name" \
+       --reason="Authenticator and recovery codes lost. Incident INC-0000"
+   ```
+
+   The command shows the account and asks you to type its email again. It
+   refuses without an operator, without a reason of at least 10 characters,
+   or when the confirmation does not match. Scripts must pass
+   `--confirm=person@example.com`.
+6. Have the person set a new password (password reset).
+7. Have the person sign in and enrol MFA again at once, while you are still
+   in contact. Until they do, a platform staff account cannot open any Super
+   Admin route and a Store Owner cannot open the Store Admin: both are sent
+   to enrollment.
+8. Confirm the audit entry exists (below) and close the incident record.
+
+**What the command does.**
+
+- Destroys the account's MFA secret and all its recovery codes. It never
+  reads, prints or logs them.
+- Revokes remembered sign-ins (the remember-me token is replaced).
+- Writes a high-severity audit entry in the platform chain:
+  action `auth.mfa.emergency_reset`, with `severity: high`, the operator, the
+  reason, the account type and the account as the subject. Find it with
+  `GET /api/v1/super-admin/audit-logs?action=auth.mfa.emergency_reset`.
+- Writes a `critical` line to the application log.
+
+**What it does not do.**
+
+- It does not end sessions that are already signed in. If the account may be
+  in the wrong hands, deactivate it first
+  (`POST /api/v1/super-admin/users/{user}/deactivate`) and reactivate it
+  after step 7.
+- It does not change the password.
+- It does not send an alert. Alert delivery is gap G4; until then someone
+  must look at the audit log.
+
+**Break-glass (Module 32 §66).** There is no separate emergency account in
+the application. If no platform staff member can sign in at all, this
+procedure, run from the server for one named account, is the break-glass
+path. It must not become routine: every use is an incident with a record.
 
 ## What this runbook does not yet cover
 

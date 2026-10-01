@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Domain\Identity\Models;
 
+use App\Domain\Identity\Support\SystemRoles;
 use App\Domain\Tenancy\Models\Store;
 use App\Support\HasPublicId;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -11,6 +12,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\DB;
 use Laravel\Sanctum\HasApiTokens;
 
 /**
@@ -29,6 +31,9 @@ final class User extends Authenticatable
     use HasApiTokens, HasFactory, HasPublicId, Notifiable, SoftDeletes;
 
     protected $table = 'users';
+
+    /** Memo for ownsAStore(), for the life of this instance (one request). */
+    private ?bool $ownsAStore = null;
 
     protected $fillable = [
         'name',
@@ -86,6 +91,28 @@ final class User extends Authenticatable
     public function isPlatformStaff(): bool
     {
         return $this->platform_role !== null;
+    }
+
+    /**
+     * Whether this account is the Owner of at least one store. Owners must
+     * have MFA (EnsureRequiredMfa). Asked per account, not per active
+     * store, because MFA belongs to the account.
+     */
+    public function ownsAStore(): bool
+    {
+        return $this->ownsAStore ??= DB::table('store_user')
+            ->join('roles', 'roles.id', '=', 'store_user.role_id')
+            ->where('store_user.user_id', $this->id)
+            ->where('store_user.status', MembershipStatus::Active->value)
+            ->where('roles.slug', SystemRoles::OWNER)
+            ->exists();
+    }
+
+    /** Whether policy requires this account to have MFA. */
+    public function mustUseMfa(): bool
+    {
+        return ($this->isPlatformStaff() && (bool) config('security.mfa.required_for_platform_staff'))
+            || ((bool) config('security.mfa.required_for_store_owners') && $this->ownsAStore());
     }
 
     /** MFA counts only once the authenticator app has been confirmed (MfaService). */

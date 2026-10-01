@@ -163,8 +163,8 @@ Architecture v1.0 arrived after this review was written and are now in
 | AUTH-003 | ✅ | Laravel hashing | P0 |
 | AUTH-004 | ✅ | Staff and customer reset tokens | P0 |
 | AUTH-005 | 🟡 | Logout only; no session list / revoke-all | P1 |
-| AUTH-006 | ✅ | TOTP MFA for staff accounts (B29, gap G2) | P1 |
-| AUTH-007 | ✅ | Single-use recovery codes, stored hashed (B29) | P1 |
+| AUTH-006 | ✅ | TOTP MFA for staff accounts; mandatory for platform staff and Store Owners, optional for store staff (B29, gap G2) | P1 |
+| AUTH-007 | ✅ | Single-use recovery codes, stored hashed; server-side emergency reset, audited (B29) | P1 |
 | AUTH-008 | ✅ | Login throttling | P0 |
 | AUTH-009 | ✅ | `RecordAuthenticationEvents` → audit log | P0 |
 | AUTH-010 | ✅ | Secrets not logged (B22 review) | P0 |

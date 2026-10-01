@@ -61,9 +61,10 @@ Route::prefix('shop/{storeSlug}')
 // Signed out: the landing page with sign-in and registration links.
 Route::get('/', function (Request $request) {
     return Inertia::render($request->user() ? 'Dashboard' : 'Welcome');
-});
+})->middleware('required.mfa');
 
-Route::middleware('auth')->group(function () {
+// 'required.mfa': a Store Owner without MFA is sent to /security to enrol.
+Route::middleware(['auth', 'required.mfa'])->group(function () {
     Route::get('/billing', fn () => Inertia::render('Billing/Overview'));
     Route::get('/inventory', fn () => Inertia::render('Inventory/Index'));
     Route::get('/orders', fn () => Inertia::render('Orders/Index'));
