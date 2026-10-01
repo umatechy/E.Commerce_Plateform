@@ -1,7 +1,7 @@
 import { PropsWithChildren } from 'react';
 import { Link, usePage } from '@inertiajs/react';
 import { adminFetch } from '@/lib/adminApi';
-import { adminNav } from '@/lib/adminNav';
+import { adminNav, platformNav } from '@/lib/adminNav';
 
 /**
  * Reusable authenticated shell for every future admin module (this
@@ -18,7 +18,7 @@ import { adminNav } from '@/lib/adminNav';
  */
 type PageProps = {
   auth: {
-    user: { id: string; name: string; email: string } | null;
+    user: { id: string; name: string; email: string; is_platform_staff?: boolean } | null;
     activeStore: { id: string; name: string } | null;
   };
 };
@@ -67,7 +67,7 @@ export default function AuthenticatedLayout({ children }: PropsWithChildren) {
 
         {auth.user && (
           <nav className="mx-auto flex max-w-6xl gap-1 overflow-x-auto px-4 text-sm">
-            {[{ href: '/', label: 'Dashboard' }, ...adminNav].map((item) => {
+            {[{ href: '/', label: 'Dashboard' }, ...adminNav, ...(auth.user.is_platform_staff ? platformNav : [])].map((item) => {
               const active = item.href === '/' ? path === '/' : path.startsWith(item.href);
 
               return (

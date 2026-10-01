@@ -57,6 +57,32 @@ final class TenantContext
         $this->platform = true;
     }
 
+    /**
+     * Runs one piece of trusted platform-system work (ADR-001 Layer 9) in
+     * platform context and puts the previous context back, whatever
+     * happens. For code that is called while a store's context is
+     * resolved but must write a platform-owned record — a critical
+     * operational alert raised while consuming a store's event.
+     *
+     * Like resolveToPlatform(), this grants nothing by itself: the caller
+     * must be server-side system code, never something a request can steer.
+     *
+     * @template T
+     * @param \Closure(): T $work
+     * @return T
+     */
+    public function asPlatform(\Closure $work): mixed
+    {
+        $previous = [$this->storeId, $this->platform, $this->impersonation, $this->actingSuperAdminId];
+        $this->resolveToPlatform();
+
+        try {
+            return $work();
+        } finally {
+            [$this->storeId, $this->platform, $this->impersonation, $this->actingSuperAdminId] = $previous;
+        }
+    }
+
     public function markImpersonation(int $actingSuperAdminId, int $storeId): void
     {
         $this->impersonation = true;

@@ -30,12 +30,15 @@ final class Backup extends Model
      */
     protected $attributes = [
         'status' => 'created',
+        'retention_tier' => 'manual',
     ];
 
     protected $fillable = [
         'public_id', 'scope', 'store_id', 'status', 'initiated_by', 'initiated_by_user_id',
-        'storage_disk', 'storage_path', 'size_bytes', 'checksum_sha256', 'is_encrypted',
-        'manifest', 'failure_reason', 'verified_at', 'expires_at',
+        'retention_tier', 'schedule_key',
+        'storage_disk', 'storage_path', 'size_bytes', 'checksum_sha256', 'is_encrypted', 'compression',
+        'manifest', 'failure_reason', 'started_at', 'completed_at', 'verified_at', 'last_checked_at',
+        'expires_at', 'request_id',
     ];
 
     protected function casts(): array
@@ -44,6 +47,10 @@ final class Backup extends Model
             'scope' => BackupScope::class,
             'status' => BackupStatus::class,
             'initiated_by' => BackupInitiator::class,
+            'retention_tier' => BackupRetentionTier::class,
+            'started_at' => 'datetime',
+            'completed_at' => 'datetime',
+            'last_checked_at' => 'datetime',
             'is_encrypted' => 'boolean',
             'manifest' => 'array',
             'verified_at' => 'datetime',
@@ -55,6 +62,19 @@ final class Backup extends Model
     public function store(): BelongsTo
     {
         return $this->belongsTo(\App\Domain\Tenancy\Models\Store::class);
+    }
+
+    /**
+     * Routes take the public id (what the API returns as `id`). The
+     * numeric id still resolves, for callers written before Phase B30.
+     * Finding the row is not authorization: every controller checks the
+     * backup's store against the resolved tenant itself.
+     */
+    public function resolveRouteBinding($value, $field = null): ?self
+    {
+        $value = (string) $value;
+
+        return self::query()->where(\Illuminate\Support\Str::isUlid($value) ? 'public_id' : 'id', $value)->first();
     }
 
     public function isRestoreEligible(): bool

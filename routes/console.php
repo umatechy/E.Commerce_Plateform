@@ -16,11 +16,22 @@ Schedule::command('inventory:expire-reservations')->everyMinute();
 // Module 15 §33-35 "Abandoned Cart Recovery" (Phase B10).
 Schedule::command('marketing:detect-abandoned-carts')->everyFifteenMinutes();
 
-// Module 23 Phase 14 "Retention" (Phase B19) — reuses the existing
-// scheduler, never a custom one. NOT EXECUTED — ENVIRONMENT LIMITATION
-// in this Claude App sandbox (no real cron/queue worker runs here).
-Schedule::command('backups:expire')->daily();
-
+// Module 23 (Phase B19 retention; Phase B30 / gap G4 the rest) — all on
+// the existing scheduler. Times are UTC and come from config/backup.php.
+// withoutOverlapping() stops one server overlapping itself; the commands
+// are also safe against a second server (a unique schedule key, locks,
+// conditional updates).
+// - The daily platform backup (monthly on the 1st). The dump runs in
+//   RunBackupJob on the queue.
+Schedule::command('backups:run-scheduled')->dailyAt((string) config('backup.schedule.backup_at', '02:00'))->timezone('UTC')->withoutOverlapping();
+// - Re-read the newest backup from storage and compare its checksum.
+Schedule::command('backups:verify --deep')->dailyAt((string) config('backup.schedule.verify_at', '04:00'))->timezone('UTC')->withoutOverlapping();
+// - Overdue backups and repeated failures: one alert a day per condition.
+Schedule::command('backups:monitor')->hourly()->withoutOverlapping();
+// - The weekly restore rehearsal, into a throw-away database.
+Schedule::command('backups:rehearse')->weeklyOn((int) config('backup.schedule.rehearsal_day', 0), (string) config('backup.schedule.rehearsal_at', '05:00'))->timezone('UTC')->withoutOverlapping();
+// - Retention.
+Schedule::command('backups:expire')->daily()->withoutOverlapping();
 // Module 24 (Phase B21): hourly store-health history for the Super Admin
 // overview; also prunes snapshots past their retention.
 Schedule::command('store-health:snapshot')->hourly()->withoutOverlapping();

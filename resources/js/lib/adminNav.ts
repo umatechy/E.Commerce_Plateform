@@ -14,3 +14,9 @@ export const adminNav: AdminNavItem[] = [
   { href: '/support', label: 'Support', description: 'Customer tickets and your requests to the platform.' },
   { href: '/security', label: 'Security', description: 'Two-step sign-in for your account.' },
 ];
+
+/** Pages for platform staff only. The server refuses everyone else, whatever the menu shows. */
+export const platformNav: AdminNavItem[] = [
+  { href: '/super-admin/support', label: 'Platform support', description: 'Requests from every store to the platform.' },
+  { href: '/super-admin/backups', label: 'Platform backups', description: 'Backups, restore rehearsals and restore requests.' },
+];

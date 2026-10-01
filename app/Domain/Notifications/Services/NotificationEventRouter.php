@@ -44,7 +44,10 @@ final class NotificationEventRouter
             'billing.invoice_issued', 'billing.invoice_paid', 'billing.payment_overdue' => $this->handleBillingEvent($eventType, $payload),
             // Module 34 (Phase B26): support emails.
             'support.ticket_created', 'support.agent_replied', 'support.requester_replied', 'support.sla_breached' => app(\App\Domain\Support\Services\SupportNotifier::class)->route($eventType, $payload),
-            default => null,
+            // Phase B30 (gap G4): critical operational alerts to the platform's operators.
+            default => in_array($eventType, \App\Domain\Monitoring\Services\CriticalAlertNotifier::EVENTS, true)
+                ? app(\App\Domain\Monitoring\Services\CriticalAlertNotifier::class)->route($eventType, $payload)
+                : null,
         };
     }
 

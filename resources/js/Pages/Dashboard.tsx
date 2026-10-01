@@ -1,6 +1,6 @@
 import { Link, usePage } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import { adminNav } from '@/lib/adminNav';
+import { adminNav, platformNav } from '@/lib/adminNav';
 
 /**
  * Admin home for a signed-in user: links to the admin pages that exist.
@@ -8,7 +8,7 @@ import { adminNav } from '@/lib/adminNav';
  */
 type PageProps = {
   auth: {
-    user: { name: string } | null;
+    user: { name: string; is_platform_staff?: boolean } | null;
     activeStore: { id: string; name: string; slug: string } | null;
   };
 };
@@ -24,7 +24,7 @@ export default function Dashboard() {
       {auth.user && <p className="mt-1 text-sm text-gray-500">Signed in as {auth.user.name}.</p>}
 
       <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {adminNav.map((item) => (
+        {[...adminNav, ...(auth.user?.is_platform_staff ? platformNav : [])].map((item) => (
           <Link
             key={item.href}
             href={item.href}

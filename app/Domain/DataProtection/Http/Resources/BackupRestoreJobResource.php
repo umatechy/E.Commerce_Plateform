@@ -15,8 +15,12 @@ final class BackupRestoreJobResource extends JsonResource
         return [
             'id' => $this->id,
             'backup_id' => $this->backup->public_id,
+            'mode' => $this->mode->value,
             'status' => $this->status->value,
+            'reference' => $this->reference,
             'failure_reason' => $this->failure_reason,
+            'report' => $this->report,
+            'duration_ms' => $this->duration_ms,
             'started_at' => $this->started_at?->toIso8601String(),
             'completed_at' => $this->completed_at?->toIso8601String(),
             'created_at' => $this->created_at->toIso8601String(),

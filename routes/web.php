@@ -76,6 +76,8 @@ Route::middleware(['auth', 'required.mfa'])->group(function () {
     Route::get('/support/platform', fn () => Inertia::render('Support/Platform'));
     // The platform's inbox (platform staff only; the API checks again).
     Route::get('/super-admin/support', fn () => Inertia::render('SuperAdmin/Support'))->middleware('can:super-admin.platform');
+    // Module 23 (Phase B30): platform backups, rehearsals and restore requests.
+    Route::get('/super-admin/backups', fn () => Inertia::render('SuperAdmin/Backups'))->middleware('can:super-admin.platform');
 });
 
 // Where the auth middleware was sending a signed-out visitor (it keeps

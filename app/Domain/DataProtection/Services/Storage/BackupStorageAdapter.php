@@ -15,15 +15,21 @@ namespace App\Domain\DataProtection\Services\Storage;
  */
 interface BackupStorageAdapter
 {
-    /** Writes the given local temp file's contents to backup storage and returns the opaque, server-generated storage path. */
+    /** Writes the given local temp file's contents to backup storage at the opaque, server-generated storage path. */
     public function store(string $localTempFilePath, string $storagePath): void;
 
     public function exists(string $storagePath): bool;
 
     public function size(string $storagePath): int;
 
+    /** SHA-256 of the STORED artifact, read back from storage (Module 23 §15). */
+    public function checksum(string $storagePath): string;
+
     /** Streams the artifact to a local temp path for restore/verification — never returns a public URL. */
     public function retrieveToLocalPath(string $storagePath): string;
 
     public function delete(string $storagePath): void;
+
+    /** The name of the storage location, recorded with the backup. Never a path or a credential. */
+    public function diskName(): string;
 }

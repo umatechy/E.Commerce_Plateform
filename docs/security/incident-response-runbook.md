@@ -1,6 +1,6 @@
 # Security Incident Response Runbook
 
-Status: 2026-10-01 (Phase B29, gap G2; roles and emergency MFA reset per the owner's decisions of 2026-10-01).
+Status: 2026-10-01 (Phase B29, gap G2; roles and emergency MFA reset per the owner's decisions of 2026-10-01; backup and recovery procedures added in Phase B30, gap G4).
 Sources: Module 32 §60–64 and §66, SRS SEC-015, owner decisions
 (`docs/source/decisions/2026-09-30-project-decisions.txt` §4, §5).
 
@@ -49,9 +49,13 @@ The response times are proposed defaults. The specifications set none.
 
 An incident can start from:
 
-- A critical alert. Owner decision §4: email is mandatory, WhatsApp is
-  configurable. **Not built yet** — alert delivery is gap G4. Until then,
-  detection depends on someone looking.
+- A critical alert by email (Phase B30): a failed or damaged backup, no
+  recent backup, a failed rehearsal or restore, a failed cleanup. Recipients
+  are the platform setting `alerts.critical_email_recipients`, or every
+  active platform staff account while that is empty. WhatsApp is optional
+  and has no provider yet. **Security events do not alert yet** (failed
+  sign-ins, MFA changes): for those, detection still depends on someone
+  looking.
 - The audit trail: `GET /api/v1/super-admin/audit-logs` (filters: `action`,
   `actor`, `actor_type`, `subject_type`, `request_id`, `from`, `to`).
   Actions worth watching: `auth.login.failed`, `auth.mfa.failed`,
@@ -132,9 +136,10 @@ every secret that may have been seen, update the vulnerable dependency
 - Restore data only if it was changed or lost. A restore is requested by the
   store (`POST /api/v1/backups/{backup}/restore-request`) and authorized by
   platform staff (`POST /api/v1/super-admin/restore-jobs/{id}/authorize`).
-  Both need step-up authentication. Targets from owner decision §5: RPO
-  24 hours, RTO 4 hours. They are targets until a restore rehearsal has
-  proven them (gap G4).
+  Both need step-up authentication, and the authorization needs the backup
+  id typed back and a reference. Follow "Production restore" below. Targets
+  from owner decision §5: RPO 24 hours, RTO 4 hours. They are targets: the
+  weekly rehearsal records how long a restore of the current backup takes.
 - Reactivate accounts (`.../users/{user}/reactivate`) after their passwords
   are reset and, for platform staff, MFA is set up again.
 - Turn maintenance mode off, if it was turned on.
@@ -166,6 +171,144 @@ record:
 Within a week of closing the incident, write a short review: timeline, cause,
 what worked, what did not, and the changes to make. Add each change to the
 gap matrix or the issue tracker with an owner.
+
+## Backup and recovery incidents
+
+Added in Phase B30 (gap G4). The Backup/Recovery Lead leads these; the
+Incident Commander decides the severity. Operations detail:
+`docs/operations/backup-and-restore.md`. Status at any time: the Super Admin
+"Platform backups" page, or `GET /api/v1/super-admin/backups/summary`.
+
+Every alert email names the backup or restore, the reason, the request ID
+and one of the procedures below.
+
+### Backup failure
+
+Alert: "Scheduled backup failed", "Backup failed", "Backup storage failure",
+"No recent backup", "Backup cleanup failed". Severity: Medium for one failed
+backup while yesterday's is intact; High when there is no verified backup
+within 24 hours.
+
+1. Read the reason in the alert or on the Backups page. The stage tells where
+   it broke: `dump` (database or `mysqldump`), `encode` (compression or the
+   encryption key), `store` (backup storage), `verify` (the stored copy).
+2. Fix the cause. Common ones: the disk is full, the storage credentials
+   changed, `mysqldump` is not on PATH, the queue worker or the scheduler
+   stopped ("No recent backup" with no failed backup means nothing ran).
+3. Take a backup now ("Back up now", or `POST /api/v1/super-admin/backups`).
+4. Confirm it is `verified`. Close the record.
+
+### Repeated backup failure
+
+Alert: "Backups keep failing" (two scheduled backups in a row). Severity:
+High. The platform is losing its recovery point.
+
+1. As above, today, not tomorrow.
+2. Until a backup is verified, avoid risky changes (deployments with
+   migrations, bulk imports).
+3. If the cause is the storage itself, point `BACKUP_DISK` at another private
+   disk, take a backup, then repair the first.
+
+### Backup corruption
+
+Alert: "Stored backup is damaged or missing", "Backup verification failed".
+Severity: High. Critical if it is the only backup, or if tampering is
+suspected.
+
+1. The backup is already marked failed and cannot be chosen for a restore.
+2. Take a new backup now and confirm it is `verified`.
+3. Run `php artisan backups:verify --all --deep` to check every other backup.
+4. Decide: storage fault or tampering? Look for who can write to the backup
+   disk and whether anything else changed. If tampering is possible, treat
+   it as "Suspected backup exposure" too.
+5. Run a rehearsal of the new backup.
+
+### Restore rehearsal failure
+
+Alert: "Restore rehearsal failed". Severity: High. Live data was not touched,
+but a backup that cannot be restored is not a backup.
+
+1. Read the failed checks on the Backups page (the rehearsal's report).
+2. "could not be created" / "access denied": the database account lacks the
+   rehearsal grant (operations document, "Setting it up"). An environment
+   fault, not a bad backup. Fix it and rehearse again.
+3. Import errors, missing core tables, orphaned rows or rows linked across
+   stores: the backup, or the data it was taken from, is wrong. Take a new
+   backup and rehearse it. If the new one fails the same checks, the live
+   data has the problem: that is a data-integrity incident, Critical.
+4. If a rehearsal database was left behind (the report says so), drop it by
+   hand: it is a full copy of the data.
+
+### Production restore
+
+Severity: Critical by definition. It replaces every store's data.
+
+1. The Incident Commander decides that a restore is the right recovery, and
+   to which backup. Everything written after that backup will be lost.
+   Record the decision and the incident reference.
+2. The Communications/Notification Lead tells merchants that the platform is
+   going into maintenance.
+3. The Technical/Infrastructure Lead: `php artisan down`, stop the queue
+   workers and the scheduler.
+4. The Backup/Recovery Lead rehearses the chosen backup first if there is
+   time (`backups:rehearse --backup=ID`).
+5. A second person authorizes the restore on the Backups page: the reference,
+   the backup id typed back, the password and two-step code.
+6. The safety backup is taken automatically. Note its id.
+7. When the restore job is `completed`: `php artisan migrate`,
+   `php artisan audit:verify`, check the health endpoints, spot-check a store.
+8. Start the workers, `php artisan up`, tell merchants.
+9. If the job is `failed` ("PRODUCTION RESTORE FAILED"): **do not retry
+   blindly and do not take the platform out of maintenance.** The database
+   may be half restored. Request and authorize a restore of the safety backup
+   from step 6. There is no automatic rollback.
+
+### Suspected backup exposure
+
+Someone who should not have it may have a backup file. A backup holds every
+store's customers, orders and password hashes. Severity: Critical when the
+backup was unencrypted, High when it was encrypted and the key is safe.
+
+1. Establish which backups, and whether they were encrypted (`is_encrypted`).
+2. Cut off the access: rotate the storage credentials, remove public access.
+3. If the backup was unencrypted, or the key may be known too: this is a data
+   breach of every store. Go to "Communication and review" and the legal
+   decision; plan a forced password reset.
+4. If it was encrypted and the key is safe: rotate the key anyway (next
+   procedure), and record why exposure of contents is not assumed.
+5. Preserve the storage access logs.
+
+### Storage credential compromise
+
+1. Rotate the storage credentials at the provider and in the environment.
+2. Review the provider's access log for reads, writes and deletes.
+3. Run `php artisan backups:verify --all --deep`: a changed or deleted
+   backup shows up as failed.
+4. Take a new backup.
+5. If backups were read: "Suspected backup exposure".
+6. Rotating the backup encryption key: generate a new one
+   (`backups:generate-key`) and set it. **Keep the old key** until every
+   backup made with it has expired; the application reads with one key at a
+   time, so restoring an old backup means setting the old key for that
+   restore. There is no re-encryption of existing backups.
+
+### Cross-tenant backup exposure
+
+A store saw, or could act on, another store's backup or a platform backup.
+Severity: Critical (Module 32 §61).
+
+1. Contain: if it is an application fault, disable the route at the web
+   server.
+2. What the application is built to guarantee, and what to check against:
+   a store lists only its own backups; another store's backup or a platform
+   backup answers "not found" by any id; no response contains a storage
+   path; no endpoint downloads an artifact; alerts are platform records.
+   `BackupAccessBoundaryTest` asserts all of it.
+3. Find what was exposed: metadata only (ids, sizes, dates), or contents. The
+   API has never been able to return contents.
+4. Search the audit log by `request_id` for the requests involved, and for
+   `restore.preflight_failed` and restore requests by that store.
+5. Notify the affected stores according to the legal decision.
 
 ## Emergency MFA reset
 
@@ -233,8 +376,9 @@ different people.
   (`POST /api/v1/super-admin/users/{user}/deactivate`) and reactivate it
   after step 7.
 - It does not change the password.
-- It does not send an alert. Alert delivery is gap G4; until then someone
-  must look at the audit log.
+- It does not send an alert. Critical alerts exist for backups and restores
+  (Phase B30) but not yet for security events; someone must look at the
+  audit log.
 
 **Break-glass (Module 32 §66).** There is no separate emergency account in
 the application. If no platform staff member can sign in at all, this
@@ -243,8 +387,11 @@ path. It must not become routine: every use is an incident with a record.
 
 ## What this runbook does not yet cover
 
-- Alert delivery (email, WhatsApp) and scheduled backup checks: gap G4.
+- Alerts on security events (many failed sign-ins, MFA disabled or reset on a
+  privileged account). Backup and restore alerts exist since Phase B30.
 - Monitoring for unusual patterns (many failed logins from one address,
   unusual impersonation volume): Module 32 §58–59, not built.
-- A tested restore: gap G4.
+- A production restore that has actually been run. The rehearsal runs weekly;
+  the destructive restore itself has not been executed.
+- Media/object backups, off-site copies and immutable backups.
 - A status page or a merchant notification template.

@@ -4,39 +4,25 @@ declare(strict_types=1);
 
 namespace App\Domain\DataProtection\Services\DumpStrategies;
 
-use App\Domain\DataProtection\Exceptions\BackupIntegrityException;
-use Illuminate\Support\Facades\Process;
-
 /**
- * Real implementation using the actual `mysql` client binary — same
- * credentials-file discipline as MysqldumpStrategy (never a plaintext
- * -p<password> command-line argument).
+ * Real implementation using the actual `mysql` client binary, with the
+ * credentials discipline of MysqlClient. The dump is read by the
+ * client's own `source` command, not through a shell redirect.
  *
- * NOT EXECUTED — ENVIRONMENT LIMITATION: this Claude App sandbox has no
- * MySQL server and, most likely, no `mysql` client binary at all — see
- * docs/checkpoints/checkpoint-b19.md's Future Verification Checklist.
+ * The import path is the one the restore rehearsal runs for real
+ * (MysqlRehearsalTarget). A production restore — this class, against the
+ * live database — has NOT been executed; see
+ * docs/checkpoints/checkpoint-b30.md.
  */
 final class MysqlRestoreStrategy implements DatabaseRestoreStrategy
 {
+    public function __construct(private readonly MysqlClient $client) {}
+
     public function restore(string $localSqlFilePath): void
     {
-        $config = config('database.connections.'.config('database.default'));
-        $credentialsFile = tempnam(sys_get_temp_dir(), 'mysql_restore_cnf_');
-
-        file_put_contents($credentialsFile, sprintf(
-            "[client]\nuser=%s\npassword=%s\nhost=%s\nport=%s\n",
-            $config['username'], $config['password'], $config['host'], $config['port'] ?? 3306,
-        ));
-        chmod($credentialsFile, 0600);
-
-        try {
-            $result = Process::run("mysql --defaults-extra-file={$credentialsFile} {$config['database']} < {$localSqlFilePath}");
-
-            if (! $result->successful()) {
-                throw new BackupIntegrityException('mysql restore exited with a non-zero status: '.$result->errorOutput());
-            }
-        } finally {
-            @unlink($credentialsFile);
-        }
+        $this->client->run('mysql', [
+            $this->client->database(),
+            '-e', 'source '.MysqlClient::sourcePath($localSqlFilePath),
+        ], 'mysql restore failed');
     }
 }

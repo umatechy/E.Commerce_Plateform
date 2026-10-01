@@ -19,16 +19,18 @@ final class BackupRestoreJob extends Model
      */
     protected $attributes = [
         'status' => 'requested',
+        'mode' => 'production',
     ];
 
     protected $fillable = [
-        'backup_id', 'target_store_id', 'pre_restore_backup_id', 'status',
-        'requested_by_user_id', 'authorized_by_user_id', 'failure_reason', 'started_at', 'completed_at',
+        'backup_id', 'mode', 'reference', 'target_store_id', 'pre_restore_backup_id', 'status',
+        'requested_by_user_id', 'authorized_by_user_id', 'failure_reason', 'report', 'started_at', 'completed_at',
+        'duration_ms', 'request_id',
     ];
 
     protected function casts(): array
     {
-        return ['status' => RestoreStatus::class, 'started_at' => 'datetime', 'completed_at' => 'datetime'];
+        return ['status' => RestoreStatus::class, 'mode' => RestoreMode::class, 'report' => 'array', 'started_at' => 'datetime', 'completed_at' => 'datetime'];
     }
 
     /** @return BelongsTo<Backup, $this> */

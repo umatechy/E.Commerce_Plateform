@@ -16,6 +16,9 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * see inspection findings). "Dumb" like every other core-state model
  * — NotificationService/DeliverNotificationJob are the only writers
  * of `status`.
+ *
+ * @property ?int $store_id  null for a platform message: a critical
+ *                           operational alert belongs to no store (Phase B30)
  */
 final class NotificationMessage extends Model
 {

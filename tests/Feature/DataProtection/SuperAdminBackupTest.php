@@ -57,11 +57,13 @@ final class SuperAdminBackupTest extends TestCase
     {
         Queue::fake();
         $store = Store::factory()->create();
-        $backup = Backup::factory()->create(['store_id' => $store->id, 'status' => BackupStatus::Verified]);
+        $backup = Backup::factory()->withArtifact()->create(['store_id' => $store->id, 'status' => BackupStatus::Verified]);
         $restoreJob = BackupRestoreJob::query()->create(['backup_id' => $backup->id, 'target_store_id' => $store->id, 'status' => 'requested']);
         $superAdmin = User::factory()->create(['platform_role' => 'support_agent']);
 
-        $response = $this->actingAs($superAdmin)->postJson("/api/v1/super-admin/restore-jobs/{$restoreJob->id}/authorize");
+        $response = $this->actingAs($superAdmin)->postJson("/api/v1/super-admin/restore-jobs/{$restoreJob->id}/authorize", [
+            'confirmation' => $backup->public_id, 'reference' => 'Incident INC-0001',
+        ]);
 
         $response->assertOk();
         $this->assertSame('running', $restoreJob->fresh()->status->value);

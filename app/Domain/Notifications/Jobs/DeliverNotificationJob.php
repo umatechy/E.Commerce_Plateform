@@ -42,7 +42,9 @@ final class DeliverNotificationJob implements ShouldQueue
     public function handle(TenantContext $context, NotificationChannelResolver $channels, NotificationStateMachine $stateMachine): void
     {
         $message = NotificationMessage::query()->withoutTenantScope()->findOrFail($this->notificationMessageId);
-        $context->resolveToStore($message->store_id);
+        // A message without a store is a platform message (a critical
+        // operational alert, Phase B30) and is delivered in platform context.
+        $message->store_id === null ? $context->resolveToPlatform() : $context->resolveToStore($message->store_id);
         $message = NotificationMessage::query()->findOrFail($this->notificationMessageId);
 
         // Idempotent-replay / terminal-state guard (Module 21 §30) —

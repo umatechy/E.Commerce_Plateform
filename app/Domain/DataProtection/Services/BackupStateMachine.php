@@ -16,7 +16,8 @@ final class BackupStateMachine
         'queued' => ['running', 'cancelled'],
         'running' => ['verifying', 'failed'],
         'verifying' => ['verified', 'failed'],
-        'verified' => ['expired', 'deleted', 'restoring'],
+        // 'failed': a later integrity re-check found the stored artifact missing or changed (Phase B30).
+        'verified' => ['expired', 'deleted', 'restoring', 'failed'],
         'restoring' => ['restored', 'restore_failed'],
         'restored' => ['verified'],
         'restore_failed' => ['verified'],

@@ -284,7 +284,7 @@ Route::middleware(['auth:sanctum', 'staff.principal', 'required.mfa'])->group(fu
 
     // --- Backup, Restore & Data Protection, staff-facing (Module 23, Phase B19) ---
     Route::get('/backups', [BackupController::class, 'index']);
-    Route::post('/backups', [BackupController::class, 'store']);
+    Route::post('/backups', [BackupController::class, 'store'])->middleware('throttle:6,60'); // a full dump each time
     Route::post('/backups/{backup}/restore-request', [BackupController::class, 'requestRestore'])->middleware('step_up');
 
     // --- Super Admin: platform-global actions (no target store — Phase
@@ -321,6 +321,10 @@ Route::middleware(['auth:sanctum', 'staff.principal', 'required.mfa'])->group(fu
             Route::post('/backups', [SuperAdminBackupController::class, 'storePlatformBackup']);
             Route::get('/restore-jobs', [SuperAdminBackupController::class, 'restoreJobs']);
             Route::post('/restore-jobs/{backupRestoreJob}/authorize', [SuperAdminBackupController::class, 'authorizeRestore'])->middleware('step_up');
+            // Phase B30 (gap G4): backup status, integrity re-check, restore rehearsal.
+            Route::get('/backups/summary', [SuperAdminBackupController::class, 'summary']);
+            Route::post('/backups/{backup}/verify', [SuperAdminBackupController::class, 'verify'])->middleware('throttle:10,1');
+            Route::post('/backups/{backup}/rehearse', [SuperAdminBackupController::class, 'rehearse'])->middleware('throttle:6,1');
 
             Route::get('/infrastructure/health', [SuperAdminInfrastructureController::class, 'health']);
 

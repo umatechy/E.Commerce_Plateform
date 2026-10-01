@@ -74,6 +74,11 @@ final class AppServiceProvider extends ServiceProvider
             \App\Domain\DataProtection\Services\DumpStrategies\DatabaseRestoreStrategy::class,
             \App\Domain\DataProtection\Services\DumpStrategies\MysqlRestoreStrategy::class,
         );
+        // Phase B30: where a restore rehearsal is carried out (Module 23 §39).
+        $this->app->bind(
+            \App\Domain\DataProtection\Services\Rehearsal\RehearsalTarget::class,
+            \App\Domain\DataProtection\Services\Rehearsal\MysqlRehearsalTarget::class,
+        );
     }
 
     public function boot(): void

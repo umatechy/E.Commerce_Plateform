@@ -91,4 +91,24 @@ final class RecordsOutboxEvents
 
         OutboxEvent::query()->create($attributes);
     }
+
+    /**
+     * For an event that reports a CONDITION which is checked again and
+     * again ("backups are overdue today"), rather than one state change:
+     * recorded the first time for its idempotency key, a no-op after that.
+     * recordEventFor() stays strict, because a duplicate key for a state
+     * change is a bug that must be seen.
+     *
+     * @return bool whether the event was recorded now
+     */
+    public function recordEventOnceFor(?int $storeId, string $eventType, array $payload, string $idempotencyKey): bool
+    {
+        if (OutboxEvent::query()->withoutTenantScope()->where('idempotency_key', $idempotencyKey)->exists()) {
+            return false;
+        }
+
+        $this->recordEventFor($storeId, $eventType, $payload, $idempotencyKey);
+
+        return true;
+    }
 }

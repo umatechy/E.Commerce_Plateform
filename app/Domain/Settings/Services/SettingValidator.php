@@ -26,7 +26,7 @@ final class SettingValidator
             SettingType::Boolean => $this->validateBoolean($value),
             SettingType::Integer => $this->validateInteger($value),
             SettingType::String => $this->validateString($value, $definition),
-            SettingType::StringArray => $this->validateStringArray($value),
+            SettingType::StringArray => $this->validateRecipients($definition, $this->validateStringArray($value)),
             SettingType::Secret => $this->validateString($value, $definition),
         };
     }
@@ -66,6 +66,28 @@ final class SettingValidator
         }
 
         return $normalized;
+    }
+
+    /**
+     * @param list<string> $items
+     * @return list<string>
+     */
+    private function validateRecipients(SettingDefinition $definition, array $items): array
+    {
+        // Alert recipients: a typo here means an alert that nobody receives.
+        foreach ($definition->key === 'alerts.critical_email_recipients' ? $items : [] as $item) {
+            if (filter_var($item, FILTER_VALIDATE_EMAIL) === false) {
+                throw new InvalidSettingValueException("\"{$item}\" is not a valid email address.");
+            }
+        }
+
+        foreach ($definition->key === 'alerts.whatsapp_recipients' ? $items : [] as $item) {
+            if (preg_match('/^\+[1-9]\d{7,14}$/', $item) !== 1) {
+                throw new InvalidSettingValueException("\"{$item}\" is not a phone number in international format (+923001234567).");
+            }
+        }
+
+        return $items;
     }
 
     /** @return list<string> */

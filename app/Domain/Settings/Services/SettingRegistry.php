@@ -62,7 +62,32 @@ final class SettingRegistry
                 key: 'backup.automated_backups_enabled', scope: SettingScope::Platform, type: SettingType::Boolean,
                 default: true,
             ),
-        ];
+            // Phase B30 (gap G4). Owner decision 2026-09-30 §5: daily backups
+            // 30 days (backup.retention_days above), monthly 12 months.
+            'backup.monthly_retention_months' => new SettingDefinition(
+                key: 'backup.monthly_retention_months', scope: SettingScope::Platform, type: SettingType::Integer,
+                default: 12,
+            ),
+            'backup.rehearsal_enabled' => new SettingDefinition(
+                key: 'backup.rehearsal_enabled', scope: SettingScope::Platform, type: SettingType::Boolean,
+                default: true, // Module 23 §47 "Restore Testing": the weekly restore rehearsal
+            ),
+            // Owner decision 2026-09-30 §4: email is mandatory for critical
+            // alerts, WhatsApp configurable. No address is invented: while
+            // this list is empty, alerts go to every active platform staff
+            // account.
+            'alerts.critical_email_recipients' => new SettingDefinition(
+                key: 'alerts.critical_email_recipients', scope: SettingScope::Platform, type: SettingType::StringArray,
+                default: [],
+            ),
+            'alerts.whatsapp_enabled' => new SettingDefinition(
+                key: 'alerts.whatsapp_enabled', scope: SettingScope::Platform, type: SettingType::Boolean,
+                default: false,
+            ),
+            'alerts.whatsapp_recipients' => new SettingDefinition(
+                key: 'alerts.whatsapp_recipients', scope: SettingScope::Platform, type: SettingType::StringArray,
+                default: [],
+            ),        ];
     }
 
     public static function find(string $key): ?SettingDefinition

@@ -5,59 +5,66 @@ declare(strict_types=1);
 namespace App\Domain\DataProtection\Services\DumpStrategies;
 
 use App\Domain\DataProtection\Exceptions\BackupIntegrityException;
-use Illuminate\Support\Facades\Process;
 
 /**
  * Real, production-shaped implementation using the actual `mysqldump`
- * binary via Laravel's Process facade — --single-transaction for
- * InnoDB consistency without locking the whole database (Module 23
- * Phase 6: "transactional consistency... active writes... locking
- * implications"), --routines/--triggers/--events for full schema
- * fidelity. Credentials are passed via a temporary --defaults-extra-file
- * (never as a plain command-line argument, which would be visible in
- * the process list to any other user on the same machine — a genuine
- * credential-leakage vector `mysqldump -u -p<password>` has).
+ * binary — --single-transaction for InnoDB consistency without locking
+ * the whole database (Module 23 Phase 6: "transactional consistency...
+ * active writes... locking implications"), --routines/--triggers/--events
+ * for full schema fidelity, --no-tablespaces so the backup account does
+ * not need the PROCESS privilege (least privilege). Credentials are
+ * handled by MysqlClient.
  *
- * NOT EXECUTED — ENVIRONMENT LIMITATION: this Claude App sandbox has no
- * MySQL server and, most likely, no `mysqldump` binary at all. This
- * code is real and correct for a genuine MySQL 8.0+ deployment but has
- * never been run here — see docs/checkpoints/checkpoint-b19.md's
- * Future Verification Checklist.
+ * Run against real MySQL 8.0 in Phase B30 (local and CI); see
+ * docs/checkpoints/checkpoint-b30.md for what was measured.
  */
 final class MysqldumpStrategy implements DatabaseDumpStrategy
 {
+    public function __construct(private readonly MysqlClient $client) {}
+
     public function dump(): string
     {
-        $config = config('database.connections.'.config('database.default'));
-        $credentialsFile = tempnam(sys_get_temp_dir(), 'mysqldump_cnf_');
-        $outputFile = tempnam(sys_get_temp_dir(), 'backup_dump_').'.sql';
-
-        file_put_contents($credentialsFile, sprintf(
-            "[client]\nuser=%s\npassword=%s\nhost=%s\nport=%s\n",
-            $config['username'], $config['password'], $config['host'], $config['port'] ?? 3306,
-        ));
-        chmod($credentialsFile, 0600);
+        $outputFile = (tempnam(sys_get_temp_dir(), 'backup_dump_') ?: throw new BackupIntegrityException('A working file could not be created.'));
 
         try {
-            $result = Process::run([
-                'mysqldump',
-                '--defaults-extra-file='.$credentialsFile,
+            $this->client->run('mysqldump', [
                 '--single-transaction',
+                '--no-tablespaces',
                 '--routines',
                 '--triggers',
                 '--events',
                 '--result-file='.$outputFile,
-                $config['database'],
-            ]);
+                $this->client->database(),
+            ], 'mysqldump failed');
 
-            if (! $result->successful()) {
-                throw new BackupIntegrityException('mysqldump exited with a non-zero status: '.$result->errorOutput());
-            }
+            $this->assertComplete($outputFile);
 
             return $outputFile;
+        } catch (\Throwable $e) {
+            @unlink($outputFile);
+
+            throw $e;
+        }
+    }
+
+    /**
+     * mysqldump writes "-- Dump completed" as its last line. A dump that
+     * was cut short (disk full, killed process) can still exit zero on
+     * some platforms; without that line it is not a backup.
+     */
+    private function assertComplete(string $file): void
+    {
+        $handle = fopen($file, 'rb') ?: throw new BackupIntegrityException('The dump could not be read back.');
+
+        try {
+            fseek($handle, -min(512, (int) filesize($file)), SEEK_END);
+            $tail = (string) stream_get_contents($handle);
         } finally {
-            // The credentials file must never survive this call, success or failure.
-            @unlink($credentialsFile);
+            fclose($handle);
+        }
+
+        if (! str_contains($tail, '-- Dump completed')) {
+            throw new BackupIntegrityException('mysqldump did not finish: the dump has no completion marker.');
         }
     }
 }

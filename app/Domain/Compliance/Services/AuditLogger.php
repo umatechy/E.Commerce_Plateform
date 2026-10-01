@@ -72,7 +72,8 @@ final class AuditLogger
             'context' => AuditHasher::canonicalJson($this->redact($context)),
             'ip_address' => $request?->ip(),
             'user_agent' => $request?->userAgent() !== null ? Str::limit($request->userAgent(), 250, '') : null,
-            'request_id' => $request?->attributes->get(\App\Http\Middleware\AssignRequestId::ATTRIBUTE), // SRS API-011
+            // SRS API-011. Outside a web request (a queued job, a scheduled command) the ID travels in Laravel's Context.
+            'request_id' => $request?->attributes->get(\App\Http\Middleware\AssignRequestId::ATTRIBUTE) ?? \App\Support\RequestId::current(),
             'created_at' => now()->format('Y-m-d H:i:s'),
         ];
 

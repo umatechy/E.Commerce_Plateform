@@ -292,12 +292,12 @@ Architecture v1.0 arrived after this review was written and are now in
 | NOTIF-003 | ❌ | Push is a stub | P2 |
 | NOTIF-004 | 🟡 | SMS/WhatsApp stubs, no provider | P1 |
 | AN-001–007 | ✅ | B12 + B16 platform dashboard | P1 |
-| BKP-001 | 🟡 | **Manual backups only; no schedule** | P0 |
+| BKP-001 | ✅ | Daily and monthly scheduled platform backups (B30, gap G4) | P0 |
 | BKP-002–006 | ✅ | Expiry, verification, restricted, protected restore, docs | P0 |
-| BKP-007 | ❌ | No restore rehearsal | P1 |
+| BKP-007 | ✅ | Weekly restore rehearsal into a throw-away database (B30). A production restore has not been executed | P1 |
 | HEALTH-001–002, 004, 006 | ✅ | B20/B21 | P1 |
 | HEALTH-003 | 🟡 | No storage/bandwidth metering | P2 |
-| HEALTH-005 | ❌ | **No alert delivery** | P1 |
+| HEALTH-005 | 🟡 | Critical email alerts for backup and restore conditions (B30). Store-health and security conditions do not alert yet | P1 |
 
 ### 3.14 PWA, AI, marketplace (APP), affiliate (AFF)
 
@@ -385,7 +385,7 @@ Architecture v1.0 arrived after this review was written and are now in
 | TEST-001–008, 012 | ✅ | 876 backend + 32 frontend tests, CI green on PR #2 | P0 |
 | TEST-009 | ❌ | **No E2E tests in CI** (Playwright installed, no tests) | P1 |
 | TEST-010 | ⚪ | No pre-release security test run | P0 |
-| TEST-011 | ❌ | No backup/restore rehearsal | P1 |
+| TEST-011 | ✅ | Restore rehearsal: scheduled, on demand, and run against real MySQL in CI (B30) | P1 |
 
 ---
 
@@ -399,7 +399,7 @@ existing pattern: feature tests plus tenant-isolation tests for every endpoint.
 | G1 | ✅ **Closed in B27** (checkpoint-b27). Store staff management (invite, roles, remove, 7 predefined roles, custom roles) | STORE-007, RBAC-002, M02 §6, §17–19, §29 | A store cannot add its team | Build invitations, membership API + UI, role catalog | P0 | — |
 | G2 | ✅ **Closed in B29** (checkpoint-b29; open findings in docs/security/b29-security-baseline.md). Security baseline: MFA, Super Admin step-up, request IDs, dependency scanning in CI, incident runbook | AUTH-006/007/012, SA-004, API-011, SEC-013/014/015, M32 §8, M30 §6 | Account takeover of privileged users; blind operations | MFA (TOTP) + recovery codes, re-auth for sensitive actions, correlation-ID middleware, `composer audit`/`npm audit` CI step, runbook | P0 | — |
 | G3 | Tax calculation | CHK-007, M11 §28 | Incorrect totals if tax applies | **Business decision first**: tax rules (inclusive/exclusive, rates, regions) | P0 | Owner decision |
-| G4 | Scheduled backups + restore rehearsal + alerting | BKP-001/007, HEALTH-005, TEST-011 | Data loss; failures go unnoticed | Schedule backups, rehearsal command, alert channel for critical health | P0 | Alert channel choice |
+| G4 | ✅ **Closed in B30** (checkpoint-b30; limitations listed there). Scheduled backups + restore rehearsal + alerting | BKP-001/007, HEALTH-005, TEST-011 | Data loss; failures go unnoticed | Schedule backups, rehearsal command, alert channel for critical health | P0 | Alert channel choice |
 | G5 | ✅ **Closed in B28** (checkpoint-b28). Store timezone consumption | DATA-010, LOC-004, M33 §50 | Wrong dates for scheduled promos/campaigns/SLA | Wire `store.timezone` into B10/B12/B13/B26 date logic | P0 | — |
 | G6 | Admin UI for API-only modules | Admin Capabilities in M06–M17, M19, M21–M23, M29–M31, M33 | Owners cannot operate the store | UI phases, highest value first: catalog, customers, shipping/payments settings, promotions, SEO/content, theme, domains, settings | P1 | G1 |
 | G7 | Module 10 completion (groups, tags, notes, blocking, merge, import, guest conversion, email verification) | M10 §9, §24–33, §47–57, AUTH-002 | Blocks targeted promotions (M14 §17–20) and marketing | Complete Module 10 | P1 | — |
