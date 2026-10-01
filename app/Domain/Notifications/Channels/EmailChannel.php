@@ -26,7 +26,7 @@ final class EmailChannel implements NotificationChannelContract
     public function send(NotificationMessage $message): NotificationSendResult
     {
         try {
-            Mail::html($message->body, function ($mail) use ($message) {
+            Mail::html($message->deliverableBody(), function ($mail) use ($message) {
                 $mail->to($message->destination)->subject($message->subject ?? '(no subject)');
             });
 

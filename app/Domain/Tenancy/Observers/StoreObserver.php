@@ -6,6 +6,7 @@ namespace App\Domain\Tenancy\Observers;
 
 use App\Domain\Identity\Models\Permission;
 use App\Domain\Identity\Models\Role;
+use App\Domain\Identity\Support\SystemRoles;
 use App\Domain\Inventory\Models\Warehouse;
 use App\Domain\Tenancy\Models\Store;
 use Illuminate\Support\Facades\DB;
@@ -28,52 +29,19 @@ use Illuminate\Support\Facades\DB;
  */
 final class StoreObserver
 {
-    /** @var array<string, list<string>> role slug => permission keys */
-    private const DEFAULT_ROLES = [
-        'owner' => ['*'], // full access within the store; enforced by RolePolicy, not by a wildcard permission row
-        'manager' => [
-            'roles.view', 'users.view', 'users.invite',
-            'products.view', 'products.create', 'products.update',
-            'categories.manage', 'brands.manage', 'attributes.manage',
-            'inventory.view', 'inventory.adjust', 'warehouses.manage',
-            'orders.view', 'orders.create', 'orders.update', 'orders.cancel',
-            'payments.view', 'payments.manage',
-            'shipments.view', 'shipments.fulfill', 'shipping_config.manage',
-            'promotions.view', 'promotions.manage',
-            'marketing.view', 'marketing.manage',
-            'notifications.view', 'notifications.manage',
-            'analytics.view', 'analytics.export',
-            'seo.view', 'seo.manage',
-            'domains.view',
-            'theme.view', 'theme.manage', 'theme.publish',
-            'settings.view', 'settings.manage',
-            'developer_platform.view', // developer_platform.manage withheld from Manager — API key issuance/revocation is Owner-only, same sensitivity precedent as domains.manage (Phase B14)
-            'store_health.view', // Module 24 (Phase B21) — read-only operational view
-            'backups.view', // backups.manage/backups.restore withheld from Manager — requesting a backup or restore is Owner-only, same sensitivity precedent (Phase B19)
-            'support.view', 'support.reply', 'support.manage', // Module 34 (Phase B26); support.platform stays with the Owner
-        ],
-        'staff' => [
-            'products.view',
-            'orders.view',
-            'support.view', 'support.reply', // Module 34 (Phase B26): front-line support
-        ],
-    ];
-
     public function created(Store $store): void
     {
-        foreach (self::DEFAULT_ROLES as $slug => $permissionKeys) {
+        // The seven predefined roles (Module 02 §6) — see SystemRoles.
+        foreach (SystemRoles::definitions() as $slug => $definition) {
             $role = Role::query()->withoutTenantScope()->create([
                 'store_id' => $store->id,
-                'name' => ucfirst($slug),
+                'name' => $definition['name'],
                 'slug' => $slug,
                 'is_system' => true, // seeded default roles are not deletable — enforced in RolePolicy::delete()
             ]);
 
-            if ($permissionKeys === ['*']) {
-                continue; // Owner is checked via is_system+slug in RolePolicy, not a giant permission list.
-            }
-
-            $permissionIds = Permission::query()->whereIn('key', $permissionKeys)->pluck('id');
+            // Owner has no rows: it is checked via its slug in BaseTenantPolicy::isOwner().
+            $permissionIds = Permission::query()->whereIn('key', $definition['permissions'])->pluck('id');
             $role->permissions()->attach($permissionIds);
         }
 

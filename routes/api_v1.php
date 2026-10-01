@@ -74,6 +74,18 @@ Route::middleware(['auth:sanctum', 'staff.principal'])->group(function () {
     // --- Roles (first concrete tenant-owned resource CRUD — B1 scope) ---
     Route::apiResource('roles', RoleController::class);
 
+    // --- Team: invitations and members (Module 02 §18–19 — Phase G1) ---
+    Route::get('/team/summary', [\App\Domain\Identity\Http\Controllers\TeamController::class, 'summary']);
+    Route::get('/team/members', [\App\Domain\Identity\Http\Controllers\TeamController::class, 'members']);
+    Route::patch('/team/members/{member}', [\App\Domain\Identity\Http\Controllers\TeamController::class, 'changeRole'])->where('member', '[0-9A-Za-z]{26}');
+    Route::post('/team/members/{member}/suspend', [\App\Domain\Identity\Http\Controllers\TeamController::class, 'suspend'])->where('member', '[0-9A-Za-z]{26}');
+    Route::post('/team/members/{member}/reactivate', [\App\Domain\Identity\Http\Controllers\TeamController::class, 'reactivate'])->where('member', '[0-9A-Za-z]{26}');
+    Route::delete('/team/members/{member}', [\App\Domain\Identity\Http\Controllers\TeamController::class, 'remove'])->where('member', '[0-9A-Za-z]{26}');
+    Route::get('/team/invitations', [\App\Domain\Identity\Http\Controllers\TeamController::class, 'invitations']);
+    Route::post('/team/invitations', [\App\Domain\Identity\Http\Controllers\TeamController::class, 'invite'])->middleware('throttle:30,1');
+    Route::post('/team/invitations/{invitation}/resend', [\App\Domain\Identity\Http\Controllers\TeamController::class, 'resend'])->middleware('throttle:30,1');
+    Route::delete('/team/invitations/{invitation}', [\App\Domain\Identity\Http\Controllers\TeamController::class, 'revoke']);
+
     // --- Subscription / Usage (Module 04 §40-41 — the store's own only) ---
     Route::get('/subscription', [SubscriptionController::class, 'show']);
     Route::get('/subscription/usage', [SubscriptionController::class, 'usage']);

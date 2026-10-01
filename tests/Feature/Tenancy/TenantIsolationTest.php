@@ -89,6 +89,7 @@ final class TenantIsolationTest extends TestCase
         // userA needs permission to create roles at all, otherwise the
         // request is rejected (403) before the spoofed store_id matters.
         $this->storeA->users()->updateExistingPivot($this->userA->id, ['role_id' => $this->systemRole($this->storeA, 'owner')->id]);
+        $this->entitle($this->storeA, ['custom_roles.enabled']); // custom roles are a package feature (Phase G1)
         $this->actingAs($this->userA);
 
         $response = $this->postJson('/api/v1/roles', [

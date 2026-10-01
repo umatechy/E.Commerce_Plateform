@@ -25,6 +25,7 @@ final class NotificationService
 
     /**
      * @param array<string, scalar> $variables
+     * @param array<string, scalar> $secretVariables values that must not be stored readable (links with tokens)
      */
     public function send(
         NotificationMessageType $messageType,
@@ -37,14 +38,19 @@ final class NotificationService
         array $variables,
         string $idempotencyKey,
         ?string $sourceEventType = null,
+        array $secretVariables = [],
     ): ?NotificationMessage {
         if ($existing = NotificationMessage::query()->where('idempotency_key', $idempotencyKey)->first()) {
             return $existing;
         }
 
         $renderer = new NotificationTemplateRenderer();
+        $escape = $channel === NotificationChannel::Email;
         $renderedSubject = $renderer->render($subject, $variables, escapeHtml: false);
-        $renderedBody = $renderer->render($bodyTemplate, $variables, escapeHtml: $channel === NotificationChannel::Email);
+        // Secret values (e.g. a link carrying a token) reach only the
+        // encrypted sealed_body; the stored body shows "[hidden]" instead.
+        $renderedBody = $renderer->render($bodyTemplate, [...$variables, ...array_map(fn () => '[hidden]', $secretVariables)], escapeHtml: $escape);
+        $sealedBody = $secretVariables === [] ? null : $renderer->render($bodyTemplate, [...$variables, ...$secretVariables], escapeHtml: $escape);
 
         $message = NotificationMessage::query()->create([
             'message_type' => $messageType,
@@ -54,6 +60,7 @@ final class NotificationService
             'destination' => $destination,
             'subject' => $renderedSubject,
             'body' => $renderedBody,
+            'sealed_body' => $sealedBody,
             'status' => NotificationStatus::Created,
             'source_event_type' => $sourceEventType,
             'idempotency_key' => $idempotencyKey,
@@ -65,6 +72,7 @@ final class NotificationService
         // is never blocked by a marketing preference.
         if ($messageType->requiresMarketingConsent() && ! $this->isEligibleForMarketing($recipientType, $recipientId, $channel, $destination)) {
             $this->transitionTo($message, NotificationStatus::Suppressed);
+            $message->update(['sealed_body' => null]); // never delivered, so nothing needs the secret
 
             return $message->fresh();
         }

@@ -49,3 +49,10 @@ Route::get('/theme/{storeSlug}', [\App\Domain\Theme\Http\Controllers\ThemePublic
 // unauthenticated, no tenant resolution needed. Intended caller: a
 // load balancer / uptime monitor.
 Route::get('/health', [\App\Domain\Infrastructure\Http\Controllers\HealthController::class, 'show']);
+
+// Phase G1 (Module 02 §18): the invitee's side. POST so the token travels
+// in the body, never in a URL that proxies and logs record.
+Route::post('/invitations/{invitation}/lookup', [\App\Domain\Identity\Http\Controllers\InvitationController::class, 'show'])
+    ->where('invitation', '[0-9A-Za-z]{26}')->middleware('throttle:30,1');
+Route::post('/invitations/{invitation}/accept', [\App\Domain\Identity\Http\Controllers\InvitationController::class, 'accept'])
+    ->where('invitation', '[0-9A-Za-z]{26}')->middleware('throttle:10,1');

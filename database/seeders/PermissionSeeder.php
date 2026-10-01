@@ -28,6 +28,7 @@ final class PermissionSeeder extends Seeder
         ['key' => 'roles.manage', 'group' => 'roles', 'description' => 'Create, update, delete roles'],
         ['key' => 'users.view', 'group' => 'users', 'description' => 'View store team members'],
         ['key' => 'users.invite', 'group' => 'users', 'description' => 'Invite new team members'],
+        ['key' => 'users.manage', 'group' => 'users', 'description' => 'Change team members\' roles, suspend, reactivate or remove them (Module 02 §19 — Phase G1)'],
         ['key' => 'products.view', 'group' => 'products', 'description' => 'View products'],
         ['key' => 'products.create', 'group' => 'products', 'description' => 'Create products'],
         ['key' => 'products.update', 'group' => 'products', 'description' => 'Update products'],

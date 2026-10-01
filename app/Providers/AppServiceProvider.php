@@ -162,6 +162,11 @@ final class AppServiceProvider extends ServiceProvider
         // logic.
         Gate::define('super-admin.platform', [SuperAdminAccessPolicy::class, 'platformAction']);
 
+        // Phase G1 (Module 02 §18–19): the store team abilities.
+        Gate::define('team.view', [\App\Domain\Identity\Policies\TeamPolicy::class, 'view']);
+        Gate::define('team.invite', [\App\Domain\Identity\Policies\TeamPolicy::class, 'invite']);
+        Gate::define('team.manage', [\App\Domain\Identity\Policies\TeamPolicy::class, 'manage']);
+
         // Module 31 §17-19 "Rate Limiting" (Phase B18) — keyed by the
         // authenticated ApiKey's id (never by IP alone, which would
         // wrongly share one bucket across every developer behind the

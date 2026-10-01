@@ -66,6 +66,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/inventory', fn () => Inertia::render('Inventory/Index'));
     Route::get('/orders', fn () => Inertia::render('Orders/Index'));
     Route::get('/store-health', fn () => Inertia::render('StoreHealth/Index')); // Module 24 (Phase B21)
+    Route::get('/team', fn () => Inertia::render('Team/Index')); // Module 02 §18–19 (Phase G1)
     // Module 34 (Phase B26): the store's inbox, and its own requests to the platform.
     Route::get('/support', fn () => Inertia::render('Support/Index'));
     Route::get('/support/platform', fn () => Inertia::render('Support/Platform'));
@@ -86,6 +87,11 @@ $intendedPath = function (Request $request): ?string {
 
     return $path.(isset($parts['query']) ? '?'.$parts['query'] : '');
 };
+
+// Phase G1: opened from the invitation email, signed in or not. The token
+// is in the #fragment, so it never reaches this route or its logs.
+Route::get('/invitations/{invitation}', fn (string $invitation) => Inertia::render('Auth/AcceptInvitation', ['invitationId' => $invitation]))
+    ->where('invitation', '[0-9A-Za-z]{26}');
 
 Route::middleware('guest')->group(function () use ($intendedPath) {
     // Named: the auth middleware sends signed-out visitors of admin pages

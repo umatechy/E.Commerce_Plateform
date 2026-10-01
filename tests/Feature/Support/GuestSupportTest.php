@@ -41,8 +41,11 @@ final class GuestSupportTest extends TestCase
         $this->assertSame('guest@example.com', $ticket->requester_email);
         $this->assertNotSame($token, $ticket->guest_token_hash); // only a hash is stored
         $mail = NotificationMessage::query()->withoutTenantScope()->where('destination', 'guest@example.com')->sole();
-        // The token rides in the #fragment, which browsers never send to a server.
-        $this->assertStringContainsString("support/tickets/{$id}#token={$token}", $mail->body);
+        // The token rides in the #fragment, which browsers never send to a server. Only the sealed
+        // text the delivery job sends carries it; the stored, admin-readable body shows "[hidden]" (Phase G1).
+        $this->assertStringContainsString("support/tickets/{$id}#token={$token}", $mail->sealed_body);
+        $this->assertStringNotContainsString($token, $mail->body);
+        $this->assertStringContainsString('[hidden]', $mail->body);
 
         $this->getJson("/api/v1/storefront/support/tickets/{$id}", [...$h, 'X-Support-Token' => $token])->assertOk()->assertJsonPath('data.messages.0.body', 'The mug arrived broken.');
         $this->getJson("/api/v1/storefront/support/tickets/{$id}?token={$token}", $h)->assertOk();

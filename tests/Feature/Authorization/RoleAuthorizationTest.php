@@ -43,6 +43,7 @@ final class RoleAuthorizationTest extends TestCase
     public function test_owner_can_create_a_role(): void
     {
         $store = Store::factory()->create();
+        $this->entitle($store, ['custom_roles.enabled']); // custom roles are a package feature (Phase G1)
         $owner = $this->memberWithRole($store, 'owner');
 
         $response = $this->actingAs($owner)->postJson('/api/v1/roles', ['name' => 'Warehouse Staff']);

@@ -22,10 +22,10 @@ final class CustomerPasswordResetTest extends TestCase
         Queue::fake();
     }
 
-    /** The token from the reset email's link. */
+    /** The token from the reset email's link (only in the sealed text the delivery job sends — Phase G1). */
     private function mailedToken(): string
     {
-        $body = NotificationMessage::query()->withoutTenantScope()->where('source_event_type', 'customer.password_reset_requested')->latest('id')->firstOrFail()->body;
+        $body = NotificationMessage::query()->withoutTenantScope()->where('source_event_type', 'customer.password_reset_requested')->latest('id')->firstOrFail()->sealed_body;
         preg_match('/token=([A-Za-z0-9]{64})/', $body, $m);
 
         return $m[1];
@@ -45,7 +45,10 @@ final class CustomerPasswordResetTest extends TestCase
 
         $mail = NotificationMessage::query()->withoutTenantScope()->where('source_event_type', 'customer.password_reset_requested')->sole();
         $this->assertSame('amna@example.com', $mail->destination);
-        $this->assertStringContainsString('/account/reset-password?token=', $mail->body);
+        $this->assertStringContainsString('/account/reset-password?token=', $mail->sealed_body);
+        // The stored, admin-readable body never carries a usable link (B25 security review limitation, fixed in G1).
+        $this->assertStringContainsString('[hidden]', $mail->body);
+        $this->assertStringNotContainsString('token=', $mail->body);
         $this->assertSame(1, DB::table('customer_password_resets')->count());
         $this->assertNotSame($this->mailedToken(), DB::table('customer_password_resets')->value('token_hash')); // only a hash is stored
 

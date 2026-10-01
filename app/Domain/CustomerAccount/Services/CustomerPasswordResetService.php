@@ -84,9 +84,10 @@ final class CustomerPasswordResetService
             RecipientType::Customer, $customer->id, $customer->email,
             'Reset your {{store.name}} password',
             'Hi {{customer.name}}, we received a request to reset your password. Use this link within 60 minutes to choose a new one: {{reset.link}} If you did not ask for this, you can ignore this email; your password stays the same.',
-            ['store.name' => $store->name, 'customer.name' => $customer->name, 'reset.link' => $link],
+            ['store.name' => $store->name, 'customer.name' => $customer->name],
             "customer-password-reset:{$resetId}",
             'customer.password_reset_requested',
+            secretVariables: ['reset.link' => $link], // the token never sits readable in notification_messages (Phase G1)
         );
 
         app(AuditLogger::class)->record('customer.password_reset_requested', [], $customer, $customer->store_id);

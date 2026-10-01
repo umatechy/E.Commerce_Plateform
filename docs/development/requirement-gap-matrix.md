@@ -196,7 +196,7 @@ Architecture v1.0 arrived after this review was written and are now in
 | STORE-004 | 🟡 | Name/slug only; business identity fields minimal | P1 |
 | STORE-005 | ✅ | `store_settings` | P0 |
 | STORE-006 | ✅ | Storefront/theme settings (API only) | P1 |
-| STORE-007 | ❌ | **No staff invite/assign/remove** | P0 |
+| STORE-007 | ✅ | Invitations, role changes, suspend/reactivate/remove (B27, gap G1) | P0 |
 | STORE-008 | ✅ | Explicit store header + membership | P0 |
 | STORE-009 | 🟡 | No controlled closure workflow | P1 |
 
@@ -396,7 +396,7 @@ existing pattern: feature tests plus tenant-isolation tests for every endpoint.
 
 | # | Gap | Sources | Risk if left | Proposed action | Pri | Depends on |
 |---|---|---|---|---|---|---|
-| G1 | Store staff management (invite, roles, remove, 7 predefined roles, custom roles) | STORE-007, RBAC-002, M02 §6, §17–19, §29 | A store cannot add its team | Build invitations, membership API + UI, role catalog | P0 | — |
+| G1 | ✅ **Closed in B27** (checkpoint-b27). Store staff management (invite, roles, remove, 7 predefined roles, custom roles) | STORE-007, RBAC-002, M02 §6, §17–19, §29 | A store cannot add its team | Build invitations, membership API + UI, role catalog | P0 | — |
 | G2 | Security baseline: MFA, Super Admin step-up, request IDs, dependency scanning in CI, incident runbook | AUTH-006/007/012, SA-004, API-011, SEC-013/014/015, M32 §8, M30 §6 | Account takeover of privileged users; blind operations | MFA (TOTP) + recovery codes, re-auth for sensitive actions, correlation-ID middleware, `composer audit`/`npm audit` CI step, runbook | P0 | — |
 | G3 | Tax calculation | CHK-007, M11 §28 | Incorrect totals if tax applies | **Business decision first**: tax rules (inclusive/exclusive, rates, regions) | P0 | Owner decision |
 | G4 | Scheduled backups + restore rehearsal + alerting | BKP-001/007, HEALTH-005, TEST-011 | Data loss; failures go unnoticed | Schedule backups, rehearsal command, alert channel for critical health | P0 | Alert channel choice |

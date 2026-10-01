@@ -106,7 +106,10 @@ final class DeliverNotificationJob implements ShouldQueue
     private function transitionTo(NotificationMessage $message, NotificationStateMachine $stateMachine, NotificationStatus $to, array $extra = []): void
     {
         $stateMachine->assertCanTransition($message->status, $to);
-        $message->update(['status' => $to, ...$extra]);
+        // A secret is kept only until the message leaves for good (sent or
+        // given up on); a retry still needs it.
+        $seal = in_array($to, [NotificationStatus::Sent, NotificationStatus::Failed], true) ? ['sealed_body' => null] : [];
+        $message->update(['status' => $to, ...$seal, ...$extra]);
         $message->refresh();
     }
 
@@ -114,6 +117,6 @@ final class DeliverNotificationJob implements ShouldQueue
     {
         NotificationMessage::query()->withoutTenantScope()
             ->whereKey($this->notificationMessageId)
-            ->update(['status' => NotificationStatus::Failed->value]);
+            ->update(['status' => NotificationStatus::Failed->value, 'sealed_body' => null]);
     }
 }

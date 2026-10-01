@@ -60,7 +60,7 @@ final class SupportNotifier
         $this->toRequester($ticket, "ticket:{$ticket->id}:created",
             'We received your request {{ticket.number}}',
             'Hi {{requester.name}}, thanks for contacting {{store.name}}. Your request "{{ticket.subject}}" has the reference {{ticket.number}}. You can follow it and reply here: {{ticket.link}} Keep this link private: anyone with it can read the conversation.',
-            ['ticket.link' => $link]);
+            [], secrets: ['ticket.link' => $link]); // the token never sits readable in notification_messages (Phase G1)
     }
 
     private function created(SupportTicket $ticket): void
@@ -129,13 +129,13 @@ final class SupportNotifier
     }
 
     /** @param array<string, scalar> $variables */
-    private function toRequester(SupportTicket $ticket, string $key, string $subject, string $body, array $variables): void
+    private function toRequester(SupportTicket $ticket, string $key, string $subject, string $body, array $variables, array $secrets = []): void
     {
         $this->notifications->send(
             NotificationMessageType::Transactional, NotificationChannel::Email,
             $ticket->requester_type === SupportTicket::REQUESTER_USER ? RecipientType::User : RecipientType::Customer,
             $ticket->requester_id, $ticket->requester_email,
-            $subject, $body, [...$this->common($ticket), ...$variables], "support:{$key}", 'support',
+            $subject, $body, [...$this->common($ticket), ...$variables], "support:{$key}", 'support', $secrets,
         );
     }
 

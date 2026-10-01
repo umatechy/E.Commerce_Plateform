@@ -34,13 +34,21 @@ final class NotificationMessage extends Model
 
     protected $fillable = [
         'store_id', 'message_type', 'channel', 'recipient_type', 'recipient_id',
-        'destination', 'notification_template_id', 'subject', 'body', 'status',
+        'destination', 'notification_template_id', 'subject', 'body', 'sealed_body', 'status',
         'source_event_type', 'idempotency_key', 'read_at', 'sent_at',
     ];
+
+    /**
+     * The full text of a message that carries a secret, readable only by
+     * the delivery job (see the 2028_02_01_000001 migration). Never
+     * serialised: resources and logs only ever see `body`.
+     */
+    protected $hidden = ['sealed_body'];
 
     protected function casts(): array
     {
         return [
+            'sealed_body' => 'encrypted',
             'message_type' => NotificationMessageType::class,
             'channel' => NotificationChannel::class,
             'recipient_type' => RecipientType::class,
@@ -60,6 +68,12 @@ final class NotificationMessage extends Model
     public function template(): BelongsTo
     {
         return $this->belongsTo(NotificationTemplate::class, 'notification_template_id');
+    }
+
+    /** The text a channel sends: the sealed text while it exists, else the stored body. */
+    public function deliverableBody(): string
+    {
+        return $this->sealed_body ?? $this->body;
     }
 
     public function isRead(): bool
