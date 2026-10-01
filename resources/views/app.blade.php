@@ -36,6 +36,7 @@
         <title inertia>Umar Techy E-Commerce Platform</title>
     @endif
     <meta name="csrf-token" content="{{ csrf_token() }}">
+    @viteReactRefresh
     @vite(['resources/css/app.css', 'resources/js/app.tsx'])
     @inertiaHead
 </head>

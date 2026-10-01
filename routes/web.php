@@ -57,8 +57,10 @@ Route::prefix('shop/{storeSlug}')
     ->middleware('storefront.store:path')
     ->group($storefrontPages);
 
-Route::get('/', function () {
-    return Inertia::render('Welcome');
+// Signed in: the admin home with links to every built admin page.
+// Signed out: the landing page with sign-in and registration links.
+Route::get('/', function (Request $request) {
+    return Inertia::render($request->user() ? 'Dashboard' : 'Welcome');
 });
 
 Route::middleware('auth')->group(function () {

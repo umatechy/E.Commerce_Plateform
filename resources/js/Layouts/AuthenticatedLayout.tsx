@@ -1,5 +1,7 @@
 import { PropsWithChildren } from 'react';
-import { Link, router, usePage } from '@inertiajs/react';
+import { Link, usePage } from '@inertiajs/react';
+import { adminFetch } from '@/lib/adminApi';
+import { adminNav } from '@/lib/adminNav';
 
 /**
  * Reusable authenticated shell for every future admin module (this
@@ -22,10 +24,16 @@ type PageProps = {
 };
 
 export default function AuthenticatedLayout({ children }: PropsWithChildren) {
-  const { auth } = usePage<PageProps>().props;
+  const page = usePage<PageProps>();
+  const { auth } = page.props;
+  const path = page.url.split('?')[0];
 
+  // The logout endpoint is a JSON API, not an Inertia one. A full load
+  // afterwards drops the old session from the shared props.
   function logout() {
-    router.post('/api/v1/auth/logout');
+    adminFetch('/auth/logout', { method: 'POST' })
+      .catch(() => undefined)
+      .finally(() => window.location.assign('/login'));
   }
 
   return (
@@ -56,6 +64,28 @@ export default function AuthenticatedLayout({ children }: PropsWithChildren) {
             )}
           </div>
         </div>
+
+        {auth.user && (
+          <nav className="mx-auto flex max-w-6xl gap-1 overflow-x-auto px-4 text-sm">
+            {[{ href: '/', label: 'Dashboard' }, ...adminNav].map((item) => {
+              const active = item.href === '/' ? path === '/' : path.startsWith(item.href);
+
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className={`whitespace-nowrap border-b-2 px-3 py-2 ${
+                    active
+                      ? 'border-gray-900 text-gray-900'
+                      : 'border-transparent text-gray-500 hover:text-gray-900'
+                  }`}
+                >
+                  {item.label}
+                </Link>
+              );
+            })}
+          </nav>
+        )}
       </header>
 
       <main className="mx-auto max-w-6xl px-4 py-6">{children}</main>

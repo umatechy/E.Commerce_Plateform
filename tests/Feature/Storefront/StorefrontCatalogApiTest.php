@@ -134,7 +134,14 @@ final class StorefrontCatalogApiTest extends TestCase
             ->assertJsonPath('data.seo.structured_data.0.offers.price', '40.00');
         $this->assertStringNotContainsString('cost_price', $response->getContent());
         $this->assertStringNotContainsString('"on_hand"', $response->getContent());
-        $this->assertStringNotContainsString('50', json_encode($response->json('data.product.variants')));
+        // The exact stock (50) must not be any value. Checked per value: a
+        // random id or SKU can contain the digits "50".
+        $values = [];
+        $variants = (array) $response->json('data.product.variants');
+        array_walk_recursive($variants, function ($value) use (&$values): void {
+            $values[] = $value;
+        });
+        $this->assertNotContains(50, $values);
     }
 
     public function test_catalog_only_products_open_but_cannot_be_bought_and_hidden_ones_do_not_exist(): void

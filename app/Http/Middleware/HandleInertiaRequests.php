@@ -29,9 +29,9 @@ final class HandleInertiaRequests extends Middleware
         return [
             ...parent::share($request),
             'auth' => [
-                'user' => $user ? new UserResource($user) : null,
+                'user' => $user ? (new UserResource($user))->resolve($request) : null,
                 'activeStore' => $activeStoreId
-                    ? Store::query()->withoutGlobalScopes()->find($activeStoreId)?->only(['id', 'name'])
+                    ? Store::query()->withoutGlobalScopes()->find($activeStoreId)?->only(['id', 'name', 'slug'])
                     : null,
             ],
         ];
