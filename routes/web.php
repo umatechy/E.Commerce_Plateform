@@ -74,10 +74,49 @@ Route::middleware(['auth', 'required.mfa'])->group(function () {
     // Module 34 (Phase B26): the store's inbox, and its own requests to the platform.
     Route::get('/support', fn () => Inertia::render('Support/Index'));
     Route::get('/support/platform', fn () => Inertia::render('Support/Platform'));
-    // The platform's inbox (platform staff only; the API checks again).
-    Route::get('/super-admin/support', fn () => Inertia::render('SuperAdmin/Support'))->middleware('can:super-admin.platform');
-    // Module 23 (Phase B30): platform backups, rehearsals and restore requests.
-    Route::get('/super-admin/backups', fn () => Inertia::render('SuperAdmin/Backups'))->middleware('can:super-admin.platform');
+
+    // Phase B31 (gap G6): the Store Admin pages. Each one only renders the
+    // page; its data comes from /api/v1, where the policy for that data
+    // decides. A page a user may not use shows the API's refusal.
+    foreach ([
+        '/products' => 'Catalog/Products', '/categories' => 'Catalog/Categories', '/brands' => 'Catalog/Brands', '/attributes' => 'Catalog/Attributes',
+        '/warehouses' => 'Inventory/Warehouses',
+        '/payments' => 'Payments/Index', '/shipments' => 'Shipping/Shipments', '/shipping' => 'Shipping/Settings',
+        '/customers' => 'Customers/Index',
+        '/promotions' => 'Marketing/Promotions', '/campaigns' => 'Marketing/Campaigns', '/segments' => 'Marketing/Segments',
+        '/content/pages' => 'Content/Pages', '/content/redirects' => 'Content/Redirects', '/content/seo' => 'Content/Seo',
+        '/storefront/theme' => 'Storefront/Theme', '/domains' => 'Storefront/Domains',
+        '/reports' => 'Analytics/Reports',
+        '/notifications' => 'Communication/Index',
+        '/team/roles' => 'Team/Roles',
+        '/backups' => 'Backups/Index',
+        '/settings' => 'Settings/Index', '/settings/audit-log' => 'Settings/AuditLog', '/settings/developer' => 'Settings/Developer',
+    ] as $uri => $page) {
+        Route::get($uri, fn () => Inertia::render($page));
+    }
+    // 'new' is registered before the id; ids are the public ULIDs the API returns.
+    Route::get('/products/new', fn () => Inertia::render('Catalog/ProductEdit', ['productId' => null]));
+    Route::get('/products/{product}', fn (string $product) => Inertia::render('Catalog/ProductEdit', ['productId' => $product]))->where('product', '[0-9A-Za-z]{26}');
+    Route::get('/orders/new', fn () => Inertia::render('Orders/Create'));
+    Route::get('/orders/{order}', fn (string $order) => Inertia::render('Orders/Show', ['orderId' => $order]))->where('order', '[0-9A-Za-z]{26}');
+
+    // Umar Techy Super Admin (Module 30): platform staff only. The gate
+    // here keeps the pages themselves away from store users; every
+    // /api/v1/super-admin call is checked again, with MFA and step-up.
+    Route::middleware('can:super-admin.platform')->prefix('super-admin')->group(function () {
+        Route::get('/support', fn () => Inertia::render('SuperAdmin/Support'));
+        // Module 23 (Phase B30): platform backups, rehearsals and restore requests.
+        Route::get('/backups', fn () => Inertia::render('SuperAdmin/Backups'));
+        // Phase B31 (gap G6).
+        foreach ([
+            '/' => 'SuperAdmin/Dashboard', '/stores' => 'SuperAdmin/Stores', '/users' => 'SuperAdmin/Users',
+            '/packages' => 'SuperAdmin/Packages', '/billing' => 'SuperAdmin/Billing', '/settings' => 'SuperAdmin/Settings',
+            '/monitoring' => 'SuperAdmin/Monitoring', '/audit-log' => 'SuperAdmin/AuditLog', '/catalog' => 'SuperAdmin/Platform',
+        ] as $uri => $page) {
+            Route::get($uri, fn () => Inertia::render($page));
+        }
+        Route::get('/stores/{store}', fn (string $store) => Inertia::render('SuperAdmin/Store', ['storeId' => $store]))->whereNumber('store');
+    });
 });
 
 // Where the auth middleware was sending a signed-out visitor (it keeps

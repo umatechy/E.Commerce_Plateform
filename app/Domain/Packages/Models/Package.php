@@ -37,4 +37,20 @@ final class Package extends Model
     {
         return $this->hasMany(PackageEntitlement::class);
     }
+
+    /**
+     * Phase B31 (gap G6): the API names a package by its `code` and never
+     * returns its numeric key, so the Super Admin page had nothing to put
+     * in the update URL. A code now resolves too; the numeric key still
+     * does, for callers written before.
+     *
+     * @param  mixed  $value
+     * @param  string|null  $field
+     */
+    public function resolveRouteBinding($value, $field = null): ?self
+    {
+        $value = (string) $value;
+
+        return self::query()->where($field ?? (ctype_digit($value) ? 'id' : 'code'), $value)->first();
+    }
 }

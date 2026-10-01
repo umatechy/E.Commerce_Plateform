@@ -194,6 +194,7 @@ final class BackupAccessBoundaryTest extends TestCase
             'GET api/v1/super-admin/backups',
             'GET api/v1/super-admin/backups/summary',
             'GET api/v1/super-admin/restore-jobs',
+            'GET backups', // Phase B31: the store's Backups page (renders the page only; no file)
             'GET super-admin/backups',
             'POST api/v1/backups',
             'POST api/v1/backups/{backup}/restore-request',

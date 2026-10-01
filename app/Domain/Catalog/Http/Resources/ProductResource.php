@@ -28,6 +28,9 @@ final class ProductResource extends JsonResource
 
         return [
             'id' => $this->public_id,
+            // The numeric key the staff write APIs take (inventory, promotion
+            // targets, admin orders). Staff-only resource.
+            'internal_id' => $this->id,
             'type' => $this->type->value,
             'name' => $this->name,
             'slug' => $this->slug,
@@ -37,7 +40,9 @@ final class ProductResource extends JsonResource
             'status' => $this->status->value,
             'visibility' => $this->visibility->value,
             'brand' => $this->whenLoaded('brand', fn () => ['id' => $this->brand->public_id, 'name' => $this->brand->name]),
+            'brand_id' => $this->brand_id,
             'primary_category_id' => $this->primary_category_id,
+            'category_ids' => $this->whenLoaded('categories', fn () => $this->categories->pluck('id')->values()),
             'price_minor' => $this->price_minor,
             'sale_price_minor' => $this->sale_price_minor,
             'effective_price_minor' => $this->effectivePriceMinor(),

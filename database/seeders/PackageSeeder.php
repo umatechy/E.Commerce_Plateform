@@ -45,6 +45,11 @@ final class PackageSeeder extends Seeder
     /** @var array<string, array<string, bool>> package code => feature key => enabled */
     private const FEATURE_MATRIX = [
         'basic' => [
+            // Module 06 — the catalog itself. ProductController requires this key
+            // ("feature, all 3 tiers"), but it was never seeded, so no real store
+            // could create a product; only tests, which add it themselves, could.
+            // Found by the Phase B31 browser check of the product form.
+            'products.basic' => true,
             'products.variants' => true, // "LIMITED" in Module 04 §8 — simplified to true, see class docblock
             'inventory.advanced' => false,
             'reports.advanced' => false,
@@ -73,6 +78,11 @@ final class PackageSeeder extends Seeder
             'theme.custom_css' => false, // Module 17 — custom CSS is a Business/Premium differentiator (documented decision, not an invented numeric limit — see b15-inspection-findings.md)
         ],
         'business' => [
+            // Module 06 — the catalog itself. ProductController requires this key
+            // ("feature, all 3 tiers"), but it was never seeded, so no real store
+            // could create a product; only tests, which add it themselves, could.
+            // Found by the Phase B31 browser check of the product form.
+            'products.basic' => true,
             'products.variants' => true,
             'inventory.advanced' => true,
             'reports.advanced' => true,
@@ -101,6 +111,11 @@ final class PackageSeeder extends Seeder
             'theme.custom_css' => true, // Module 17 — Business/Premium differentiator (see b15-inspection-findings.md)
         ],
         'premium' => [
+            // Module 06 — the catalog itself. ProductController requires this key
+            // ("feature, all 3 tiers"), but it was never seeded, so no real store
+            // could create a product; only tests, which add it themselves, could.
+            // Found by the Phase B31 browser check of the product form.
+            'products.basic' => true,
             'products.variants' => true,
             'inventory.advanced' => true,
             'reports.advanced' => true,

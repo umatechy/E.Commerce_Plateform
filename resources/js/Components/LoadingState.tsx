@@ -1,4 +1,8 @@
-/** Reusable loading-state block. */
+/** Reusable loading-state block. Pages that use it load through useApi, which ends a silent wait in an error with "Try again". */
 export default function LoadingState() {
-  return <div className="p-8 text-center text-gray-400">Loading…</div>;
+  return (
+    <div role="status" className="p-8 text-center text-gray-500">
+      Loading…
+    </div>
+  );
 }

@@ -58,6 +58,14 @@ final class ShippingConfigController
         return (new ShippingMethodResource($method))->response()->setStatusCode(201);
     }
 
+    /** Phase B31 (G6): the rates the store has set, so the admin page can show them. */
+    public function rates(Request $request): AnonymousResourceCollection
+    {
+        $this->authorizeManage($request);
+
+        return ShippingRateResource::collection(ShippingRate::query()->orderBy('shipping_zone_id')->orderBy('shipping_method_id')->get());
+    }
+
     public function storeRate(SaveShippingRateRequest $request): JsonResponse
     {
         $this->authorizeManage($request);

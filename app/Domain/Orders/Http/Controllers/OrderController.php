@@ -12,6 +12,8 @@ use App\Domain\Orders\Http\Resources\OrderResource;
 use App\Domain\Orders\Http\Resources\OrderTimelineEventResource;
 use App\Domain\Orders\Models\CancellationReason;
 use App\Domain\Orders\Models\Order;
+use App\Domain\Orders\Models\OrderStatus;
+use App\Domain\Orders\Models\PaymentStatus;
 use App\Domain\Orders\Services\OrderService;
 use App\Domain\Packages\Exceptions\FeatureNotEntitledException;
 use App\Domain\Packages\Exceptions\SubscriptionInactiveException;
@@ -21,6 +23,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 
 /**
@@ -36,8 +39,23 @@ final class OrderController
     {
         Gate::forUser($request->user())->authorize('viewAny', Order::class);
 
+        // Phase B31 (G6): the admin order list filters and searches on the server.
+        $filters = $request->validate([
+            'status' => ['nullable', Rule::enum(OrderStatus::class)],
+            'payment_status' => ['nullable', Rule::enum(PaymentStatus::class)],
+            'search' => ['nullable', 'string', 'max:255'],
+        ]);
+
         return OrderResource::collection(
-            Order::query()->with('items')->orderByDesc('created_at')->paginate(25)
+            Order::query()->with(['items', 'customer'])
+                ->when($filters['status'] ?? null, fn ($q, string $status) => $q->where('status', $status))
+                ->when($filters['payment_status'] ?? null, fn ($q, string $status) => $q->where('payment_status', $status))
+                ->when($filters['search'] ?? null, function ($query, string $search) {
+                    $like = '%'.addcslashes($search, '%_\\').'%';
+                    $query->where(fn ($q) => $q->where('order_number', 'like', $like)->orWhere('guest_name', 'like', $like)->orWhere('guest_email', 'like', $like));
+                })
+                ->orderByDesc('created_at')->orderByDesc('id')
+                ->paginate(25)
         );
     }
 
@@ -45,7 +63,7 @@ final class OrderController
     {
         Gate::forUser($request->user())->authorize('view', $order);
 
-        return new OrderResource($order->load('items'));
+        return new OrderResource($order->load(['items', 'customer']));
     }
 
     public function store(CreateOrderRequest $request, OrderService $orders): JsonResponse

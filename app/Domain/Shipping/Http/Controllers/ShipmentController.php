@@ -19,6 +19,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Validation\Rule;
 
 /**
  * Staff-facing Shipment API (Module 13 §75/§81). Every method:
@@ -31,14 +32,26 @@ final class ShipmentController
     {
         Gate::forUser($request->user())->authorize('viewAny', Shipment::class);
 
-        return ShipmentResource::collection(Shipment::query()->with('items')->orderByDesc('created_at')->paginate(25));
+        // Phase B31 (G6): each shipment names its order; an order page lists its own.
+        $filters = $request->validate([
+            'order' => ['nullable', 'string', 'size:26'],
+            'status' => ['nullable', Rule::enum(ShipmentStatus::class)],
+        ]);
+
+        return ShipmentResource::collection(
+            Shipment::query()->with(['items.orderItem', 'order'])
+                ->when($filters['order'] ?? null, fn ($q, string $order) => $q->whereHas('order', fn ($o) => $o->where('public_id', $order)))
+                ->when($filters['status'] ?? null, fn ($q, string $status) => $q->where('status', $status))
+                ->orderByDesc('created_at')->orderByDesc('id')
+                ->paginate(25)
+        );
     }
 
     public function show(Request $request, Shipment $shipment): ShipmentResource
     {
         Gate::forUser($request->user())->authorize('view', $shipment);
 
-        return new ShipmentResource($shipment->load(['items', 'trackingEvents']));
+        return new ShipmentResource($shipment->load(['items.orderItem', 'trackingEvents', 'order']));
     }
 
     public function store(CreateShipmentRequest $request, ShipmentService $shipments): JsonResponse

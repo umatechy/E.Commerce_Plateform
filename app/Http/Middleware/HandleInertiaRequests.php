@@ -7,6 +7,7 @@ namespace App\Http\Middleware;
 use App\Domain\Identity\Http\Resources\UserResource;
 use App\Domain\Settings\Services\StoreClock;
 use App\Domain\Tenancy\Models\Store;
+use App\Http\Support\AdminShellProps;
 use Inertia\Middleware;
 
 /**
@@ -45,6 +46,9 @@ final class HandleInertiaRequests extends Middleware
                     && (bool) config('security.mfa.required_for_store_owners')
                     && ! $user->hasMfaEnabled()
                     && $user->ownsAStore(),
+                // Phase B31 (G6): what the navigation needs to show only what this
+                // user may open and what the package includes. Display only.
+                ...app(AdminShellProps::class)->for($user, $activeStoreId),
             ],
         ];
     }

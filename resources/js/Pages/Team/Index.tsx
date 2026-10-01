@@ -1,6 +1,9 @@
 import { formatDate } from '@/lib/datetime';
 import { useCallback, useEffect, useState } from 'react';
-import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
+import AdminPage from '@/Components/AdminPage';
+import { ButtonLink } from '@/Components/ui/Button';
+import { ConfirmDialog } from '@/Components/ui/Dialog';
+import { useAccess } from '@/lib/access';
 import ErrorState from '@/Components/ErrorState';
 import LoadingState from '@/Components/LoadingState';
 import InviteForm from '@/Components/Team/InviteForm';
@@ -21,6 +24,8 @@ export default function Index() {
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
+  const [confirming, setConfirming] = useState<{ member: TeamMember; action: 'suspend' | 'remove' } | null>(null);
+  const access = useAccess();
 
   const load = useCallback(async () => {
     try {
@@ -55,17 +60,23 @@ export default function Index() {
     }
   }
 
-  if (error) return <AuthenticatedLayout><ErrorState message={error} /></AuthenticatedLayout>;
-  if (!summary) return <AuthenticatedLayout><LoadingState /></AuthenticatedLayout>;
+  if (error) {
+    return (
+      <AdminPage title="Team">
+        <ErrorState message={error} onRetry={() => void load()} />
+      </AdminPage>
+    );
+  }
+  if (!summary) return <AdminPage title="Team"><LoadingState /></AdminPage>;
 
   const full = seatsFull(summary.seats);
 
   return (
-    <AuthenticatedLayout>
-      <div className="flex items-baseline justify-between">
-        <h1 className="text-xl font-semibold">Team</h1>
-        <span className="text-sm text-gray-600">{seatText(summary.seats)}</span>
-      </div>
+    <AdminPage
+      title="Team"
+      description={seatText(summary.seats)}
+      actions={access.can('roles.view') && <ButtonLink href="/team/roles">Roles and permissions</ButtonLink>}
+    >
 
       {notice && <div className="mt-4 rounded border border-red-200 bg-red-50 p-3 text-sm text-red-700" role="alert">{notice}</div>}
 
@@ -88,9 +99,12 @@ export default function Index() {
           busy={busy}
           onRoleChange={(member, role) => void run(member.id, () => adminFetch(`/team/members/${member.id}`, { method: 'PATCH', body: { role } }))}
           onAction={(member, action) => {
-            if (action !== 'reactivate' && !window.confirm(CONFIRM[action])) return;
-            const path = action === 'remove' ? `/team/members/${member.id}` : `/team/members/${member.id}/${action}`;
-            void run(member.id, () => adminFetch(path, { method: action === 'remove' ? 'DELETE' : 'POST' }));
+            if (action !== 'reactivate') {
+              setConfirming({ member, action });
+
+              return;
+            }
+            void run(member.id, () => adminFetch(`/team/members/${member.id}/reactivate`, { method: 'POST' }));
           }}
         />
       </section>
@@ -122,6 +136,24 @@ export default function Index() {
           </ul>
         </section>
       )}
-    </AuthenticatedLayout>
+
+      <ConfirmDialog
+        open={confirming !== null}
+        title={confirming?.action === 'remove' ? 'Remove this person?' : 'Suspend this person?'}
+        confirmLabel={confirming?.action === 'remove' ? 'Remove from team' : 'Suspend'}
+        busy={busy !== null}
+        onClose={() => setConfirming(null)}
+        onConfirm={() => {
+          if (confirming === null) return;
+          const { member, action } = confirming;
+          const path = action === 'remove' ? `/team/members/${member.id}` : `/team/members/${member.id}/${action}`;
+          void run(member.id, () => adminFetch(path, { method: action === 'remove' ? 'DELETE' : 'POST' })).then(() => setConfirming(null));
+        }}
+      >
+        <p>
+          <strong>{confirming?.member.name}</strong> ({confirming?.member.email}): {confirming ? CONFIRM[confirming.action] : ''}
+        </p>
+      </ConfirmDialog>
+    </AdminPage>
   );
 }

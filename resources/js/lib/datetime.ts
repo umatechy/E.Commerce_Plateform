@@ -44,3 +44,42 @@ export function formatDate(iso: string, timeZone: string | undefined = displayTi
 export function formatDateTime(iso: string, timeZone: string | undefined = displayTimezone): string {
   return format(iso, { dateStyle: 'short', timeStyle: 'short' }, timeZone);
 }
+
+/** The timezone admin pages show dates in (the store's), for labels such as "Times are in Asia/Karachi". */
+export function displayTimezoneName(): string {
+  return displayTimezone ?? 'UTC';
+}
+
+/**
+ * A stored UTC instant as the value of an <input type="datetime-local">
+ * in the store's timezone ("2026-10-14T09:05"). The server reads such an
+ * offset-less value back as store-local time (StoreClock, Phase B28), so
+ * a date is edited in the same timezone it is shown in, whatever the
+ * browser's own timezone is.
+ */
+export function toStoreLocalInput(iso: string | null | undefined, timeZone: string | undefined = displayTimezone): string {
+  if (!iso) return '';
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return '';
+  const parts = (zone: string | undefined) =>
+    new Intl.DateTimeFormat('en-CA', { timeZone: zone, year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }).formatToParts(date);
+  let list: Intl.DateTimeFormatPart[];
+  try {
+    list = parts(timeZone);
+  } catch {
+    list = parts('UTC');
+  }
+  const get = (type: string) => list.find((part) => part.type === type)?.value ?? '00';
+
+  return `${get('year')}-${get('month')}-${get('day')}T${get('hour')}:${get('minute')}`;
+}
+
+/** Platform billing runs on UTC periods (Module 33 §50.5): these dates are shown as UTC dates, never moved into the store's timezone. */
+export function formatUtcDate(iso: string | null | undefined): string {
+  return iso ? formatDate(iso, 'UTC') : '—';
+}
+
+/** A date and time, or a dash when there is none. */
+export function dateTimeOrDash(iso: string | null | undefined): string {
+  return iso ? formatDateTime(iso) : '—';
+}

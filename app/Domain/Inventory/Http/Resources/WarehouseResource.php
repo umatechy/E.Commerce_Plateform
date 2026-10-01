@@ -14,8 +14,11 @@ final class WarehouseResource extends JsonResource
     {
         return [
             'id' => $this->public_id,
+            'internal_id' => $this->id,
             'name' => $this->name,
             'code' => $this->code,
+            'address' => $this->address,
+            'contact' => $this->contact,
             'status' => $this->status->value,
             'is_default' => $this->is_default,
             'fulfillment_priority' => $this->fulfillment_priority,

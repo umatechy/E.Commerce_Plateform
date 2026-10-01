@@ -21,6 +21,7 @@ final class ShipmentResource extends JsonResource
     {
         return [
             'id' => $this->public_id,
+            'order' => $this->whenLoaded('order', fn () => $this->order === null ? null : ['id' => $this->order->public_id, 'order_number' => $this->order->order_number]),
             'carrier' => $this->carrier,
             'status' => $this->status->value,
             'tracking_number' => $this->tracking_number,
@@ -29,6 +30,7 @@ final class ShipmentResource extends JsonResource
             'estimated_delivery_at' => $this->estimated_delivery_at?->toIso8601String(),
             'shipped_at' => $this->shipped_at?->toIso8601String(),
             'delivered_at' => $this->delivered_at?->toIso8601String(),
+            'created_at' => $this->created_at?->toIso8601String(),
             'items' => ShipmentItemResource::collection($this->whenLoaded('items')),
             'tracking_events' => ShipmentTrackingEventResource::collection($this->whenLoaded('trackingEvents')),
         ];

@@ -84,6 +84,7 @@ Route::middleware(['auth:sanctum', 'staff.principal', 'required.mfa'])->group(fu
     Route::post('/store/switch', StoreSwitchController::class);
 
     // --- Roles (first concrete tenant-owned resource CRUD — B1 scope) ---
+    Route::get('/permissions', [RoleController::class, 'permissions']); // Phase B31: the catalog for the role editor
     Route::apiResource('roles', RoleController::class);
 
     // --- Team: invitations and members (Module 02 §18–19 — Phase G1) ---
@@ -176,6 +177,7 @@ Route::middleware(['auth:sanctum', 'staff.principal', 'required.mfa'])->group(fu
     Route::post('/shipping/zones', [ShippingConfigController::class, 'storeZone']);
     Route::get('/shipping/methods', [ShippingConfigController::class, 'methods']);
     Route::post('/shipping/methods', [ShippingConfigController::class, 'storeMethod']);
+    Route::get('/shipping/rates', [ShippingConfigController::class, 'rates']); // Phase B31
     Route::post('/shipping/rates', [ShippingConfigController::class, 'storeRate']);
 
     // --- Promotions & Coupons (Module 14, Phase B9) ---

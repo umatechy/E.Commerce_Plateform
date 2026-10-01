@@ -14,6 +14,7 @@ final class PromotionResource extends JsonResource
     {
         return [
             'id' => $this->public_id,
+            'internal_id' => $this->id,
             'name' => $this->name,
             'type' => $this->type->value,
             'target_scope' => $this->target_scope->value,

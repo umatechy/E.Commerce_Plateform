@@ -18,6 +18,7 @@ final class ProductVariantResource extends JsonResource
 
         return [
             'id' => $this->public_id,
+            'internal_id' => $this->id,
             'sku' => $this->sku,
             'barcode' => $this->barcode,
             'price_minor' => $this->price_minor,

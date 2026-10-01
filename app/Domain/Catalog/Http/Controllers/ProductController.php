@@ -21,6 +21,7 @@ use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 
 /**
@@ -43,8 +44,21 @@ final class ProductController
     {
         Gate::forUser($request->user())->authorize('viewAny', Product::class);
 
+        // Phase B31 (G6): the admin product list searches and filters on the server.
+        $filters = $request->validate([
+            'search' => ['nullable', 'string', 'max:255'],
+            'status' => ['nullable', Rule::enum(ProductStatus::class)],
+        ]);
+
         return ProductResource::collection(
-            Product::query()->with(['brand', 'variants'])->paginate(25)
+            Product::query()->with(['brand', 'variants'])
+                ->when($filters['search'] ?? null, function ($query, string $search) {
+                    $like = '%'.addcslashes($search, '%_\\').'%';
+                    $query->where(fn ($q) => $q->where('name', 'like', $like)->orWhere('sku', 'like', $like));
+                })
+                ->when($filters['status'] ?? null, fn ($query, string $status) => $query->where('status', $status))
+                ->orderByDesc('id')
+                ->paginate(25)
         );
     }
 
@@ -52,7 +66,7 @@ final class ProductController
     {
         Gate::forUser($request->user())->authorize('view', $product);
 
-        return new ProductResource($product->load(['brand', 'variants']));
+        return new ProductResource($product->load(['brand', 'variants', 'categories']));
     }
 
     public function store(StoreProductRequest $request, EntitlementService $entitlements): JsonResponse
@@ -132,7 +146,7 @@ final class ProductController
 
         $this->syncUsageForStatusChange($entitlements, $previousStatus, $newStatus);
 
-        return new ProductResource($product->refresh());
+        return new ProductResource($product->refresh()->load(['brand', 'variants', 'categories']));
     }
 
     public function destroy(Request $request, Product $product, EntitlementService $entitlements): \Illuminate\Http\Response

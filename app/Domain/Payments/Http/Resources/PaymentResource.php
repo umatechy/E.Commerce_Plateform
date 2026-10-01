@@ -25,12 +25,14 @@ final class PaymentResource extends JsonResource
     {
         return [
             'id' => $this->public_id,
+            'order' => $this->whenLoaded('order', fn () => $this->order === null ? null : ['id' => $this->order->public_id, 'order_number' => $this->order->order_number]),
             'method' => $this->method->value,
             'status' => $this->status->value,
             'amount_minor' => $this->amount_minor,
             'currency' => $this->currency,
             'completed_at' => $this->completed_at?->toIso8601String(),
             'failed_at' => $this->failed_at?->toIso8601String(),
+            'created_at' => $this->created_at?->toIso8601String(),
         ];
     }
 }

@@ -52,6 +52,17 @@ final class RoleController
         return RoleResource::collection(Role::query()->with('permissions')->get());
     }
 
+    /**
+     * Phase B31 (G6): the permission catalog the role editor lists. The
+     * catalog is platform-wide and holds no store data.
+     */
+    public function permissions(Request $request): \Illuminate\Http\JsonResponse
+    {
+        $this->authorizeAbility($request, 'viewAny', Role::class);
+
+        return response()->json(['data' => Permission::query()->orderBy('group')->orderBy('key')->get(['key', 'group', 'description'])]);
+    }
+
     public function show(Request $request, Role $role): RoleResource
     {
         $this->authorizeAbility($request, 'view', $role);

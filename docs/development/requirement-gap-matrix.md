@@ -56,6 +56,9 @@ Architecture v1.0 arrived after this review was written and are now in
    domains, settings, notifications, reports, backups, developer apps or staff.
    Super Admin has one page (support). Every blueprint lists "Admin
    Capabilities". A store owner cannot run a store without these screens.
+   **Closed in B31 (gap G6):** the Store Admin and the Super Admin now have
+   pages for every capability the API has. What the API itself lacks is listed
+   in `docs/development/b31-inspection-findings.md` (customers first: gap G7).
 4. **Store staff cannot be managed.** There is no API or UI to invite staff,
    assign roles or remove members (Module 02 §18, §29; SRS STORE-007). Stores
    get three seeded roles (owner, manager, staff). The blueprint lists seven.
@@ -105,7 +108,7 @@ Architecture v1.0 arrived after this review was written and are now in
 | 14 | Discounts, Coupons & Promotions | B9 | 🟡 | Percentage/fixed/free-shipping promotions, coupons, targets, usage limits, order snapshots | Buy X Get Y (§13–14), tiered quantity (§12), customer group/segment/first-order (§17–20), payment-method discounts (§16), collections (§9), bulk codes (§49–51), preview/versioning (§59, §65–67) |
 | 15 | Marketing & Customer Engagement | B10 | 🟡 | Campaigns, whitelisted segments, email opt-in, abandoned-cart detection | SMS/WhatsApp/push channels (§22–26), other triggers (welcome, post-purchase, win-back…, §29–44), send windows/frequency caps (§17, §50), approval/versioning (§68–69), attribution (§60–63), A/B testing (§64) |
 | 16 | SEO & Content | B13 | 🟡 | SEO settings, metadata, canonicals, redirects, sitemap, robots, content pages, sanitization | Blog/articles (§22), landing pages and content blocks (§20–21), revisions/preview (§24–25), multilingual/hreflang (§27), custom head/scripts (§28), verification (§29), SEO diagnostics (§33) |
-| 17 | Theme, Branding & Design System | B15 | 🟡 | One system theme, store theme config, tokens, sections, publish/rollback | Multiple themes and theme versions (§15–17), dark mode (§32), RTL (§9), logo/favicon upload with SVG sanitization (§7), customizer UI (§38), custom CSS (§36), scheduling |
+| 17 | Theme, Branding & Design System | B15 | 🟡 | One system theme, store theme config, tokens, sections, publish/rollback | Multiple themes and theme versions (§15–17), dark mode (§32), RTL (§9), logo/favicon upload with SVG sanitization (§7), custom CSS entitlement exists; scheduling. Customizer UI built in B31 (colours, type, branding, sections, CSS, history) |
 | 18 | Animation & Interaction | — | ❌ | Nothing | Whole module |
 | 19 | Domain Management | B14 | 🟡 | Platform subdomains, custom domains, DNS TXT verification, primary domain, SSL status field | Real SSL provisioning (§17–18), HTTP verification (§16), registrar/managed domains (§19), automated re-verification |
 | 20 | Hosting & Infrastructure | B20 | ✅ | Health endpoint, Dockerfile/compose, Nginx/PHP-FPM/Supervisor templates, responsibility matrix | Actual provisioning is out of scope by design |
@@ -118,7 +121,7 @@ Architecture v1.0 arrived after this review was written and are now in
 | 27 | App / Plugin Marketplace & Integrations | — | ❌ | B18 developer apps/API keys/webhooks are a base | Extension registry, installation lifecycle, permissions, billing, review pipeline |
 | 28 | Affiliate & Reseller Program | — | ❌ | Nothing | Whole module (3,500-line blueprint) |
 | 29 | Billing, Invoices & Renewals | B23 | 🟡 | Package prices, invoices, hourly renewal/dunning, manual payments, revenue summary | Card gateway, proration (§47), refunds/credit notes (§42–43), add-ons (§50), usage/overage billing (§52–54), PDF invoices (§75), tax, reseller/domain/marketplace billing, financial approval (§92) |
-| 30 | Umar Techy Super Admin | B16 | 🟡 | Dashboard, stores, users, packages, impersonation with reason, backups/health oversight (API) | Step-up auth (§6), emergency lock/kill switch (§14, §61), feature flags (§22), platform announcements (§71), incident management (§87–89), KYC (§93), platform terms (§94–95), Super Admin UI |
+| 30 | Umar Techy Super Admin | B16 | 🟡 | Dashboard, stores, users, packages, impersonation with reason, backups/health oversight (API) | Step-up auth (§6), emergency lock/kill switch (§14, §61), feature flags (§22), platform announcements (§71), incident management (§87–89), KYC (§93), platform terms (§94–95). Super Admin UI built in B31 |
 | 31 | API & Developer Platform | B18 | 🟡 | `/api/dev/v1`, applications, hashed API keys, 5 read-only scopes, rate limits, request log, signed webhooks | Write scopes, OAuth (deferred by ADR-002), OpenAPI/docs (§51), sandbox (§49), developer portal (§48), idempotency on dev API, request/correlation IDs |
 | 32 | Security, Audit & Compliance | B22 | 🟡 | Hash-chained audit log, customer export/erasure, security headers, password policy | MFA (§8), session security (§9), page CSP, WORM storage for audit heads, incident response (§60–64), dependency security (§48), security dashboard (§85) |
 | 33 | System Settings & Configuration | B17 | 🟡 | Platform/store settings registry, validation, encrypted secrets, revisions/rollback | Feature flags (§16–17), most per-domain settings sections (§21–47), localization/multi-currency (§48–49), timezone consumption (§50), business hours, maintenance mode (§51–52) |
@@ -129,7 +132,7 @@ Architecture v1.0 arrived after this review was written and are now in
 
 ## 3. SRS requirement matrix
 
-"API only" means the capability works through the API but has no admin screen (see finding 3).
+"API only" meant the capability worked through the API but had no admin screen (finding 3). Since B31 (gap G6) these have screens; the rows below say so.
 
 ### 3.1 Multi-tenant (MT)
 
@@ -195,7 +198,7 @@ Architecture v1.0 arrived after this review was written and are now in
 | STORE-003 | 🟡 | 5 states vs 9 in Module 03 §7 | P1 |
 | STORE-004 | 🟡 | Name/slug only; business identity fields minimal | P1 |
 | STORE-005 | ✅ | `store_settings` | P0 |
-| STORE-006 | ✅ | Storefront/theme settings (API only) | P1 |
+| STORE-006 | ✅ | Storefront/theme settings, with admin pages since B31 | P1 |
 | STORE-007 | ✅ | Invitations, role changes, suspend/reactivate/remove (B27, gap G1) | P0 |
 | STORE-008 | ✅ | Explicit store header + membership | P0 |
 | STORE-009 | 🟡 | No controlled closure workflow | P1 |
@@ -228,9 +231,9 @@ Architecture v1.0 arrived after this review was written and are now in
 
 | ID | Status | Evidence / gap | Pri |
 |---|---|---|---|
-| CAT-001 | ✅ | API only | P0 |
+| CAT-001 | ✅ | API and admin pages (B31). B31 also fixed the seeder: `products.basic` was never seeded, so no real store could create a product | P0 |
 | CAT-002–012 | ✅ | SKUs, pricing, images, variants, categories, brands, attributes, status, slugs, snapshots | P0 |
-| TAX-001–007 | ✅ | Hierarchy, slugs, brands, attributes (API only) | P0 |
+| TAX-001–007 | ✅ | Hierarchy, slugs, brands, attributes; admin pages since B31 | P0 |
 
 ### 3.8 Inventory (INV)
 
@@ -268,7 +271,7 @@ Architecture v1.0 arrived after this review was written and are now in
 | PAY-009–011 | ✅ | No card data; no false paid; refund policy | P0 |
 | SHIP-001–006, 008 | ✅ | Zones, rates, free shipping, tracking history | P0 |
 | SHIP-007 | 🟡 | Adapter exists; mock courier only | P1 |
-| PROMO-001–007 | ✅ | B9 (API only) | P0 |
+| PROMO-001–007 | ✅ | B9; admin pages since B31 | P0 |
 | MKT-001–005 | ✅ | Email only (see Module 15 gaps) | P1 |
 
 ### 3.12 SEO (SEO), theme (THEME), animation (ANIM), domains (DOM), hosting (HOST)
@@ -319,7 +322,7 @@ Architecture v1.0 arrived after this review was written and are now in
 | BILL-001–004, 007–008 | ✅ | B23 | P0 |
 | BILL-005 | ➖ | No billing gateway, so no billing webhooks | P1 |
 | BILL-006 | 🟡 | Voids authorized; refunds/credit notes not built | P1 |
-| SA-001–003 | ✅ | B16 (API only) | P0 |
+| SA-001–003 | ✅ | B16; Super Admin pages since B31 | P0 |
 | SA-004 | ✅ | Reason required; step-up re-authentication on impersonation and 13 other actions (B29) | P0 |
 | SA-005 | 🟡 | No mass-action safeguards (no bulk actions yet) | P1 |
 | SA-006 | ➖ | No break-glass feature | P2 |
@@ -401,7 +404,7 @@ existing pattern: feature tests plus tenant-isolation tests for every endpoint.
 | G3 | Tax calculation | CHK-007, M11 §28 | Incorrect totals if tax applies | **Business decision first**: tax rules (inclusive/exclusive, rates, regions) | P0 | Owner decision |
 | G4 | ✅ **Closed in B30** (checkpoint-b30; limitations listed there). Scheduled backups + restore rehearsal + alerting | BKP-001/007, HEALTH-005, TEST-011 | Data loss; failures go unnoticed | Schedule backups, rehearsal command, alert channel for critical health | P0 | Alert channel choice |
 | G5 | ✅ **Closed in B28** (checkpoint-b28). Store timezone consumption | DATA-010, LOC-004, M33 §50 | Wrong dates for scheduled promos/campaigns/SLA | Wire `store.timezone` into B10/B12/B13/B26 date logic | P0 | — |
-| G6 | Admin UI for API-only modules | Admin Capabilities in M06–M17, M19, M21–M23, M29–M31, M33 | Owners cannot operate the store | UI phases, highest value first: catalog, customers, shipping/payments settings, promotions, SEO/content, theme, domains, settings | P1 | G1 |
+| G6 | ✅ **Closed in B31** (checkpoint-b31; matrix in docs/architecture/b31-admin-ui.md §6; open items in docs/development/b31-inspection-findings.md). Admin UI for API-only modules | Admin Capabilities in M06–M17, M19, M21–M23, M29–M31, M33 | Owners cannot operate the store | UI phases, highest value first: catalog, customers, shipping/payments settings, promotions, SEO/content, theme, domains, settings | P1 | G1 |
 | G7 | Module 10 completion (groups, tags, notes, blocking, merge, import, guest conversion, email verification) | M10 §9, §24–33, §47–57, AUTH-002 | Blocks targeted promotions (M14 §17–20) and marketing | Complete Module 10 | P1 | — |
 | G8 | Returns, exchanges, refunds flow | ORD-008, M09 §45–54, M13 §70 | Manual handling only | Return request → inspection → refund/restock | P1 | — |
 | G9 | Real payment and courier providers | PAY-002/005, SHIP-007, M12 §20–21 | Online payment not possible | **Owner decision**: providers and merchant credentials; then adapters | P1 | Owner decision |
@@ -443,9 +446,9 @@ This follows the Master Prompt §40 dependency order, adjusted for what exists:
 1. **G1 + G2 + G5 + G4.** P0 gaps that need no business decision: staff
    management, security baseline, timezone wiring, scheduled backups and alerts.
 2. **G3 and G9–G10** as soon as the owner's decisions arrive.
-3. **G6 admin UI**, together with **G7** (Module 10), **G8** (returns) and
+3. **G6 admin UI** (done, B31), together with **G7** (Module 10), **G8** (returns) and
    **G15** (catalog depth). This is the minimum a merchant needs to run a store
-   without the API.
+   without the API. G7 is next: the admin has no customer list until it exists.
 4. **G11 localization**, then **G12, G13, G14**.
 5. **New modules in blueprint order:** G17 (Module 18), G16 (Module 25),
    G18 (Module 26), G19 (Module 27), G20 (Module 28), then G21 and G22.

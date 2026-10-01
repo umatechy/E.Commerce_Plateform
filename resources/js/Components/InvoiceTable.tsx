@@ -35,13 +35,15 @@ const STATUS_STYLE: Record<Invoice['status'], string> = {
   uncollectible: 'bg-red-100 text-red-700',
 };
 
-export default function InvoiceTable({ invoices }: { invoices: Invoice[] }) {
+export default function InvoiceTable({ invoices, onOpen }: { invoices: Invoice[]; onOpen?: (invoice: Invoice) => void }) {
   if (invoices.length === 0) {
     return <EmptyState title="No invoices yet" description="Your first invoice is issued a few days before your trial ends." />;
   }
 
   return (
-    <table className="w-full text-left text-sm">
+    <div className="overflow-x-auto">
+    <table className="w-full min-w-[32rem] text-left text-sm">
+      <caption className="sr-only">Invoices</caption>
       <thead className="text-gray-500">
         <tr>
           <th className="py-2">Invoice</th>
@@ -54,7 +56,15 @@ export default function InvoiceTable({ invoices }: { invoices: Invoice[] }) {
       <tbody>
         {invoices.map((invoice) => (
           <tr key={invoice.id} className="border-t">
-            <td className="py-2 font-medium">{invoice.number}</td>
+            <td className="py-2 font-medium">
+              {onOpen ? (
+                <button type="button" onClick={() => onOpen(invoice)} className="rounded text-indigo-700 underline focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-600">
+                  {invoice.number}
+                </button>
+              ) : (
+                invoice.number
+              )}
+            </td>
             <td className="py-2">
               {formatDate(invoice.period_start)} – {formatDate(invoice.period_end)}
             </td>
@@ -69,5 +79,6 @@ export default function InvoiceTable({ invoices }: { invoices: Invoice[] }) {
         ))}
       </tbody>
     </table>
+    </div>
   );
 }

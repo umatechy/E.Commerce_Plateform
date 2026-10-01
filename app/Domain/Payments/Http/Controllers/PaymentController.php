@@ -10,11 +10,13 @@ use App\Domain\Payments\Http\Requests\RefundRequest;
 use App\Domain\Payments\Http\Resources\PaymentResource;
 use App\Domain\Payments\Http\Resources\PaymentTransactionResource;
 use App\Domain\Payments\Models\Payment;
+use App\Domain\Payments\Models\PaymentStatus;
 use App\Domain\Payments\Services\PaymentService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Validation\Rule;
 
 /**
  * Staff-facing Payment API (Module 12 §68-69). Every method:
@@ -28,14 +30,30 @@ final class PaymentController
     {
         Gate::forUser($request->user())->authorize('viewAny', Payment::class);
 
-        return PaymentResource::collection(Payment::query()->orderByDesc('created_at')->paginate(25));
+        // Phase B31 (G6): each payment names its order; an order page lists its own.
+        $filters = $request->validate([
+            'order' => ['nullable', 'string', 'size:26'],
+            'status' => ['nullable', Rule::enum(PaymentStatus::class)],
+        ]);
+
+        return PaymentResource::collection(
+            Payment::query()->with('order')
+                ->when($filters['order'] ?? null, fn ($q, string $order) => $q->whereHas('order', fn ($o) => $o->where('public_id', $order)))
+                ->when($filters['status'] ?? null, fn ($q, string $status) => $q->where('status', $status))
+                ->orderByDesc('created_at')->orderByDesc('id')
+                ->paginate(25)
+        );
     }
 
     public function show(Request $request, Payment $payment): PaymentResource
     {
         Gate::forUser($request->user())->authorize('view', $payment);
 
-        return new PaymentResource($payment);
+        return (new PaymentResource($payment->load('order')))->additional(['meta' => [
+            'paid_amount_minor' => $payment->paidAmountMinor(),
+            'refunded_amount_minor' => $payment->refundedAmountMinor(),
+            'refundable_amount_minor' => $payment->refundableAmountMinor(),
+        ]]);
     }
 
     public function transactions(Request $request, Payment $payment): AnonymousResourceCollection
