@@ -89,7 +89,7 @@ export default function Login({ intended }: { intended?: string | null }) {
               inputMode="numeric"
               value={code}
               onChange={(e) => setCode(e.target.value)}
-              className="mt-1 block w-full rounded border-gray-300"
+              className="mt-1 block w-full rounded border border-gray-300 px-3 py-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-600"
               autoComplete="one-time-code"
               autoFocus
             />
@@ -120,7 +120,7 @@ export default function Login({ intended }: { intended?: string | null }) {
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="mt-1 block w-full rounded border-gray-300"
+            className="mt-1 block w-full rounded border border-gray-300 px-3 py-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-600"
             autoComplete="username"
           />
           {errors.email && <p className="mt-1 text-sm text-red-600">{errors.email}</p>}
@@ -135,7 +135,7 @@ export default function Login({ intended }: { intended?: string | null }) {
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="mt-1 block w-full rounded border-gray-300"
+            className="mt-1 block w-full rounded border border-gray-300 px-3 py-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-600"
             autoComplete="current-password"
           />
           {errors.password && <p className="mt-1 text-sm text-red-600">{errors.password}</p>}

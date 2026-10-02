@@ -4,7 +4,7 @@ import { tokenFromHash } from '@/lib/team';
 
 type Invitation = { store: string; role: string; email: string; has_account: boolean; signed_in_as: string | null; expires_at: string };
 
-const input = 'mt-1 block w-full rounded border-gray-300';
+const input = 'mt-1 block w-full rounded border border-gray-300 px-3 py-2';
 
 /**
  * Phase G1 (Module 02 §18) — opened from the invitation email. The token

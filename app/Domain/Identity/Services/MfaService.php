@@ -98,7 +98,7 @@ final class MfaService
 
         $this->guardAttempts($user);
 
-        $accepted = preg_match('/^\d{6}$/', trim($code)) === 1
+        $accepted = preg_match('/^\d{6}$/', self::digits($code)) === 1
             ? $this->acceptTotp($user, $code)
             : $this->consumeRecoveryCode($user, $code);
 
@@ -177,7 +177,7 @@ final class MfaService
         // Returns the step of the code when it is valid AND newer than the
         // last accepted one. (0, not null: with null the library returns
         // true instead of the step, and the code could be replayed.)
-        $step = $this->engine->verifyKeyNewer((string) $user->mfa_secret, trim($code), $user->mfa_last_used_step ?? 0, self::WINDOW);
+        $step = $this->engine->verifyKeyNewer((string) $user->mfa_secret, self::digits($code), $user->mfa_last_used_step ?? 0, self::WINDOW);
 
         if (! is_int($step)) {
             return false;
@@ -186,6 +186,16 @@ final class MfaService
         $user->forceFill(['mfa_last_used_step' => $step])->save();
 
         return true;
+    }
+
+    /**
+     * Authenticator apps show a code as "123 456". People type it as they
+     * see it, so spaces are dropped before it is checked (a code typed with
+     * its space was refused as "not valid").
+     */
+    private static function digits(string $code): string
+    {
+        return (string) preg_replace('/\s+/u', '', $code);
     }
 
     private function consumeRecoveryCode(User $user, string $code): bool

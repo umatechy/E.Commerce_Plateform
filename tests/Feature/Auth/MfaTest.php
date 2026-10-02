@@ -103,6 +103,26 @@ final class MfaTest extends TestCase
         $this->assertSame(1, AuditLog::query()->where('action', 'auth.mfa.enabled')->count());
     }
 
+    public function test_a_code_typed_with_the_space_the_app_shows_is_accepted(): void
+    {
+        // Authenticator apps show "123 456". Typed like that, a right code was refused as "not valid".
+        $user = $this->user();
+        $spaced = fn (string $code) => ' '.substr($code, 0, 3).' '.substr($code, 3).' ';
+
+        $this->actingAs($user)->postJson('/api/v1/auth/mfa/setup', ['password' => self::PASSWORD])->assertOk();
+        $this->postJson('/api/v1/auth/mfa/confirm', ['code' => $spaced($this->code($user))])->assertOk()->assertJsonPath('data.enabled', true);
+
+        $this->postJson('/api/v1/auth/logout');
+        $this->app['auth']->forgetGuards();
+        $this->signIn($user)->assertStatus(202);
+        $this->postJson('/api/v1/auth/login/mfa', ['code' => $spaced($this->code($user, 1))])->assertOk();
+        // A wrong code with a space is still wrong.
+        $this->postJson('/api/v1/auth/logout');
+        $this->app['auth']->forgetGuards();
+        $this->signIn($user)->assertStatus(202);
+        $this->postJson('/api/v1/auth/login/mfa', ['code' => '000 000'])->assertStatus(422)->assertJsonValidationErrors('code');
+    }
+
     public function test_a_password_alone_does_not_sign_in_an_account_with_mfa(): void
     {
         $user = $this->user();

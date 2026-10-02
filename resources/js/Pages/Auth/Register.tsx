@@ -44,7 +44,7 @@ export default function Register() {
               type={type}
               value={data[field]}
               onChange={(e) => setData(field, e.target.value)}
-              className="mt-1 block w-full rounded border-gray-300"
+              className="mt-1 block w-full rounded border border-gray-300 px-3 py-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-600"
               autoComplete={autoComplete}
             />
             {errors[field] && <p className="mt-1 text-sm text-red-600">{errors[field]}</p>}
