@@ -240,7 +240,9 @@ final class CustomerAdminTest extends TestCase
         $customer = $this->customer($store);
         app(TenantContext::class)->resolveToStore($store->id);
 
-        $this->actingAs($owner)->get("/customers/{$customer->public_id}")->assertOk();
-        $this->actingAs($owner)->get('/customers/groups')->assertOk();
+        // No Vite manifest in CI: render the page without assets.
+        $this->withoutVite()->actingAs($owner)->get("/customers/{$customer->public_id}")->assertOk()
+            ->assertInertia(fn ($page) => $page->component('Customers/Show')->where('customerId', $customer->public_id));
+        $this->withoutVite()->actingAs($owner)->get('/customers/groups')->assertOk()->assertInertia(fn ($page) => $page->component('Customers/Groups'));
     }
 }
