@@ -7,6 +7,7 @@ import { FormError, SelectField, TextAreaField, TextField } from '@/Components/u
 import { StatusBadge } from '@/Components/ui/Badge';
 import { AccessNotice, Card, Details, EmptyPanel, ErrorPanel, Skeleton } from '@/Components/ui/Page';
 import ProductPicker, { type PickedProduct } from '@/Components/ProductPicker';
+import ReturnPhotos from '@/Components/Orders/ReturnPhotos';
 import { useAccess } from '@/lib/access';
 import { useApi } from '@/lib/useApi';
 import { useAction, useForm } from '@/lib/useForm';
@@ -384,12 +385,14 @@ export default function Show({ returnId }: { returnId: string }) {
               {inspected && <p className="mt-2 text-xs text-slate-600">Value is what the customer paid for the accepted units, after discounts.</p>}
             </Card>
 
+            <ReturnPhotos record={record} canManage={manage} onChanged={done} />
+
             <Card title="Request">
               <Details
                 items={[
                   { label: 'Order', value: record.order ? <Link href={`/orders/${record.order.id}`} className={`rounded font-mono text-indigo-700 hover:underline ${FOCUS_RING}`}>{record.order.order_number}</Link> : '—' },
                   { label: 'Customer', value: record.order?.customer_name ?? '—' },
-                  { label: 'Asked by', value: record.requested_by === 'customer' ? 'The customer' : 'Your team, for the customer' },
+                  { label: 'Asked by', value: record.requested_by === 'customer' ? 'The customer' : record.requested_by === 'guest' ? 'The customer, by the link sent to the order\x27s email' : 'Your team, for the customer' },
                   { label: 'Wants', value: RESOLUTION_LABELS[record.resolution] ?? record.resolution },
                   { label: 'Reason', value: REASON_LABELS[record.reason] ?? record.reason },
                   { label: 'In their words', value: record.description ?? '—' },

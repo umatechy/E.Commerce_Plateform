@@ -70,15 +70,21 @@ final class ReturnService
      *
      * @param list<array{order_item_id: int, quantity: int}> $items
      * @param array{resolution: string, reason: string, description?: ?string, return_method?: ?string} $data
-     * @param Customer|User $actor the customer asking, or the staff member recording it for them
+     * @param Customer|User|null $actor the customer asking, the staff member recording it for them, or
+     *                                  null for a guest who proved the order is theirs by the emailed link (Phase B34)
      */
-    public function request(Order $order, array $items, array $data, Customer|User $actor, string $idempotencyKey): ReturnRequest
+    public function request(Order $order, array $items, array $data, Customer|User|null $actor, string $idempotencyKey): ReturnRequest
     {
         if ($existing = ReturnRequest::query()->where('idempotency_key', $idempotencyKey)->first()) {
             return $existing;
         }
 
-        $byCustomer = $actor instanceof Customer;
+        $byCustomer = ! $actor instanceof User; // a customer or a guest: bound by the store's setting and return period
+        $requestedBy = match (true) {
+            $actor instanceof User => 'staff',
+            $actor instanceof Customer => 'customer',
+            default => 'guest',
+        };
         if ($block = $this->eligibility->orderBlock($order)) {
             throw new ReturnActionRefusedException($block, 'order_not_returnable', 422);
         }
@@ -86,7 +92,7 @@ final class ReturnService
             throw new ReturnActionRefusedException('This store takes return requests by contact only. Please get in touch with the store.', 'returns_by_contact_only', 403);
         }
 
-        $return = DB::transaction(function () use ($order, $items, $data, $actor, $byCustomer, $idempotencyKey) {
+        $return = DB::transaction(function () use ($order, $items, $data, $actor, $byCustomer, $requestedBy, $idempotencyKey) {
             // The order row is the lock for its returns: quantities are checked and taken under it.
             $locked = Order::query()->lockForUpdate()->findOrFail($order->id);
             $lines = $this->eligibility->lines($locked);
@@ -123,8 +129,8 @@ final class ReturnService
                 'reason' => ReturnReason::from($data['reason']),
                 'description' => $data['description'] ?? null,
                 'return_method' => isset($data['return_method']) ? ReturnMethod::from($data['return_method']) : null,
-                'requested_by' => $byCustomer ? 'customer' : 'staff',
-                'requested_by_user_id' => $byCustomer ? null : $actor->id,
+                'requested_by' => $requestedBy,
+                'requested_by_user_id' => $actor instanceof User ? $actor->id : null,
                 'currency' => $locked->currency,
                 'idempotency_key' => $idempotencyKey,
             ]);
@@ -132,14 +138,14 @@ final class ReturnService
                 $return->items()->create(['order_item_id' => $id, 'quantity' => $quantity]);
             }
 
-            $this->orders->noteReturnEvent($locked, 'return_requested', $byCustomer ? null : $actor->id, "return:{$return->return_number}");
+            $this->orders->noteReturnEvent($locked, 'return_requested', $actor instanceof User ? $actor->id : null, "return:{$return->return_number}");
             $this->syncOrder($locked);
             $this->outbox->recordEvent('return.requested', ['return_id' => $return->id, 'order_id' => $locked->id], "return:{$return->id}:requested");
 
             return $return;
         });
 
-        $this->audit->record('return.requested', ['order' => $order->order_number, 'items' => count($items), 'resolution' => $data['resolution'], 'by' => $byCustomer ? 'customer' : 'staff'], $return, actor: $actor);
+        $this->audit->record('return.requested', ['order' => $order->order_number, 'items' => count($items), 'resolution' => $data['resolution'], 'by' => $requestedBy], $return, actor: $actor);
 
         return $return->load('items.orderItem');
     }
@@ -174,7 +180,7 @@ final class ReturnService
     }
 
     /** Withdrawn by the customer or by staff, as long as the goods were not received. */
-    public function cancel(ReturnRequest $return, Customer|User $actor, ?string $note = null): ReturnRequest
+    public function cancel(ReturnRequest $return, Customer|User|null $actor, ?string $note = null): ReturnRequest
     {
         return $this->change($return, ReturnStatus::Cancelled, $actor, 'return.cancelled', [
             'cancelled_at' => now(),
@@ -187,7 +193,7 @@ final class ReturnService
      *
      * @param array{carrier?: ?string, tracking_number?: ?string} $data
      */
-    public function markInTransit(ReturnRequest $return, array $data, Customer|User $actor): ReturnRequest
+    public function markInTransit(ReturnRequest $return, array $data, Customer|User|null $actor): ReturnRequest
     {
         return $this->change($return, ReturnStatus::InTransit, $actor, 'return.in_transit', [
             'return_carrier' => $data['carrier'] ?? null,
@@ -490,7 +496,7 @@ final class ReturnService
      *
      * @param array<string, mixed> $fields
      */
-    private function change(ReturnRequest $return, ReturnStatus $to, Customer|User $actor, string $event, array $fields = []): ReturnRequest
+    private function change(ReturnRequest $return, ReturnStatus $to, Customer|User|null $actor, string $event, array $fields = []): ReturnRequest
     {
         $changed = DB::transaction(function () use ($return, $to, $actor, $event, $fields) {
             $locked = ReturnRequest::query()->lockForUpdate()->findOrFail($return->id);
@@ -503,13 +509,13 @@ final class ReturnService
             return $locked;
         });
 
-        $this->audit->record($event, ['status' => $to->value, 'by' => $actor instanceof Customer ? 'customer' : 'staff'], $changed, actor: $actor);
+        $this->audit->record($event, ['status' => $to->value, 'by' => match (true) { $actor instanceof User => 'staff', $actor instanceof Customer => 'customer', default => 'guest' }], $changed, actor: $actor);
 
         return $changed->load('items.orderItem');
     }
 
     /** Writes the status (after the state machine agreed) and notes it on the order's timeline. */
-    private function transition(ReturnRequest $return, ReturnStatus $to, Customer|User $actor): void
+    private function transition(ReturnRequest $return, ReturnStatus $to, Customer|User|null $actor): void
     {
         $this->states->assertCanTransition($return->status, $to);
         $return->forceFill(['status' => $to])->save();

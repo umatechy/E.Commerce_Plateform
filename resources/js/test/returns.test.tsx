@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import Show from '@/Pages/Returns/Show';
 import ReturnsCard from '@/Components/Orders/ReturnsCard';
-import OrderReturns from '@/Components/Storefront/OrderReturns';
+import OrderReturns, { customerReturnsApi } from '@/Components/Storefront/OrderReturns';
 import { clearToasts } from '@/Components/ui/toast';
 import { json, owner, routeFetch, routerMock, setPage } from '@/test/inertiaMock';
 import { returnSteps, type ReturnRecord, type Returnable } from '@/lib/returns';
@@ -211,7 +211,7 @@ describe('returns in the customer account', () => {
 
   it('points to the store when it takes returns by contact only', async () => {
     vi.stubGlobal('fetch', routeFetch({ [`/customer/orders/${ORDER}/returnable`]: () => json(200, { data: { enabled: false, blocked: null, window_days: 7, lines: [line], returns: [] } }) }));
-    render(<OrderReturns shell={shell} orderId={ORDER} />);
+    render(<OrderReturns shell={shell} api={customerReturnsApi(shell, ORDER)} />);
 
     expect((await screen.findByRole('link', { name: 'contact the store' })).getAttribute('href')).toBe(`/shop/acme/account/support/new?order=${ORDER}`);
     expect(screen.queryByRole('button', { name: 'Send request' })).toBeNull();
@@ -232,7 +232,7 @@ describe('returns in the customer account', () => {
         },
       }),
     );
-    render(<OrderReturns shell={shell} orderId={ORDER} />);
+    render(<OrderReturns shell={shell} api={customerReturnsApi(shell, ORDER)} />);
 
     await screen.findByRole('heading', { name: 'Request a return' });
     fireEvent.click(screen.getByRole('button', { name: 'Send request' }));

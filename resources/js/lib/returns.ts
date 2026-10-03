@@ -65,6 +65,8 @@ export type ReturnLine = {
   inspection_note?: string | null;
 };
 
+export type ReturnPhoto = { id: string; width: number; height: number; uploaded_by: 'customer' | 'guest' | 'staff' };
+
 export type ReturnRecord = {
   id: string;
   return_number: string;
@@ -72,7 +74,7 @@ export type ReturnRecord = {
   resolution: string;
   reason: string;
   description: string | null;
-  requested_by: 'customer' | 'staff';
+  requested_by: 'customer' | 'guest' | 'staff';
   decision_note: string | null;
   return_method: string | null;
   return_shipping_paid_by: 'customer' | 'store' | null;
@@ -88,7 +90,9 @@ export type ReturnRecord = {
   replacement_order?: { id: string; order_number: string; grand_total_minor: number } | null;
   items?: ReturnLine[];
   warehouse?: { id: number; name: string } | null;
-  can: Record<'review' | 'approve' | 'reject' | 'cancel' | 'mark_in_transit' | 'receive' | 'inspect' | 'approve_refund' | 'replace' | 'refund', boolean>;
+  /** Phase B34: photos by id; the image is read through the API (it has no public URL). */
+  photos?: ReturnPhoto[];
+  can: Record<'review' | 'approve' | 'reject' | 'cancel' | 'mark_in_transit' | 'receive' | 'inspect' | 'approve_refund' | 'replace' | 'refund', boolean> & { add_photos?: boolean };
   created_at: string;
   decided_at: string | null;
   shipped_back_at: string | null;
@@ -113,7 +117,16 @@ export type ReturnableLine = {
   unit_price_minor: number;
 };
 
-export type Returnable = { blocked: string | null; window_days: number; customer_requests_enabled?: boolean; enabled?: boolean; lines: ReturnableLine[]; returns?: ReturnRecord[] };
+export type Returnable = {
+  blocked: string | null;
+  window_days: number;
+  customer_requests_enabled?: boolean;
+  enabled?: boolean;
+  order?: { id: string; order_number: string; currency: string };
+  max_photos?: number;
+  lines: ReturnableLine[];
+  returns?: ReturnRecord[];
+};
 
 /** The steps of a return that went well, in order, with when each happened. */
 export function returnSteps(record: ReturnRecord): { label: string; at: string | null }[] {

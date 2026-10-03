@@ -140,6 +140,10 @@ final class CustomerDataService
             // return itself stays: it belongs to the order's financial record.
             $returns = \App\Domain\Returns\Models\ReturnRequest::query()->where('customer_id', $customer->id)
                 ->update(['description' => null, 'return_tracking_number' => null]);
+            // Phase B34: their photos show their goods and may show their home: the files go.
+            app(\App\Domain\Returns\Services\ReturnPhotoService::class)->removeForReturns(
+                \App\Domain\Returns\Models\ReturnRequest::query()->where('customer_id', $customer->id)->pluck('id'),
+            );
             \Illuminate\Support\Facades\DB::table('customer_email_verifications')->where('customer_id', $customer->id)->delete();
 
             // No password: the account can never be signed into again. The

@@ -103,6 +103,11 @@ export default function StoreLayout({ shell, seo, children }: PropsWithChildren<
               </li>
             ))}
             <li>
+              <Link href={`${base}/returns`} className="hover:text-sf-text">
+                Returns
+              </Link>
+            </li>
+            <li>
               <Link href={`${base}/contact`} className="hover:text-sf-text">
                 Contact us
               </Link>

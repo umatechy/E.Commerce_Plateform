@@ -35,7 +35,7 @@ use Illuminate\Validation\Rule;
  */
 final class ReturnController
 {
-    private const WITH = ['items.orderItem', 'order.customer', 'replacementOrder', 'warehouse'];
+    private const WITH = ['items.orderItem', 'order.customer', 'replacementOrder', 'warehouse', 'photos'];
 
     public function __construct(private readonly ReturnService $returns, private readonly ReturnEligibility $eligibility) {}
 
@@ -210,6 +210,42 @@ final class ReturnController
 
             return $this->one($request, $result);
         });
+    }
+
+    // --- Photos (Module 09 §45 "Images", Phase B34) ---
+
+    public function addPhoto(Request $request, ReturnRequest $return, \App\Domain\Returns\Services\ReturnPhotoService $photos): JsonResponse
+    {
+        $this->authorize($request, 'manage');
+        $data = $request->validate(self::photoRules());
+
+        return $this->guarded(function () use ($request, $return, $data, $photos) {
+            $photos->add($return, $data['photo'], 'staff', $request->user()->id);
+
+            return $this->one($request, $return->unsetRelation('photos'), 201);
+        });
+    }
+
+    public function photo(Request $request, ReturnRequest $return, string $photo, \App\Domain\Returns\Services\ReturnPhotoService $photos): \Symfony\Component\HttpFoundation\Response
+    {
+        $this->authorize($request, 'view');
+
+        // Through the return: a photo of another return (or store) is not found.
+        return $photos->response($return->photos()->where('public_id', $photo)->firstOrFail());
+    }
+
+    public function deletePhoto(Request $request, ReturnRequest $return, string $photo, \App\Domain\Returns\Services\ReturnPhotoService $photos): JsonResponse
+    {
+        $this->authorize($request, 'manage');
+        $photos->remove($return->photos()->where('public_id', $photo)->firstOrFail());
+
+        return $this->one($request, $return->unsetRelation('photos'));
+    }
+
+    /** @return array<string, list<mixed>> */
+    public static function photoRules(): array
+    {
+        return ['photo' => ['required', 'file', 'mimes:jpg,jpeg,png,webp', 'max:'.(int) config('returns.photos.max_kilobytes')]];
     }
 
     /** @return array<string, list<mixed>> */

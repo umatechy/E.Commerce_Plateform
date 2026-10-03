@@ -118,6 +118,22 @@ final class StorefrontWebController
     }
 
     /**
+     * Phase B34 — returns for someone without an account (Module 09
+     * §8–9). The page asks for the order number and email, or, opened
+     * from the emailed link, carries its token to the API. Never indexed:
+     * its address can hold that token.
+     */
+    public function returns(Request $request): Response
+    {
+        $token = (string) $request->query('token', '');
+
+        return $this->render($request, 'Storefront/Returns', [
+            // Only echoed back to the API, which checks it.
+            'token' => preg_match('/^[A-Za-z0-9]{64}$/', $token) === 1 ? $token : '',
+        ], $this->privatePageSeo($request, 'Returns'));
+    }
+
+    /**
      * Phase B26 — the contact form (Module 34). Public and indexable like
      * any store page; a signed-in shopper's request goes to their account.
      */

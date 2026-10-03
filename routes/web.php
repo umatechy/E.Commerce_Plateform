@@ -46,6 +46,8 @@ $storefrontPages = function (): void {
     // Phase B26 (Module 34): the contact form, and a guest's request
     // opened from the private link in their email.
     Route::get('/contact', [StorefrontWebController::class, 'contact']);
+    // Phase B34 (Module 09 §8–9): returns for a guest, by the link sent to the order's email.
+    Route::get('/returns', [StorefrontWebController::class, 'returns']);
     Route::get('/support/tickets/{ticketId}', [StorefrontWebController::class, 'supportTicket'])->where('ticketId', '[0-9A-Za-z]{26}');
 };
 

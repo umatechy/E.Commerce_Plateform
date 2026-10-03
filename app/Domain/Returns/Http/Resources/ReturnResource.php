@@ -83,6 +83,10 @@ final class ReturnResource extends JsonResource
                 ...($this->staff ? ['inspection_note' => $item->inspection_note] : []),
             ])->values()),
             ...($this->staff ? ['warehouse' => $this->whenLoaded('warehouse', fn () => $this->warehouse === null ? null : ['id' => $this->warehouse->id, 'name' => $this->warehouse->name])] : []),
+            // Phase B34: the photos, by id; the image itself is read through the API (it has no public URL).
+            'photos' => $this->whenLoaded('photos', fn () => $this->photos->map(fn (\App\Domain\Returns\Models\ReturnPhoto $photo) => [
+                'id' => $photo->public_id, 'width' => $photo->width, 'height' => $photo->height, 'uploaded_by' => $photo->uploaded_by,
+            ])->values()),
             'can' => [
                 'review' => $states->can($status, ReturnStatus::UnderReview),
                 'approve' => $states->can($status, ReturnStatus::Approved),
@@ -94,6 +98,8 @@ final class ReturnResource extends JsonResource
                 'approve_refund' => $status === ReturnStatus::Inspected && ($this->replacement_order_id === null || (int) $this->items_refund_minor > 0),
                 'replace' => $status === ReturnStatus::Inspected && $this->replacement_order_id === null,
                 'refund' => $status === ReturnStatus::ApprovedForRefund,
+                // The person who asked adds photos until the store has answered; staff while the return is open.
+                'add_photos' => $this->staff ? ! $status->isClosed() : in_array($status, [ReturnStatus::Requested, ReturnStatus::UnderReview], true),
             ],
             'created_at' => $this->created_at->toIso8601String(),
             'decided_at' => $this->decided_at?->toIso8601String(),

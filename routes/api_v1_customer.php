@@ -49,6 +49,9 @@ Route::middleware(['auth:customer', 'customer.principal'])->group(function () {
     Route::get('/customer/returns/{returnPublicId}', [\App\Domain\Returns\Http\Controllers\CustomerReturnController::class, 'show']);
     Route::post('/customer/returns/{returnPublicId}/cancel', [\App\Domain\Returns\Http\Controllers\CustomerReturnController::class, 'cancel']);
     Route::post('/customer/returns/{returnPublicId}/shipped', [\App\Domain\Returns\Http\Controllers\CustomerReturnController::class, 'shipped']);
+    // Photos (Phase B34): private files, read only through these routes.
+    Route::post('/customer/returns/{returnPublicId}/photos', [\App\Domain\Returns\Http\Controllers\CustomerReturnController::class, 'addPhoto'])->middleware('throttle:20,10,customer-returns-photos');
+    Route::get('/customer/returns/{returnPublicId}/photos/{photo}', [\App\Domain\Returns\Http\Controllers\CustomerReturnController::class, 'photo'])->where('photo', '[0-9A-Za-z]{26}');
 
     // --- Support (Module 34, Phase B26) — the customer's own requests ---
     Route::get('/customer/support/tickets', [\App\Domain\Support\Http\Controllers\CustomerSupportController::class, 'index']);
@@ -129,6 +132,16 @@ Route::middleware(['customer.optional', 'storefront.store:api', 'throttle:120,1'
         // Module 34 (Phase B26): contact form and a guest's private ticket link.
         $support = \App\Domain\Support\Http\Controllers\GuestSupportController::class;
         Route::post('/support/contact', [$support, 'contact'])->middleware('throttle:3,1,sf-contact');
+
+        // Module 09 §8–9 (Phase B34): returns for a guest, through the link sent to the order's email.
+        // The lookup answers the same for every input; the other routes need the link's token (X-Return-Token).
+        Route::post('/returns/lookup', [\App\Domain\Returns\Http\Controllers\GuestReturnController::class, 'lookup'])->middleware('throttle:5,10,sf-return-lookup');
+        Route::get('/returns/guest', [\App\Domain\Returns\Http\Controllers\GuestReturnController::class, 'returnable'])->middleware('throttle:60,1,sf-return-guest');
+        Route::post('/returns/guest', [\App\Domain\Returns\Http\Controllers\GuestReturnController::class, 'store'])->middleware('throttle:10,10,sf-return-guest-create');
+        Route::post('/returns/guest/{returnPublicId}/cancel', [\App\Domain\Returns\Http\Controllers\GuestReturnController::class, 'cancel'])->middleware('throttle:20,10,sf-return-guest-act');
+        Route::post('/returns/guest/{returnPublicId}/shipped', [\App\Domain\Returns\Http\Controllers\GuestReturnController::class, 'shipped'])->middleware('throttle:20,10,sf-return-guest-act');
+        Route::post('/returns/guest/{returnPublicId}/photos', [\App\Domain\Returns\Http\Controllers\GuestReturnController::class, 'addPhoto'])->middleware('throttle:20,10,sf-return-guest-photos');
+        Route::get('/returns/guest/{returnPublicId}/photos/{photo}', [\App\Domain\Returns\Http\Controllers\GuestReturnController::class, 'photo'])->where('photo', '[0-9A-Za-z]{26}')->middleware('throttle:120,1,sf-return-guest-photo');
         Route::get('/support/tickets/{ticket}', [$support, 'show'])->middleware('throttle:30,1,sf-ticket');
         Route::post('/support/tickets/{ticket}/messages', [$support, 'reply'])->middleware('throttle:10,1,sf-ticket-reply');
         Route::post('/support/tickets/{ticket}/resolve', [$support, 'resolve'])->middleware('throttle:10,1,sf-ticket-reply');

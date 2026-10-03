@@ -2,7 +2,7 @@ import { formatDate, formatDateTime } from '@/lib/datetime';
 import { Link } from '@inertiajs/react';
 import { useEffect, useState } from 'react';
 import AccountLayout from '@/Components/Storefront/AccountLayout';
-import OrderReturns from '@/Components/Storefront/OrderReturns';
+import OrderReturns, { customerReturnsApi } from '@/Components/Storefront/OrderReturns';
 import { formatMoney } from '@/lib/money';
 import { errorMessage, storefrontFetch } from '@/Storefront/api';
 import { formatAddress, useCustomer } from '@/Storefront/account';
@@ -106,7 +106,7 @@ export default function Order({ storefront, seo, order_id }: StorefrontPageProps
             </div>
           )}
 
-          <OrderReturns shell={storefront} orderId={order.id} />
+          <OrderReturns shell={storefront} api={customerReturnsApi(storefront, order.id)} />
         </div>
       )}
     </AccountLayout>

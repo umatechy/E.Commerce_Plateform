@@ -15,20 +15,11 @@ use Illuminate\Validation\ValidationException;
 /**
  * Phase B24 — the only writer of product images.
  *
- * Every upload is decoded and re-encoded with GD before it is stored.
- * That drops EXIF/XMP metadata (camera serials, GPS positions of a
- * seller's home) and guarantees the stored bytes are a plain image —
- * a file that merely claims to be one (a polyglot, an HTML payload with
- * a JPEG header) fails to decode and is refused.
+ * Every upload is decoded and re-encoded before it is stored (see
+ * App\Support\ImageReencoder): no metadata, and only real images.
  */
 final class ProductImageService
 {
-    private const FORMATS = [
-        IMAGETYPE_JPEG => 'jpg',
-        IMAGETYPE_PNG => 'png',
-        IMAGETYPE_WEBP => 'webp',
-    ];
-
     public function add(Product $product, UploadedFile $file, ?string $alt, ?int $variantId): ProductImage
     {
         if ($product->images()->count() >= (int) config('storefront.images.max_per_product')) {
@@ -86,39 +77,6 @@ final class ProductImageService
     /** @return array{0: string, 1: string, 2: int, 3: int} bytes, extension, width, height */
     private function reencode(UploadedFile $file): array
     {
-        $info = @getimagesize($file->getRealPath());
-        $type = $info[2] ?? null;
-
-        if ($info === false || ! isset(self::FORMATS[$type])) {
-            throw ValidationException::withMessages(['image' => 'The file must be a JPEG, PNG or WebP image.']);
-        }
-
-        [$width, $height] = $info;
-        $min = (int) config('storefront.images.min_dimension');
-        $max = (int) config('storefront.images.max_dimension');
-
-        if ($width < $min || $height < $min || $width > $max || $height > $max) {
-            throw ValidationException::withMessages(['image' => "Images must be between {$min} and {$max} pixels on each side."]);
-        }
-
-        $image = @imagecreatefromstring((string) file_get_contents($file->getRealPath()));
-
-        if ($image === false) {
-            throw ValidationException::withMessages(['image' => 'The image could not be read.']);
-        }
-
-        ob_start();
-        match ($type) {
-            IMAGETYPE_JPEG => imagejpeg($image, null, 85),
-            IMAGETYPE_PNG => (function () use ($image) {
-                imagesavealpha($image, true);
-                imagepng($image, null, 6);
-            })(),
-            IMAGETYPE_WEBP => imagewebp($image, null, 85),
-        };
-        $bytes = (string) ob_get_clean();
-        imagedestroy($image);
-
-        return [$bytes, self::FORMATS[$type], $width, $height];
+        return app(\App\Support\ImageReencoder::class)->reencode($file, (int) config('storefront.images.min_dimension'), (int) config('storefront.images.max_dimension'));
     }
 }

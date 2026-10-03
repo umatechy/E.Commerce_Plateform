@@ -98,6 +98,12 @@ final class ReturnRequest extends Model
         return $this->hasMany(ReturnItem::class);
     }
 
+    /** @return HasMany<ReturnPhoto, $this> Module 09 §45 "Images" (Phase B34) */
+    public function photos(): HasMany
+    {
+        return $this->hasMany(ReturnPhoto::class)->orderBy('id');
+    }
+
     /** @return BelongsTo<Order, $this> */
     public function replacementOrder(): BelongsTo
     {

@@ -176,6 +176,10 @@ Route::middleware(['auth:sanctum', 'staff.principal', 'required.mfa'])->group(fu
     Route::post('/returns/{return}/approve-refund', [\App\Domain\Returns\Http\Controllers\ReturnController::class, 'approveRefund']);
     Route::post('/returns/{return}/refund', [\App\Domain\Returns\Http\Controllers\ReturnController::class, 'refund']);
     Route::post('/returns/{return}/replacement', [\App\Domain\Returns\Http\Controllers\ReturnController::class, 'replacement']);
+    // Photos (Phase B34): private files, served only through these routes.
+    Route::post('/returns/{return}/photos', [\App\Domain\Returns\Http\Controllers\ReturnController::class, 'addPhoto'])->middleware('throttle:30,1,returns-photos');
+    Route::get('/returns/{return}/photos/{photo}', [\App\Domain\Returns\Http\Controllers\ReturnController::class, 'photo'])->where('photo', '[0-9A-Za-z]{26}');
+    Route::delete('/returns/{return}/photos/{photo}', [\App\Domain\Returns\Http\Controllers\ReturnController::class, 'deletePhoto'])->where('photo', '[0-9A-Za-z]{26}');
 
     // --- Payments (Module 12, Phase B7) ---
     Route::get('/payments', [PaymentController::class, 'index']);
