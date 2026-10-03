@@ -5,12 +5,12 @@ import Button, { ButtonLink, FOCUS_RING } from '@/Components/ui/Button';
 import DataTable, { type Column } from '@/Components/ui/DataTable';
 import Dialog, { ConfirmDialog } from '@/Components/ui/Dialog';
 import { FormError, TextAreaField, TextField } from '@/Components/ui/Form';
-import { AccessNotice, Card } from '@/Components/ui/Page';
+import { AccessNotice, Card, PackageNotice } from '@/Components/ui/Page';
 import { useAccess } from '@/lib/access';
 import { useApi } from '@/lib/useApi';
 import { useAction, useForm } from '@/lib/useForm';
 import { adminFetch } from '@/lib/adminApi';
-import type { CustomerGroup, CustomerTag } from '@/lib/customers';
+import { ADVANCED_FEATURE, type CustomerGroup, type CustomerTag } from '@/lib/customers';
 
 /**
  * Module 10 §23–24 (Phase B32, gap G7): the store's customer groups and
@@ -77,7 +77,9 @@ const memberLink = (query: string, count: number) => (
 
 export default function Groups() {
   const access = useAccess();
-  const canManage = access.can('customers.manage');
+  // Owner decision 2026-10-03: changing groups and tags is Business/Premium. What exists stays visible.
+  const advanced = access.feature(ADVANCED_FEATURE) === true;
+  const canManage = access.can('customers.manage') && advanced;
   const groups = useApi<{ data: CustomerGroup[] }>('/customer-groups');
   const tags = useApi<{ data: CustomerTag[] }>('/customer-tags');
   const [editing, setEditing] = useState<CustomerGroup | 'new' | null>(null);
@@ -145,6 +147,11 @@ export default function Groups() {
       }
     >
       <div className="space-y-4">
+        {!advanced && (
+          <PackageNotice title="Customer groups and tags come with the Business and Premium packages" packageName={access.packageName} canSeeBilling={access.can('billing.view')}>
+            Groups and tags you already have stay, and you can still filter customers by them.
+          </PackageNotice>
+        )}
         <Card title="Groups">
           <DataTable caption="Customer groups" columns={groupColumns} rows={groups.data?.data ?? []} rowKey={(g) => g.id} loading={groups.data === null && !groups.error} error={groups.error} onRetry={groups.reload} empty={<p className="text-sm text-slate-600">No groups yet.{canManage ? ' Create one with New group.' : ''}</p>} />
         </Card>

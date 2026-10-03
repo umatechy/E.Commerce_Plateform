@@ -133,3 +133,28 @@ Next:
 G8 (returns, exchanges, refund flow — Module 09 §45–54, Module 13 §70),
 then G15 (catalog depth). G3 (tax) and G9–G10 (providers) still wait for
 the owner's rules and credentials.
+
+============================================================
+ADDENDUM — owner decisions of 2026-10-03
+============================================================
+
+1. Customer features by package (Module 10 §87): groups, tags, CSV
+   import/export and merge are Business and Premium
+   (`customers.advanced`); Basic keeps the rest. No "Maximum
+   Customers" limit. Seeder and migration 2028_05_01_000003; enforced
+   in the API; the screens say what needs a bigger package. Existing
+   groups and tags are never deleted on Basic.
+2. Customer merge (Module 10 §56): built. Explicit (chosen target,
+   typed email, reason, step-up), same store only, audited, with a
+   `customer_merges` record; refuses what would lose a sign-in or a
+   block. Migration 2028_05_01_000004.
+
+Tests: PHP 1061 passed (CustomerMergeAndPackageTest 5 added; four
+customer tests now give their store the Business-level feature);
+Vitest 137 passed (3 added). PHPStan, ESLint, TypeScript: clean.
+Browser (Chromium, local): 5 of 5 — Basic hides groups/tags/import/
+export and the API refuses (403); Business opens them; a duplicate with
+the same phone merged into the customer who stays; the merged record
+points to it and offers no changes.
+
+Known limitation 1 and 2 above are closed by this addendum.

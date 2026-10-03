@@ -75,6 +75,7 @@ final class CustomerRecordsController
     public function storeGroup(Request $request): JsonResponse
     {
         $this->authorize($request, 'manage');
+        $this->assertAdvanced();
         $data = $request->validate($this->groupRules());
 
         $group = CustomerGroup::query()->create($data);
@@ -86,6 +87,7 @@ final class CustomerRecordsController
     public function updateGroup(Request $request, CustomerGroup $group): JsonResponse
     {
         $this->authorize($request, 'manage');
+        $this->assertAdvanced();
         $data = $request->validate($this->groupRules($group));
 
         $before = $group->name;
@@ -99,6 +101,7 @@ final class CustomerRecordsController
     public function deleteGroup(Request $request, CustomerGroup $group): JsonResponse
     {
         $this->authorize($request, 'manage');
+        $this->assertAdvanced();
 
         $members = $group->customers()->count();
         $group->delete();
@@ -119,6 +122,7 @@ final class CustomerRecordsController
     public function renameTag(Request $request, CustomerTag $tag): JsonResponse
     {
         $this->authorize($request, 'manage');
+        $this->assertAdvanced();
         $data = $request->validate(['name' => ['required', 'string', 'max:60']]);
 
         $normalized = CustomerTag::normalize($data['name']);
@@ -137,6 +141,7 @@ final class CustomerRecordsController
     public function deleteTag(Request $request, CustomerTag $tag): JsonResponse
     {
         $this->authorize($request, 'manage');
+        $this->assertAdvanced();
 
         $count = $tag->customers()->count();
         $tag->delete();
@@ -150,6 +155,7 @@ final class CustomerRecordsController
     public function previewImport(Request $request, CustomerImport $import): JsonResponse
     {
         $this->authorize($request, 'import');
+        $this->assertAdvanced();
         $request->validate(['file' => ['required', 'file', 'mimes:csv,txt', 'max:'.CustomerImport::MAX_KILOBYTES]]);
 
         try {
@@ -162,6 +168,7 @@ final class CustomerRecordsController
     public function confirmImport(Request $request, string $import, CustomerImport $imports): JsonResponse
     {
         $this->authorize($request, 'import');
+        $this->assertAdvanced();
 
         try {
             return response()->json(['data' => $imports->confirm($import, $request->user())]);
@@ -205,6 +212,11 @@ final class CustomerRecordsController
         return ['id' => $tag->public_id, 'name' => $tag->name, 'customers_count' => (int) ($tag->customers_count ?? 0)];
     }
 
+    /** Groups, tags and import: Business and Premium (owner decision 2026-10-03, Module 10 §87). Reading what exists stays open. */
+    private function assertAdvanced(): void
+    {
+        app(\App\Domain\Packages\Services\EntitlementService::class)->assertFeatureEntitled('customers.advanced');
+    }
     private function authorize(Request $request, string $ability): void
     {
         abort_unless(app(CustomerPolicy::class)->{$ability}($request->user()), 403);

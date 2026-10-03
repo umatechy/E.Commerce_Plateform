@@ -1,5 +1,5 @@
 import { FormEvent, useState } from 'react';
-import { Link } from '@inertiajs/react';
+import { Link, router } from '@inertiajs/react';
 import AdminPage from '@/Components/AdminPage';
 import Button, { ButtonLink, FOCUS_RING } from '@/Components/ui/Button';
 import DataTable, { Pagination, type Column } from '@/Components/ui/DataTable';
@@ -14,7 +14,7 @@ import { useAction, useForm } from '@/lib/useForm';
 import { adminErrorMessage, adminFetch } from '@/lib/adminApi';
 import { money } from '@/lib/money';
 import { dateTimeOrDash, formatDate, formatDateTime } from '@/lib/datetime';
-import { ACTIVITY_LABELS, SOURCE_LABELS, type ActivityEvent, type CustomerDetail, type CustomerGroup, type CustomerNote, type CustomerRow } from '@/lib/customers';
+import { ACTIVITY_LABELS, ADVANCED_FEATURE, SOURCE_LABELS, type ActivityEvent, type CustomerDetail, type CustomerGroup, type CustomerNote, type CustomerRow } from '@/lib/customers';
 import { orderCustomer, type Order } from '@/lib/orders';
 
 /**
@@ -97,7 +97,7 @@ function StatusDialog({ customer, action, onClose, onDone }: { customer: Custome
   );
 }
 
-function GroupAndTags({ customer, canManage, onChanged }: { customer: CustomerDetail; canManage: boolean; onChanged: (c: CustomerRow) => void }) {
+function GroupAndTags({ customer, canManage, packageLocked, onChanged }: { customer: CustomerDetail; canManage: boolean; packageLocked: boolean; onChanged: (c: CustomerRow) => void }) {
   const groups = useApi<{ data: CustomerGroup[] }>(canManage ? '/customer-groups' : null);
   const [tagText, setTagText] = useState('');
   const { busy, run } = useAction();
@@ -162,6 +162,7 @@ function GroupAndTags({ customer, canManage, onChanged }: { customer: CustomerDe
             </form>
           )}
         </div>
+        {packageLocked && <p className="text-xs text-slate-600">Changing groups and tags comes with the Business and Premium packages.</p>}
       </div>
     </Card>
   );
@@ -346,11 +347,95 @@ function Privacy({ customer, onErased }: { customer: CustomerDetail; onErased: (
   );
 }
 
+/**
+ * Module 10 §56: joins this record (a duplicate) into the customer who
+ * stays. Staff choose the other record, give a reason and type its
+ * email; the server asks for the password again and refuses what would
+ * lose a sign-in or a block. Nothing is merged automatically.
+ */
+function MergeDialog({ customer, preset, onClose }: { customer: CustomerDetail; preset: { id: string; name: string; email: string } | null; onClose: () => void }) {
+  const [target, setTarget] = useState<{ id: string; name: string; email: string } | null>(preset);
+  const [text, setText] = useState('');
+  const results = usePagedApi<CustomerRow>(target === null && text.trim().length >= 2 ? '/customers' : null, { search: text.trim(), status: 'active', per_page: 8 });
+  const form = useForm({ reason: '', confirm_email: '' });
+
+  async function save(event: FormEvent) {
+    event.preventDefault();
+    if (target === null) {
+      form.setFormError('Choose the customer who stays.');
+
+      return;
+    }
+    const done = await form.submit(
+      () => adminFetch<{ data: { into: string } }>(`/customers/${customer.id}/merge`, { method: 'POST', body: { into: target.id, ...form.values } }),
+      'Customers merged.',
+    );
+    if (done) router.visit(`/customers/${done.data.into}`);
+  }
+
+  return (
+    <Dialog
+      open
+      wide
+      title={`Merge ${customer.name} into another customer`}
+      description="Orders, addresses, notes, tags, wishlist and messages of this record move to the customer who stays. That customer keeps their own name, email, account and marketing choice. This record is archived and marked as merged. It cannot be undone. You will be asked for your password."
+      onClose={onClose}
+      busy={form.busy}
+    >
+      <form onSubmit={save} className="space-y-4" noValidate>
+        <FormError message={form.formError} errors={form.errors} />
+        {target === null ? (
+          <div>
+            <TextField label="Find the customer who stays" type="search" value={text} onChange={setText} autoComplete="off" hint="Name, email or phone. Only active customers." data-autofocus />
+            {results.rows && (
+              <ul className="mt-2 divide-y divide-slate-100 rounded-md border border-slate-200">
+                {results.rows.filter((row) => row.id !== customer.id && !row.merged).map((row) => (
+                  <li key={row.id}>
+                    <button type="button" onClick={() => setTarget({ id: row.id, name: row.name, email: row.email })} className={`w-full p-2 text-left text-sm hover:bg-slate-50 ${FOCUS_RING}`}>
+                      <span className="font-medium text-slate-900">{row.name}</span> <span className="text-slate-600">{row.email}</span>
+                      {row.registered && <Badge tone="blue">Has an account</Badge>}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        ) : (
+          <div className="flex flex-wrap items-center justify-between gap-2 rounded-md border border-slate-200 p-3 text-sm">
+            <p>
+              Stays: <strong>{target.name}</strong> <span className="text-slate-600">{target.email}</span>
+            </p>
+            <Button size="sm" onClick={() => setTarget(null)} disabled={form.busy}>Choose another</Button>
+          </div>
+        )}
+        <TextField label="Reason" value={form.values.reason} onChange={(v) => form.set('reason', v)} error={form.errors.reason} maxLength={500} required hint="For example: the same person, added twice." />
+        {target && (
+          <TextField label={`Type the email of the customer who stays (${target.email}) to confirm`} value={form.values.confirm_email} onChange={(v) => form.set('confirm_email', v)} error={form.errors.confirm_email} autoComplete="off" required />
+        )}
+        <div className="flex justify-end gap-2">
+          <Button onClick={onClose} disabled={form.busy}>Cancel</Button>
+          <Button
+            type="submit"
+            variant="danger"
+            busy={form.busy}
+            busyLabel="Merging…"
+            disabled={target === null || form.values.reason.trim() === '' || form.values.confirm_email.trim().toLowerCase() !== target.email.toLowerCase()}
+          >
+            Merge for good
+          </Button>
+        </div>
+      </form>
+    </Dialog>
+  );
+}
+
 export default function Show({ customerId }: { customerId: string }) {
   const access = useAccess();
-  const canManage = access.can('customers.manage');
+  // Owner decision 2026-10-03 (Module 10 §87): groups, tags and merge are Business/Premium.
+  const advanced = access.feature(ADVANCED_FEATURE) === true;
   const state = useApi<{ data: CustomerDetail }>(`/customers/${customerId}`);
-  const [dialog, setDialog] = useState<'edit' | 'block' | 'archive' | 'reactivate' | null>(null);
+  const [dialog, setDialog] = useState<'edit' | 'block' | 'archive' | 'reactivate' | 'merge' | null>(null);
+  const [mergeInto, setMergeInto] = useState<{ id: string; name: string; email: string } | null>(null);
   const [version, setVersion] = useState(0);
   const customer = state.data?.data ?? null;
 
@@ -375,6 +460,15 @@ export default function Show({ customerId }: { customerId: string }) {
     return <AdminPage title="Customer" trail={[{ label: 'Customer' }]}><Skeleton lines={6} /></AdminPage>;
   }
 
+  // A merged record is history only: nothing about it changes any more.
+  const merged = customer.merged === true;
+  const canManage = access.can('customers.manage') && !merged;
+  const canMerge = canManage && advanced && !customer.erased && customer.status !== 'blocked';
+  const openMerge = (into: { id: string; name: string; email: string } | null) => {
+    setMergeInto(into);
+    setDialog('merge');
+  };
+
   return (
     <AdminPage
       title={customer.name}
@@ -392,12 +486,20 @@ export default function Show({ customerId }: { customerId: string }) {
             </>
           )}
           {canManage && !customer.erased && customer.status !== 'active' && <Button variant="primary" onClick={() => setDialog('reactivate')}>{customer.status === 'blocked' ? 'Unblock' : 'Restore'}</Button>}
+          {canMerge && !customer.registered && <Button onClick={() => openMerge(null)}>Merge into…</Button>}
         </>
       }
     >
       <div className="space-y-4">
         {customer.erased && <div role="status" className="rounded-md border border-slate-300 bg-slate-100 p-3 text-sm text-slate-800">This person's personal data was erased. The record stays only so that past orders add up.</div>}
-        {!customer.erased && customer.status !== 'active' && (
+        {merged && customer.merged_into && (
+          <div role="status" className="rounded-md border border-slate-300 bg-slate-100 p-3 text-sm text-slate-800">
+            This record was merged into{' '}
+            <Link href={`/customers/${customer.merged_into.id}`} className={`rounded font-medium underline ${FOCUS_RING}`}>{customer.merged_into.name}</Link>
+            {customer.merged_into.at && ` on ${formatDate(customer.merged_into.at)}`}. Its orders and details are there now.
+          </div>
+        )}
+        {!merged && !customer.erased && customer.status !== 'active' && (
           <div role="status" className={`rounded-md border p-3 text-sm ${customer.status === 'blocked' ? 'border-red-200 bg-red-50 text-red-900' : 'border-amber-300 bg-amber-50 text-amber-900'}`}>
             <strong>{customer.status === 'blocked' ? 'Blocked' : 'Archived'}</strong>
             {customer.status_changed_at && ` on ${formatDate(customer.status_changed_at)}`}
@@ -412,10 +514,16 @@ export default function Show({ customerId }: { customerId: string }) {
               {customer.possible_duplicates.map((other) => (
                 <li key={other.id}>
                   <Link href={`/customers/${other.id}`} className={`rounded underline ${FOCUS_RING}`}>{other.name}</Link> ({other.email}) — {other.reason === 'same_email' ? 'same email' : 'same phone'}
+                  {canMerge && !customer.registered && (
+                    <>
+                      {' '}
+                      <Button size="sm" variant="ghost" onClick={() => openMerge(other)}>Merge this record into {other.name}</Button>
+                    </>
+                  )}
                 </li>
               ))}
             </ul>
-            <p className="mt-1">Nothing is merged automatically. Check before acting.</p>
+            <p className="mt-1">Nothing is merged automatically. Check before acting.{customer.registered ? ' This customer has an account, so the other record is merged into this one: open it to merge.' : ''}{!advanced && canManage ? ' Merging comes with the Business and Premium packages.' : ''}</p>
           </div>
         )}
 
@@ -445,7 +553,19 @@ export default function Show({ customerId }: { customerId: string }) {
             <Notes customer={customer} canManage={canManage} />
           </div>
           <div className="space-y-4">
-            <GroupAndTags customer={customer} canManage={canManage} onChanged={changed} />
+            <GroupAndTags customer={customer} canManage={canManage && advanced} packageLocked={canManage && !advanced} onChanged={changed} />
+            {(customer.merged_from ?? []).length > 0 && (
+              <Card title="Merged into this customer">
+                <ul className="space-y-1 text-sm">
+                  {(customer.merged_from ?? []).map((record) => (
+                    <li key={record.id}>
+                      <Link href={`/customers/${record.id}`} className={`rounded text-indigo-700 hover:underline ${FOCUS_RING}`}>{record.name}</Link>{' '}
+                      <span className="text-slate-600">on {formatDate(record.at)}</span>
+                    </li>
+                  ))}
+                </ul>
+              </Card>
+            )}
             <Card title="Addresses">
               {customer.addresses.length === 0 ? (
                 <p className="text-sm text-slate-600">No saved addresses.</p>
@@ -469,6 +589,7 @@ export default function Show({ customerId }: { customerId: string }) {
       </div>
 
       {dialog === 'edit' && <EditDialog customer={customer} onClose={() => setDialog(null)} onDone={changed} />}
+      {dialog === 'merge' && <MergeDialog customer={customer} preset={mergeInto} onClose={() => setDialog(null)} />}
       {(dialog === 'block' || dialog === 'archive' || dialog === 'reactivate') && <StatusDialog customer={customer} action={dialog} onClose={() => setDialog(null)} onDone={changed} />}
     </AdminPage>
   );

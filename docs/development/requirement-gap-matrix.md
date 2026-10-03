@@ -251,7 +251,7 @@ Architecture v1.0 arrived after this review was written and are now in
 | ORD-001–007 | ✅ | B5 engine, state machine, snapshots, outbox | P0 |
 | ORD-008 | 🟡 | Payment refunds authorized; **no return workflow** | P1 |
 | ORD-009–010 | ✅ | Idempotency; coordinated checkout | P0 |
-| CUS-001–007 | ✅ | Store-scoped customers, account, export/erasure; B32: status/blocking, groups, tags, notes, import/export, email verification, guest order linking, admin screens. Merge reserved (M10 §56) | P0 |
+| CUS-001–007 | ✅ | Store-scoped customers, account, export/erasure; B32: status/blocking, groups, tags, notes, import/export, email verification, guest order linking, admin screens, explicit merge (M10 §56); groups/tags/import/export/merge are Business+ (owner decision 10) | P0 |
 
 ### 3.10 Cart & checkout (CHK)
 
@@ -408,7 +408,7 @@ existing pattern: feature tests plus tenant-isolation tests for every endpoint.
 | G4 | ✅ **Closed in B30** (checkpoint-b30; limitations listed there). Scheduled backups + restore rehearsal + alerting | BKP-001/007, HEALTH-005, TEST-011 | Data loss; failures go unnoticed | Schedule backups, rehearsal command, alert channel for critical health | P0 | Alert channel choice |
 | G5 | ✅ **Closed in B28** (checkpoint-b28). Store timezone consumption | DATA-010, LOC-004, M33 §50 | Wrong dates for scheduled promos/campaigns/SLA | Wire `store.timezone` into B10/B12/B13/B26 date logic | P0 | — |
 | G6 | ✅ **Closed in B31** (checkpoint-b31; matrix in docs/architecture/b31-admin-ui.md §6; open items in docs/development/b31-inspection-findings.md). Admin UI for API-only modules | Admin Capabilities in M06–M17, M19, M21–M23, M29–M31, M33 | Owners cannot operate the store | UI phases, highest value first: catalog, customers, shipping/payments settings, promotions, SEO/content, theme, domains, settings | P1 | G1 |
-| G7 | ✅ **Closed in B32** (checkpoint-b32; docs/architecture/b32-customers.md; merge reserved, package limits for customer features await an owner decision — docs/development/b32-inspection-findings.md §3). Module 10 completion (groups, tags, notes, blocking, merge, import, guest conversion, email verification) | M10 §9, §24–33, §47–57, AUTH-002 | Blocks targeted promotions (M14 §17–20) and marketing | Complete Module 10 | P1 | — |
+| G7 | ✅ **Closed in B32** (checkpoint-b32; docs/architecture/b32-customers.md; follow-up: customer merge built, customer features mapped to packages per owner decision 10 — docs/development/b32-inspection-findings.md §3, §6). Module 10 completion (groups, tags, notes, blocking, merge, import, guest conversion, email verification) | M10 §9, §24–33, §47–57, AUTH-002 | Blocks targeted promotions (M14 §17–20) and marketing | Complete Module 10 | P1 | — |
 | G8 | Returns, exchanges, refunds flow | ORD-008, M09 §45–54, M13 §70 | Manual handling only | Return request → inspection → refund/restock | P1 | — |
 | G9 | Real payment and courier providers | PAY-002/005, SHIP-007, M12 §20–21 | Online payment not possible | **Owner decision**: providers and merchant credentials; then adapters | P1 | Owner decision |
 | G10 | Real SMS/WhatsApp/push providers | NOTIF-003/004, M21 §18–20 | WhatsApp is central for the Pakistan market (M01 §14) | **Owner decision**: provider; then adapters | P1 | Owner decision |
@@ -441,6 +441,8 @@ The owner answered every question the same day. The full text is in
 | 7 | Inventory costing | **None** in the initial system; FIFO/WAC only via a future approved requirement | B4's open decision closed; nothing to build |
 | 8 | AI provider (G18) | OpenAI behind a provider abstraction; Module 26 must first define features, models, privacy, entitlements, limits, costs, audit, fallback | G18 starts with that definition |
 | 9 | Priorities | **Approved** as proposed | — |
+| 10 | Customer features by package (asked in B32, answered 2026-10-03 in the session) | Module 10 §87 mapping: Basic keeps accounts, profiles, addresses, search, notes, blocking, privacy; **groups, tags, CSV import/export and merge are Business and Premium** (`customers.advanced`). **No "Maximum Customers" limit** for now | Seeder + migration `2028_05_01_000003`; enforced in the customer API |
+| 11 | Customer merge (Module 10 §56, reserved in B32) | Build it | Built in B32 follow-up (`CustomerMerger`) |
 
 ## 6. Recommended order
 

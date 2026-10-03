@@ -38,6 +38,8 @@ final class StaffCustomerResource extends JsonResource
             'email_verified' => $this->email_verified_at !== null,
             'marketing_email_opt_in' => (bool) $this->marketing_email_opt_in,
             'erased' => $this->erased_at !== null,
+            // Module 10 §56: set when this record was merged into another one.
+            'merged' => $this->merged_into_customer_id !== null,
             'group' => $this->whenLoaded('group', fn () => $this->group === null ? null : ['id' => $this->group->public_id, 'name' => $this->group->name]),
             'tags' => $this->whenLoaded('tags', fn () => $this->tags->map(fn ($tag) => ['id' => $tag->public_id, 'name' => $tag->name])->values()),
             'orders_count' => $this->when($this->resource->getAttribute('orders_count') !== null, fn () => (int) $this->resource->getAttribute('orders_count')),

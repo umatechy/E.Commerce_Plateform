@@ -59,6 +59,7 @@ final class CustomerAdminTest extends TestCase
     public function test_the_list_shows_figures_and_filters_by_status_group_tag_and_orders(): void
     {
         $store = Store::factory()->create();
+        $this->entitle($store, ['customers.advanced']);
         $owner = $this->owner($store);
         $ayesha = $this->customer($store, ['name' => 'Ayesha Khan', 'email' => 'ayesha@example.com']);
         $bilal = $this->customer($store, ['name' => 'Bilal Ahmed', 'email' => 'bilal@example.com']);
@@ -219,6 +220,7 @@ final class CustomerAdminTest extends TestCase
     {
         $store = Store::factory()->create();
         $other = Store::factory()->create();
+        $this->entitle($store, ['customers.advanced']);
         $owner = $this->owner($store);
         CustomerGroup::query()->withoutTenantScope()->create(['store_id' => $other->id, 'name' => 'Retail']);
 

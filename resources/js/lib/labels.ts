@@ -55,6 +55,7 @@ export const FEATURE_LABELS: Record<string, string> = {
   'seo.basic': 'SEO and content pages',
   'domains.custom_domain': 'Custom domain',
   'theme.custom_css': 'Custom CSS',
+  'customers.advanced': 'Customer groups, tags, import/export and merge',
   'products.basic': 'Products',
 };
 

@@ -72,8 +72,29 @@ data, only colours, sections and CSS.
 
 ## 6. Residual risks
 
-1. Customer merge is not built; duplicates remain until staff act.
-2. Package limits for customer features are an open owner decision
-   (nothing invented).
-3. The verification email was not observed in a real inbox (mail driver
+1. Duplicates remain until staff merge them (never automatic).
+2. The verification email was not observed in a real inbox (mail driver
    `log`).
+
+## 7. Follow-up (2026-10-03): package gate and customer merge
+
+**Package gate.** `customers.advanced` is checked by
+`EntitlementService` in the controllers before any change to groups or
+tags, import, export and merge (403 `feature_not_entitled`). Hiding the
+buttons on Basic is convenience only; `CustomerMergeAndPackageTest`
+calls the API directly for all eight actions and checks nothing changed.
+
+**Merge.**
+
+| Risk | Control |
+|---|---|
+| Cross-tenant merge | Both records resolved under the tenant (another store's source is 404, its target 422); every write also filters by `store_id`; the service refuses different stores as a last line |
+| Account takeover through a merge | A source with its own account is refused (its sign-in would move nowhere); two accounts are refused; the target keeps its password and email |
+| A block lost by merging | Blocked records are refused on either side |
+| Consent widened | The target's marketing consent is kept, never the source's |
+| Mistaken merge | Explicit: chosen target, typed target email, reason, step-up; audited on both records; `customer_merges` keeps who/when/what (counts, no personal data) |
+| Races | Both rows locked (lower id first) and re-checked in the transaction; unique `source_customer_id` |
+| Leftover access | The source loses its tokens, email-verification and password-reset rows; a merged record can no longer be changed or restored |
+
+Tests: `CustomerMergeAndPackageTest` (5), `StepUpTest` route list,
+Vitest (3). Browser: Basic refusal in UI and API, Business merge.

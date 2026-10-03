@@ -216,6 +216,10 @@ final class CustomerManagement
         if ($customer->erased_at !== null) {
             throw new CustomerActionRefusedException('This customer\'s personal data was erased. The record can no longer be changed.', 'erased');
         }
+        // Module 10 §56: a merged record is history; its customer lives on in the target.
+        if ($customer->merged_into_customer_id !== null) {
+            throw new CustomerActionRefusedException('This record was merged into another customer. Make changes there.', 'merged');
+        }
     }
 
     private function assertEmailFree(string $email, ?Customer $except = null): void

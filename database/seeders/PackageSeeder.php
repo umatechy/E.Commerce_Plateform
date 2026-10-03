@@ -75,6 +75,7 @@ final class PackageSeeder extends Seeder
             'analytics.basic' => true, // Module 22 — core dashboard/reports available to every tier
             'seo.basic' => true, // Module 16 — core SEO/content management available to every tier
             'domains.custom_domain' => true, // Module 19 — custom domain attachment available to every tier
+            'customers.advanced' => false, // Module 10 §87 (owner decision 2026-10-03): groups, tags, CSV import/export and merge are Business+
             'theme.custom_css' => false, // Module 17 — custom CSS is a Business/Premium differentiator (documented decision, not an invented numeric limit — see b15-inspection-findings.md)
         ],
         'business' => [
@@ -108,6 +109,7 @@ final class PackageSeeder extends Seeder
             'analytics.basic' => true, // Module 22 — core dashboard/reports available to every tier
             'seo.basic' => true, // Module 16 — core SEO/content management available to every tier
             'domains.custom_domain' => true, // Module 19 — custom domain attachment available to every tier
+            'customers.advanced' => true, // Module 10 §87 (owner decision 2026-10-03)
             'theme.custom_css' => true, // Module 17 — Business/Premium differentiator (see b15-inspection-findings.md)
         ],
         'premium' => [
@@ -141,6 +143,7 @@ final class PackageSeeder extends Seeder
             'analytics.basic' => true, // Module 22 — core dashboard/reports available to every tier
             'seo.basic' => true, // Module 16 — core SEO/content management available to every tier
             'domains.custom_domain' => true, // Module 19 — custom domain attachment available to every tier
+            'customers.advanced' => true, // Module 10 §87 (owner decision 2026-10-03)
             'theme.custom_css' => true, // Module 17 — Business/Premium differentiator (see b15-inspection-findings.md)
         ],
     ];

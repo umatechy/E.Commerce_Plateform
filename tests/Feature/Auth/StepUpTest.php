@@ -109,6 +109,7 @@ final class StepUpTest extends TestCase
             'POST api/v1/backups/{backup}/restore-request',
             // Phase B32: erasing a customer's personal data cannot be undone.
             'POST api/v1/customers/{customer}/erase',
+            'POST api/v1/customers/{customer}/merge',
             'POST api/v1/super-admin/billing/invoices/{invoice}/extend-due-date',
             'POST api/v1/super-admin/billing/invoices/{invoice}/payments',
             'POST api/v1/super-admin/billing/invoices/{invoice}/void',

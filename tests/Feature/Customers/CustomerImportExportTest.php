@@ -26,6 +26,8 @@ final class CustomerImportExportTest extends TestCase
     private function openStore(): Store
     {
         $store = Store::factory()->create(['status' => 'active']);
+        // Import and export are Business/Premium (owner decision 2026-10-03).
+        $this->entitle($store, ['customers.advanced']);
         app(TenantContext::class)->resolveToStore($store->id);
 
         return $store;

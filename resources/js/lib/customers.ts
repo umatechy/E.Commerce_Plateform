@@ -3,6 +3,9 @@
  * StaffCustomerResource, the customer detail, notes, groups, tags,
  * activity and the import preview. The server computes every figure.
  */
+/** Owner decision 2026-10-03 (Module 10 §87): groups, tags, import, export and merge are Business/Premium. */
+export const ADVANCED_FEATURE = 'customers.advanced';
+
 export const CUSTOMER_STATUSES = ['active', 'blocked', 'archived'] as const;
 export type CustomerStatus = (typeof CUSTOMER_STATUSES)[number];
 
@@ -34,6 +37,8 @@ export type CustomerRow = {
   email_verified: boolean;
   marketing_email_opt_in: boolean;
   erased: boolean;
+  /** Module 10 §56: this record was merged into another. */
+  merged?: boolean;
   group?: { id: string; name: string } | null;
   tags?: { id: string; name: string }[];
   orders_count?: number;
@@ -60,6 +65,8 @@ export type CustomerDetail = CustomerRow & {
   average_order_value_minor: number | null;
   addresses: CustomerAddress[];
   possible_duplicates: { id: string; name: string; email: string; reason: 'same_email' | 'same_phone' }[];
+  merged_into?: { id: string; name: string; at: string | null } | null;
+  merged_from?: { id: string; name: string; at: string }[];
 };
 
 export type CustomerNote = { id: string; body: string; author: string | null; is_yours: boolean; created_at: string };
@@ -88,6 +95,8 @@ export const ACTIVITY_LABELS: Record<string, string> = {
   'customer.unblocked': 'Unblocked',
   'customer.archived': 'Archived',
   'customer.restored': 'Restored',
+  'customer.merged_into': 'Merged into another customer record',
+  'customer.merged_from': 'Another customer record was merged into this one',
   'customer.group_changed': 'Group changed',
   'customer.tags_changed': 'Tags changed',
   'customer.note_added': 'Note added',

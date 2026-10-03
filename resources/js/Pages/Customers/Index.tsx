@@ -7,7 +7,7 @@ import Dialog from '@/Components/ui/Dialog';
 import { FormError, SelectField, TextField } from '@/Components/ui/Form';
 import { FilterBar, SearchField } from '@/Components/ui/Filters';
 import Badge, { StatusBadge } from '@/Components/ui/Badge';
-import { EmptyPanel, QueryState, StatCard } from '@/Components/ui/Page';
+import { EmptyPanel, PackageNotice, QueryState, StatCard } from '@/Components/ui/Page';
 import { toast } from '@/Components/ui/toast';
 import { useAccess } from '@/lib/access';
 import { useApi, usePagedApi } from '@/lib/useApi';
@@ -18,7 +18,7 @@ import { money } from '@/lib/money';
 import { formatDate } from '@/lib/datetime';
 import { DATE_FILTERS, options } from '@/lib/labels';
 import { downloadFile } from '@/lib/download';
-import { CUSTOMER_SORTS, CUSTOMER_STATUSES, IMPORT_TEMPLATE, type CustomerGroup, type CustomerRow, type CustomerTag, type ImportPreview } from '@/lib/customers';
+import { ADVANCED_FEATURE, CUSTOMER_SORTS, CUSTOMER_STATUSES, IMPORT_TEMPLATE, type CustomerGroup, type CustomerRow, type CustomerTag, type ImportPreview } from '@/lib/customers';
 
 /**
  * Module 10 §51–54, §96 (Phase B32, gap G7): the store's customers.
@@ -59,7 +59,7 @@ function Figures() {
   );
 }
 
-function AddCustomerDialog({ groups, onClose }: { groups: CustomerGroup[]; onClose: () => void }) {
+function AddCustomerDialog({ groups, advanced, onClose }: { groups: CustomerGroup[]; advanced: boolean; onClose: () => void }) {
   const form = useForm({ name: '', email: '', phone: '', group: '', tags: '' });
 
   async function save(event: FormEvent) {
@@ -69,8 +69,8 @@ function AddCustomerDialog({ groups, onClose }: { groups: CustomerGroup[]; onClo
       name: v.name,
       email: v.email,
       phone: v.phone === '' ? null : v.phone,
-      group: v.group === '' ? null : v.group,
-      tags: v.tags.split(',').map((t) => t.trim()).filter((t) => t !== ''),
+      // Groups and tags only on Business/Premium (the server checks it too).
+      ...(advanced ? { group: v.group === '' ? null : v.group, tags: v.tags.split(',').map((t) => t.trim()).filter((t) => t !== '') } : {}),
     };
     const saved = await form.submit(() => adminFetch<{ data: CustomerRow }>('/customers', { method: 'POST', body }), 'Customer added.');
     if (saved) router.visit(`/customers/${saved.data.id}`);
@@ -83,8 +83,12 @@ function AddCustomerDialog({ groups, onClose }: { groups: CustomerGroup[]; onClo
         <TextField label="Name" value={form.values.name} onChange={(v) => form.set('name', v)} error={form.errors.name} required maxLength={255} data-autofocus />
         <TextField label="Email" type="email" value={form.values.email} onChange={(v) => form.set('email', v)} error={form.errors.email} required maxLength={255} />
         <TextField label="Phone" optional value={form.values.phone} onChange={(v) => form.set('phone', v)} error={form.errors.phone} maxLength={32} />
-        <SelectField label="Group" optional value={form.values.group} onChange={(v) => form.set('group', v)} error={form.errors.group} placeholder="No group" options={groups.map((g) => ({ value: g.id, label: g.name }))} />
-        <TextField label="Tags" optional value={form.values.tags} onChange={(v) => form.set('tags', v)} error={form.errors.tags} hint="Separate tags with commas, e.g. VIP, Wholesale." />
+        {advanced && (
+          <>
+            <SelectField label="Group" optional value={form.values.group} onChange={(v) => form.set('group', v)} error={form.errors.group} placeholder="No group" options={groups.map((g) => ({ value: g.id, label: g.name }))} />
+            <TextField label="Tags" optional value={form.values.tags} onChange={(v) => form.set('tags', v)} error={form.errors.tags} hint="Separate tags with commas, e.g. VIP, Wholesale." />
+          </>
+        )}
         <div className="flex justify-end gap-2">
           <Button onClick={onClose} disabled={form.busy}>Cancel</Button>
           <Button type="submit" variant="primary" busy={form.busy} busyLabel="Adding…">Add customer</Button>
@@ -207,6 +211,8 @@ export default function Index() {
   const groups = useApi<{ data: CustomerGroup[] }>('/customer-groups');
   const tags = useApi<{ data: CustomerTag[] }>('/customer-tags');
   const [dialog, setDialog] = useState<'add' | 'import' | null>(null);
+  // Owner decision 2026-10-03 (Module 10 §87): groups, tags, import, export and merge are Business/Premium.
+  const advanced = access.feature(ADVANCED_FEATURE) === true;
   const filtered = Object.entries(filters).some(([key, value]) => !['page', 'sort'].includes(key) && value !== '');
   // The export takes the list's filters (not its page).
   const exportFilters = Object.fromEntries(Object.entries(filters).filter(([key]) => key !== 'page'));
@@ -223,7 +229,7 @@ export default function Index() {
         </div>
       ),
     },
-    { key: 'status', header: 'Status', priority: true, render: (customer) => (customer.erased ? <Badge>Erased</Badge> : <StatusBadge status={customer.status} />) },
+    { key: 'status', header: 'Status', priority: true, render: (customer) => (customer.erased ? <Badge>Erased</Badge> : customer.merged ? <Badge>Merged</Badge> : <StatusBadge status={customer.status} />) },
     { key: 'group', header: 'Group', render: (customer) => customer.group?.name ?? '—' },
     {
       key: 'tags',
@@ -242,7 +248,7 @@ export default function Index() {
       actions={
         <>
           <ButtonLink href="/customers/groups">Groups and tags</ButtonLink>
-          {access.can('customers.export') && (
+          {advanced && access.can('customers.export') && (
             <Button
               busy={exporting}
               busyLabel="Preparing…"
@@ -257,11 +263,18 @@ export default function Index() {
               Export CSV
             </Button>
           )}
-          {access.can('customers.import') && <Button onClick={() => setDialog('import')}>Import</Button>}
+          {advanced && access.can('customers.import') && <Button onClick={() => setDialog('import')}>Import</Button>}
           {access.can('customers.manage') && <Button variant="primary" onClick={() => setDialog('add')}>Add customer</Button>}
         </>
       }
     >
+      {!advanced && (access.can('customers.import') || access.can('customers.export') || access.can('customers.manage')) && (
+        <div className="mb-4">
+          <PackageNotice title="Groups, tags, import, export and merging customers come with the Business and Premium packages" packageName={access.packageName} canSeeBilling={access.can('billing.view')}>
+            Everything else about your customers works on every package. Groups and tags you already have stay.
+          </PackageNotice>
+        </div>
+      )}
       {access.can('analytics.view') && <Figures />}
 
       <FilterBar>
@@ -299,7 +312,7 @@ export default function Index() {
       <Pagination meta={list.meta} disabled={list.loading} onPage={(page) => setFilters({ page: String(page) })} />
       <p className="mt-2 text-xs text-slate-600">Spent is the total of a customer's orders that were not cancelled, in your store currency ({access.currency}).</p>
 
-      {dialog === 'add' && <AddCustomerDialog groups={groups.data?.data ?? []} onClose={() => setDialog(null)} />}
+      {dialog === 'add' && <AddCustomerDialog groups={groups.data?.data ?? []} advanced={advanced} onClose={() => setDialog(null)} />}
       {dialog === 'import' && <ImportDialog onClose={() => setDialog(null)} onDone={() => { setDialog(null); list.reload(); tags.reload(); }} />}
     </AdminPage>
   );

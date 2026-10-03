@@ -131,13 +131,32 @@ Promotions (target names), Packages (contents editor), Platform settings
 (history), Theme (Preview draft), storefront Confirm-your-email page and
 dashboard prompt.
 
-## 6. Not built (reserved or out of scope)
+## 6. Packages (owner decision 2026-10-03)
 
-- Customer **merge** (§56): reserved. Possible duplicates (same email or
-  phone) are shown as a warning only.
+`customers.advanced` (Business, Premium): groups, tags, CSV import,
+CSV export, merge. Basic keeps everything else. Reading existing groups
+and tags stays open on Basic (a downgrade deletes nothing); changes
+answer 403 `feature_not_entitled`. No "Maximum Customers" limit.
+
+## 7. Customer merge (Module 10 §56)
+
+`POST /customers/{source}/merge` with `into`, `reason`,
+`confirm_email` (the target's), behind `customers.manage`,
+`customers.advanced` and step-up. `CustomerMerger` locks both rows
+(lower id first), checks them again and moves orders, payments,
+promotion usages, addresses, tags (union), group (if the target has
+none), wishlist items the target lacks, notes, notifications, campaign
+history and support requests. The target keeps its identity, password,
+email confirmation and marketing consent. The source is archived with
+`merged_into_customer_id`/`merged_at`, loses its tokens and can no
+longer be changed; `customer_merges` records the counts. Rules and
+refusals: `docs/development/b32-inspection-findings.md` §6.
+
+## 8. Not built (out of scope)
+
 - Staff cannot change the email or phone of a customer who has an
   account (§67: identity changes need the customer's verification).
 - Customer groups do not set prices or promotion eligibility yet (Module
   14 §17–20 consumes them later).
-- Groups and tags are not limited by package: Module 04 §8 has no mapping
-  for them. This is an owner decision (see the findings).
+- Merging two records that both have an account (the customer's choice,
+  not staff's).

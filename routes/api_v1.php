@@ -268,6 +268,8 @@ Route::middleware(['auth:sanctum', 'staff.principal', 'required.mfa'])->group(fu
     Route::post('/customers/{customer}/block', [\App\Domain\Customers\Http\Controllers\CustomerController::class, 'block']);
     Route::post('/customers/{customer}/archive', [\App\Domain\Customers\Http\Controllers\CustomerController::class, 'archive']);
     Route::post('/customers/{customer}/reactivate', [\App\Domain\Customers\Http\Controllers\CustomerController::class, 'reactivate']);
+    // Module 10 §56: explicit, audited, the password asked again.
+    Route::post('/customers/{customer}/merge', [\App\Domain\Customers\Http\Controllers\CustomerController::class, 'merge'])->middleware(['step_up', 'throttle:10,10,customers-merge']);
     Route::get('/customers/{customer}/activity', [\App\Domain\Customers\Http\Controllers\CustomerController::class, 'activity']);
     Route::get('/customers/{customer}/notes', [\App\Domain\Customers\Http\Controllers\CustomerRecordsController::class, 'notes']);
     Route::post('/customers/{customer}/notes', [\App\Domain\Customers\Http\Controllers\CustomerRecordsController::class, 'addNote']);

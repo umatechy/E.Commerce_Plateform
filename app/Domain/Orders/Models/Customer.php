@@ -53,6 +53,7 @@ final class Customer extends Model implements AuthenticatableContract
             'status' => \App\Domain\Customers\Models\CustomerStatus::class, // Module 10 §29 (Phase B32)
             'source' => \App\Domain\Customers\Models\CustomerSource::class,
             'status_changed_at' => 'datetime',
+            'merged_at' => 'datetime', // Module 10 §56 (customer merge)
         ];
     }
 
@@ -103,6 +104,12 @@ final class Customer extends Model implements AuthenticatableContract
     public function notes(): HasMany
     {
         return $this->hasMany(\App\Domain\Customers\Models\CustomerNote::class);
+    }
+
+    /** @return BelongsTo<self, $this> Module 10 §56: the record this one was merged into */
+    public function mergedInto(): BelongsTo
+    {
+        return $this->belongsTo(self::class, 'merged_into_customer_id');
     }
 
     /** Module 10 §29–31 (Phase B32). A row from before B32, or one not yet refreshed, counts as active. */

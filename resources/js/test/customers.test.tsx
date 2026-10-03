@@ -142,6 +142,62 @@ describe('customer detail', () => {
   });
 });
 
+describe('package (owner decision 2026-10-03)', () => {
+  const business = { ...owner, features: { 'customers.advanced': true } };
+
+  it('on Basic: tags are read-only and merging is not offered', async () => {
+    vi.stubGlobal('fetch', customerRoutes(detail({ registered: false, possible_duplicates: [{ id: '01JCUSTOMER000000000000002', name: 'A. Khan', email: 'a.khan@example.com', reason: 'same_email' }] })));
+    render(<Show customerId={ID} />);
+
+    await screen.findByRole('heading', { name: 'Ayesha Khan' });
+    expect(screen.getByText('VIP')).toBeTruthy();
+    expect(screen.queryByLabelText('Add tags')).toBeNull();
+    expect(screen.getByText('Changing groups and tags comes with the Business and Premium packages.')).toBeTruthy();
+    expect(screen.queryByRole('button', { name: 'Merge into…' })).toBeNull();
+    expect(screen.queryByRole('button', { name: /Merge this record/ })).toBeNull();
+  });
+
+  it('on Business: merges into the chosen duplicate after the email is typed, then opens it', async () => {
+    setPage(business, `/customers/${ID}`);
+    let sent: unknown = null;
+    vi.stubGlobal(
+      'fetch',
+      customerRoutes(detail({ registered: false, possible_duplicates: [{ id: '01JCUSTOMER000000000000002', name: 'A. Khan', email: 'a.khan@example.com', reason: 'same_email' }] }), {
+        [`POST /customers/${ID}/merge`]: (_url, init) => {
+          sent = JSON.parse(init.body as string);
+
+          return json(200, { data: { into: '01JCUSTOMER000000000000002', moved: { orders: 2 } } });
+        },
+      }),
+    );
+    const { routerMock } = await import('@/test/inertiaMock');
+    render(<Show customerId={ID} />);
+
+    expect(await screen.findByLabelText('Add tags')).toBeTruthy();
+    fireEvent.click(await screen.findByRole('button', { name: 'Merge this record into A. Khan' }));
+    const dialog = await screen.findByRole('dialog', { name: 'Merge Ayesha Khan into another customer' });
+    const submit = within(dialog).getByRole('button', { name: 'Merge for good' }) as HTMLButtonElement;
+    fireEvent.change(within(dialog).getByLabelText('Reason'), { target: { value: 'Added twice' } });
+    expect(submit.disabled).toBe(true);
+    fireEvent.change(within(dialog).getByLabelText(/Type the email of the customer who stays/), { target: { value: 'A.KHAN@example.com' } });
+    expect(submit.disabled).toBe(false);
+    fireEvent.click(submit);
+
+    await waitFor(() => expect(sent).toEqual({ into: '01JCUSTOMER000000000000002', reason: 'Added twice', confirm_email: 'A.KHAN@example.com' }));
+    await waitFor(() => expect(routerMock.visit).toHaveBeenCalledWith('/customers/01JCUSTOMER000000000000002'));
+  });
+
+  it('a merged record says where it went and offers no changes', async () => {
+    setPage(business, `/customers/${ID}`);
+    vi.stubGlobal('fetch', customerRoutes(detail({ status: 'archived', merged: true, merged_into: { id: '01JCUSTOMER000000000000002', name: 'A. Khan', at: '2026-10-03T10:00:00Z' } })));
+    render(<Show customerId={ID} />);
+
+    expect((await screen.findByRole('link', { name: 'A. Khan' })).getAttribute('href')).toBe('/customers/01JCUSTOMER000000000000002');
+    expect(screen.queryByRole('button', { name: 'Restore' })).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Edit' })).toBeNull();
+  });
+});
+
 describe('groups and tags', () => {
   it('links each group and tag to its customers by id', async () => {
     setPage(owner, '/customers/groups');

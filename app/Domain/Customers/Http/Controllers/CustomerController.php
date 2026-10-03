@@ -9,10 +9,12 @@ use App\Domain\CustomerAccount\Models\CustomerAddress;
 use App\Domain\Customers\Exceptions\CustomerActionRefusedException;
 use App\Domain\Customers\Http\Resources\StaffCustomerResource;
 use App\Domain\Customers\Models\CustomerGroup;
+use App\Domain\Customers\Models\CustomerMerge;
 use App\Domain\Customers\Policies\CustomerPolicy;
 use App\Domain\Customers\Services\CustomerDirectory;
 use App\Domain\Customers\Services\CustomerExport;
 use App\Domain\Customers\Services\CustomerManagement;
+use App\Domain\Customers\Services\CustomerMerger;
 use App\Domain\Orders\Models\Customer;
 use App\Domain\Orders\Models\Order;
 use Illuminate\Http\JsonResponse;
@@ -65,8 +67,45 @@ final class CustomerController
                         'is_default' => (bool) $a->is_default,
                     ])->values(),
                 'possible_duplicates' => $this->duplicates($customer),
+                // Module 10 §56: where this record went, and which records joined it.
+                'merged_into' => $customer->merged_into_customer_id === null ? null : (function () use ($customer) {
+                    $into = $customer->mergedInto;
+
+                    return $into === null ? null : ['id' => $into->public_id, 'name' => $into->name, 'at' => $customer->merged_at?->toIso8601String()];
+                })(),
+                'merged_from' => CustomerMerge::query()->where('target_customer_id', $customer->id)->with('source')->orderBy('id')->get()
+                    ->map(fn (CustomerMerge $m) => ['id' => $m->source->public_id, 'name' => $m->source->name, 'at' => $m->created_at->toIso8601String()])->values(),
             ],
         ]);
+    }
+
+    /**
+     * Module 10 §56: joins this customer (the duplicate) into `into` (the
+     * one who stays). Business/Premium (`customers.advanced`), manage
+     * permission, the target's email typed as confirmation, a reason, and
+     * the password again (step-up on the route).
+     */
+    public function merge(Request $request, Customer $customer, CustomerMerger $merger): JsonResponse
+    {
+        $this->authorize($request, 'manage');
+        $this->assertAdvanced();
+        $data = $request->validate([
+            'into' => ['required', 'string', 'size:26'],
+            'confirm_email' => ['required', 'string', 'max:255'],
+            'reason' => ['required', 'string', 'max:500'],
+        ]);
+
+        $target = Customer::query()->where('public_id', $data['into'])->first()
+            ?? throw \Illuminate\Validation\ValidationException::withMessages(['into' => 'Choose one of your store\'s customers.']);
+        if (strcasecmp(trim($data['confirm_email']), (string) $target->email) !== 0) {
+            throw \Illuminate\Validation\ValidationException::withMessages(['confirm_email' => 'This is not the email of the customer who stays.']);
+        }
+
+        return $this->refusable(function () use ($request, $customer, $target, $data, $merger) {
+            $moved = $merger->merge($customer, $target, $data['reason'], $request->user());
+
+            return response()->json(['data' => ['into' => $target->public_id, 'moved' => $moved]]);
+        });
     }
 
     public function store(Request $request): JsonResponse
@@ -80,6 +119,11 @@ final class CustomerController
             'tags' => ['nullable', 'array', 'max:'.CustomerManagement::MAX_TAGS_PER_CUSTOMER],
             'tags.*' => ['string', 'max:60'],
         ]);
+
+        // Groups and tags are Business/Premium (owner decision 2026-10-03, Module 10 §87).
+        if (! empty($data['group']) || ! empty($data['tags'])) {
+            $this->assertAdvanced();
+        }
 
         $customer = $this->customers->create($data, $request->user());
         if (! empty($data['group'])) {
@@ -102,6 +146,10 @@ final class CustomerController
             'group' => ['sometimes', 'nullable', 'string', 'size:26'],
         ]);
 
+        if (array_key_exists('group', $data)) {
+            $this->assertAdvanced();
+        }
+
         return $this->refusable(function () use ($request, $customer, $data) {
             $this->customers->update($customer, $data, $request->user());
             if (array_key_exists('group', $data)) {
@@ -115,6 +163,7 @@ final class CustomerController
     public function tags(Request $request, Customer $customer): JsonResponse
     {
         $this->authorize($request, 'manage');
+        $this->assertAdvanced();
         $data = $request->validate(['tags' => ['present', 'array', 'max:'.CustomerManagement::MAX_TAGS_PER_CUSTOMER], 'tags.*' => ['string', 'max:60']]);
 
         return $this->refusable(function () use ($request, $customer, $data) {
@@ -200,6 +249,7 @@ final class CustomerController
     public function export(Request $request, CustomerExport $export): StreamedResponse
     {
         $this->authorize($request, 'export');
+        $this->assertAdvanced();
         $filters = $request->validate(CustomerDirectory::rules());
 
         return $export->stream($filters, $request->user());
@@ -213,7 +263,7 @@ final class CustomerController
      */
     private function duplicates(Customer $customer): array
     {
-        if ($customer->erased_at !== null) {
+        if ($customer->erased_at !== null || $customer->merged_into_customer_id !== null) {
             return [];
         }
 
@@ -222,6 +272,7 @@ final class CustomerController
         return Customer::query()
             ->whereKeyNot($customer->id)
             ->whereNull('erased_at')
+            ->whereNull('merged_into_customer_id')
             ->where(function ($q) use ($customer, $digits) {
                 $q->whereRaw('LOWER(email) = ?', [mb_strtolower($customer->email)]);
                 if (strlen((string) $digits) >= 7) {
@@ -268,6 +319,12 @@ final class CustomerController
         } catch (CustomerActionRefusedException $e) {
             return response()->json(['message' => $e->getMessage(), 'code' => $e->errorCode], $e->status);
         }
+    }
+
+    /** Groups, tags, import, export and merge: Business and Premium (owner decision 2026-10-03, Module 10 §87). */
+    private function assertAdvanced(): void
+    {
+        app(\App\Domain\Packages\Services\EntitlementService::class)->assertFeatureEntitled('customers.advanced');
     }
 
     private function authorize(Request $request, string $ability): void
