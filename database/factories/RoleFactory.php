@@ -18,7 +18,10 @@ final class RoleFactory extends Factory
 
         return [
             'name' => $name,
-            'slug' => \Illuminate\Support\Str::slug($name),
+            // Prefixed: a job title such as "Manager" would otherwise take the
+            // slug of a system role every store is seeded with (flaky
+            // uniq_roles_store_id_slug violation, seen in CI on B32).
+            'slug' => 'custom-'.\Illuminate\Support\Str::slug($name),
             'is_system' => false,
         ];
     }
