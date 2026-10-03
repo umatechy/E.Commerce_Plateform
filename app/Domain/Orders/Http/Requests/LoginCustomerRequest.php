@@ -62,6 +62,15 @@ final class LoginCustomerRequest extends FormRequest
 
         RateLimiter::clear($this->throttleKey());
 
+        // Module 10 §31/§58 (Phase B32): a blocked or archived customer cannot
+        // sign in. Said only after the right password, so the answer reveals
+        // nothing to someone guessing.
+        if (! $customer->standing()->maySignIn()) {
+            app(\App\Domain\Compliance\Services\AuditLogger::class)->record('auth.login.refused', ['guard' => 'customer', 'status' => $customer->standing()->value], $customer, $customer->store_id, $customer);
+
+            throw ValidationException::withMessages(['email' => 'This account cannot sign in. Please contact the store.']);
+        }
+
         return $customer;
     }
 

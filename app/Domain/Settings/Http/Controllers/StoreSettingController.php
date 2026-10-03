@@ -82,6 +82,14 @@ final class StoreSettingController
     {
         abort_unless(app(SettingPolicy::class)->viewStore($request->user()), 403);
 
+        // Phase B32 security fix: only store settings have a store history.
+        // Before, any key was accepted, so a store's staff could read the
+        // history of platform settings (e.g. alert recipient addresses).
+        $definition = SettingRegistry::find($key);
+        if ($definition === null || $definition->scope !== SettingScope::Store) {
+            return response()->json(['message' => (new UnknownSettingKeyException($key))->getMessage(), 'code' => 'unknown_setting'], 404);
+        }
+
         try {
             return SettingRevisionResource::collection($config->history($key));
         } catch (UnknownSettingKeyException $e) {
@@ -94,7 +102,7 @@ final class StoreSettingController
         abort_unless(app(SettingPolicy::class)->manageStore($request->user()), 403);
 
         try {
-            $config->rollbackTo($revisionId, $request->user()->id);
+            $config->rollbackTo($revisionId, $request->user()->id, SettingScope::Store);
         } catch (SettingRevisionNotFoundException $e) {
             return response()->json(['message' => $e->getMessage(), 'code' => 'revision_not_found'], 404);
         }

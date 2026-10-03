@@ -21,6 +21,8 @@ use Illuminate\Support\Facades\Route;
 // --- Customer authentication (ADR-002 Surface A — `customer` Sanctum guard) ---
 Route::post('/customer/register', [CustomerAuthController::class, 'register'])->middleware('throttle:5,1');
 Route::post('/customer/login', [CustomerAuthController::class, 'login'])->middleware('throttle:10,1');
+// Module 10 §9/§13 (Phase B32): the link from the email confirms the address, signed in or not.
+Route::post('/customer/email/verify', [\App\Domain\CustomerAccount\Http\Controllers\CustomerEmailVerificationController::class, 'verify'])->middleware('throttle:10,1,customer-email-verify');
 
 Route::middleware(['auth:customer', 'customer.principal'])->group(function () {
     Route::post('/customer/logout', [CustomerAuthController::class, 'logout']);
@@ -31,6 +33,7 @@ Route::middleware(['auth:customer', 'customer.principal'])->group(function () {
     // --- Customer account (Phase B25) ---
     Route::get('/customer/profile', [\App\Domain\CustomerAccount\Http\Controllers\CustomerProfileController::class, 'show']);
     Route::patch('/customer/profile', [\App\Domain\CustomerAccount\Http\Controllers\CustomerProfileController::class, 'update']);
+    Route::post('/customer/email/verification', [\App\Domain\CustomerAccount\Http\Controllers\CustomerEmailVerificationController::class, 'send'])->middleware('throttle:3,10,customer-email-send');
     Route::put('/customer/email', [\App\Domain\CustomerAccount\Http\Controllers\CustomerProfileController::class, 'changeEmail'])->middleware('throttle:6,1');
     Route::put('/customer/password', [\App\Domain\CustomerAccount\Http\Controllers\CustomerProfileController::class, 'changePassword'])->middleware('throttle:6,1');
     Route::get('/customer/addresses', [\App\Domain\CustomerAccount\Http\Controllers\CustomerAddressController::class, 'index']);

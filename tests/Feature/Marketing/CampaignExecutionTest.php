@@ -55,6 +55,24 @@ final class CampaignExecutionTest extends TestCase
         $this->assertDatabaseHas('campaign_recipients', ['campaign_id' => $campaign->id, 'customer_id' => $customer->id, 'status' => 'skipped_no_consent']);
     }
 
+    public function test_a_blocked_or_archived_customer_is_skipped_even_with_consent(): void
+    {
+        // Phase B32 (Module 10 §31): consent given before a block does not outlive it.
+        $store = Store::factory()->create();
+        app(TenantContext::class)->resolveToStore($store->id);
+        $blocked = Customer::factory()->for($store)->create(['marketing_email_opt_in' => true, 'status' => 'blocked']);
+        $archived = Customer::factory()->for($store)->create(['marketing_email_opt_in' => true, 'status' => 'archived']);
+        $campaign = Campaign::factory()->for($store)->create(['status' => CampaignStatus::Active]);
+
+        (new ProcessCampaignExecutionJob($campaign->id))->handle(
+            app(TenantContext::class), app(CampaignService::class),
+            app(\App\Domain\Marketing\Services\MarketingSegmentService::class), app(\App\Domain\Events\Support\RecordsOutboxEvents::class),
+        );
+
+        $this->assertDatabaseHas('campaign_recipients', ['campaign_id' => $campaign->id, 'customer_id' => $blocked->id, 'status' => 'skipped_inactive']);
+        $this->assertDatabaseHas('campaign_recipients', ['campaign_id' => $campaign->id, 'customer_id' => $archived->id, 'status' => 'skipped_inactive']);
+    }
+
     public function test_customer_within_frequency_cooldown_is_skipped(): void
     {
         $store = Store::factory()->create();

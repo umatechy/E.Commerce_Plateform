@@ -26,9 +26,16 @@ final class CreateOrderRequest extends FormRequest
             'items.*.product_variant_id' => ['nullable', 'integer', 'required_without:items.*.product_id'],
             'items.*.quantity' => ['required', 'integer', 'min:1'],
 
-            'customer_id' => ['nullable', 'integer', 'exists:customers,id'],
-            'guest_name' => ['nullable', 'string', 'max:255', 'required_without:customer_id'],
-            'guest_email' => ['nullable', 'email', 'max:255', 'required_without:customer_id'],
+            // The store's own customers only: checked against the tenant in
+            // OrderController (an `exists` rule alone sees every store).
+            'customer_id' => ['nullable', 'integer'],
+            'customer' => ['nullable', 'string', 'size:26'], // Phase B32: the public id the customer API returns
+            'guest_name' => ['nullable', 'string', 'max:255', 'required_without_all:customer_id,customer'],
+            'guest_email' => ['nullable', 'email', 'max:255', 'required_without_all:customer_id,customer'],
+            // Module 09 §70 (Phase B32): an order taken by staff goes through the
+            // same payment step as a storefront order. Offline methods only:
+            // no gateway is connected for staff to charge a card.
+            'payment_method' => ['nullable', 'in:cod,bank_transfer'],
             'guest_phone' => ['nullable', 'string', 'max:32'],
 
             'billing_address' => ['nullable', 'array'],

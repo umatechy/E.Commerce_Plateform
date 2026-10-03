@@ -30,6 +30,12 @@ final class EnsureCustomerPrincipal
             abort(401, 'Customer authentication required.');
         }
 
+        // Module 10 §31 (Phase B32): blocking ends the sessions; this also
+        // covers a token issued in the moment before.
+        if (! $request->user()->standing()->maySignIn()) {
+            abort(403, 'This account cannot be used. Please contact the store.');
+        }
+
         return $next($request);
     }
 }

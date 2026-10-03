@@ -37,91 +37,118 @@ final class StorefrontExperience
         private readonly ConfigService $config,
     ) {}
 
-    /** @return array<string, mixed> branding, theme and navigation shared by every page */
-    public function shell(Store $store): array
+    /**
+     * @param array{config?: mixed, custom_css?: ?string}|null $preview a theme draft to show instead of the
+     *        published theme (Module 17 §19, Phase B32). Never cached: the cache holds what customers see.
+     * @return array<string, mixed> branding, theme and navigation shared by every page
+     */
+    public function shell(Store $store, ?array $preview = null): array
     {
-        return $this->cache->remember($store->id, 'shell', function () use ($store) {
-            $theme = $this->themes->resolvePublished($store);
-            $config = $theme['config'] ?? [];
-            $branding = $config['branding'] ?? [];
-            $announcement = collect($this->sections($config))->firstWhere('type', SectionType::AnnouncementBar->value);
-            $counts = $this->catalog->productCountsByCategory();
+        if ($preview !== null) {
+            return $this->buildShell($store, $preview);
+        }
 
-            return [
-                'store' => [
-                    'name' => $store->name,
-                    'slug' => $store->slug,
-                    'currency' => $this->presenter->currency(),
-                    'locale' => $this->config->get('store.default_locale'),
-                    'timezone' => $this->config->get('store.timezone'), // dates are shown in the store's timezone (Module 33 §50.3)
-                    'tagline' => $branding['tagline'] ?? null,
-                    'logo_url' => $branding['logo_url'] ?? null,
-                    'favicon_url' => $branding['favicon_url'] ?? null,
-                    'social_links' => $branding['social_links'] ?? (object) [],
-                ],
-                'theme' => [
-                    'tokens' => $config['tokens'] ?? (object) [],
-                    'custom_css' => $theme['custom_css'] ?? null,
-                ],
-                'announcement' => $announcement['config']['message'] ?? null,
-                'navigation' => [
-                    'categories' => array_values(array_filter(
-                        $this->presenter->categoryTree($counts),
-                        fn (array $category) => $category['in_menu'],
-                    )),
-                    'pages' => $this->publishedPages()->map(fn (ContentPage $page) => ['slug' => $page->slug, 'title' => $page->title])->values()->all(),
-                ],
-            ];
-        });
+        return $this->cache->remember($store->id, 'shell', fn () => $this->buildShell($store, $this->themes->resolvePublished($store)));
     }
 
-    /** @return array<string, mixed> */
-    public function home(Store $store): array
+    /**
+     * @param array<string, mixed>|null $theme
+     * @return array<string, mixed>
+     */
+    private function buildShell(Store $store, ?array $theme): array
     {
-        return $this->cache->remember($store->id, 'home', function () use ($store) {
-            $theme = $this->themes->resolvePublished($store);
-            $sections = $this->sections($theme['config'] ?? []);
-            // Every store starts on the default theme, which has only a
-            // header and footer: until the owner adds content sections,
-            // the home page shows sensible defaults instead of nothing.
-            if (! collect($sections)->contains(fn (array $s) => in_array($s['type'], self::CONTENT_SECTIONS, true))) {
-                $sections = [...$sections, ...$this->defaultSections($store)];
-            }
-            $counts = $this->catalog->productCountsByCategory();
+        $config = $theme['config'] ?? [];
+        $branding = $config['branding'] ?? [];
+        $announcement = collect($this->sections($config))->firstWhere('type', SectionType::AnnouncementBar->value);
+        $counts = $this->catalog->productCountsByCategory();
 
-            $resolved = [];
-            foreach ($sections as $section) {
-                $config = $section['config'] ?? [];
-                $resolved[] = match ($section['type']) {
-                    SectionType::Hero->value, SectionType::PromotionalBanner->value => ['type' => $section['type'], ...$config],
-                    SectionType::FeaturedProducts->value => [
-                        'type' => $section['type'],
-                        'heading' => $config['heading'] ?? 'New arrivals',
-                        'products' => $this->catalog->newest((int) ($config['limit'] ?? 8))->map(fn (Product $p) => $this->presenter->card($p))->all(),
-                    ],
-                    SectionType::FeaturedCategories->value => [
-                        'type' => $section['type'],
-                        'heading' => $config['heading'] ?? 'Shop by category',
-                        'categories' => array_slice(array_values(array_filter(
-                            $this->presenter->categoryTree($counts),
-                            fn (array $c) => ($c['product_count'] ?? 0) > 0,
-                        )), 0, (int) ($config['limit'] ?? 6)),
-                    ],
-                    // Header/footer are the layout itself; the announcement
-                    // is in the shell; a newsletter needs a sign-up
-                    // endpoint that does not exist yet (not rendered).
-                    default => null,
-                };
-            }
+        return [
+            'store' => [
+                'name' => $store->name,
+                'slug' => $store->slug,
+                'currency' => $this->presenter->currency(),
+                'locale' => $this->config->get('store.default_locale'),
+                'timezone' => $this->config->get('store.timezone'), // dates are shown in the store's timezone (Module 33 §50.3)
+                'tagline' => $branding['tagline'] ?? null,
+                'logo_url' => $branding['logo_url'] ?? null,
+                'favicon_url' => $branding['favicon_url'] ?? null,
+                'social_links' => $branding['social_links'] ?? (object) [],
+            ],
+            'theme' => [
+                'tokens' => $config['tokens'] ?? (object) [],
+                'custom_css' => $theme['custom_css'] ?? null,
+            ],
+            'announcement' => $announcement['config']['message'] ?? null,
+            'navigation' => [
+                'categories' => array_values(array_filter(
+                    $this->presenter->categoryTree($counts),
+                    fn (array $category) => $category['in_menu'],
+                )),
+                'pages' => $this->publishedPages()->map(fn (ContentPage $page) => ['slug' => $page->slug, 'title' => $page->title])->values()->all(),
+            ],
+        ];
+    }
 
-            return [
-                'sections' => array_values(array_filter($resolved)),
-                'seo' => $this->presenter->seo($this->seo->forStoreHome($store), [
-                    $this->structuredData->forOrganization($store),
-                    $this->structuredData->forWebsite($store),
-                ]),
-            ];
-        });
+    /**
+     * @param array<string, mixed>|null $preview a theme draft (Module 17 §19); never cached
+     * @return array<string, mixed>
+     */
+    public function home(Store $store, ?array $preview = null): array
+    {
+        if ($preview !== null) {
+            return $this->buildHome($store, $preview);
+        }
+
+        return $this->cache->remember($store->id, 'home', fn () => $this->buildHome($store, $this->themes->resolvePublished($store)));
+    }
+
+    /**
+     * @param array<string, mixed>|null $theme
+     * @return array<string, mixed>
+     */
+    private function buildHome(Store $store, ?array $theme): array
+    {
+        $sections = $this->sections($theme['config'] ?? []);
+        // Every store starts on the default theme, which has only a
+        // header and footer: until the owner adds content sections,
+        // the home page shows sensible defaults instead of nothing.
+        if (! collect($sections)->contains(fn (array $s) => in_array($s['type'], self::CONTENT_SECTIONS, true))) {
+            $sections = [...$sections, ...$this->defaultSections($store)];
+        }
+        $counts = $this->catalog->productCountsByCategory();
+
+        $resolved = [];
+        foreach ($sections as $section) {
+            $config = $section['config'] ?? [];
+            $resolved[] = match ($section['type']) {
+                SectionType::Hero->value, SectionType::PromotionalBanner->value => ['type' => $section['type'], ...$config],
+                SectionType::FeaturedProducts->value => [
+                    'type' => $section['type'],
+                    'heading' => $config['heading'] ?? 'New arrivals',
+                    'products' => $this->catalog->newest((int) ($config['limit'] ?? 8))->map(fn (Product $p) => $this->presenter->card($p))->all(),
+                ],
+                SectionType::FeaturedCategories->value => [
+                    'type' => $section['type'],
+                    'heading' => $config['heading'] ?? 'Shop by category',
+                    'categories' => array_slice(array_values(array_filter(
+                        $this->presenter->categoryTree($counts),
+                        fn (array $c) => ($c['product_count'] ?? 0) > 0,
+                    )), 0, (int) ($config['limit'] ?? 6)),
+                ],
+                // Header/footer are the layout itself; the announcement
+                // is in the shell; a newsletter needs a sign-up
+                // endpoint that does not exist yet (not rendered).
+                default => null,
+            };
+        }
+
+        return [
+            'sections' => array_values(array_filter($resolved)),
+            'seo' => $this->presenter->seo($this->seo->forStoreHome($store), [
+                $this->structuredData->forOrganization($store),
+                $this->structuredData->forWebsite($store),
+            ]),
+        ];
     }
 
     /**

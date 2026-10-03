@@ -4,7 +4,8 @@ import SettingsEditor, { type SettingInfo } from '@/Components/SettingsEditor';
 /**
  * Module 33 platform settings (/api/v1/super-admin/settings). Platform
  * staff only; every change asks for the password again (step-up) and is
- * recorded in the audit trail. The settings shown are the ones the
+ * recorded in the audit trail. Each setting has its history, and an
+ * earlier value can be put back (Phase B32). The settings shown are the ones the
  * server's registry has for the platform; this page names them.
  */
 const INFO: Record<string, SettingInfo> = {
@@ -28,7 +29,14 @@ const INFO: Record<string, SettingInfo> = {
 export default function Settings() {
   return (
     <AdminPage title="Platform settings" description="Configuration for the whole platform. You will be asked for your password when you change one.">
-      <SettingsEditor listPath="/super-admin/settings" updatePath="/super-admin/settings" info={INFO} canManage />
+      <SettingsEditor
+        listPath="/super-admin/settings"
+        updatePath="/super-admin/settings"
+        info={INFO}
+        canManage
+        historyPath={(key) => `/super-admin/settings/${key}/history`}
+        rollbackPath={(id) => `/super-admin/settings/revisions/${id}/rollback`}
+      />
     </AdminPage>
   );
 }

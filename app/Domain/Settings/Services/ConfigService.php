@@ -154,7 +154,7 @@ final class ConfigService
      * @throws UnknownSettingKeyException
      * @throws \App\Domain\Settings\Exceptions\SettingRevisionNotFoundException
      */
-    public function rollbackTo(int $revisionId, ?int $actorUserId): void
+    public function rollbackTo(int $revisionId, ?int $actorUserId, ?SettingScope $onlyScope = null): void
     {
         $revision = SettingRevision::query()->find($revisionId);
 
@@ -163,6 +163,13 @@ final class ConfigService
         }
 
         $definition = $this->requireDefinition($revision->key);
+
+        // Phase B32 security fix: the store endpoint passes Store, the
+        // platform endpoint Platform. Before, a store's staff could roll back
+        // a PLATFORM setting through the store endpoint by its revision id.
+        if ($onlyScope !== null && $definition->scope !== $onlyScope) {
+            throw new \App\Domain\Settings\Exceptions\SettingRevisionNotFoundException();
+        }
 
         // Module 33 §32: rollback must not cross tenant boundaries —
         // a store-scope revision can only ever be rolled back while

@@ -1,5 +1,6 @@
 import { FormEvent, useCallback, useEffect, useState } from 'react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
+import { AdminCrumbs } from '@/Components/AdminPage';
 import EmptyState from '@/Components/EmptyState';
 import ErrorState from '@/Components/ErrorState';
 import LoadingState from '@/Components/LoadingState';
@@ -104,6 +105,7 @@ export default function Backups() {
 
   return (
     <AuthenticatedLayout>
+      <AdminCrumbs />
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-xl font-semibold">Platform backups</h1>
         <button onClick={runBackup} disabled={busy !== null} className="rounded bg-gray-900 px-4 py-2 text-sm text-white disabled:opacity-50">

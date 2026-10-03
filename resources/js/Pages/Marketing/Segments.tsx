@@ -1,6 +1,7 @@
 import { FormEvent, useState } from 'react';
+import { Link } from '@inertiajs/react';
 import AdminPage from '@/Components/AdminPage';
-import Button from '@/Components/ui/Button';
+import Button, { FOCUS_RING } from '@/Components/ui/Button';
 import DataTable, { type Column } from '@/Components/ui/DataTable';
 import Dialog from '@/Components/ui/Dialog';
 import { FormError, SelectField, TextField } from '@/Components/ui/Form';
@@ -126,8 +127,18 @@ function CreateDialog({ currency, onClose, onDone }: { currency: string; onClose
 function PreviewDrawer({ segment, onClose }: { segment: Segment; onClose: () => void }) {
   // Working out who matches reads every customer's orders; give it longer.
   const state = useApi<{ data: Customer[] }>(`/marketing/segments/${segment.id}/preview`);
+  const canOpen = useAccess().can('customers.view');
   const columns: Column<Customer>[] = [
-    { key: 'name', header: 'Customer', render: (customer) => <span className="font-medium">{customer.name}</span> },
+    {
+      key: 'name',
+      header: 'Customer',
+      render: (customer) =>
+        canOpen ? (
+          <Link href={`/customers/${customer.id}`} className={`rounded font-medium text-indigo-700 hover:underline ${FOCUS_RING}`}>{customer.name}</Link>
+        ) : (
+          <span className="font-medium">{customer.name}</span>
+        ),
+    },
     { key: 'email', header: 'Email', priority: true, render: (customer) => customer.email },
   ];
 

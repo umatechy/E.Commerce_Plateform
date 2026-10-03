@@ -1,6 +1,7 @@
 import { Link } from '@inertiajs/react';
 import { useCallback, useEffect, useState, type FormEvent } from 'react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
+import { AdminCrumbs } from '@/Components/AdminPage';
 import EmptyState from '@/Components/EmptyState';
 import ErrorState from '@/Components/ErrorState';
 import LoadingState from '@/Components/LoadingState';
@@ -78,6 +79,7 @@ export default function Platform() {
 
   return (
     <AuthenticatedLayout>
+      <AdminCrumbs trail={[{ label: 'Help from the platform' }]} />
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="text-lg font-semibold">Help from the platform</h1>

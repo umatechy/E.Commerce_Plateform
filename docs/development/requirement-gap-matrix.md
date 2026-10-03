@@ -59,6 +59,9 @@ Architecture v1.0 arrived after this review was written and are now in
    **Closed in B31 (gap G6):** the Store Admin and the Super Admin now have
    pages for every capability the API has. What the API itself lacks is listed
    in `docs/development/b31-inspection-findings.md` (customers first: gap G7).
+   **Closed in B32 (gap G7):** customer list, detail, groups, tags, notes,
+   blocking, import/export and guest conversion; most B31 items too
+   (`docs/development/b32-inspection-findings.md` §4).
 4. **Store staff cannot be managed.** There is no API or UI to invite staff,
    assign roles or remove members (Module 02 §18, §29; SRS STORE-007). Stores
    get three seeded roles (owner, manager, staff). The blueprint lists seven.
@@ -248,7 +251,7 @@ Architecture v1.0 arrived after this review was written and are now in
 | ORD-001–007 | ✅ | B5 engine, state machine, snapshots, outbox | P0 |
 | ORD-008 | 🟡 | Payment refunds authorized; **no return workflow** | P1 |
 | ORD-009–010 | ✅ | Idempotency; coordinated checkout | P0 |
-| CUS-001–007 | ✅ | Store-scoped customers, account, export/erasure | P0 |
+| CUS-001–007 | ✅ | Store-scoped customers, account, export/erasure; B32: status/blocking, groups, tags, notes, import/export, email verification, guest order linking, admin screens. Merge reserved (M10 §56) | P0 |
 
 ### 3.10 Cart & checkout (CHK)
 
@@ -405,7 +408,7 @@ existing pattern: feature tests plus tenant-isolation tests for every endpoint.
 | G4 | ✅ **Closed in B30** (checkpoint-b30; limitations listed there). Scheduled backups + restore rehearsal + alerting | BKP-001/007, HEALTH-005, TEST-011 | Data loss; failures go unnoticed | Schedule backups, rehearsal command, alert channel for critical health | P0 | Alert channel choice |
 | G5 | ✅ **Closed in B28** (checkpoint-b28). Store timezone consumption | DATA-010, LOC-004, M33 §50 | Wrong dates for scheduled promos/campaigns/SLA | Wire `store.timezone` into B10/B12/B13/B26 date logic | P0 | — |
 | G6 | ✅ **Closed in B31** (checkpoint-b31; matrix in docs/architecture/b31-admin-ui.md §6; open items in docs/development/b31-inspection-findings.md). Admin UI for API-only modules | Admin Capabilities in M06–M17, M19, M21–M23, M29–M31, M33 | Owners cannot operate the store | UI phases, highest value first: catalog, customers, shipping/payments settings, promotions, SEO/content, theme, domains, settings | P1 | G1 |
-| G7 | Module 10 completion (groups, tags, notes, blocking, merge, import, guest conversion, email verification) | M10 §9, §24–33, §47–57, AUTH-002 | Blocks targeted promotions (M14 §17–20) and marketing | Complete Module 10 | P1 | — |
+| G7 | ✅ **Closed in B32** (checkpoint-b32; docs/architecture/b32-customers.md; merge reserved, package limits for customer features await an owner decision — docs/development/b32-inspection-findings.md §3). Module 10 completion (groups, tags, notes, blocking, merge, import, guest conversion, email verification) | M10 §9, §24–33, §47–57, AUTH-002 | Blocks targeted promotions (M14 §17–20) and marketing | Complete Module 10 | P1 | — |
 | G8 | Returns, exchanges, refunds flow | ORD-008, M09 §45–54, M13 §70 | Manual handling only | Return request → inspection → refund/restock | P1 | — |
 | G9 | Real payment and courier providers | PAY-002/005, SHIP-007, M12 §20–21 | Online payment not possible | **Owner decision**: providers and merchant credentials; then adapters | P1 | Owner decision |
 | G10 | Real SMS/WhatsApp/push providers | NOTIF-003/004, M21 §18–20 | WhatsApp is central for the Pakistan market (M01 §14) | **Owner decision**: provider; then adapters | P1 | Owner decision |
@@ -446,9 +449,9 @@ This follows the Master Prompt §40 dependency order, adjusted for what exists:
 1. **G1 + G2 + G5 + G4.** P0 gaps that need no business decision: staff
    management, security baseline, timezone wiring, scheduled backups and alerts.
 2. **G3 and G9–G10** as soon as the owner's decisions arrive.
-3. **G6 admin UI** (done, B31), together with **G7** (Module 10), **G8** (returns) and
-   **G15** (catalog depth). This is the minimum a merchant needs to run a store
-   without the API. G7 is next: the admin has no customer list until it exists.
+3. **G6 admin UI** (done, B31), **G7** (Module 10, done, B32), then **G8**
+   (returns) and **G15** (catalog depth). This is the minimum a merchant needs
+   to run a store without the API. G8 is next.
 4. **G11 localization**, then **G12, G13, G14**.
 5. **New modules in blueprint order:** G17 (Module 18), G16 (Module 25),
    G18 (Module 26), G19 (Module 27), G20 (Module 28), then G21 and G22.

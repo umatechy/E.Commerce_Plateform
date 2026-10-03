@@ -94,6 +94,18 @@ final class CheckoutService
             throw new CartCheckoutNotAllowedException('This cart is no longer active and cannot be checked out.');
         }
 
+        // Module 10 §31 (Phase B32): a blocked customer places no new orders,
+        // signed in or as a guest with the same email.
+        // The address is checked too, so another record with it (an account
+        // made before the block, a guest) cannot be used to get round it.
+        $orderEmail = mb_strtolower(trim((string) ($cart->customer !== null ? $cart->customer->email : ($checkoutData['guest_email'] ?? ''))));
+        $blocked = ($cart->customer !== null && ! $cart->customer->standing()->mayOrder())
+            || ($orderEmail !== '' && \App\Domain\Orders\Models\Customer::query()
+                ->whereRaw('LOWER(email) = ?', [$orderEmail])->where('status', \App\Domain\Customers\Models\CustomerStatus::Blocked->value)->exists());
+        if ($blocked) {
+            throw new CartCheckoutNotAllowedException('This order cannot be placed. Please contact the store.');
+        }
+
         // Phase B9 correctness fix: an idempotent REPLAY must short-
         // circuit before any promotion evaluation runs. Promotions
         // (unlike shipping rates) can have a finite usage_limit that

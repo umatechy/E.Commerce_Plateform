@@ -52,6 +52,9 @@ final class CustomerDataService
                 'created_at' => $customer->created_at?->toIso8601String(),
                 'erased_at' => $customer->erased_at?->toIso8601String(),
             ],
+            // Phase B32: the address book (B25) is personal data too.
+            'addresses' => \App\Domain\CustomerAccount\Models\CustomerAddress::query()->where('customer_id', $customer->id)->orderBy('id')->get()
+                ->map(fn (\App\Domain\CustomerAccount\Models\CustomerAddress $a) => $a->only(['label', 'name', 'phone', 'line1', 'line2', 'city', 'province', 'postal_code', 'country', 'is_default']))->all(),
             'orders' => $orders->map(fn (Order $order) => [
                 'order_number' => $order->order_number,
                 'status' => $order->status->value,
@@ -120,6 +123,13 @@ final class CustomerDataService
 
             $wishlist = WishlistItem::query()->where('customer_id', $customer->id)->delete();
             $tokens = $customer->tokens()->delete();
+            // Phase B32 (Module 10 §32): staff notes may hold personal details;
+            // tags, group and the email links go with the person.
+            $notes = \App\Domain\Customers\Models\CustomerNote::query()->where('customer_id', $customer->id)->delete();
+            // The address book (B25) was missed by erasure until Phase B32.
+            $addresses = \App\Domain\CustomerAccount\Models\CustomerAddress::query()->where('customer_id', $customer->id)->delete();
+            $customer->tags()->detach();
+            \Illuminate\Support\Facades\DB::table('customer_email_verifications')->where('customer_id', $customer->id)->delete();
 
             // No password: the account can never be signed into again. The
             // email is replaced by a unique, undeliverable placeholder.
@@ -131,6 +141,8 @@ final class CustomerDataService
                 'email_verified_at' => null,
                 'marketing_email_opt_in' => false,
                 'erased_at' => now(),
+                'customer_group_id' => null,
+                'status_reason' => null,
             ])->save();
 
             return [
@@ -138,6 +150,8 @@ final class CustomerDataService
                 'notifications_anonymized' => $notifications,
                 'wishlist_items_removed' => $wishlist,
                 'tokens_revoked' => $tokens,
+                'notes_removed' => $notes,
+                'addresses_removed' => $addresses,
             ];
         });
     }

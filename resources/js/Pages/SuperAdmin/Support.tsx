@@ -1,4 +1,5 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
+import { AdminCrumbs } from '@/Components/AdminPage';
 import AgentInbox from '@/Components/Support/AgentInbox';
 import { PLATFORM_CATEGORIES } from '@/lib/support';
 
@@ -6,6 +7,7 @@ import { PLATFORM_CATEGORIES } from '@/lib/support';
 export default function Support() {
   return (
     <AuthenticatedLayout>
+      <AdminCrumbs />
       <AgentInbox apiBase="/super-admin/support" title="Platform support" categories={PLATFORM_CATEGORIES} showStore />
     </AuthenticatedLayout>
   );

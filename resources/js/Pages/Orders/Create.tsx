@@ -1,16 +1,18 @@
-import { FormEvent, useState } from 'react';
+import { FormEvent, useEffect, useState } from 'react';
 import { router } from '@inertiajs/react';
 import AdminPage from '@/Components/AdminPage';
 import Button, { ButtonLink } from '@/Components/ui/Button';
-import { FormError, TextAreaField, TextField } from '@/Components/ui/Form';
+import { FormError, SelectField, TextAreaField, TextField } from '@/Components/ui/Form';
 import { Card, PackageNotice } from '@/Components/ui/Page';
 import ProductPicker, { type PickedProduct } from '@/Components/ProductPicker';
 import { useAccess } from '@/lib/access';
+import { useApi, usePagedApi } from '@/lib/useApi';
 import { useForm, useUnsavedWarning } from '@/lib/useForm';
 import { adminFetch, AdminApiError, idempotencyKey } from '@/lib/adminApi';
 import { money } from '@/lib/money';
 import { variantLabel } from '@/lib/catalog';
-import type { Order } from '@/lib/orders';
+import { PAYMENT_METHOD_LABELS, type Order } from '@/lib/orders';
+import type { CustomerRow } from '@/lib/customers';
 
 /**
  * An order taken by staff, e.g. by phone or at the counter
@@ -19,7 +21,65 @@ import type { Order } from '@/lib/orders';
  * the stock, applies the package's monthly order limit and returns the
  * order. The prices shown here are the catalog's current prices, for
  * orientation only.
+ *
+ * Phase B32 (Module 09 §70, Module 10): the order is for one of the
+ * store's customers or for a guest, and staff choose how it is paid
+ * (cash on delivery or bank transfer, as the package allows). The
+ * payment is then recorded on the order when the money arrives
+ * (Payments → Open → Record payment received). Active customers only;
+ * the server checks this again.
  */
+const ADMIN_PAYMENT_METHODS = ['cod', 'bank_transfer'] as const;
+
+function CustomerPicker({ chosen, onChoose }: { chosen: CustomerRow | null; onChoose: (customer: CustomerRow | null) => void }) {
+  const [text, setText] = useState('');
+  const [search, setSearch] = useState('');
+  useEffect(() => {
+    const timer = setTimeout(() => setSearch(text.trim()), 300);
+
+    return () => clearTimeout(timer);
+  }, [text]);
+  const results = usePagedApi<CustomerRow>(search.length >= 2 && chosen === null ? '/customers' : null, { search, status: 'active', per_page: 8 });
+
+  if (chosen !== null) {
+    return (
+      <div className="flex flex-wrap items-center justify-between gap-2 rounded-md border border-slate-200 p-3 text-sm">
+        <div>
+          <p className="font-medium text-slate-900">{chosen.name}</p>
+          <p className="text-slate-600">{chosen.email}{chosen.phone ? ` · ${chosen.phone}` : ''}</p>
+        </div>
+        <Button size="sm" onClick={() => onChoose(null)}>Change customer</Button>
+      </div>
+    );
+  }
+
+  return (
+    <div>
+      <TextField label="Find a customer" type="search" value={text} onChange={setText} hint="Name, email or phone (at least 2 characters). Only active customers can order." autoComplete="off" />
+      {search.length >= 2 && (
+        <div className="mt-2" aria-live="polite">
+          {results.error ? (
+            <p className="text-sm text-red-700">{results.error}</p>
+          ) : results.rows === null ? (
+            <p className="text-sm text-slate-600">Searching…</p>
+          ) : results.rows.length === 0 ? (
+            <p className="text-sm text-slate-600">No active customer matches. Choose “Guest” to take the order without an account.</p>
+          ) : (
+            <ul className="divide-y divide-slate-100 rounded-md border border-slate-200">
+              {results.rows.map((customer) => (
+                <li key={customer.id}>
+                  <button type="button" onClick={() => onChoose(customer)} className="w-full p-2 text-left text-sm hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500">
+                    <span className="font-medium text-slate-900">{customer.name}</span> <span className="text-slate-600">{customer.email}</span>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
 type Line = PickedProduct & { quantity: string };
 
 function lineKey(line: PickedProduct): string {
@@ -28,7 +88,17 @@ function lineKey(line: PickedProduct): string {
 
 export default function Create() {
   const access = useAccess();
-  const form = useForm({ guest_name: '', guest_email: '', guest_phone: '', notes: '' });
+  const form = useForm({ guest_name: '', guest_email: '', guest_phone: '', notes: '', payment_method: '' });
+  const methods = ADMIN_PAYMENT_METHODS.filter((method) => access.feature(`payment.${method}`) === true);
+  // From a customer's page: /orders/new?customer={id}.
+  const [preset] = useState(() => new URLSearchParams(window.location.search).get('customer'));
+  const presetCustomer = useApi<{ data: CustomerRow }>(preset && /^[0-9A-Za-z]{26}$/.test(preset) ? `/customers/${preset}` : null);
+  const [mode, setMode] = useState<'customer' | 'guest'>(preset ? 'customer' : 'guest');
+  const [customer, setCustomer] = useState<CustomerRow | null>(null);
+  useEffect(() => {
+    const found = presetCustomer.data?.data;
+    if (found && found.status === 'active' && !found.erased) setCustomer(found);
+  }, [presetCustomer.data]);
   const [lines, setLines] = useState<Line[]>([]);
   // One key for this order form: submitting twice creates one order.
   const [key] = useState(idempotencyKey);
@@ -56,9 +126,17 @@ export default function Create() {
 
       return;
     }
+    if (mode === 'customer' && customer === null) {
+      form.setFormError('Choose the customer, or take the order as a guest.');
+
+      return;
+    }
     setLimitReached(false);
     const v = form.values;
-    const body = { items, guest_name: v.guest_name, guest_email: v.guest_email, guest_phone: v.guest_phone === '' ? null : v.guest_phone, notes: v.notes === '' ? null : v.notes, source: 'admin', idempotency_key: key };
+    const who = mode === 'customer' && customer !== null
+      ? { customer: customer.id }
+      : { guest_name: v.guest_name, guest_email: v.guest_email, guest_phone: v.guest_phone === '' ? null : v.guest_phone };
+    const body = { items, ...who, payment_method: v.payment_method === '' ? null : v.payment_method, notes: v.notes === '' ? null : v.notes, source: 'admin', idempotency_key: key };
     const saved = await form.submit(async () => {
       try {
         return await adminFetch<{ data: Order }>('/orders', { method: 'POST', body });
@@ -79,12 +157,6 @@ export default function Create() {
           </PackageNotice>
         )}
         <FormError message={form.formError} errors={form.errors} />
-        <p role="note" className="rounded-md border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900">
-          <strong>Know before you create it: </strong>
-          an order made here reserves the stock, but it has no payment attached. The admin cannot yet take or record a payment for it, and the server does not let an
-          unpaid order be shipped. Until that exists, such an order can only be cancelled (which releases the stock). Orders placed on your storefront are not
-          affected.
-        </p>
 
         <Card title="Products">
           <ProductPicker onPick={add} label="Add a product" />
@@ -112,14 +184,55 @@ export default function Create() {
         </Card>
 
         <Card title="Customer">
+          <fieldset className="mb-4">
+            <legend className="sr-only">Who the order is for</legend>
+            <div className="flex flex-wrap gap-4 text-sm">
+              {(['customer', 'guest'] as const).map((value) => (
+                <label key={value} className="flex items-center gap-2">
+                  <input type="radio" name="order-for" value={value} checked={mode === value} onChange={() => setMode(value)} className="h-4 w-4 border-slate-400 text-indigo-600 focus:ring-indigo-500" />
+                  {value === 'customer' ? 'A customer of the store' : 'Guest (no account)'}
+                </label>
+              ))}
+            </div>
+          </fieldset>
           <div className="grid gap-4 sm:grid-cols-2">
-            <TextField label="Name" value={form.values.guest_name} onChange={(v) => form.set('guest_name', v)} error={form.errors.guest_name} required maxLength={255} />
-            <TextField label="Email" type="email" value={form.values.guest_email} onChange={(v) => form.set('guest_email', v)} error={form.errors.guest_email} required maxLength={255} />
-            <TextField label="Phone" optional value={form.values.guest_phone} onChange={(v) => form.set('guest_phone', v)} error={form.errors.guest_phone} maxLength={32} />
+            {mode === 'customer' ? (
+              <div className="sm:col-span-2">
+                {form.errors.customer && <p className="mb-2 text-sm text-red-700">{form.errors.customer}</p>}
+                {presetCustomer.data && presetCustomer.data.data.status !== 'active' && customer === null && (
+                  <p className="mb-2 text-sm text-amber-800">{presetCustomer.data.data.name} is {presetCustomer.data.data.status} and cannot place orders.</p>
+                )}
+                <CustomerPicker chosen={customer} onChoose={setCustomer} />
+              </div>
+            ) : (
+              <>
+                <TextField label="Name" value={form.values.guest_name} onChange={(v) => form.set('guest_name', v)} error={form.errors.guest_name} required maxLength={255} />
+                <TextField label="Email" type="email" value={form.values.guest_email} onChange={(v) => form.set('guest_email', v)} error={form.errors.guest_email} required maxLength={255} />
+                <TextField label="Phone" optional value={form.values.guest_phone} onChange={(v) => form.set('guest_phone', v)} error={form.errors.guest_phone} maxLength={32} />
+              </>
+            )}
             <div className="sm:col-span-2">
               <TextAreaField label="Note" optional rows={3} value={form.values.notes} onChange={(v) => form.set('notes', v)} error={form.errors.notes} maxLength={1000} />
             </div>
           </div>
+        </Card>
+
+        <Card title="Payment">
+          {methods.length === 0 ? (
+            <p className="text-sm text-amber-900">Your package includes neither cash on delivery nor bank transfer. The order is created without a payment and cannot be shipped until it has one.</p>
+          ) : (
+            <SelectField
+              label="How the customer pays"
+              value={form.values.payment_method}
+              onChange={(v) => form.set('payment_method', v)}
+              error={form.errors.payment_method}
+              placeholder="Not decided yet"
+              options={methods.map((method) => ({ value: method, label: PAYMENT_METHOD_LABELS[method] }))}
+              hint={form.values.payment_method === ''
+                ? 'Without a payment the order cannot be shipped. Choose one now, or cancel the order later if it is never paid.'
+                : 'When the money arrives, record it on the order under Payments. A cash-on-delivery order can be shipped before it is paid.'}
+            />
+          )}
         </Card>
 
         <div className="flex flex-wrap gap-3">

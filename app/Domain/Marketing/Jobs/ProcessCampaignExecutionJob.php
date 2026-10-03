@@ -93,6 +93,12 @@ final class ProcessCampaignExecutionJob implements ShouldQueue
             return;
         }
 
+        if (! $customer->standing()->mayReceiveMarketing()) {
+            $this->recordRecipient($campaign, $customer, CampaignRecipientStatus::SkippedInactive);
+
+            return;
+        }
+
         if (! $customer->marketing_email_opt_in) {
             $this->recordRecipient($campaign, $customer, CampaignRecipientStatus::SkippedNoConsent);
 

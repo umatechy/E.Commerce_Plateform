@@ -32,6 +32,11 @@ final class PromotionResource extends JsonResource
             'starts_at' => $this->starts_at?->toIso8601String(),
             'ends_at' => $this->ends_at?->toIso8601String(),
             'target_ids' => $this->whenLoaded('targets', fn () => $this->targets->pluck('target_id')),
+            // Phase B32: the targets with their names (PromotionTargetNames).
+            'targets' => $this->whenLoaded('targetNames', fn () => $this->targets->map(fn ($target) => [
+                'id' => (int) $target->target_id,
+                'name' => $this->resource->getRelation('targetNames')->get((int) $target->target_id),
+            ])->values()),
         ];
     }
 }

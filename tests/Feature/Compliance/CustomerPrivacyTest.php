@@ -133,6 +133,8 @@ final class CustomerPrivacyTest extends TestCase
             'notifications_anonymized' => 1,
             'wishlist_items_removed' => 1,
             'tokens_revoked' => 1,
+            'notes_removed' => 0,
+            'addresses_removed' => 0,
         ]);
 
         $customer->refresh();

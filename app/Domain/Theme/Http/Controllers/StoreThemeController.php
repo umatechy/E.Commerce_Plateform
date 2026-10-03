@@ -60,6 +60,21 @@ final class StoreThemeController
         return (new StoreThemeResource($updated))->response();
     }
 
+    /**
+     * Module 17 §19 (Phase B32): a 30-minute link to the storefront with the
+     * draft theme. Only for staff who may view the theme.
+     */
+    public function previewLink(Request $request, \App\Domain\Theme\Services\ThemePreviewLink $links): JsonResponse
+    {
+        abort_unless(app(ThemePolicy::class)->view($request->user()), 403);
+        $store = \App\Domain\Tenancy\Models\Store::query()->findOrFail(app(TenantContext::class)->storeId());
+
+        $link = $links->issue($store, $request->user()->id, '/shop/'.$store->slug);
+        app(\App\Domain\Compliance\Services\AuditLogger::class)->record('theme.preview_link_created', ['expires_at' => $link['expires_at']], $store);
+
+        return response()->json(['data' => $link]);
+    }
+
     public function publish(Request $request, ThemeService $themes): StoreThemeResource
     {
         abort_unless(app(ThemePolicy::class)->publish($request->user()), 403);

@@ -35,6 +35,33 @@ final class SuperAdminSettingController
         return response()->json(['data' => $resources]);
     }
 
+    /** Phase B32: the change history of a platform setting (Module 33 §31). Secrets show no values. */
+    public function history(string $key, ConfigService $config): JsonResponse
+    {
+        $definition = SettingRegistry::find($key);
+        if ($definition === null || $definition->scope !== SettingScope::Platform) {
+            return response()->json(['message' => (new UnknownSettingKeyException($key))->getMessage(), 'code' => 'unknown_setting'], 404);
+        }
+
+        return response()->json(['data' => \App\Domain\Settings\Http\Resources\SettingRevisionResource::collection($config->history($key))]);
+    }
+
+    /** Phase B32: puts an earlier value of a PLATFORM setting back, through the validated write path; audited. */
+    public function rollback(Request $request, int $revisionId, ConfigService $config): JsonResponse
+    {
+        try {
+            $config->rollbackTo($revisionId, $request->user()->id, SettingScope::Platform);
+        } catch (\App\Domain\Settings\Exceptions\SettingRevisionNotFoundException) {
+            return response()->json(['message' => 'There is no such change of a platform setting.', 'code' => 'revision_not_found'], 404);
+        }
+
+        app(\App\Domain\Compliance\Services\AuditLogger::class)->record('super_admin.setting.rolled_back', [
+            'acting_super_admin_id' => $request->user()->id, 'revision_id' => $revisionId,
+        ]);
+
+        return response()->json(status: 204);
+    }
+
     public function update(Request $request, string $key, ConfigService $config): JsonResponse
     {
         $request->validate(['value' => ['required'], 'reason' => ['sometimes', 'nullable', 'string', 'max:500']]);

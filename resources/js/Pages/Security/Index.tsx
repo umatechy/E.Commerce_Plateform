@@ -2,6 +2,7 @@ import { FormEvent, useCallback, useEffect, useState } from 'react';
 import { router } from '@inertiajs/react';
 import QRCode from 'qrcode';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
+import { AdminCrumbs } from '@/Components/AdminPage';
 import ErrorState from '@/Components/ErrorState';
 import LoadingState from '@/Components/LoadingState';
 import { AdminApiError, adminErrorMessage, adminFetch } from '@/lib/adminApi';
@@ -131,6 +132,7 @@ export default function Index() {
 
   return (
     <AuthenticatedLayout>
+      <AdminCrumbs fallback={[{ label: 'Dashboard', href: '/' }, { label: 'Your account' }, { label: 'Security' }]} />
       <h1 className="text-xl font-semibold">Security</h1>
 
       {loadError && !status && (

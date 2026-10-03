@@ -38,7 +38,7 @@ type Props = {
   updatePath: string;
   info: Record<string, SettingInfo>;
   canManage: boolean;
-  /** Store settings keep a history that can be restored; platform settings have no history API. */
+  /** Where a setting's history is read and an earlier value put back (store and platform settings). */
   historyPath?: (key: string) => string;
   rollbackPath?: (revisionId: number) => string;
 };

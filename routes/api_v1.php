@@ -249,8 +249,33 @@ Route::middleware(['auth:sanctum', 'staff.principal', 'required.mfa'])->group(fu
     // own tamper-evident audit trail and data-subject requests.
     Route::get('/audit-logs', [AuditLogController::class, 'index']);
     Route::get('/audit-logs/integrity', [AuditLogController::class, 'integrity']);
+    // --- Customers (Module 10, Phase B32 — gap G7). Fixed paths before {customer}. ---
+    Route::get('/customers', [\App\Domain\Customers\Http\Controllers\CustomerController::class, 'index'])->middleware('throttle:120,1,customers-list');
+    Route::post('/customers', [\App\Domain\Customers\Http\Controllers\CustomerController::class, 'store']);
+    Route::get('/customers/export', [\App\Domain\Customers\Http\Controllers\CustomerController::class, 'export'])->middleware('throttle:5,10,customers-export');
+    Route::post('/customers/import', [\App\Domain\Customers\Http\Controllers\CustomerRecordsController::class, 'previewImport'])->middleware('throttle:10,10,customers-import');
+    Route::post('/customers/import/{import}/confirm', [\App\Domain\Customers\Http\Controllers\CustomerRecordsController::class, 'confirmImport'])->where('import', '[0-9A-Za-z]{26}')->middleware('throttle:10,10,customers-import-confirm');
+    Route::get('/customer-groups', [\App\Domain\Customers\Http\Controllers\CustomerRecordsController::class, 'groups']);
+    Route::post('/customer-groups', [\App\Domain\Customers\Http\Controllers\CustomerRecordsController::class, 'storeGroup']);
+    Route::patch('/customer-groups/{group}', [\App\Domain\Customers\Http\Controllers\CustomerRecordsController::class, 'updateGroup']);
+    Route::delete('/customer-groups/{group}', [\App\Domain\Customers\Http\Controllers\CustomerRecordsController::class, 'deleteGroup']);
+    Route::get('/customer-tags', [\App\Domain\Customers\Http\Controllers\CustomerRecordsController::class, 'tags']);
+    Route::patch('/customer-tags/{tag}', [\App\Domain\Customers\Http\Controllers\CustomerRecordsController::class, 'renameTag']);
+    Route::delete('/customer-tags/{tag}', [\App\Domain\Customers\Http\Controllers\CustomerRecordsController::class, 'deleteTag']);
+    Route::get('/customers/{customer}', [\App\Domain\Customers\Http\Controllers\CustomerController::class, 'show']);
+    Route::patch('/customers/{customer}', [\App\Domain\Customers\Http\Controllers\CustomerController::class, 'update']);
+    Route::put('/customers/{customer}/tags', [\App\Domain\Customers\Http\Controllers\CustomerController::class, 'tags']);
+    Route::post('/customers/{customer}/block', [\App\Domain\Customers\Http\Controllers\CustomerController::class, 'block']);
+    Route::post('/customers/{customer}/archive', [\App\Domain\Customers\Http\Controllers\CustomerController::class, 'archive']);
+    Route::post('/customers/{customer}/reactivate', [\App\Domain\Customers\Http\Controllers\CustomerController::class, 'reactivate']);
+    Route::get('/customers/{customer}/activity', [\App\Domain\Customers\Http\Controllers\CustomerController::class, 'activity']);
+    Route::get('/customers/{customer}/notes', [\App\Domain\Customers\Http\Controllers\CustomerRecordsController::class, 'notes']);
+    Route::post('/customers/{customer}/notes', [\App\Domain\Customers\Http\Controllers\CustomerRecordsController::class, 'addNote']);
+    Route::delete('/customers/{customer}/notes/{note}', [\App\Domain\Customers\Http\Controllers\CustomerRecordsController::class, 'deleteNote']);
+
     Route::get('/customers/{customer}/personal-data', [CustomerPrivacyController::class, 'export']);
-    Route::post('/customers/{customer}/erase', [CustomerPrivacyController::class, 'erase']);
+    // Irreversible: the password again (step-up), Phase B32.
+    Route::post('/customers/{customer}/erase', [CustomerPrivacyController::class, 'erase'])->middleware('step_up');
 
     Route::get('/store/health', [StoreHealthController::class, 'show']);
     Route::get('/store/health/history', [StoreHealthController::class, 'history']);
@@ -258,6 +283,7 @@ Route::middleware(['auth:sanctum', 'staff.principal', 'required.mfa'])->group(fu
     Route::get('/store/theme', [StoreThemeController::class, 'show']);
     Route::put('/store/theme/draft', [StoreThemeController::class, 'updateDraft']);
     Route::post('/store/theme/publish', [StoreThemeController::class, 'publish']);
+    Route::post('/store/theme/preview', [StoreThemeController::class, 'previewLink'])->middleware('throttle:20,1,theme-preview'); // Phase B32
     Route::get('/store/theme/publications', [StoreThemeController::class, 'publications']);
     Route::post('/store/theme/publications/{publicationId}/rollback', [StoreThemeController::class, 'rollback']);
 
@@ -298,6 +324,8 @@ Route::middleware(['auth:sanctum', 'staff.principal', 'required.mfa'])->group(fu
             Route::get('/packages', [SuperAdminPackageController::class, 'index']);
             Route::post('/packages', [SuperAdminPackageController::class, 'store'])->middleware('step_up');
             Route::put('/packages/{package}', [SuperAdminPackageController::class, 'update'])->middleware('step_up');
+            // Phase B32 (Module 04 §63): what a package includes.
+            Route::put('/packages/{package}/entitlements', [\App\Domain\SuperAdmin\Http\Controllers\SuperAdminPackageEntitlementController::class, 'update'])->middleware('step_up');
 
             Route::get('/themes', [SuperAdminThemeController::class, 'index']);
             Route::post('/themes', [SuperAdminThemeController::class, 'store']);
@@ -315,6 +343,8 @@ Route::middleware(['auth:sanctum', 'staff.principal', 'required.mfa'])->group(fu
 
             Route::get('/settings', [SuperAdminSettingController::class, 'index']);
             Route::put('/settings/{key}', [SuperAdminSettingController::class, 'update'])->middleware('step_up');
+            Route::get('/settings/{key}/history', [SuperAdminSettingController::class, 'history']); // Phase B32
+            Route::post('/settings/revisions/{revisionId}/rollback', [SuperAdminSettingController::class, 'rollback'])->whereNumber('revisionId')->middleware('step_up');
 
             Route::get('/developer/applications', [SuperAdminDeveloperPlatformController::class, 'index']);
             Route::post('/developer/applications/{application}/suspend', [SuperAdminDeveloperPlatformController::class, 'suspend'])->middleware('step_up');

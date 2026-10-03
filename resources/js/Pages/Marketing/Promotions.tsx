@@ -46,6 +46,8 @@ type Promotion = {
   starts_at: string | null;
   ends_at: string | null;
   target_ids?: number[];
+  /** Phase B32: the targets with their names; a target deleted since has no name. */
+  targets?: { id: number; name: string | null }[];
 };
 
 type Coupon = { id: number; code: string; is_active: boolean; usage_limit: number | null; used_count: number; customer_usage_limit: number | null };
@@ -84,6 +86,25 @@ function valuesFrom(promotion: Promotion | null, currency: string): Values {
   };
 }
 
+function targetNames(promotion: Promotion | null | undefined): Record<number, string> {
+  const names: Record<number, string> = {};
+  for (const target of promotion?.targets ?? []) {
+    if (target.name !== null) names[target.id] = target.name;
+  }
+
+  return names;
+}
+
+/** What the promotion applies to, in words: "Rose Attar, Oud (+2 more)". */
+function targetSummary(promotion: Promotion): string {
+  const label = SCOPE_LABELS[promotion.target_scope] ?? humanize(promotion.target_scope);
+  if (promotion.target_scope === 'order' || !promotion.targets || promotion.targets.length === 0) return label;
+  const shown = promotion.targets.slice(0, 2).map((target) => target.name ?? `deleted #${target.id}`);
+  const more = promotion.targets.length - shown.length;
+
+  return `${shown.join(', ')}${more > 0 ? ` (+${more} more)` : ''}`;
+}
+
 function discountText(promotion: Promotion): string {
   if (promotion.type === 'percentage') return `${promotion.percentage_value ?? 0}% off`;
   if (promotion.type === 'fixed_amount') return `${money(promotion.fixed_amount_minor, promotion.currency)} off`;
@@ -91,13 +112,14 @@ function discountText(promotion: Promotion): string {
   return 'Free shipping';
 }
 
-function Targets({ scope, ids, onChange }: { scope: string; ids: number[]; onChange: (ids: number[]) => void }) {
+function Targets({ scope, ids, known, onChange }: { scope: string; ids: number[]; known: Record<number, string>; onChange: (ids: number[]) => void }) {
   const categories = useApi<{ data: Category[] }>(scope === 'category' ? '/categories' : null);
   const brands = useApi<{ data: Brand[] }>(scope === 'brand' ? '/brands' : null);
-  // Names of products picked in this dialog. A product chosen earlier is
-  // known only by its number: the API returns the ids of a promotion's
-  // targets, not their names.
-  const [names, setNames] = useState<Record<number, string>>({});
+  // Names of the products: those saved come with the promotion (its
+  // `targets`), those picked in this dialog from the picker. A product
+  // deleted since keeps only its number.
+  const [picked, setPicked] = useState<Record<number, string>>({});
+  const names: Record<number, string> = { ...known, ...picked };
 
   if (scope === 'order') return null;
 
@@ -109,7 +131,7 @@ function Targets({ scope, ids, onChange }: { scope: string; ids: number[]; onCha
           <ul className="flex flex-wrap gap-2">
             {ids.map((id) => (
               <li key={id} className="flex items-center gap-1 rounded-full bg-slate-100 py-0.5 pl-3 pr-1 text-sm">
-                {names[id] ?? `Product #${id}`}
+                {names[id] ?? `Deleted product (#${id})`}
                 <Button size="sm" variant="ghost" onClick={() => onChange(ids.filter((value) => value !== id))} aria-label={`Remove ${names[id] ?? `product ${id}`}`}>✕</Button>
               </li>
             ))}
@@ -118,7 +140,7 @@ function Targets({ scope, ids, onChange }: { scope: string; ids: number[]; onCha
         <ProductPicker
           label="Add a product"
           onPick={({ product }) => {
-            setNames((current) => ({ ...current, [product.internal_id]: product.name }));
+            setPicked((current) => ({ ...current, [product.internal_id]: product.name }));
             if (!ids.includes(product.internal_id)) onChange([...ids, product.internal_id]);
           }}
         />
@@ -231,7 +253,7 @@ function PromotionDialog({ promotion, onClose, onDone }: { promotion: Promotion 
 
         <div role="tabpanel" hidden={tab !== 'applies'} className="space-y-4">
           <SelectField label="Applies to" value={values.target_scope} onChange={(v) => { set('target_scope', v); set('target_ids', []); }} error={errors.target_scope} options={options(SCOPES, SCOPE_LABELS)} />
-          <Targets scope={values.target_scope} ids={values.target_ids} onChange={(ids) => set('target_ids', ids)} />
+          <Targets scope={values.target_scope} ids={values.target_ids} known={values.target_scope === promotion?.target_scope ? targetNames(promotion) : {}} onChange={(ids) => set('target_ids', ids)} />
           {errors.target_ids && <p role="alert" className="text-xs font-medium text-red-700">{errors.target_ids}</p>}
         </div>
 
@@ -341,7 +363,7 @@ export default function Promotions() {
       render: (promotion) => (
         <div>
           <span className="font-medium">{promotion.name}</span>
-          <p className="text-xs text-slate-600">{discountText(promotion)} · {SCOPE_LABELS[promotion.target_scope] ?? humanize(promotion.target_scope)}{promotion.requires_coupon ? ' · needs a code' : ''}</p>
+          <p className="text-xs text-slate-600">{discountText(promotion)} · {targetSummary(promotion)}{promotion.requires_coupon ? ' · needs a code' : ''}</p>
         </div>
       ),
     },

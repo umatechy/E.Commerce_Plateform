@@ -122,6 +122,10 @@ final class CustomerPasswordResetService
 
             app(AuditLogger::class)->record('customer.password_reset', [], $customer, $customer->store_id, $customer);
 
+            // The reset link proved the address (Module 10 §9): the guest
+            // orders placed with it join the account.
+            app(\App\Domain\Customers\Services\GuestOrderLinker::class)->link($customer->refresh());
+
             return true;
         });
     }

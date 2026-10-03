@@ -28,11 +28,12 @@ final class StorefrontWebController
     public function __construct(
         private readonly StorefrontExperience $experience,
         private readonly SeoResolver $seo,
+        private readonly \App\Domain\Theme\Services\ThemePreviewLink $themePreview,
     ) {}
 
     public function home(Request $request): Response
     {
-        $home = $this->experience->home($this->store($request));
+        $home = $this->experience->home($this->store($request), $this->themePreview($request));
 
         return $this->render($request, 'Storefront/Home', ['sections' => $home['sections']], $home['seo']);
     }
@@ -100,7 +101,8 @@ final class StorefrontWebController
             'Order' => ['order_id' => (string) $request->route('orderId')],
             'SupportTicket' => ['ticket_id' => (string) $request->route('ticketId')],
             // Read from the link in the reset email; only echoed back to the API.
-            'ResetPassword' => ['token' => (string) $request->query('token', ''), 'email' => (string) $request->query('email', '')],
+            // Phase B32: the "confirm your email" link, likewise only echoed back to the API.
+            'ResetPassword', 'VerifyEmail' => ['token' => (string) $request->query('token', ''), 'email' => (string) $request->query('email', '')],
             'Login' => ['redirect' => $this->safeRedirect($request)],
             default => [],
         };
@@ -109,6 +111,7 @@ final class StorefrontWebController
             'Login' => 'Sign in',
             'Register' => 'Create an account',
             'ForgotPassword', 'ResetPassword' => 'Reset your password',
+            'VerifyEmail' => 'Confirm your email',
             'Support', 'SupportNew', 'SupportTicket' => 'Support',
             default => 'Your account',
         }));
@@ -209,16 +212,34 @@ final class StorefrontWebController
     private function render(Request $request, string $component, array $props, array $seo): Response
     {
         $store = $this->store($request);
+        $themePreview = $this->themePreview($request);
 
         return Inertia::render($component, [
             ...$props,
             'storefront' => [
-                ...$this->experience->shell($store),
+                ...$this->experience->shell($store, $themePreview),
                 'base_path' => $request->attributes->get('storefront.base_path'),
                 'preview' => (bool) $request->attributes->get('storefront.preview'),
+                // Module 17 §19 (Phase B32): until when the draft theme is shown, or null.
+                'theme_preview' => $themePreview['expires_at'] ?? null,
             ],
-            'seo' => $seo,
+            // A preview is never indexed.
+            'seo' => $themePreview !== null ? [...$seo, 'robots' => 'noindex, nofollow'] : $seo,
         ]);
+    }
+
+    /**
+     * The draft theme for this request (Module 17 §19), worked out once.
+     *
+     * @return array{config: mixed, custom_css: ?string, expires_at: string}|null
+     */
+    private function themePreview(Request $request): ?array
+    {
+        if (! $request->attributes->has('storefront.theme_preview')) {
+            $request->attributes->set('storefront.theme_preview', $this->themePreview->draftFor($request, $this->store($request), (string) $request->attributes->get('storefront.base_path')));
+        }
+
+        return $request->attributes->get('storefront.theme_preview');
     }
 
     private function store(Request $request): Store

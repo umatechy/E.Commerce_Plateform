@@ -107,6 +107,8 @@ final class StepUpTest extends TestCase
             'GET api/v1/super-admin/stores/{store}/impersonate',
             'PATCH api/v1/super-admin/billing/prices/{price}',
             'POST api/v1/backups/{backup}/restore-request',
+            // Phase B32: erasing a customer's personal data cannot be undone.
+            'POST api/v1/customers/{customer}/erase',
             'POST api/v1/super-admin/billing/invoices/{invoice}/extend-due-date',
             'POST api/v1/super-admin/billing/invoices/{invoice}/payments',
             'POST api/v1/super-admin/billing/invoices/{invoice}/void',
@@ -114,9 +116,11 @@ final class StepUpTest extends TestCase
             'POST api/v1/super-admin/developer/applications/{application}/suspend',
             'POST api/v1/super-admin/packages',
             'POST api/v1/super-admin/restore-jobs/{backupRestoreJob}/authorize',
+            'POST api/v1/super-admin/settings/revisions/{revisionId}/rollback',
             'POST api/v1/super-admin/users/{user}/deactivate',
             'POST api/v1/super-admin/users/{user}/reactivate',
             'PUT api/v1/super-admin/packages/{package}',
+            'PUT api/v1/super-admin/packages/{package}/entitlements',
             'PUT api/v1/super-admin/settings/{key}',
         ], $guarded);
     }

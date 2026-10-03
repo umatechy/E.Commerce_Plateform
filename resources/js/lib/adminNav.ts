@@ -29,7 +29,7 @@ export const storeNav: NavGroup[] = [
       { href: '/orders', label: 'Orders', description: 'Orders, their status, payments and deliveries.', permissions: ['orders.view'] },
       { href: '/payments', label: 'Payments', description: 'Payments, confirmations and refunds.', permissions: ['payments.view'] },
       { href: '/shipments', label: 'Shipments', description: 'Deliveries and their tracking.', permissions: ['shipments.view'] },
-      { href: '/customers', label: 'Customers', description: 'Customer figures for your store.', permissions: ['analytics.view'] },
+      { href: '/customers', label: 'Customers', description: 'Your customers, their orders, groups, tags and notes.', permissions: ['customers.view'] },
     ],
   },
   {

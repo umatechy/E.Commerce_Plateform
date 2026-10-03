@@ -44,12 +44,14 @@ final class OrderController
             'status' => ['nullable', Rule::enum(OrderStatus::class)],
             'payment_status' => ['nullable', Rule::enum(PaymentStatus::class)],
             'search' => ['nullable', 'string', 'max:255'],
+            'customer' => ['nullable', 'string', 'size:26'], // Phase B32: one customer's orders
         ]);
 
         return OrderResource::collection(
             Order::query()->with(['items', 'customer'])
                 ->when($filters['status'] ?? null, fn ($q, string $status) => $q->where('status', $status))
                 ->when($filters['payment_status'] ?? null, fn ($q, string $status) => $q->where('payment_status', $status))
+                ->when($filters['customer'] ?? null, fn ($q, string $customer) => $q->whereHas('customer', fn ($c) => $c->where('public_id', $customer)))
                 ->when($filters['search'] ?? null, function ($query, string $search) {
                     $like = '%'.addcslashes($search, '%_\\').'%';
                     $query->where(fn ($q) => $q->where('order_number', 'like', $like)->orWhere('guest_name', 'like', $like)->orWhere('guest_email', 'like', $like));
@@ -70,13 +72,46 @@ final class OrderController
     {
         Gate::forUser($request->user())->authorize('create', Order::class);
 
+        // Phase B32 security fix: a customer id from another store was accepted
+        // (the `exists` rule has no tenant). Only this store's customers, by
+        // public id or numeric key; a blocked customer places no new orders.
+        $customer = null;
+        if ($request->filled('customer') || $request->filled('customer_id')) {
+            $customer = \App\Domain\Orders\Models\Customer::query()
+                ->when($request->filled('customer'), fn ($q) => $q->where('public_id', $request->string('customer')->toString()), fn ($q) => $q->whereKey((int) $request->input('customer_id')))
+                ->whereNull('erased_at')
+                ->first();
+            if ($customer === null) {
+                throw ValidationException::withMessages(['customer' => 'Choose one of your store\'s customers.']);
+            }
+            if (! $customer->standing()->mayOrder()) {
+                throw ValidationException::withMessages(['customer' => 'This customer is '.$customer->standing()->value.' and cannot place orders.']);
+            }
+        }
+
+        // Module 10 §31: nor as a guest with the address of a blocked customer.
+        if ($customer === null && $request->filled('guest_email') && \App\Domain\Orders\Models\Customer::query()
+            ->whereRaw('LOWER(email) = ?', [mb_strtolower(trim($request->string('guest_email')->toString()))])
+            ->where('status', \App\Domain\Customers\Models\CustomerStatus::Blocked->value)->exists()) {
+            throw ValidationException::withMessages(['guest_email' => 'A blocked customer has this email. Unblock them first if they may order again.']);
+        }
+
+        $paymentMethod = $request->filled('payment_method') ? \App\Domain\Payments\Models\PaymentMethod::from($request->string('payment_method')->toString()) : null;
+        if ($paymentMethod !== null) {
+            try {
+                app(\App\Domain\Packages\Services\EntitlementService::class)->assertFeatureEntitled(\App\Domain\Cart\Services\CheckoutService::FEATURE_KEY_BY_METHOD[$paymentMethod->value]);
+            } catch (FeatureNotEntitledException|SubscriptionInactiveException $e) {
+                return response()->json(['message' => $e->getMessage()], 403);
+            }
+        }
+
         try {
             $order = $orders->createOrder(
                 items: $request->input('items'),
-                orderData: $request->only([
-                    'customer_id', 'guest_name', 'guest_email', 'guest_phone',
-                    'billing_address', 'shipping_address', 'notes', 'source',
-                ]),
+                orderData: [
+                    ...$request->only(['guest_name', 'guest_email', 'guest_phone', 'billing_address', 'shipping_address', 'notes', 'source']),
+                    'customer_id' => $customer?->id,
+                ],
                 idempotencyKey: $request->string('idempotency_key')->toString(),
             );
         } catch (EmptyOrderException $e) {
@@ -97,7 +132,15 @@ final class OrderController
 
         $wasJustCreated = $order->wasRecentlyCreated;
 
-        return (new OrderResource($order))->response()->setStatusCode($wasJustCreated ? 201 : 200);
+        // The payment record (idempotent with the order's own key): from now
+        // on staff record the money received, and a cash-on-delivery order
+        // can be shipped before it is paid, as at checkout.
+        if ($paymentMethod !== null) {
+            app(\App\Domain\Payments\Services\PaymentService::class)->createForOrder($order, $paymentMethod, $request->string('idempotency_key')->toString().':payment');
+            $order->refresh();
+        }
+
+        return (new OrderResource($order->load(['items', 'customer'])))->response()->setStatusCode($wasJustCreated ? 201 : 200);
     }
 
     public function cancel(CancelOrderRequest $request, Order $order, OrderService $orders): JsonResponse

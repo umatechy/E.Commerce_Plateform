@@ -34,6 +34,17 @@ final class CustomerRegistration
             throw ValidationException::withMessages(['email' => 'An account with this email already exists.']);
         }
 
+        // Phase B32 (Module 10 §31): a blocked customer cannot get round the
+        // block with a new account on the same address. The answer does not
+        // say why, as for a blocked sign-in.
+        $blocked = Customer::query()
+            ->whereRaw('LOWER(email) = ?', [mb_strtolower($data['email'])])
+            ->where('status', \App\Domain\Customers\Models\CustomerStatus::Blocked->value)
+            ->exists();
+        if ($blocked) {
+            throw ValidationException::withMessages(['email' => 'An account cannot be created with this email. Please contact the store.']);
+        }
+
         $customer = Customer::query()->create([
             'name' => $data['name'],
             'email' => $data['email'],
@@ -42,6 +53,18 @@ final class CustomerRegistration
         ]);
 
         app(AuditLogger::class)->record('customer.registered', [], $customer, $customer->store_id, $customer);
+
+        // Module 10 §9–10 (Phase B32): the confirm-your-email link goes out at
+        // once. A failure to send does not undo the account; the customer can
+        // ask for the link again from their account.
+        try {
+            $store = \App\Domain\Tenancy\Models\Store::query()->find($customer->store_id);
+            if ($store !== null) {
+                app(\App\Domain\Customers\Services\CustomerEmailVerification::class)->send($customer, $store);
+            }
+        } catch (\Throwable $e) {
+            report($e);
+        }
 
         return $customer;
     }

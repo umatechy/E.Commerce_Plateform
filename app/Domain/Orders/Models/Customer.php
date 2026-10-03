@@ -50,6 +50,9 @@ final class Customer extends Model implements AuthenticatableContract
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'erased_at' => 'datetime', // Module 32 — personal data erased on request
+            'status' => \App\Domain\Customers\Models\CustomerStatus::class, // Module 10 §29 (Phase B32)
+            'source' => \App\Domain\Customers\Models\CustomerSource::class,
+            'status_changed_at' => 'datetime',
         ];
     }
 
@@ -82,6 +85,30 @@ final class Customer extends Model implements AuthenticatableContract
     public function wishlistItems(): HasMany
     {
         return $this->hasMany(\App\Domain\Cart\Models\WishlistItem::class);
+    }
+
+    /** @return BelongsTo<\App\Domain\Customers\Models\CustomerGroup, $this> Module 10 §25 (Phase B32) */
+    public function group(): BelongsTo
+    {
+        return $this->belongsTo(\App\Domain\Customers\Models\CustomerGroup::class, 'customer_group_id');
+    }
+
+    /** @return \Illuminate\Database\Eloquent\Relations\BelongsToMany<\App\Domain\Customers\Models\CustomerTag, $this> Module 10 §24 (Phase B32) */
+    public function tags(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
+    {
+        return $this->belongsToMany(\App\Domain\Customers\Models\CustomerTag::class, 'customer_tag_assignments', 'customer_id', 'customer_tag_id')->orderBy('customer_tags.name');
+    }
+
+    /** @return HasMany<\App\Domain\Customers\Models\CustomerNote, $this> Module 10 §32 (Phase B32); staff only */
+    public function notes(): HasMany
+    {
+        return $this->hasMany(\App\Domain\Customers\Models\CustomerNote::class);
+    }
+
+    /** Module 10 §29–31 (Phase B32). A row from before B32, or one not yet refreshed, counts as active. */
+    public function standing(): \App\Domain\Customers\Models\CustomerStatus
+    {
+        return $this->status ?? \App\Domain\Customers\Models\CustomerStatus::Active;
     }
 
     public function isRegistered(): bool

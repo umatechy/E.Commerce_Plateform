@@ -26,14 +26,20 @@ final class PromotionController
     {
         Gate::forUser($request->user())->authorize('viewAny', Promotion::class);
 
-        return PromotionResource::collection(Promotion::query()->with('targets')->orderByDesc('created_at')->paginate(25));
+        $page = Promotion::query()->with('targets')->orderByDesc('created_at')->paginate(25);
+        app(\App\Domain\Promotions\Services\PromotionTargetNames::class)->attach($page->getCollection());
+
+        return PromotionResource::collection($page);
     }
 
     public function show(Request $request, Promotion $promotion): PromotionResource
     {
         Gate::forUser($request->user())->authorize('view', $promotion);
 
-        return new PromotionResource($promotion->load('targets'));
+        $promotion->load('targets');
+        app(\App\Domain\Promotions\Services\PromotionTargetNames::class)->attach([$promotion]);
+
+        return new PromotionResource($promotion);
     }
 
     public function store(SavePromotionRequest $request): JsonResponse

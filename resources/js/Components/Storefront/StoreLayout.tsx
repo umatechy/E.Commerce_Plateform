@@ -40,6 +40,15 @@ export default function StoreLayout({ shell, seo, children }: PropsWithChildren<
           Preview — this store is not launched yet. Only your team can see it.
         </div>
       )}
+      {shell.theme_preview && (
+        <div role="status" className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1 bg-indigo-700 px-4 py-2 text-center text-sm font-medium text-white">
+          <span>Theme preview — you are seeing the unpublished draft. Customers see the published theme.</span>
+          {/* A full page load, so the server ends the preview (it forgets the preview cookie). */}
+          <a href={`${base}/?theme_preview=exit`} className="rounded underline focus:outline-none focus-visible:ring-2 focus-visible:ring-white">
+            End preview
+          </a>
+        </div>
+      )}
       {shell.announcement && <div className="bg-sf-primary px-4 py-2 text-center text-sm text-white">{shell.announcement}</div>}
 
       <header className="border-b border-sf-border">

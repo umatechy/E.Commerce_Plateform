@@ -1,6 +1,7 @@
 import { FormEvent, useState } from 'react';
+import { Link } from '@inertiajs/react';
 import AdminPage from '@/Components/AdminPage';
-import Button, { ButtonLink } from '@/Components/ui/Button';
+import Button, { ButtonLink, FOCUS_RING } from '@/Components/ui/Button';
 import DataTable, { type Column } from '@/Components/ui/DataTable';
 import Dialog from '@/Components/ui/Dialog';
 import { FormError, SelectField, TextAreaField } from '@/Components/ui/Form';
@@ -68,7 +69,7 @@ function PaymentsCard({ order, onChanged }: { order: Order; onChanged: () => voi
       <DataTable caption="Payments of this order" columns={columns} rows={list.rows} rowKey={(payment) => payment.id} loading={list.loading} error={list.error} onRetry={list.reload} empty={
           <p className="text-sm text-slate-600">
             No payment has been started for this order.
-            {order.source === 'admin' && ' An order created in the admin has no payment yet, and the server does not let an unpaid order be shipped.'}
+            {order.source === 'admin' && ' It was created in the admin without a payment method, and the server does not let an order without a payment be shipped. Cancel it if it will not be paid.'}
           </p>
         } />
       {open && (
@@ -243,7 +244,13 @@ export default function Show({ orderId }: { orderId: string }) {
             <Card title="Customer">
               <div className="space-y-3">
                 <div>
-                  <p className="text-sm font-medium text-slate-900">{orderCustomer(order)}</p>
+                  <p className="text-sm font-medium text-slate-900">
+                    {order.customer && access.can('customers.view') ? (
+                      <Link href={`/customers/${order.customer.id}`} className={`rounded text-indigo-700 hover:underline ${FOCUS_RING}`}>{orderCustomer(order)}</Link>
+                    ) : (
+                      orderCustomer(order)
+                    )}
+                  </p>
                   <p className="text-sm text-slate-700">{order.customer?.email ?? order.guest_email ?? ''}</p>
                   {order.guest_phone && <p className="text-sm text-slate-700">{order.guest_phone}</p>}
                 </div>

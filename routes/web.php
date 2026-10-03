@@ -35,6 +35,8 @@ $storefrontPages = function (): void {
         '/account/forgot-password' => 'ForgotPassword', '/account/reset-password' => 'ResetPassword',
         '/account/orders' => 'Orders', '/account/orders/{orderId}' => 'Order', '/account/addresses' => 'Addresses',
         '/account/profile' => 'Profile', '/account/wishlist' => 'Wishlist',
+        // Phase B32: the link in the "confirm your email" message.
+        '/account/verify-email' => 'VerifyEmail',
         // Phase B26: support requests ('new' is registered before the id).
         '/account/support' => 'Support', '/account/support/new' => 'SupportNew', '/account/support/{ticketId}' => 'SupportTicket',
     ] as $uri => $page) {
@@ -98,6 +100,9 @@ Route::middleware(['auth', 'required.mfa'])->group(function () {
     Route::get('/products/new', fn () => Inertia::render('Catalog/ProductEdit', ['productId' => null]));
     Route::get('/products/{product}', fn (string $product) => Inertia::render('Catalog/ProductEdit', ['productId' => $product]))->where('product', '[0-9A-Za-z]{26}');
     Route::get('/orders/new', fn () => Inertia::render('Orders/Create'));
+    // Phase B32 (gap G7, Module 10): customer groups and tags, and one customer.
+    Route::get('/customers/groups', fn () => Inertia::render('Customers/Groups'));
+    Route::get('/customers/{customer}', fn (string $customer) => Inertia::render('Customers/Show', ['customerId' => $customer]))->where('customer', '[0-9A-Za-z]{26}');
     Route::get('/orders/{order}', fn (string $order) => Inertia::render('Orders/Show', ['orderId' => $order]))->where('order', '[0-9A-Za-z]{26}');
 
     // Umar Techy Super Admin (Module 30): platform staff only. The gate

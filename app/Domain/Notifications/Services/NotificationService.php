@@ -88,7 +88,7 @@ final class NotificationService
         if ($recipientType === RecipientType::Customer) {
             $customer = $recipientId !== null ? Customer::query()->find($recipientId) : null;
 
-            if ($customer === null || ! $customer->marketing_email_opt_in) {
+            if ($customer === null || ! $customer->marketing_email_opt_in || ! $customer->standing()->mayReceiveMarketing()) {
                 return false; // no known Customer (e.g. a guest) is never eligible for marketing — there is no consent record to check
             }
         }

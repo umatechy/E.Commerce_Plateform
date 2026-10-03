@@ -43,6 +43,7 @@ final class SystemRoles
         'store_health.view', // Module 24 (Phase B21)
         'backups.view', // backups.manage/restore withheld — Owner-only (Phase B19)
         'support.view', 'support.reply', 'support.manage', // Module 34 (Phase B26)
+        'customers.view', 'customers.manage', // Module 10 (Phase B32)
     ];
 
     /** @return array<string, array{name: string, permissions: list<string>}> slug => definition, Owner first */
@@ -55,6 +56,7 @@ final class SystemRoles
                 ...self::MANAGER,
                 'users.manage', 'products.delete', 'products.view_cost', 'payments.refund',
                 'analytics.financial', 'domains.manage', 'storefront.manage', 'audit.view', 'billing.view',
+                'customers.export', 'customers.import',
             ]],
             'manager' => ['name' => 'Manager', 'permissions' => self::MANAGER],
             'staff' => ['name' => 'Staff', 'permissions' => [
@@ -65,6 +67,7 @@ final class SystemRoles
                 'orders.view', 'orders.create', 'orders.update', 'orders.cancel',
                 'payments.view', 'payments.manage', 'shipments.view', 'shipments.fulfill',
                 'products.view', 'inventory.view', 'support.view', 'support.reply',
+                'customers.view',
             ]],
             'inventory-manager' => ['name' => 'Inventory Manager', 'permissions' => [
                 'products.view', 'inventory.view', 'inventory.adjust', 'warehouses.manage',
@@ -75,6 +78,7 @@ final class SystemRoles
                 'categories.manage', 'brands.manage', 'attributes.manage',
                 'promotions.view', 'promotions.manage', 'marketing.view', 'marketing.manage',
                 'seo.view', 'seo.manage', 'theme.view', 'theme.manage', 'analytics.view',
+                'customers.view',
             ]],
         ];
     }

@@ -72,6 +72,8 @@ export type Shell = {
   navigation: { categories: CategoryNode[]; pages: { slug: string; title: string }[] };
   base_path: string;
   preview: boolean;
+  /** Phase B32 (Module 17 §19): until when this visit shows the draft theme; null for the published one. */
+  theme_preview?: string | null;
 };
 
 export type Seo = {

@@ -154,6 +154,26 @@ export default function Theme() {
   }
 
   const unpublished = JSON.stringify(theme.draft_config) !== JSON.stringify(theme.published_config);
+
+  // Phase B32 (Module 17 §19): a short-lived link that shows this store's
+  // saved draft to whoever opens it, marked as a preview and not indexed.
+  // The tab is opened at the click (a browser blocks one opened later) and
+  // sent to the link once the server has made it.
+  async function previewDraft() {
+    const tab = window.open('about:blank', '_blank');
+    const link = await run('preview', () => adminFetch<{ data: { url: string; expires_at: string } }>('/store/theme/preview', { method: 'POST' }));
+    if (!link) {
+      tab?.close();
+
+      return;
+    }
+    if (tab) {
+      tab.opener = null;
+      tab.location.href = link.data.url;
+    } else {
+      window.location.href = link.data.url;
+    }
+  }
   const section = (index: number, patch: Partial<Section>) => change({ ...config, sections: config.sections.map((item, i) => (i === index ? { ...item, ...patch } : item)) });
   const moveSection = (index: number, by: number) => {
     const sections = [...config.sections];
@@ -173,6 +193,15 @@ export default function Theme() {
               View published storefront<span className="sr-only"> (opens in a new tab)</span>
             </a>
           )}
+          <Button
+            onClick={() => void previewDraft()}
+            busy={busy === 'preview'}
+            busyLabel="Opening…"
+            disabled={dirty}
+            title={dirty ? 'Save the draft first: the preview shows the saved draft' : 'Opens your storefront with the draft, for 30 minutes. Customers do not see it.'}
+          >
+            Preview draft<span className="sr-only"> (opens in a new tab)</span>
+          </Button>
           {canEdit && <Button onClick={() => void saveDraft()} busy={saving} busyLabel="Saving…" disabled={!dirty}>Save draft</Button>}
           {canPublish && <Button variant="primary" onClick={() => setConfirm('publish')} disabled={dirty || !unpublished} title={dirty ? 'Save the draft first' : !unpublished ? 'The draft is already published' : undefined}>Publish</Button>}
         </>
