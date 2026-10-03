@@ -15,6 +15,7 @@ import { fromMinor, money, toMinor } from '@/lib/money';
 import { dateTimeOrDash, displayTimezoneName, toStoreLocalInput } from '@/lib/datetime';
 import { options } from '@/lib/labels';
 import type { Brand, Category } from '@/lib/catalog';
+import CurrencyField from '@/Components/CurrencyField';
 
 /**
  * Module 14 "Discounts, Coupons & Promotions" (/api/v1/promotions,
@@ -244,7 +245,7 @@ function PromotionDialog({ promotion, onClose, onDone }: { promotion: Promotion 
             {values.type === 'fixed_amount' && (
               <>
                 <TextField label="Amount off" inputMode="decimal" value={values.fixed_amount} onChange={(v) => set('fixed_amount', v)} error={errors.fixed_amount_minor} required />
-                <TextField label="Currency" value={values.currency} onChange={(v) => set('currency', v.toUpperCase())} error={errors.currency} maxLength={3} required />
+                <CurrencyField value={values.currency} onChange={(v) => set('currency', v)} error={errors.currency} />
               </>
             )}
           </div>

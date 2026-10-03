@@ -9,7 +9,12 @@ import SettingsEditor, { type SettingInfo } from '@/Components/SettingsEditor';
  * server's registry has for the platform; this page names them.
  */
 const INFO: Record<string, SettingInfo> = {
-  'platform.supported_currencies': { label: 'Supported currencies', description: 'The currencies stores may use.', itemHint: 'One three-letter code per line, such as USD.' },
+  'platform.supported_currencies': {
+    label: 'Supported currencies',
+    description: 'The currencies stores may choose from. New stores use PKR (Rs.).',
+    itemHint: 'One three-letter code per line, such as PKR or USD.',
+    warning: 'A store keeps its currency even if you remove it here; only new choices are limited.',
+  },
   'platform.default_locale': { label: 'Default language', description: 'Used by a store that has not chosen its own.', itemHint: 'A language code such as en.' },
   'platform.maintenance_mode': {
     label: 'Maintenance mode',

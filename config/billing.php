@@ -10,7 +10,9 @@ declare(strict_types=1);
 return [
     // Currency new subscriptions are billed in (a PackagePrice must exist
     // for it). ISO 4217.
-    'currency' => env('BILLING_CURRENCY', 'USD'),
+    // Owner decision 2026-10-03: Pakistan first. Existing subscriptions keep
+    // the currency they were started in.
+    'currency' => env('BILLING_CURRENCY', 'PKR'),
 
     // Tax charged on every invoice, in basis points (1700 = 17%). 0 = none.
     'tax_rate_bps' => (int) env('BILLING_TAX_RATE_BPS', 0),

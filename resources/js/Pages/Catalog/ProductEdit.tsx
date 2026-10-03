@@ -14,6 +14,7 @@ import { useAction, useForm, useUnsavedWarning } from '@/lib/useForm';
 import { adminErrorMessage, adminFetch, AdminApiError } from '@/lib/adminApi';
 import { fromMinor, money, toMinor } from '@/lib/money';
 import { options } from '@/lib/labels';
+import CurrencyField from '@/Components/CurrencyField';
 import {
   categoryTree,
   PRODUCT_STATUSES,
@@ -199,7 +200,7 @@ function ProductForm({ product, onSaved }: { product: Product | null; onSaved: (
       <div role="tabpanel" hidden={tab !== 'pricing'} className="space-y-4">
         <Card description="Amounts are entered in the currency below and stored exactly.">
           <div className="grid gap-4 sm:grid-cols-2">
-            <TextField label="Currency" value={values.currency} onChange={(v) => set('currency', v.toUpperCase())} error={errors.currency} maxLength={3} hint="Three-letter code, e.g. USD." />
+            <CurrencyField value={values.currency} onChange={(v) => set('currency', v)} error={errors.currency} hint="New products start in your store currency." />
             <TextField label="Price" optional inputMode="decimal" value={values.price} onChange={(v) => set('price', v)} error={errors.price_minor} hint="The price of the product itself. Each variant has its own price." />
             <TextField label="Sale price" optional inputMode="decimal" value={values.sale_price} onChange={(v) => set('sale_price', v)} error={errors.sale_price_minor} hint="Must be lower than the price." />
             {canCost && <TextField label="Cost price" optional inputMode="decimal" value={values.cost_price} onChange={(v) => set('cost_price', v)} error={errors.cost_price_minor} hint="Never shown to customers." />}

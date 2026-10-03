@@ -56,6 +56,9 @@ final class SettingValidator
         }
 
         $normalized = trim($value);
+        if ($definition->key === 'store.default_currency') {
+            $normalized = strtoupper($normalized);
+        }
 
         if ($definition->allowedValues !== null && ! in_array($normalized, $definition->allowedValues, true)) {
             throw new InvalidSettingValueException('Value must be one of: '.implode(', ', $definition->allowedValues));
@@ -85,6 +88,17 @@ final class SettingValidator
             if (preg_match('/^\+[1-9]\d{7,14}$/', $item) !== 1) {
                 throw new InvalidSettingValueException("\"{$item}\" is not a phone number in international format (+923001234567).");
             }
+        }
+
+        // Currencies: three-letter ISO codes, upper case, each once (owner decision 2026-10-03).
+        if ($definition->key === 'platform.supported_currencies') {
+            $items = array_map('strtoupper', $items);
+            foreach ($items as $item) {
+                if (! Currencies::isCode($item)) {
+                    throw new InvalidSettingValueException("\"{$item}\" is not a three-letter currency code such as PKR or USD.");
+                }
+            }
+            $items = array_values(array_unique($items));
         }
 
         return $items;

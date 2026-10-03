@@ -12,6 +12,7 @@ import { useForm } from '@/lib/useForm';
 import { adminFetch } from '@/lib/adminApi';
 import { fromMinor, money, toMinor } from '@/lib/money';
 import { options } from '@/lib/labels';
+import CurrencyField from '@/Components/CurrencyField';
 
 /**
  * Module 13 §5/§22 shipping configuration: zones (where you deliver),
@@ -130,7 +131,7 @@ function RateDialog({ zones, methods, currency, onClose, onDone }: { zones: Zone
         <div className="grid gap-4 sm:grid-cols-2">
           <SelectField label="Zone" value={form.values.shipping_zone_id} onChange={(v) => form.set('shipping_zone_id', v)} error={errors.shipping_zone_id} placeholder="Choose a zone" options={zones.map((zone) => ({ value: String(zone.id), label: zone.name }))} required />
           <SelectField label="Method" value={form.values.shipping_method_id} onChange={(v) => form.set('shipping_method_id', v)} error={errors.shipping_method_id} placeholder="Choose a method" options={methods.map((method) => ({ value: String(method.id), label: method.name }))} required />
-          <TextField label="Currency" value={form.values.currency} onChange={(v) => form.set('currency', v.toUpperCase())} error={errors.currency} maxLength={3} required />
+          <CurrencyField value={form.values.currency} onChange={(v) => form.set('currency', v)} error={errors.currency} hint="Rates are offered only to carts in the same currency." />
           <TextField label="Base cost" inputMode="decimal" value={form.values.base} onChange={(v) => form.set('base', v)} error={errors.base_cost_minor} required />
           <TextField label="Cost per extra unit" optional inputMode="decimal" value={form.values.per_unit} onChange={(v) => form.set('per_unit', v)} error={errors.per_unit_cost_minor} />
           <TextField label="Units included in the base cost" optional type="number" min={0} value={form.values.unit_threshold} onChange={(v) => form.set('unit_threshold', v)} error={errors.unit_threshold} />

@@ -27,7 +27,6 @@ use Illuminate\Http\Request;
 final class CartController
 {
     private const GUEST_TOKEN_HEADER = 'X-Guest-Cart-Token';
-    private const DEFAULT_CURRENCY = 'USD'; // documented placeholder — see docs/architecture/b6-cart-checkout.md "Currency"
 
     public function show(Request $request, CartService $carts): JsonResponse
     {
@@ -126,7 +125,7 @@ final class CartController
      */
     private function resolveCart(Request $request, CartService $carts): array
     {
-        return $carts->resolveForRequest($request, self::GUEST_TOKEN_HEADER, self::DEFAULT_CURRENCY);
+        return $carts->resolveForRequest($request, self::GUEST_TOKEN_HEADER, $carts->storeCurrency());
     }
 
     private function assertOwnsCartItem(Cart $cart, CartItem $item): void

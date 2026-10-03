@@ -32,7 +32,7 @@ final class StructuredDataService
             'offers' => [
                 '@type' => 'Offer',
                 'priceCurrency' => $product->currency,
-                'price' => number_format($product->price_minor / 100, 2, '.', ''),
+                'price' => \App\Domain\Settings\Services\Currencies::amount((int) $product->price_minor, (string) $product->currency),
                 'availability' => 'https://schema.org/InStock',
             ],
         ];

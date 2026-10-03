@@ -1,4 +1,5 @@
 import { usePage } from '@inertiajs/react';
+import { DEFAULT_CURRENCY, SUPPORTED_CURRENCIES } from './money';
 
 /**
  * What the signed-in user may open, as the server shared it with the
@@ -19,6 +20,8 @@ export type AuthProps = {
   package?: { code: string; name: string } | null;
   stores?: { id: number; name: string }[];
   currency?: string | null;
+  /** The currencies the platform offers (owner decision 2026-10-03). */
+  currencies?: string[];
 };
 
 export type Access = {
@@ -32,6 +35,8 @@ export type Access = {
   locked: boolean;
   packageName: string | null;
   currency: string;
+  /** The currencies a store may choose, the store currency first. */
+  currencies: string[];
   timezone: string;
 };
 
@@ -47,7 +52,9 @@ export function accessFrom(auth: AuthProps): Access {
     hasStore: auth.activeStore !== null && auth.activeStore !== undefined,
     locked: auth.mfa_enrollment_required === true,
     packageName: auth.package?.name ?? null,
-    currency: auth.currency ?? 'USD',
+    // Pakistan first (owner decision 2026-10-03).
+    currency: auth.currency ?? DEFAULT_CURRENCY,
+    currencies: (auth.currencies?.length ? auth.currencies : [...SUPPORTED_CURRENCIES]),
     timezone: auth.timezone ?? 'UTC',
   };
 }

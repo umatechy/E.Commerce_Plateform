@@ -106,7 +106,9 @@ final class StoreObserver
             'store_id' => $store->id,
             'shipping_zone_id' => $defaultZone->id,
             'shipping_method_id' => $pickupMethod->id,
-            'currency' => 'USD', // documented placeholder — see Cart's identical DEFAULT_CURRENCY precedent (Phase B6)
+            // A new store's own currency (owner decision 2026-10-03: PKR); this
+            // free pickup rate must match the store's carts to be offered.
+            'currency' => \App\Domain\Settings\Services\Currencies::DEFAULT,
             'base_cost_minor' => 0,
         ]);
 

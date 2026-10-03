@@ -37,6 +37,7 @@ final class CheckoutPromotionIntegrationTest extends TestCase
     private function setUpStore(): array
     {
         $store = Store::factory()->create();
+        $this->storeCurrency($store, 'USD'); // its products and rates are priced in USD
         $package = Package::factory()->create();
         foreach (['orders.basic', 'payment.cod', 'shipping.basic'] as $feature) {
             $package->entitlements()->create(['key' => $feature, 'type' => EntitlementType::Feature, 'boolean_value' => true]);

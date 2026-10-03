@@ -36,6 +36,17 @@ final class CartService
      * given principal. Exactly one of $customer/$guestToken is
      * expected — mirrors the ownership model in Module 11 §5.
      */
+    /**
+     * The currency a new cart starts in: the store's own (owner decision
+     * 2026-10-03: PKR unless the store chose another). Replaces the B6
+     * placeholder 'USD', which left a PKR store's carts without shipping
+     * rates (rates are matched by currency).
+     */
+    public function storeCurrency(): string
+    {
+        return (string) app(\App\Domain\Settings\Services\ConfigService::class)->get('store.default_currency');
+    }
+
     public function activeCartFor(?Customer $customer, ?string $guestToken, string $currency): Cart
     {
         $query = Cart::query()->where('status', CartStatus::Active);
@@ -277,7 +288,7 @@ final class CartService
 
         try {
             $result = app(\App\Domain\Promotions\Services\PromotionEligibilityEngine::class)->evaluate(
-                $cartItemContexts, $subtotalMinor, $cart->currency ?? 'USD',
+                $cartItemContexts, $subtotalMinor, $cart->currency ?? $this->storeCurrency(),
                 $cart->customer, $cart->coupon_code,
             );
         } catch (\App\Domain\Promotions\Exceptions\CouponNotEligibleException) {
@@ -308,7 +319,7 @@ final class CartService
 
         $totals = $this->totals($cart);
         app(\App\Domain\Promotions\Services\PromotionEligibilityEngine::class)->evaluate(
-            [], $totals['subtotal_minor'], $totals['currency'] ?? 'USD', $cart->customer, $code,
+            [], $totals['subtotal_minor'], $totals['currency'] ?? $this->storeCurrency(), $cart->customer, $code,
         );
 
         $cart->update(['coupon_code' => $code]);
@@ -340,7 +351,7 @@ final class CartService
         }
 
         return DB::transaction(function () use ($guestCart, $customer) {
-            $customerCart = $this->activeCartFor($customer, null, $guestCart->currency ?? 'USD');
+            $customerCart = $this->activeCartFor($customer, null, $guestCart->currency ?? $this->storeCurrency());
 
             foreach ($guestCart->items as $guestItem) {
                 $existing = CartItem::query()

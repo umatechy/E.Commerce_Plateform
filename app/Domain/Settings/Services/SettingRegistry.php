@@ -28,7 +28,7 @@ final class SettingRegistry
         return [
             'platform.supported_currencies' => new SettingDefinition(
                 key: 'platform.supported_currencies', scope: SettingScope::Platform, type: SettingType::StringArray,
-                default: ['USD'],
+                default: Currencies::SUPPORTED, // owner decision 2026-10-03: PKR first, then USD, EUR, GBP, AED, SAR
             ),
             'platform.default_locale' => new SettingDefinition(
                 key: 'platform.default_locale', scope: SettingScope::Platform, type: SettingType::String,
@@ -40,7 +40,7 @@ final class SettingRegistry
             ),
             'store.default_currency' => new SettingDefinition(
                 key: 'store.default_currency', scope: SettingScope::Store, type: SettingType::String,
-                default: 'USD', // Module 33 §4 hierarchy: cross-validated against platform.supported_currencies at write time, see SettingValidator
+                default: Currencies::DEFAULT, // owner decision 2026-10-03 (Pakistan first). Module 33 §4 hierarchy: cross-validated against platform.supported_currencies at write time, see SettingValidator
             ),
             'store.timezone' => new SettingDefinition(
                 key: 'store.timezone', scope: SettingScope::Store, type: SettingType::String,

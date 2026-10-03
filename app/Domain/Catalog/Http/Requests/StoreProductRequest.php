@@ -19,6 +19,19 @@ final class StoreProductRequest extends FormRequest
         return true;
     }
 
+    /**
+     * Currency codes are compared upper-case; a product without one gets
+     * the store's currency (before B32 follow-up it stayed empty, and an
+     * order for it could not be saved: orders.currency is required).
+     */
+    protected function prepareForValidation(): void
+    {
+        $currency = $this->input('currency');
+        $this->merge(['currency' => is_string($currency) && trim($currency) !== ''
+            ? strtoupper(trim($currency))
+            : (string) app(\App\Domain\Settings\Services\ConfigService::class)->get('store.default_currency')]);
+    }
+
     public function rules(): array
     {
         return [
@@ -34,7 +47,8 @@ final class StoreProductRequest extends FormRequest
             'price_minor' => ['nullable', 'integer', 'min:0'],
             'sale_price_minor' => ['nullable', 'integer', 'min:0', 'lt:price_minor'],
             'cost_price_minor' => ['nullable', 'integer', 'min:0'],
-            'currency' => ['nullable', 'string', 'size:3'],
+            // One of the platform's currencies; without one, the store's own (owner decision 2026-10-03).
+            'currency' => ['required', 'string', 'size:3', \App\Domain\Settings\Services\Currencies::rule()],
             'category_ids' => ['array'],
             'category_ids.*' => ['integer', 'exists:categories,id'],
         ];

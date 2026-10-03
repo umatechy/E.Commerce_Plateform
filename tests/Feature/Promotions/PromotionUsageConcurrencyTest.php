@@ -41,6 +41,7 @@ final class PromotionUsageConcurrencyTest extends TestCase
     public function test_two_concurrent_checkouts_cannot_both_consume_the_final_usage_slot(): void
     {
         $store = Store::factory()->create();
+        $this->storeCurrency($store, 'USD'); // its products and rates are priced in USD
         $package = Package::factory()->create();
         foreach (['orders.basic', 'payment.cod', 'shipping.basic'] as $feature) {
             $package->entitlements()->create(['key' => $feature, 'type' => EntitlementType::Feature, 'boolean_value' => true]);

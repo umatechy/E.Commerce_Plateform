@@ -35,7 +35,7 @@ final class CheckoutController
 {
     public function store(CheckoutRequest $request, CartService $carts, CheckoutService $checkout): JsonResponse
     {
-        [$cart] = $carts->resolveForRequest($request, 'X-Guest-Cart-Token', 'USD');
+        [$cart] = $carts->resolveForRequest($request, 'X-Guest-Cart-Token', $carts->storeCurrency());
 
         $customer = $request->user() instanceof Customer ? $request->user() : null;
 

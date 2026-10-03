@@ -29,7 +29,8 @@ export default function Index() {
       'store.default_currency': {
         label: 'Store currency',
         description: 'The currency amounts are shown in across the admin and that new products and rates start with.',
-        itemHint: 'A three-letter code, such as USD or PKR.',
+        choices: access.currencies,
+        itemHint: 'One of the currencies the platform offers. Pakistan stores use PKR (Rs.).',
         warning: 'Existing products, orders and rates keep the currency they were saved with. Nothing is converted.',
       },
       'store.timezone': {
@@ -45,7 +46,7 @@ export default function Index() {
         itemHint: 'A language code such as en.',
       },
     }),
-    [],
+    [access.currencies],
   );
 
   return (

@@ -41,10 +41,13 @@ final class SuperAdminBillingController
     /** Creates the price for (package, interval, currency), or changes its amount if it exists. */
     public function upsertPrice(Request $request): JsonResponse
     {
+        if (is_string($request->input('currency'))) {
+            $request->merge(['currency' => strtoupper(trim($request->input('currency')))]);
+        }
         $validated = $request->validate([
             'package_code' => ['required', 'string', Rule::exists('packages', 'code')],
             'billing_interval' => ['required', Rule::enum(BillingInterval::class)],
-            'currency' => ['required', 'string', 'size:3', 'alpha'],
+            'currency' => ['required', 'string', 'size:3', \App\Domain\Settings\Services\Currencies::rule()], // owner decision 2026-10-03
             'amount_minor' => ['required', 'integer', 'min:0', 'max:100000000000'],
             'is_active' => ['sometimes', 'boolean'],
         ]);

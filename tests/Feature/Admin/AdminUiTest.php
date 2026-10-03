@@ -77,7 +77,9 @@ final class AdminUiTest extends TestCase
             ->where('auth.features', ['products.basic' => true, 'theme.custom_css' => true, 'custom_roles.enabled' => false]) // limits are not features
             ->where('auth.package.name', $package->name)
             ->where('auth.stores', [['id' => $store->id, 'name' => $store->name]])
-            ->where('auth.currency', 'USD'));
+            // A new store prices in PKR (owner decision 2026-10-03); the six offered currencies come along.
+            ->where('auth.currency', 'PKR')
+            ->where('auth.currencies', ['PKR', 'USD', 'EUR', 'GBP', 'AED', 'SAR']));
     }
 
     public function test_a_staff_member_gets_exactly_the_permissions_of_the_role_and_never_another_stores(): void

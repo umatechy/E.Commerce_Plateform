@@ -14,6 +14,8 @@ import { adminFetch, idempotencyKey } from '@/lib/adminApi';
 import { fromMinor, money, toMinor } from '@/lib/money';
 import { formatUtcDate } from '@/lib/datetime';
 import { options } from '@/lib/labels';
+import CurrencyField from '@/Components/CurrencyField';
+import { DEFAULT_CURRENCY } from '@/lib/money';
 
 /**
  * Module 29 platform billing (/api/v1/super-admin/billing/...): what
@@ -78,7 +80,7 @@ function Prices() {
   const prices = useApi<{ data: Price[] }>('/super-admin/billing/prices');
   const packages = useApi<{ data: Package[] }>('/super-admin/packages');
   const [adding, setAdding] = useState(false);
-  const form = useForm({ package_code: '', billing_interval: 'monthly', currency: 'USD', amount: '' });
+  const form = useForm({ package_code: '', billing_interval: 'monthly', currency: DEFAULT_CURRENCY, amount: '' });
   const [local, setLocal] = useState<string | null>(null);
   const { busy, run } = useAction();
 
@@ -117,7 +119,7 @@ function Prices() {
   return (
     <>
       <div className="mb-3 flex justify-end">
-        <Button variant="primary" onClick={() => { form.reset({ package_code: '', billing_interval: 'monthly', currency: 'USD', amount: '' }); setLocal(null); setAdding(true); }}>Set a price</Button>
+        <Button variant="primary" onClick={() => { form.reset({ package_code: '', billing_interval: 'monthly', currency: DEFAULT_CURRENCY, amount: '' }); setLocal(null); setAdding(true); }}>Set a price</Button>
       </div>
       <DataTable caption="Package prices" columns={columns} rows={prices.data?.data ?? null} rowKey={(price) => price.id} loading={prices.loading} error={prices.error} onRetry={prices.reload} empty={<EmptyPanel title="No prices set" description="Without a price, no invoice can be issued for a package." />} />
 
@@ -127,7 +129,7 @@ function Prices() {
           <SelectField label="Package" value={form.values.package_code} onChange={(v) => form.set('package_code', v)} error={form.errors.package_code} placeholder="Choose a package" options={(packages.data?.data ?? []).map((item) => ({ value: item.code, label: item.name }))} required />
           <div className="grid gap-4 sm:grid-cols-3">
             <SelectField label="Billed" value={form.values.billing_interval} onChange={(v) => form.set('billing_interval', v)} error={form.errors.billing_interval} options={[{ value: 'monthly', label: 'Monthly' }, { value: 'yearly', label: 'Yearly' }]} />
-            <TextField label="Currency" value={form.values.currency} onChange={(v) => form.set('currency', v.toUpperCase())} error={form.errors.currency} maxLength={3} required />
+            <CurrencyField value={form.values.currency} onChange={(v) => form.set('currency', v)} error={form.errors.currency} />
             <TextField label="Amount" inputMode="decimal" value={form.values.amount} onChange={(v) => form.set('amount', v)} error={local ?? form.errors.amount_minor} required />
           </div>
           <div className="flex justify-end gap-2">

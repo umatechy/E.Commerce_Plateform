@@ -110,7 +110,7 @@ final class WishlistController
         $customer = $request->user();
         abort_unless($item->customer_id === $customer->id, 404);
 
-        [$cart] = $carts->resolveForRequest($request, 'X-Guest-Cart-Token', 'USD');
+        [$cart] = $carts->resolveForRequest($request, 'X-Guest-Cart-Token', $carts->storeCurrency());
 
         $carts->addItem($cart, $item->product_id, $item->product_variant_id, quantity: 1);
         $item->delete();

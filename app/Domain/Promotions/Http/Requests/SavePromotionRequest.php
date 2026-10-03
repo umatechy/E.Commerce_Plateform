@@ -35,6 +35,14 @@ final class SavePromotionRequest extends FormRequest
         return true; // enforced via Gate::authorize()/direct Policy call in the controller
     }
 
+    /** Currency codes are compared upper-case (owner decision 2026-10-03). */
+    protected function prepareForValidation(): void
+    {
+        if (is_string($this->input('currency'))) {
+            $this->merge(['currency' => strtoupper(trim($this->input('currency')))]);
+        }
+    }
+
     public function rules(): array
     {
         return [
@@ -44,7 +52,7 @@ final class SavePromotionRequest extends FormRequest
             'status' => ['sometimes', 'in:draft,active,paused,disabled,archived'],
             'percentage_value' => ['required_if:type,percentage', 'integer', 'min:1', 'max:100'],
             'fixed_amount_minor' => ['required_if:type,fixed_amount', 'integer', 'min:1'],
-            'currency' => ['required_if:type,fixed_amount', 'string', 'size:3'],
+            'currency' => ['required_if:type,fixed_amount', 'string', 'size:3', \App\Domain\Settings\Services\Currencies::rule()],
             'min_order_value_minor' => ['nullable', 'integer', 'min:0'],
             'max_discount_minor' => ['nullable', 'integer', 'min:0'],
             'requires_coupon' => ['sometimes', 'boolean'],

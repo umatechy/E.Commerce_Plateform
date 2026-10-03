@@ -84,6 +84,21 @@ abstract class TestCase extends BaseTestCase
     }
 
     /**
+     * Makes the store price in this currency (store.default_currency). New
+     * stores use PKR (owner decision 2026-10-03); the factories still make
+     * USD products and rates, so a test that checks out such products
+     * gives its store USD, as a real USD store would have.
+     */
+    protected function storeCurrency(Store $store, string $currency): void
+    {
+        \Illuminate\Support\Facades\DB::table('store_settings')->updateOrInsert(
+            ['store_id' => $store->id, 'key' => 'store.default_currency'],
+            ['value' => json_encode([$currency]), 'created_at' => now(), 'updated_at' => now()],
+        );
+        \Illuminate\Support\Facades\Cache::forget("settings:store:{$store->id}:store.default_currency");
+    }
+
+    /**
      * Gives the store an active subscription to a package granting the
      * given boolean feature entitlements (EntitlementService is server-
      * authoritative, so a store created by the factory has none).

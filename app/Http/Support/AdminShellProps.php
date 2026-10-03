@@ -33,7 +33,7 @@ final class AdminShellProps
     public function for(?User $user, ?int $activeStoreId): array
     {
         if ($user === null) {
-            return ['permissions' => [], 'is_owner' => false, 'features' => [], 'package' => null, 'stores' => [], 'currency' => null];
+            return ['permissions' => [], 'is_owner' => false, 'features' => [], 'package' => null, 'stores' => [], 'currency' => null, 'currencies' => []];
         }
 
         $stores = $user->stores()->wherePivot('status', 'active')->orderBy('stores.name')->get(['stores.id', 'stores.name']);
@@ -45,6 +45,8 @@ final class AdminShellProps
             ...$this->package($activeStoreId),
             'stores' => $stores->map(fn (Store $store) => ['id' => $store->id, 'name' => $store->name])->values()->all(),
             'currency' => $this->context->hasStore() ? (string) $this->config->get('store.default_currency') : null,
+            // The currencies the platform offers (owner decision 2026-10-03), for the currency pickers.
+            'currencies' => \App\Domain\Settings\Services\Currencies::supported(),
         ];
     }
 

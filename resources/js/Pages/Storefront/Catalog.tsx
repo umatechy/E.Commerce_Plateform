@@ -5,6 +5,7 @@ import ProductGrid from '@/Components/Storefront/ProductGrid';
 import Pagination from '@/Components/Storefront/Pagination';
 import EmptyState from '@/Components/EmptyState';
 import type { CategoryNode, ProductCard, StorefrontPageProps } from '@/Storefront/types';
+import { currencyDigits } from '@/lib/money';
 
 type Filters = { q?: string; category?: string; brand?: string; min_price?: number; max_price?: number; in_stock?: boolean; sort?: string; page?: number };
 type Context =
@@ -34,7 +35,8 @@ export default function Catalog({ storefront, seo, context, filters, listing, fa
   const query = Object.fromEntries(
     Object.entries(filters).filter(([key]) => !(key === 'category' && context.type === 'category') && !(key === 'brand' && context.type === 'brand')),
   );
-  const digits = new Intl.NumberFormat(undefined, { style: 'currency', currency: storefront.store.currency }).resolvedOptions().maximumFractionDigits ?? 2;
+  // ISO 4217 decimals, as the server stores them (browsers show PKR without any).
+  const digits = currencyDigits(storefront.store.currency);
   const [minPrice, setMinPrice] = useState(filters.min_price !== undefined ? String(filters.min_price / 10 ** digits) : '');
   const [maxPrice, setMaxPrice] = useState(filters.max_price !== undefined ? String(filters.max_price / 10 ** digits) : '');
 

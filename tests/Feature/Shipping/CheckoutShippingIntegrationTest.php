@@ -34,6 +34,7 @@ final class CheckoutShippingIntegrationTest extends TestCase
     public function test_checkout_includes_server_calculated_shipping_cost_in_grand_total(): void
     {
         $store = Store::factory()->create();
+        $this->storeCurrency($store, 'USD'); // its products and rates are priced in USD
         $package = Package::factory()->create();
         foreach (['orders.basic', 'payment.cod', 'shipping.basic'] as $feature) {
             $package->entitlements()->create(['key' => $feature, 'type' => EntitlementType::Feature, 'boolean_value' => true]);
@@ -64,6 +65,7 @@ final class CheckoutShippingIntegrationTest extends TestCase
     public function test_digital_only_cart_skips_shipping_entirely(): void
     {
         $store = Store::factory()->create();
+        $this->storeCurrency($store, 'USD'); // its products and rates are priced in USD
         $package = Package::factory()->create();
         foreach (['orders.basic', 'payment.cod', 'shipping.basic'] as $feature) {
             $package->entitlements()->create(['key' => $feature, 'type' => EntitlementType::Feature, 'boolean_value' => true]);
@@ -96,6 +98,7 @@ final class CheckoutShippingIntegrationTest extends TestCase
     public function test_checkout_fails_when_destination_is_not_serviceable(): void
     {
         $store = Store::factory()->create();
+        $this->storeCurrency($store, 'USD'); // its products and rates are priced in USD
         $package = Package::factory()->create();
         foreach (['orders.basic', 'payment.cod', 'shipping.basic'] as $feature) {
             $package->entitlements()->create(['key' => $feature, 'type' => EntitlementType::Feature, 'boolean_value' => true]);
@@ -122,6 +125,7 @@ final class CheckoutShippingIntegrationTest extends TestCase
     public function test_checkout_requires_shipping_method_for_physical_cart(): void
     {
         $store = Store::factory()->create();
+        $this->storeCurrency($store, 'USD'); // its products and rates are priced in USD
         $package = Package::factory()->create();
         foreach (['orders.basic', 'payment.cod', 'shipping.basic'] as $feature) {
             $package->entitlements()->create(['key' => $feature, 'type' => EntitlementType::Feature, 'boolean_value' => true]);

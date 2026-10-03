@@ -443,6 +443,7 @@ The owner answered every question the same day. The full text is in
 | 9 | Priorities | **Approved** as proposed | — |
 | 10 | Customer features by package (asked in B32, answered 2026-10-03 in the session) | Module 10 §87 mapping: Basic keeps accounts, profiles, addresses, search, notes, blocking, privacy; **groups, tags, CSV import/export and merge are Business and Premium** (`customers.advanced`). **No "Maximum Customers" limit** for now | Seeder + migration `2028_05_01_000003`; enforced in the customer API |
 | 11 | Customer merge (Module 10 §56, reserved in B32) | Build it | Built in B32 follow-up (`CustomerMerger`) |
+| 12 | Currency (answered 2026-10-03 in the session) | Pakistan first: default **PKR (Rs.)**; the platform also offers USD, EUR, GBP, AED, SAR for later use; nothing converted | `Currencies`, migration `2028_05_01_000005`, `docs/development/b32-currency-pakistan-first.md` |
 
 ## 6. Recommended order
 

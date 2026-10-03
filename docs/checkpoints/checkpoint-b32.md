@@ -158,3 +158,23 @@ the same phone merged into the customer who stays; the merged record
 points to it and offers no changes.
 
 Known limitation 1 and 2 above are closed by this addendum.
+
+============================================================
+ADDENDUM 2 — currency, Pakistan first (owner decision 2026-10-03)
+============================================================
+
+Default currency PKR (shown "Rs."); offered: PKR, USD, EUR, GBP, AED,
+SAR; platform billing PKR. Inspection found three defects, fixed:
+carts kept a USD placeholder (a PKR store's shipping rates were never
+offered), products without a currency could not be ordered, and the
+browser's 0-decimal PKR would have shown 1999 paisa as Rs. 1,999.
+Currency inputs are now one picker limited to the offered list; the
+server accepts only those. Existing stores with amounts in USD are
+pinned to USD (nothing converted). Details:
+docs/development/b32-currency-pakistan-first.md.
+
+Tests: PHP 1066 passed (CurrencyDefaultsTest 5 added; three
+checkout test files give their USD-priced stores USD); Vitest 142
+(money.test.ts 5 added). Browser (Chromium, local): 4 of 4 — a new
+store's product form starts in PKR with the six currencies, the list shows
+"Rs. 2,500", and the Store currency setting offers the six with PKR set.

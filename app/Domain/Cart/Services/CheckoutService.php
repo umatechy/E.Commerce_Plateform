@@ -166,7 +166,7 @@ final class CheckoutService
                 $checkoutData['shipping_address'],
                 $totals['subtotal_minor'],
                 $weightedItems,
-                $totals['currency'] ?? 'USD',
+                $totals['currency'] ?? $this->carts->storeCurrency(),
             );
 
             $shippingTotalMinor = $quote['cost_minor'];
@@ -184,7 +184,7 @@ final class CheckoutService
         ])->values()->all();
 
         $promotionResult = $this->promotionEngine->evaluate(
-            $promotionItemContexts, $totals['subtotal_minor'], $totals['currency'] ?? 'USD',
+            $promotionItemContexts, $totals['subtotal_minor'], $totals['currency'] ?? $this->carts->storeCurrency(),
             $cart->customer, $cart->coupon_code, $shippingTotalMinor,
         );
 

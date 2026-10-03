@@ -182,7 +182,7 @@ final class StorefrontPresenter
         $seo = $this->seo->forProduct($product);
         $currency = $detail['price']['currency'];
         $available = $detail['purchasable'];
-        $money = fn (?int $minor) => $minor === null ? null : number_format($minor / 100, 2, '.', '');
+        $money = fn (?int $minor) => $minor === null ? null : \App\Domain\Settings\Services\Currencies::amount($minor, (string) $currency);
 
         return array_filter([
             '@context' => 'https://schema.org',

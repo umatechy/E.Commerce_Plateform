@@ -23,7 +23,7 @@ final class ShippingQuoteController
 {
     public function index(Request $request, CartService $carts): AnonymousResourceCollection
     {
-        [$cart] = $carts->resolveForRequest($request, 'X-Guest-Cart-Token', 'USD');
+        [$cart] = $carts->resolveForRequest($request, 'X-Guest-Cart-Token', $carts->storeCurrency());
         $totals = $carts->totals($cart);
 
         $items = $cart->items->load('variant')->map(fn ($item) => [
@@ -38,7 +38,7 @@ final class ShippingQuoteController
         ];
 
         $eligible = app(\App\Domain\Shipping\Services\ShippingRateService::class)
-            ->eligibleMethods($destination, $totals['subtotal_minor'], $items, $totals['currency'] ?? 'USD');
+            ->eligibleMethods($destination, $totals['subtotal_minor'], $items, $totals['currency'] ?? $carts->storeCurrency());
 
         return ShippingMethodQuoteResource::collection($eligible);
     }

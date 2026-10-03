@@ -13,6 +13,14 @@ final class UpdateProductRequest extends FormRequest
         return true;
     }
 
+    /** Currency codes are compared upper-case (owner decision 2026-10-03). */
+    protected function prepareForValidation(): void
+    {
+        if (is_string($this->input('currency'))) {
+            $this->merge(['currency' => strtoupper(trim($this->input('currency')))]);
+        }
+    }
+
     public function rules(): array
     {
         return [
@@ -27,7 +35,7 @@ final class UpdateProductRequest extends FormRequest
             'price_minor' => ['sometimes', 'nullable', 'integer', 'min:0'],
             'sale_price_minor' => ['sometimes', 'nullable', 'integer', 'min:0'],
             'cost_price_minor' => ['sometimes', 'nullable', 'integer', 'min:0'],
-            'currency' => ['sometimes', 'nullable', 'string', 'size:3'],
+            'currency' => ['sometimes', 'string', 'size:3', \App\Domain\Settings\Services\Currencies::rule()],
             'category_ids' => ['sometimes', 'array'],
             'category_ids.*' => ['integer', 'exists:categories,id'],
         ];

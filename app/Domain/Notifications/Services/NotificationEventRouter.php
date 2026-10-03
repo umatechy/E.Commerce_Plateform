@@ -74,7 +74,7 @@ final class NotificationEventRouter
             $subject, $body,
             [
                 'order.number' => $order->order_number,
-                'order.total' => number_format($order->grand_total_minor / 100, 2),
+                'order.total' => \App\Domain\Settings\Services\Currencies::readable($order->grand_total_minor, $order->currency),
                 'order.currency' => $order->currency,
                 'customer.name' => $order->customer->name ?? $order->guest_name ?? 'there',
             ],
@@ -171,7 +171,7 @@ final class NotificationEventRouter
             [
                 'order.number' => $order->order_number,
                 'order.currency' => $order->currency,
-                'payment.refund_amount' => number_format(((int) $payload['amount_minor']) / 100, 2),
+                'payment.refund_amount' => \App\Domain\Settings\Services\Currencies::readable((int) $payload['amount_minor'], (string) $order->currency),
                 'customer.name' => $order->customer->name ?? $order->guest_name ?? 'there',
             ],
             "notification:payment:{$payment->id}:refunded:".($payload['amount_minor'] ?? '0'),
@@ -319,7 +319,7 @@ final class NotificationEventRouter
                 'owner.name' => $owner->name,
                 'store.name' => (string) ($invoice->bill_to['store'] ?? ''),
                 'invoice.number' => $invoice->number,
-                'invoice.total' => number_format($invoice->total_minor / 100, 2),
+                'invoice.total' => \App\Domain\Settings\Services\Currencies::readable($invoice->total_minor, $invoice->currency),
                 'invoice.currency' => $invoice->currency,
                 'invoice.period' => $invoice->period_start->toDateString().' to '.$invoice->period_end->toDateString(),
                 'invoice.due_date' => $invoice->due_at->toDateString(),
