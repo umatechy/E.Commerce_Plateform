@@ -71,6 +71,13 @@ final class CustomerDataService
                     'line_total_minor' => $item->line_total_minor,
                 ])->all(),
             ])->all(),
+            // Phase B33: the returns the customer asked for, with their own words.
+            'returns' => \App\Domain\Returns\Models\ReturnRequest::query()->where('customer_id', $customer->id)->orderBy('id')->get()
+                ->map(fn (\App\Domain\Returns\Models\ReturnRequest $return) => [
+                    'return_number' => $return->return_number, 'status' => $return->status->value, 'resolution' => $return->resolution->value,
+                    'reason' => $return->reason->value, 'description' => $return->description, 'requested_at' => $return->created_at->toIso8601String(),
+                    'refunded_minor' => $return->refunded_minor, 'currency' => $return->currency,
+                ])->all(),
             'wishlist' => WishlistItem::query()->where('customer_id', $customer->id)->with('product')->get()
                 ->map(fn (WishlistItem $item) => ['product' => $item->product?->name, 'added_at' => $item->created_at->toIso8601String()])
                 ->all(),
@@ -129,6 +136,10 @@ final class CustomerDataService
             // The address book (B25) was missed by erasure until Phase B32.
             $addresses = \App\Domain\CustomerAccount\Models\CustomerAddress::query()->where('customer_id', $customer->id)->delete();
             $customer->tags()->detach();
+            // Phase B33: what the person wrote on a return, and their parcel's tracking number. The
+            // return itself stays: it belongs to the order's financial record.
+            $returns = \App\Domain\Returns\Models\ReturnRequest::query()->where('customer_id', $customer->id)
+                ->update(['description' => null, 'return_tracking_number' => null]);
             \Illuminate\Support\Facades\DB::table('customer_email_verifications')->where('customer_id', $customer->id)->delete();
 
             // No password: the account can never be signed into again. The
@@ -152,6 +163,7 @@ final class CustomerDataService
                 'tokens_revoked' => $tokens,
                 'notes_removed' => $notes,
                 'addresses_removed' => $addresses,
+                'returns_anonymized' => $returns,
             ];
         });
     }

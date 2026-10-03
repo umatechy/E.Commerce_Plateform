@@ -39,6 +39,9 @@ final class NotificationEventRouter
             'payment.initiated' => $this->handlePaymentInitiated($payload),
             'payment.refunded' => $this->handlePaymentRefunded($payload),
             'shipment.created' => $this->handleShipmentCreated($payload),
+            // Module 09 §63 (Phase B33): the store's answer to a return request. The
+            // refund itself is announced by payment.refunded above.
+            'return.approved', 'return.rejected' => $this->handleReturnDecision($eventType, $payload),
             'marketing.recipient_queued' => $this->handleMarketingRecipientQueued($payload),
             'marketing.abandoned_cart_detected' => $this->handleAbandonedCartDetected($payload),
             'billing.invoice_issued', 'billing.invoice_paid', 'billing.payment_overdue' => $this->handleBillingEvent($eventType, $payload),
@@ -176,6 +179,39 @@ final class NotificationEventRouter
             ],
             "notification:payment:{$payment->id}:refunded:".($payload['amount_minor'] ?? '0'),
             'payment.refunded',
+        );
+    }
+
+    private function handleReturnDecision(string $eventType, array $payload): void
+    {
+        $return = \App\Domain\Returns\Models\ReturnRequest::query()->find($payload['return_id']);
+        $order = $return?->order;
+        if ($return === null || $order === null) {
+            return;
+        }
+
+        $destination = $order->customer->email ?? $order->guest_email;
+        if ($destination === null) {
+            return;
+        }
+
+        $approved = $eventType === 'return.approved';
+        [$subject, $body] = $this->resolveTemplate($eventType, NotificationChannel::Email, $approved
+            ? ['Your return {{return.number}} is approved', 'Hi {{customer.name}}, your return {{return.number}} for order {{order.number}} is approved. {{return.note}}']
+            : ['About your return {{return.number}}', 'Hi {{customer.name}}, we could not accept your return {{return.number}} for order {{order.number}}. {{return.note}}']);
+
+        $this->notifications->send(
+            NotificationMessageType::Transactional, NotificationChannel::Email,
+            RecipientType::Customer, $order->customer_id, $destination,
+            $subject, $body,
+            [
+                'return.number' => $return->return_number,
+                'return.note' => (string) $return->decision_note,
+                'order.number' => $order->order_number,
+                'customer.name' => $order->customer->name ?? $order->guest_name ?? 'there',
+            ],
+            "notification:return:{$return->id}:{$eventType}",
+            $eventType,
         );
     }
 

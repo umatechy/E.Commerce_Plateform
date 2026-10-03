@@ -158,6 +158,22 @@ Route::middleware(['auth:sanctum', 'staff.principal', 'required.mfa'])->group(fu
     Route::post('/orders/{order}/cancel', [OrderController::class, 'cancel']);
     Route::get('/orders/{order}/timeline', [OrderController::class, 'timeline']);
 
+    // --- Returns, inspection, refunds, replacement orders (Module 09 §45–54, Phase B33 — gap G8) ---
+    Route::get('/orders/{order}/returnable', [\App\Domain\Returns\Http\Controllers\ReturnController::class, 'returnable']);
+    Route::post('/orders/{order}/returns', [\App\Domain\Returns\Http\Controllers\ReturnController::class, 'store'])->middleware('throttle:30,1,returns-create');
+    Route::get('/returns', [\App\Domain\Returns\Http\Controllers\ReturnController::class, 'index']);
+    Route::get('/returns/{return}', [\App\Domain\Returns\Http\Controllers\ReturnController::class, 'show']);
+    Route::post('/returns/{return}/review', [\App\Domain\Returns\Http\Controllers\ReturnController::class, 'review']);
+    Route::post('/returns/{return}/approve', [\App\Domain\Returns\Http\Controllers\ReturnController::class, 'approve']);
+    Route::post('/returns/{return}/reject', [\App\Domain\Returns\Http\Controllers\ReturnController::class, 'reject']);
+    Route::post('/returns/{return}/cancel', [\App\Domain\Returns\Http\Controllers\ReturnController::class, 'cancel']);
+    Route::post('/returns/{return}/in-transit', [\App\Domain\Returns\Http\Controllers\ReturnController::class, 'inTransit']);
+    Route::post('/returns/{return}/receive', [\App\Domain\Returns\Http\Controllers\ReturnController::class, 'receive']);
+    Route::post('/returns/{return}/inspect', [\App\Domain\Returns\Http\Controllers\ReturnController::class, 'inspect']);
+    Route::post('/returns/{return}/approve-refund', [\App\Domain\Returns\Http\Controllers\ReturnController::class, 'approveRefund']);
+    Route::post('/returns/{return}/refund', [\App\Domain\Returns\Http\Controllers\ReturnController::class, 'refund']);
+    Route::post('/returns/{return}/replacement', [\App\Domain\Returns\Http\Controllers\ReturnController::class, 'replacement']);
+
     // --- Payments (Module 12, Phase B7) ---
     Route::get('/payments', [PaymentController::class, 'index']);
     Route::get('/payments/{payment}', [PaymentController::class, 'show']);

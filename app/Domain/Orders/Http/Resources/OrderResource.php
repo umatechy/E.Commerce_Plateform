@@ -18,6 +18,9 @@ final class OrderResource extends JsonResource
             'status' => $this->status->value,
             'payment_status' => $this->payment_status->value,
             'fulfillment_status' => $this->fulfillment_status->value,
+            // Phase B33 (Module 09 §47): the order's summary of its returns, and what it replaces (§54).
+            'return_status' => $this->return_status->value,
+            'replacement_for' => $this->replacement_for_order_id === null ? null : (fn ($original) => $original === null ? null : ['id' => $original->public_id, 'order_number' => $original->order_number])($this->replacementFor),
             'source' => $this->source->value,
             'currency' => $this->currency,
             'subtotal_minor' => $this->subtotal_minor,

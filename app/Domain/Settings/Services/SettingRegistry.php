@@ -42,6 +42,19 @@ final class SettingRegistry
                 key: 'store.default_currency', scope: SettingScope::Store, type: SettingType::String,
                 default: Currencies::DEFAULT, // owner decision 2026-10-03 (Pakistan first). Module 33 §4 hierarchy: cross-validated against platform.supported_currencies at write time, see SettingValidator
             ),
+            // Module 09 §42/§45 (Phase B33): "Customers may request returns where
+            // the store allows them"; "the exact rules must be configurable".
+            // Off until the store decides; staff can always record a return.
+            'returns.customer_requests_enabled' => new SettingDefinition(
+                key: 'returns.customer_requests_enabled', scope: SettingScope::Store, type: SettingType::Boolean,
+                default: false,
+            ),
+            // Days after delivery in which a customer may ask. A starting value
+            // the store changes to its own policy; staff are not bound by it.
+            'returns.window_days' => new SettingDefinition(
+                key: 'returns.window_days', scope: SettingScope::Store, type: SettingType::Integer,
+                default: 7,
+            ),
             'store.timezone' => new SettingDefinition(
                 key: 'store.timezone', scope: SettingScope::Store, type: SettingType::String,
                 default: 'UTC', // closes the multiply-documented gap from B10/B12/B13 — see inspection findings

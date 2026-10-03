@@ -15,4 +15,5 @@ enum OrderSource: string
     case Api = 'api';
     case Marketplace = 'marketplace';
     case SocialCommerce = 'social_commerce';
+    case Replacement = 'replacement'; // Module 09 §54 (Phase B33): made from a return by staff, never by a shopper or the API
 }

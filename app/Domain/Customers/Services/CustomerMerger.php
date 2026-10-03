@@ -71,6 +71,7 @@ final class CustomerMerger
             // Orders, and what hangs on the customer through them.
             $moved['orders'] = $move('orders', 'customer_id');
             $moved['payments'] = $move('payments', 'customer_id');
+            $moved['returns'] = $move('return_requests', 'customer_id'); // Phase B33: they follow their orders
             // Coupon "per customer" limits keep counting the same person.
             $moved['promotion_usages'] = $move('promotion_usages', 'customer_id');
 

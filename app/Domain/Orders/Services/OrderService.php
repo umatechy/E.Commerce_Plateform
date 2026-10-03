@@ -280,6 +280,42 @@ final class OrderService
         );
     }
 
+    /**
+     * Phase B33 addition, in the pattern of syncPaymentStatus() and
+     * syncFulfillmentStatus(): the ONLY code path that writes
+     * Order.return_status — called by App\Domain\Returns\Services\ReturnService
+     * whenever a return of this order changes.
+     */
+    public function syncReturnStatus(Order $order, \App\Domain\Orders\Models\OrderReturnStatus $status): void
+    {
+        if ($order->return_status === $status) {
+            return;
+        }
+
+        $order->update(['return_status' => $status]);
+
+        $this->recordTimelineEvent(
+            $order, 'return_status_changed', null, null, actorId: null,
+            reason: "return_status:{$status->value}",
+        );
+    }
+
+    /**
+     * Phase B33: a return puts what happened on the order's timeline
+     * (Module 09 §74: the timeline is the order's readable history). The
+     * order's own status is not touched.
+     */
+    public function noteReturnEvent(Order $order, string $eventType, ?int $actorId, string $reason, ?string $note = null): void
+    {
+        $this->recordTimelineEvent($order, $eventType, null, null, $actorId, $reason, $note);
+    }
+
+    /** Module 09 §54 (Phase B33): marks an order as the replacement of another. */
+    public function linkReplacement(Order $replacement, Order $original): void
+    {
+        $replacement->update(['replacement_for_order_id' => $original->id]);
+    }
+
     private function transitionTo(Order $order, OrderStatus $to, ?int $actorId, ?string $reason, ?string $note = null): void
     {
         $this->stateMachine->assertCanTransition($order->status, $to);

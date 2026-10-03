@@ -26,9 +26,9 @@ export function humanize(value: string): string {
 }
 
 const GREEN = ['active', 'paid', 'completed', 'delivered', 'verified', 'published', 'succeeded', 'sent', 'ok', 'fulfilled', 'in_stock', 'enabled', 'yes', 'restored', 'read'];
-const AMBER = ['pending', 'pending_confirmation', 'draft', 'trialing', 'past_due', 'grace_period', 'scheduled', 'paused', 'processing', 'warning', 'partially_paid', 'partially_fulfilled', 'partially_refunded', 'verification_required', 'low_stock', 'queued', 'running', 'verifying', 'open', 'requires_action', 'authorized', 'unfulfilled', 'unpaid', 'refund_pending', 'suspended', 'expired'];
-const RED = ['failed', 'cancelled', 'critical', 'overdue', 'out_of_stock', 'revoked', 'restore_failed', 'delivery_failed', 'lost', 'damaged', 'disputed', 'reversed', 'uncollectible', 'broken', 'removed', 'disabled'];
-const BLUE = ['confirmed', 'ready', 'ready_to_fulfill', 'in_transit', 'shipped', 'out_for_delivery', 'picked_up', 'fulfilling', 'refunded', 'returned', 'returning', 'label_created'];
+const AMBER = ['pending', 'pending_confirmation', 'draft', 'trialing', 'past_due', 'grace_period', 'scheduled', 'paused', 'processing', 'warning', 'partially_paid', 'partially_fulfilled', 'partially_refunded', 'verification_required', 'low_stock', 'queued', 'running', 'verifying', 'open', 'requires_action', 'authorized', 'unfulfilled', 'unpaid', 'refund_pending', 'suspended', 'expired', 'requested', 'under_review', 'return_requested', 'partially_returned', 'approved_for_refund', 'received', 'inspected'];
+const RED = ['failed', 'cancelled', 'rejected', 'critical', 'overdue', 'out_of_stock', 'revoked', 'restore_failed', 'delivery_failed', 'lost', 'damaged', 'disputed', 'reversed', 'uncollectible', 'broken', 'removed', 'disabled'];
+const BLUE = ['confirmed', 'ready', 'ready_to_fulfill', 'in_transit', 'shipped', 'out_for_delivery', 'picked_up', 'fulfilling', 'refunded', 'returned', 'returning', 'label_created', 'approved'];
 
 export function toneForStatus(status: string): Tone {
   if (GREEN.includes(status)) return 'green';

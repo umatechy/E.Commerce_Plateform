@@ -43,6 +43,12 @@ Route::middleware(['auth:customer', 'customer.principal'])->group(function () {
     Route::post('/customer/addresses/{address}/default', [\App\Domain\CustomerAccount\Http\Controllers\CustomerAddressController::class, 'makeDefault']);
     Route::get('/customer/orders', [\App\Domain\CustomerAccount\Http\Controllers\CustomerOrderController::class, 'index']);
     Route::get('/customer/orders/{orderPublicId}', [\App\Domain\CustomerAccount\Http\Controllers\CustomerOrderController::class, 'show']);
+    // Module 09 §45 (Phase B33): the customer's own returns.
+    Route::get('/customer/orders/{orderPublicId}/returnable', [\App\Domain\Returns\Http\Controllers\CustomerReturnController::class, 'returnable']);
+    Route::post('/customer/orders/{orderPublicId}/returns', [\App\Domain\Returns\Http\Controllers\CustomerReturnController::class, 'store'])->middleware('throttle:10,10,customer-returns-create');
+    Route::get('/customer/returns/{returnPublicId}', [\App\Domain\Returns\Http\Controllers\CustomerReturnController::class, 'show']);
+    Route::post('/customer/returns/{returnPublicId}/cancel', [\App\Domain\Returns\Http\Controllers\CustomerReturnController::class, 'cancel']);
+    Route::post('/customer/returns/{returnPublicId}/shipped', [\App\Domain\Returns\Http\Controllers\CustomerReturnController::class, 'shipped']);
 
     // --- Support (Module 34, Phase B26) — the customer's own requests ---
     Route::get('/customer/support/tickets', [\App\Domain\Support\Http\Controllers\CustomerSupportController::class, 'index']);

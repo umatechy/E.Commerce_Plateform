@@ -33,6 +33,15 @@ export default function Index() {
         itemHint: 'One of the currencies the platform offers. Pakistan stores use PKR (Rs.).',
         warning: 'Existing products, orders and rates keep the currency they were saved with. Nothing is converted.',
       },
+      'returns.customer_requests_enabled': {
+        label: 'Customers can ask for a return themselves',
+        description: 'Shows “Request a return” on delivered orders in the customer account. When off, customers contact you and your team records the return.',
+      },
+      'returns.window_days': {
+        label: 'Return period (days)',
+        description: 'How many days after delivery a customer may ask for a return. Your team can still record one later.',
+        warning: 'Set this to your own return policy. Make sure the policy page of your store says the same.',
+      },
       'store.timezone': {
         label: 'Store timezone',
         description: 'Dates in the admin and on your storefront are shown in this timezone, and "today" in reports and promotions means the day here.',

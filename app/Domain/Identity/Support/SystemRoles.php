@@ -44,6 +44,7 @@ final class SystemRoles
         'backups.view', // backups.manage/restore withheld — Owner-only (Phase B19)
         'support.view', 'support.reply', 'support.manage', // Module 34 (Phase B26)
         'customers.view', 'customers.manage', // Module 10 (Phase B32)
+        'returns.view', 'returns.manage', 'returns.approve', // Module 09 §65 (Phase B33); refunds stay with payments.refund
     ];
 
     /** @return array<string, array{name: string, permissions: list<string>}> slug => definition, Owner first */
@@ -60,14 +61,14 @@ final class SystemRoles
             ]],
             'manager' => ['name' => 'Manager', 'permissions' => self::MANAGER],
             'staff' => ['name' => 'Staff', 'permissions' => [
-                'products.view', 'orders.view',
+                'products.view', 'orders.view', 'returns.view',
                 'support.view', 'support.reply', // Module 34 (Phase B26): front-line support
             ]],
             'order-manager' => ['name' => 'Order Manager', 'permissions' => [
                 'orders.view', 'orders.create', 'orders.update', 'orders.cancel',
                 'payments.view', 'payments.manage', 'shipments.view', 'shipments.fulfill',
                 'products.view', 'inventory.view', 'support.view', 'support.reply',
-                'customers.view',
+                'customers.view', 'returns.view', 'returns.manage', // receives and inspects; approval and refunds are for managers
             ]],
             'inventory-manager' => ['name' => 'Inventory Manager', 'permissions' => [
                 'products.view', 'inventory.view', 'inventory.adjust', 'warehouses.manage',

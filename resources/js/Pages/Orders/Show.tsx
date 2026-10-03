@@ -8,6 +8,8 @@ import { FormError, SelectField, TextAreaField } from '@/Components/ui/Form';
 import { StatusBadge, humanize } from '@/Components/ui/Badge';
 import { AccessNotice, Card, Details, EmptyPanel, ErrorPanel, Skeleton } from '@/Components/ui/Page';
 import PaymentDrawer from '@/Components/Orders/PaymentDialogs';
+import ReturnsCard from '@/Components/Orders/ReturnsCard';
+import { ORDER_RETURN_LABELS } from '@/lib/returns';
 import { CreateShipmentDialog, ShipmentDrawer } from '@/Components/Orders/ShipmentDialogs';
 import { useAccess } from '@/lib/access';
 import { useApi, usePagedApi } from '@/lib/useApi';
@@ -220,6 +222,8 @@ export default function Show({ orderId }: { orderId: string }) {
                   { label: 'Status', value: <StatusBadge status={order.status} /> },
                   { label: 'Payment', value: <StatusBadge status={order.payment_status} /> },
                   { label: 'Fulfilment', value: <StatusBadge status={order.fulfillment_status} /> },
+                  ...(order.return_status && order.return_status !== 'none' ? [{ label: 'Returns', value: <StatusBadge status={order.return_status} label={ORDER_RETURN_LABELS[order.return_status]} /> }] : []),
+                  ...(order.replacement_for ? [{ label: 'Replaces', value: <Link href={`/orders/${order.replacement_for.id}`} className={`rounded font-mono text-indigo-700 hover:underline ${FOCUS_RING}`}>{order.replacement_for.order_number}</Link> }] : []),
                   ...(order.cancellation_reason ? [{ label: 'Cancelled because', value: humanize(order.cancellation_reason) }] : []),
                 ]}
               />
@@ -238,6 +242,7 @@ export default function Show({ orderId }: { orderId: string }) {
 
             {access.can('payments.view') && <PaymentsCard order={order} onChanged={refresh} />}
             {access.can('shipments.view') && <ShipmentsCard order={order} onChanged={refresh} />}
+            {access.can('returns.view') && <ReturnsCard order={order} />}
           </div>
 
           <div className="space-y-4">

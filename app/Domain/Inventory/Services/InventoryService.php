@@ -346,6 +346,60 @@ final class InventoryService
     }
 
     /**
+     * Module 08 §46–47 / Module 09 §48 (Phase B33): goods of a customer
+     * return, after inspection.
+     *
+     * - Resalable units go back on hand (RETURN_IN) and can be sold again.
+     * - Damaged units are recorded as received and written off in the same
+     *   step (RETURN_IN, then DAMAGE_OUT): the trail shows they came back,
+     *   and they never become available stock (§47: damaged stock must
+     *   not be sold). There is no separate damaged balance yet.
+     *
+     * Idempotent per key: a repeated call records nothing twice.
+     *
+     * @return list<StockMovement>
+     */
+    public function receiveReturn(Inventory $inventory, int $resalable, int $damaged, int $returnRequestId, int $actorId, string $idempotencyKey): array
+    {
+        if ($resalable < 0 || $damaged < 0) {
+            throw new \InvalidArgumentException('Returned quantities cannot be negative.');
+        }
+
+        return DB::transaction(function () use ($inventory, $resalable, $damaged, $returnRequestId, $actorId, $idempotencyKey) {
+            $movements = [];
+            $steps = [
+                [$resalable, "{$idempotencyKey}:resalable", StockMovementType::ReturnIn, 'Customer return: back in stock', $resalable],
+                [$damaged, "{$idempotencyKey}:damaged-in", StockMovementType::ReturnIn, 'Customer return: received damaged', $damaged],
+                [$damaged, "{$idempotencyKey}:damaged-out", StockMovementType::DamageOut, 'Customer return: damaged, written off', -$damaged],
+            ];
+
+            foreach ($steps as [$quantity, $key, $type, $reason, $delta]) {
+                if ($quantity === 0) {
+                    continue;
+                }
+                if ($existing = $this->findByIdempotencyKey($key)) {
+                    $movements[] = $existing;
+
+                    continue;
+                }
+
+                $locked = DB::table('inventories')->where('id', $inventory->id)->lockForUpdate()->first();
+                $previous = (int) $locked->on_hand;
+                DB::table('inventories')->where('id', $inventory->id)->update(['on_hand' => $previous + $delta, 'updated_at' => now()]);
+
+                $movements[] = $this->recordMovement(
+                    $inventory, $type, $delta,
+                    previousOnHand: $previous, newOnHand: $previous + $delta,
+                    reason: $reason, actorId: $actorId, idempotencyKey: $key,
+                    referenceType: 'return', referenceId: $returnRequestId,
+                );
+            }
+
+            return $movements;
+        });
+    }
+
+    /**
      * Module 08 §22 "Reservation Expiry". Called by the scheduled
      * console command (App\Domain\Inventory\Console\ExpireStaleReservations
      * — same dispatcher-pattern precedent as ADR-004's outbox:publish).

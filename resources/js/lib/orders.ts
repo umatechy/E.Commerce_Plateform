@@ -60,6 +60,10 @@ export type Order = {
   tax_total_minor: number;
   shipping_total_minor: number;
   grand_total_minor: number;
+  /** Phase B33: none, return_requested, partially_returned, returned. */
+  return_status?: string;
+  /** The order this one replaces (made from a return). */
+  replacement_for?: { id: string; order_number: string } | null;
   is_guest_order: boolean;
   guest_name?: string | null;
   guest_email?: string | null;

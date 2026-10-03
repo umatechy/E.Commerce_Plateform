@@ -104,6 +104,9 @@ Route::middleware(['auth', 'required.mfa'])->group(function () {
     Route::get('/customers/groups', fn () => Inertia::render('Customers/Groups'));
     Route::get('/customers/{customer}', fn (string $customer) => Inertia::render('Customers/Show', ['customerId' => $customer]))->where('customer', '[0-9A-Za-z]{26}');
     Route::get('/orders/{order}', fn (string $order) => Inertia::render('Orders/Show', ['orderId' => $order]))->where('order', '[0-9A-Za-z]{26}');
+    // Phase B33 (gap G8): returns. Data and permissions come from /api/v1/returns.
+    Route::get('/returns', fn () => Inertia::render('Returns/Index'));
+    Route::get('/returns/{return}', fn (string $return) => Inertia::render('Returns/Show', ['returnId' => $return]))->where('return', '[0-9A-Za-z]{26}');
 
     // Umar Techy Super Admin (Module 30): platform staff only. The gate
     // here keeps the pages themselves away from store users; every

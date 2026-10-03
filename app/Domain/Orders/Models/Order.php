@@ -34,6 +34,7 @@ final class Order extends Model
         'status' => 'pending_confirmation',
         'payment_status' => 'unpaid',
         'fulfillment_status' => 'unfulfilled',
+        'return_status' => 'none',
         'source' => 'storefront',
     ];
 
@@ -47,6 +48,7 @@ final class Order extends Model
         'notes', 'idempotency_key',
         'cancellation_reason', 'cancellation_note', 'cancelled_by',
         'completed_at', 'cancelled_at',
+        'return_status', 'replacement_for_order_id', // Phase B33; written only by OrderService
     ];
 
     protected function casts(): array
@@ -55,6 +57,7 @@ final class Order extends Model
             'status' => OrderStatus::class,
             'payment_status' => PaymentStatus::class,
             'fulfillment_status' => FulfillmentStatus::class,
+            'return_status' => OrderReturnStatus::class, // Module 09 §47 (Phase B33)
             'source' => OrderSource::class,
             'cancellation_reason' => CancellationReason::class,
             'billing_address_snapshot' => 'array',
@@ -90,6 +93,22 @@ final class Order extends Model
     public function shipments(): HasMany
     {
         return $this->hasMany(\App\Domain\Shipping\Models\Shipment::class);
+    }
+
+    /**
+     * Module 09 §45 (Phase B33): the returns made against this order.
+     *
+     * @return HasMany<\App\Domain\Returns\Models\ReturnRequest, $this>
+     */
+    public function returns(): HasMany
+    {
+        return $this->hasMany(\App\Domain\Returns\Models\ReturnRequest::class);
+    }
+
+    /** @return BelongsTo<self, $this> Module 09 §54: the order this one replaces */
+    public function replacementFor(): BelongsTo
+    {
+        return $this->belongsTo(self::class, 'replacement_for_order_id');
     }
 
     /** @return BelongsTo<User, $this> */

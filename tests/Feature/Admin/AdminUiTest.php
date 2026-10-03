@@ -90,7 +90,7 @@ final class AdminUiTest extends TestCase
 
         $this->actingAs($staff)->withoutVite()->get('/')->assertOk()->assertInertia(fn ($page) => $page
             ->where('auth.is_owner', false)
-            ->where('auth.permissions', fn ($keys) => collect($keys)->sort()->values()->all() === ['orders.view', 'products.view', 'support.reply', 'support.view'])
+            ->where('auth.permissions', fn ($keys) => collect($keys)->sort()->values()->all() === ['orders.view', 'products.view', 'returns.view', 'support.reply', 'support.view'])
             ->where('auth.stores', fn ($stores) => collect($stores)->pluck('id')->all() === [$store->id] && ! collect($stores)->pluck('id')->contains($other->id)));
     }
 
