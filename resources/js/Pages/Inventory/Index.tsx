@@ -34,6 +34,8 @@ type StockRow = {
   reserved: number;
   available: number;
   incoming: number;
+  /** Module 08 §47: counted apart from on hand; never sellable. */
+  damaged?: number;
   reorder_point: number | null;
   is_low_stock: boolean;
   is_out_of_stock: boolean;
@@ -57,24 +59,36 @@ function StockState({ row }: { row: StockRow }) {
   return <Badge tone="green">In stock</Badge>;
 }
 
-function AdjustDialog({ row, mode, onClose, onDone }: { row: StockRow; mode: 'adjust' | 'opening'; onClose: () => void; onDone: () => void }) {
+type DialogMode = 'adjust' | 'opening' | 'damage' | 'writeoff';
+
+/** What each stock dialog does: its API path, its words, and what counts as a valid quantity. */
+const MODES: Record<DialogMode, { path: string; title: string; label: string; hint?: string; success: string; valid: (quantity: number) => boolean; invalid: string }> = {
+  adjust: { path: 'adjust', title: 'Adjust stock', label: 'Change in quantity', hint: 'For example 5 to add five, -2 to remove two.', success: 'Stock adjusted.', valid: (q) => q !== 0, invalid: 'Enter a whole number other than 0. Use a minus sign to take stock away.' },
+  opening: { path: 'opening-stock', title: 'Set opening stock', label: 'Quantity on hand', success: 'Opening stock recorded.', valid: (q) => q >= 0, invalid: 'Enter a whole number, 0 or more.' },
+  // Module 08 §47 (Phase B34): damaged units are counted apart and can never be sold.
+  damage: { path: 'damaged', title: 'Mark stock as damaged', label: 'Damaged units', hint: 'They leave the stock you can sell and are counted as damaged.', success: 'Marked as damaged.', valid: (q) => q > 0, invalid: 'Enter a whole number of 1 or more.' },
+  writeoff: { path: 'damaged/write-off', title: 'Write off damaged stock', label: 'Units to write off', hint: 'For damaged units that were thrown away or sent back to the supplier.', success: 'Damaged stock written off.', valid: (q) => q > 0, invalid: 'Enter a whole number of 1 or more.' },
+};
+
+function AdjustDialog({ row, mode, onClose, onDone }: { row: StockRow; mode: DialogMode; onClose: () => void; onDone: () => void }) {
   const form = useForm({ quantity: '', reason: '' });
   // One key per opened dialog: pressing Save twice records one movement.
   const [key] = useState(idempotencyKey);
   const [local, setLocal] = useState<string | null>(null);
+  const words = MODES[mode];
 
   async function save(event: FormEvent) {
     event.preventDefault();
     const quantity = Number(form.values.quantity);
-    if (form.values.quantity.trim() === '' || !Number.isInteger(quantity) || (mode === 'adjust' ? quantity === 0 : quantity < 0)) {
-      setLocal(mode === 'adjust' ? 'Enter a whole number other than 0. Use a minus sign to take stock away.' : 'Enter a whole number, 0 or more.');
+    if (form.values.quantity.trim() === '' || !Number.isInteger(quantity) || !words.valid(quantity)) {
+      setLocal(words.invalid);
 
       return;
     }
     setLocal(null);
     const saved = await form.submit(
-      () => adminFetch(`/inventory/${row.id}/${mode === 'adjust' ? 'adjust' : 'opening-stock'}`, { method: 'POST', body: { quantity, reason: form.values.reason, idempotency_key: key } }),
-      mode === 'adjust' ? 'Stock adjusted.' : 'Opening stock recorded.',
+      () => adminFetch(`/inventory/${row.id}/${words.path}`, { method: 'POST', body: { quantity, reason: form.values.reason, idempotency_key: key } }),
+      words.success,
     );
     if (saved !== undefined) onDone();
   }
@@ -82,10 +96,10 @@ function AdjustDialog({ row, mode, onClose, onDone }: { row: StockRow; mode: 'ad
   return (
     <Dialog
       open
-      title={mode === 'adjust' ? 'Adjust stock' : 'Set opening stock'}
+      title={words.title}
       description={
         <>
-          {itemName(row)} at {row.warehouse?.name ?? 'warehouse'}. On hand now: {row.on_hand}.
+          {itemName(row)} at {row.warehouse?.name ?? 'warehouse'}. On hand now: {row.on_hand}{mode === 'damage' ? `, of which ${row.available} can be marked (the rest is reserved for orders)` : ''}{mode === 'writeoff' ? `; damaged: ${row.damaged ?? 0}` : ''}.
           {mode === 'opening' && ' Opening stock can be set once per stock record.'}
         </>
       }
@@ -95,12 +109,12 @@ function AdjustDialog({ row, mode, onClose, onDone }: { row: StockRow; mode: 'ad
       <form onSubmit={save} className="space-y-4" noValidate>
         <FormError message={form.formError} />
         <TextField
-          label={mode === 'adjust' ? 'Change in quantity' : 'Quantity on hand'}
+          label={words.label}
           inputMode="numeric"
           value={form.values.quantity}
           onChange={(v) => form.set('quantity', v)}
           error={local ?? form.errors.quantity}
-          hint={mode === 'adjust' ? 'For example 5 to add five, -2 to remove two.' : undefined}
+          hint={words.hint}
           required
           data-autofocus
         />
@@ -210,7 +224,7 @@ export default function Index() {
   const canAdjust = access.can('inventory.adjust');
   const [filters, setFilters] = useUrlState(FILTER_DEFAULTS);
   const list = usePagedApi<StockRow>('/inventory', { stock: filters.stock, page: filters.page });
-  const [dialog, setDialog] = useState<{ row: StockRow; mode: 'adjust' | 'opening' | 'movements' } | null>(null);
+  const [dialog, setDialog] = useState<{ row: StockRow; mode: DialogMode | 'movements' } | null>(null);
   const [adding, setAdding] = useState(false);
 
   const columns: Column<StockRow>[] = [
@@ -228,6 +242,7 @@ export default function Index() {
     { key: 'on_hand', header: 'On hand', align: 'right', render: (row) => row.on_hand },
     { key: 'reserved', header: 'Reserved', align: 'right', render: (row) => row.reserved },
     { key: 'available', header: 'Available', align: 'right', priority: true, render: (row) => <span className="font-medium">{row.available}</span> },
+    { key: 'damaged', header: 'Damaged', align: 'right', render: (row) => ((row.damaged ?? 0) > 0 ? <span className="font-medium text-red-800">{row.damaged}</span> : 0) },
     { key: 'reorder', header: 'Reorder point', align: 'right', render: (row) => row.reorder_point ?? '—' },
     { key: 'state', header: 'Status', priority: true, render: (row) => <StockState row={row} /> },
     {
@@ -236,6 +251,8 @@ export default function Index() {
         <span className="flex flex-wrap justify-end gap-1">
           {canAdjust && <Button size="sm" variant="ghost" onClick={() => setDialog({ row, mode: 'adjust' })}>Adjust<span className="sr-only"> {itemName(row)}</span></Button>}
           {canAdjust && row.on_hand === 0 && <Button size="sm" variant="ghost" onClick={() => setDialog({ row, mode: 'opening' })}>Opening stock</Button>}
+          {canAdjust && row.available > 0 && <Button size="sm" variant="ghost" onClick={() => setDialog({ row, mode: 'damage' })}>Mark damaged<span className="sr-only"> {itemName(row)}</span></Button>}
+          {canAdjust && (row.damaged ?? 0) > 0 && <Button size="sm" variant="ghost" onClick={() => setDialog({ row, mode: 'writeoff' })}>Write off<span className="sr-only"> damaged {itemName(row)}</span></Button>}
           <Button size="sm" variant="ghost" onClick={() => setDialog({ row, mode: 'movements' })}>History<span className="sr-only"> of {itemName(row)}</span></Button>
         </span>
       ),
@@ -245,7 +262,7 @@ export default function Index() {
   return (
     <AdminPage
       title="Inventory"
-      description="Stock per product and warehouse. Available is on hand minus reserved."
+      description="Stock per product and warehouse. Available is on hand minus reserved. Damaged units are counted apart and are never sold."
       actions={
         <>
           <ButtonLink href="/warehouses">Warehouses</ButtonLink>

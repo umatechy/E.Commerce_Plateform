@@ -36,6 +36,8 @@ final class InventoryResource extends JsonResource
             'reserved' => $this->reserved,
             'available' => $this->available(),
             'incoming' => $this->incoming,
+            // Module 08 §47 (Phase B34): received or found damaged; never part of `available`.
+            'damaged' => (int) $this->damaged,
             'reorder_point' => $this->reorder_point,
             'reorder_quantity' => $this->reorder_quantity,
             'is_low_stock' => $this->isLowStock(),

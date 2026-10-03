@@ -24,6 +24,7 @@ enum StockMovementType: string
     case TransferIn = 'transfer_in';
     case TransferOut = 'transfer_out';
     case DamageOut = 'damage_out';
+    case DamagedWriteOff = 'damaged_write_off'; // Phase B34: damaged units disposed of; on hand is not touched
     case LossOut = 'loss_out';
     case OpeningBalance = 'opening_balance';
     case Correction = 'correction';

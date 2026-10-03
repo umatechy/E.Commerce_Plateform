@@ -152,7 +152,7 @@ function InspectDialog({ record, onClose, onDone }: { record: ReturnRecord; onCl
   }
 
   return (
-    <Dialog open wide title="Inspect the returned items" description="Say what became of every unit. Good ones go back into stock; damaged ones are recorded and written off; rejected ones are not accepted and go back to the customer. This cannot be changed afterwards." onClose={onClose} busy={form.busy}>
+    <Dialog open wide title="Inspect the returned items" description="Say what became of every unit. Good ones go back into stock; damaged ones are counted as damaged stock, which is never sold; rejected ones are not accepted and go back to the customer. This cannot be changed afterwards." onClose={onClose} busy={form.busy}>
       <form onSubmit={save} className="space-y-4" noValidate>
         <FormError message={form.formError} errors={form.errors} />
         {lines.map((line, index) => (

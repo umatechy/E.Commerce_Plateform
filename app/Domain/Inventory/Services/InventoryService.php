@@ -350,10 +350,10 @@ final class InventoryService
      * return, after inspection.
      *
      * - Resalable units go back on hand (RETURN_IN) and can be sold again.
-     * - Damaged units are recorded as received and written off in the same
-     *   step (RETURN_IN, then DAMAGE_OUT): the trail shows they came back,
-     *   and they never become available stock (§47: damaged stock must
-     *   not be sold). There is no separate damaged balance yet.
+     * - Damaged units are recorded as received and moved out of sellable
+     *   stock in the same step (RETURN_IN, then DAMAGE_OUT), into the
+     *   damaged balance (§47, Phase B34): the trail shows they came back,
+     *   they are counted, and they never become available stock.
      *
      * Idempotent per key: a repeated call records nothing twice.
      *
@@ -385,7 +385,12 @@ final class InventoryService
 
                 $locked = DB::table('inventories')->where('id', $inventory->id)->lockForUpdate()->first();
                 $previous = (int) $locked->on_hand;
-                DB::table('inventories')->where('id', $inventory->id)->update(['on_hand' => $previous + $delta, 'updated_at' => now()]);
+                DB::table('inventories')->where('id', $inventory->id)->update([
+                    'on_hand' => $previous + $delta,
+                    // The write-off of a damaged return is where the unit enters the damaged balance.
+                    ...($type === StockMovementType::DamageOut ? ['damaged' => DB::raw('damaged + '.abs($delta))] : []),
+                    'updated_at' => now(),
+                ]);
 
                 $movements[] = $this->recordMovement(
                     $inventory, $type, $delta,
@@ -396,6 +401,80 @@ final class InventoryService
             }
 
             return $movements;
+        });
+    }
+
+    /**
+     * Module 08 §47 (Phase B34): units found damaged on the shelf leave
+     * sellable stock and enter the damaged balance. Reserved units are
+     * promised to orders and cannot be taken: only what is available.
+     *
+     * @throws InsufficientStockException
+     */
+    public function markDamaged(Inventory $inventory, int $quantity, string $reason, int $actorId, string $idempotencyKey): StockMovement
+    {
+        if ($existing = $this->findByIdempotencyKey($idempotencyKey)) {
+            return $existing;
+        }
+        if ($quantity <= 0) {
+            throw new \InvalidArgumentException('The damaged quantity must be positive.');
+        }
+
+        return DB::transaction(function () use ($inventory, $quantity, $reason, $actorId, $idempotencyKey) {
+            $previousOnHand = (int) DB::table('inventories')->where('id', $inventory->id)->lockForUpdate()->value('on_hand');
+
+            $affected = DB::table('inventories')->where('id', $inventory->id)
+                ->whereRaw('on_hand - reserved >= ?', [$quantity])
+                ->update([
+                    'on_hand' => DB::raw("on_hand - {$quantity}"),
+                    'damaged' => DB::raw("damaged + {$quantity}"),
+                    'updated_at' => now(),
+                ]);
+            if ($affected === 0) {
+                throw new InsufficientStockException($inventory->id, $quantity);
+            }
+
+            $movement = $this->recordMovement(
+                $inventory, StockMovementType::DamageOut, -$quantity,
+                previousOnHand: $previousOnHand, newOnHand: $previousOnHand - $quantity,
+                reason: $reason, actorId: $actorId, idempotencyKey: $idempotencyKey,
+            );
+            $this->maybeRecordLowStockEvent($inventory->fresh());
+
+            return $movement;
+        });
+    }
+
+    /**
+     * Module 08 §47 (Phase B34): damaged units are disposed of. Only the
+     * damaged balance goes down; on hand is not touched, and the movement
+     * records it with the reason.
+     *
+     * @throws InsufficientStockException when more is written off than is damaged
+     */
+    public function writeOffDamaged(Inventory $inventory, int $quantity, string $reason, int $actorId, string $idempotencyKey): StockMovement
+    {
+        if ($existing = $this->findByIdempotencyKey($idempotencyKey)) {
+            return $existing;
+        }
+        if ($quantity <= 0) {
+            throw new \InvalidArgumentException('The quantity to write off must be positive.');
+        }
+
+        return DB::transaction(function () use ($inventory, $quantity, $reason, $actorId, $idempotencyKey) {
+            $onHand = (int) DB::table('inventories')->where('id', $inventory->id)->lockForUpdate()->value('on_hand');
+
+            $affected = DB::table('inventories')->where('id', $inventory->id)->where('damaged', '>=', $quantity)
+                ->update(['damaged' => DB::raw("damaged - {$quantity}"), 'updated_at' => now()]);
+            if ($affected === 0) {
+                throw new InsufficientStockException($inventory->id, $quantity);
+            }
+
+            return $this->recordMovement(
+                $inventory, StockMovementType::DamagedWriteOff, -$quantity,
+                previousOnHand: $onHand, newOnHand: $onHand,
+                reason: $reason, actorId: $actorId, idempotencyKey: $idempotencyKey,
+            );
         });
     }
 

@@ -151,6 +151,7 @@ final class ReturnFlowTest extends TestCase
         $this->assertSame(18, $this->inventory->fresh()->on_hand);
         $movements = StockMovement::query()->where('reference_type', 'return')->orderBy('id')->get()->map(fn ($m) => [$m->type->value, $m->quantity])->all();
         $this->assertSame([['return_in', 1], ['return_in', 1], ['damage_out', -1]], $movements);
+        $this->assertSame(1, $this->inventory->fresh()->damaged, 'the damaged unit is counted apart (Module 08 §47)');
         $this->assertSame('partially_returned', $order->fresh()->return_status->value);
 
         // The fee cannot exceed the items; the order had no shipping to refund.

@@ -30,6 +30,7 @@ final class Inventory extends Model
     protected $fillable = [
         'store_id', 'warehouse_id', 'product_id', 'product_variant_id',
         'on_hand', 'reserved', 'incoming', 'reorder_point', 'reorder_quantity',
+        // `damaged` (Module 08 §47) is written only by InventoryService.
     ];
 
     protected function casts(): array
@@ -38,6 +39,7 @@ final class Inventory extends Model
             'on_hand' => 'integer',
             'reserved' => 'integer',
             'incoming' => 'integer',
+            'damaged' => 'integer',
         ];
     }
 

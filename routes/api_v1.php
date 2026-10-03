@@ -149,6 +149,9 @@ Route::middleware(['auth:sanctum', 'staff.principal', 'required.mfa'])->group(fu
     Route::apiResource('inventory', InventoryController::class)->only(['index', 'show', 'store']);
     Route::post('/inventory/{inventory}/adjust', [InventoryController::class, 'adjust']);
     Route::post('/inventory/{inventory}/opening-stock', [InventoryController::class, 'openingStock']);
+    // Module 08 §47 (Phase B34): the damaged balance.
+    Route::post('/inventory/{inventory}/damaged', [InventoryController::class, 'markDamaged']);
+    Route::post('/inventory/{inventory}/damaged/write-off', [InventoryController::class, 'writeOffDamaged']);
     Route::get('/inventory/{inventory}/movements', [InventoryController::class, 'movements']);
     Route::post('/inventory/{inventory}/reservations', [ReservationController::class, 'store']);
     Route::post('/reservations/{reservation}/release', [ReservationController::class, 'release']);

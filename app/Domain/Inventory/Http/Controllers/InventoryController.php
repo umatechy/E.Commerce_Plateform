@@ -113,6 +113,41 @@ final class InventoryController
         return (new StockMovementResource($movement))->response()->setStatusCode(201);
     }
 
+    /**
+     * Module 08 §47 (Phase B34): move available units into the damaged
+     * balance, or write damaged units off. Same permission and request
+     * shape as a stock adjustment, with a positive quantity.
+     */
+    public function markDamaged(Request $request, Inventory $inventory, InventoryService $service): JsonResponse
+    {
+        return $this->damagedAction($request, $inventory, fn (int $quantity, string $reason, string $key) => $service->markDamaged($inventory, $quantity, $reason, $request->user()->id, $key),
+            'There are not that many available units. Reserved units are promised to orders and cannot be marked as damaged.');
+    }
+
+    public function writeOffDamaged(Request $request, Inventory $inventory, InventoryService $service): JsonResponse
+    {
+        return $this->damagedAction($request, $inventory, fn (int $quantity, string $reason, string $key) => $service->writeOffDamaged($inventory, $quantity, $reason, $request->user()->id, $key),
+            'There are not that many damaged units to write off.');
+    }
+
+    private function damagedAction(Request $request, Inventory $inventory, callable $action, string $refusal): JsonResponse
+    {
+        Gate::forUser($request->user())->authorize('adjust', $inventory);
+        $data = $request->validate([
+            'quantity' => ['required', 'integer', 'min:1', 'max:1000000'],
+            'reason' => ['required', 'string', 'max:255'],
+            'idempotency_key' => ['nullable', 'string', 'max:100'],
+        ]);
+
+        try {
+            $movement = $action((int) $data['quantity'], $data['reason'], $data['idempotency_key'] ?? (string) Str::uuid());
+        } catch (InsufficientStockException) {
+            return response()->json(['message' => $refusal, 'code' => 'insufficient_stock'], 422);
+        }
+
+        return (new StockMovementResource($movement))->response()->setStatusCode(201);
+    }
+
     public function openingStock(OpeningStockRequest $request, Inventory $inventory, InventoryService $service): JsonResponse
     {
         Gate::forUser($request->user())->authorize('adjust', $inventory);
