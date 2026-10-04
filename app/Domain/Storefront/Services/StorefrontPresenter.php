@@ -206,6 +206,16 @@ final class StorefrontPresenter
         ], fn ($value) => $value !== null);
     }
 
+    /** @return array<string, mixed> Phase B39: a collection, in the visitor's language */
+    public function collection(\App\Domain\Catalog\Models\Collection $collection): array
+    {
+        return [
+            'slug' => $collection->slug,
+            'name' => $this->tr('collection', $collection->id, 'name', $collection->name),
+            'description' => $this->tr('collection', $collection->id, 'description', $collection->description),
+        ];
+    }
+
     /** @return array<string, mixed> */
     public function brand(Brand $brand): array
     {

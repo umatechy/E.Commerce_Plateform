@@ -48,7 +48,7 @@ final class SavePromotionRequest extends FormRequest
         return [
             'name' => ['required', 'string', 'max:255'],
             'type' => ['required', 'in:percentage,fixed_amount,free_shipping'],
-            'target_scope' => ['required', 'in:order,product,category,brand'],
+            'target_scope' => ['required', 'in:order,product,category,brand,collection'],
             'status' => ['sometimes', 'in:draft,active,paused,disabled,archived'],
             'percentage_value' => ['required_if:type,percentage', 'integer', 'min:1', 'max:100'],
             'fixed_amount_minor' => ['required_if:type,fixed_amount', 'integer', 'min:1'],

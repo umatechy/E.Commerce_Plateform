@@ -65,6 +65,7 @@ final class TranslationController
             'product' => Product::class,
             'category' => Category::class,
             'brand' => Brand::class,
+            'collection' => \App\Domain\Catalog\Models\Collection::class, // Phase B39
             default => abort(404),
         };
         $query = $model::query();

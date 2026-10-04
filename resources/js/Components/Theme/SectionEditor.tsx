@@ -3,6 +3,8 @@ import { CheckboxField, SelectField, TextAreaField, TextField } from '@/Componen
 import { humanize } from '@/Components/ui/Badge';
 import ImageUploadField from '@/Components/ui/ImageUploadField';
 import { BADGE_ICONS, SECTION_FIELDS, SECTION_ITEMS, type Section, type SectionItem } from '@/lib/theme';
+import { useApi } from '@/lib/useApi';
+import type { Collection } from '@/lib/catalog';
 
 /**
  * One home page section (Module 17 §25): shown or not, its texts, and for
@@ -37,6 +39,9 @@ export default function SectionEditor({
   const items = SECTION_ITEMS[section.type];
   const list = (Array.isArray(section.config.items) ? section.config.items : []) as SectionItem[];
   const setConfig = (key: string, value: string | number | SectionItem[]) => onChange({ config: { ...section.config, [key]: value } });
+  // Phase B39: the collections a "featured products" section can show.
+  const wantsCollections = fields.some((field) => field.kind === 'collection') && section.config.source === 'collection';
+  const collections = useApi<{ data: Collection[] }>(wantsCollections ? '/collections' : null);
   const setItem = (i: number, key: string, value: string) => setConfig('items', list.map((item, n) => (n === i ? { ...item, [key]: value } : item)));
 
   return (
@@ -68,7 +73,29 @@ export default function SectionEditor({
         {fields.length > 0 && (
           <div className="grid gap-3 sm:grid-cols-2">
             {fields.map((field) =>
-              field.kind === 'image' ? (
+              field.kind === 'source' ? (
+                <SelectField
+                  key={field.key}
+                  label={field.label}
+                  disabled={!canEdit}
+                  value={String(section.config.source ?? 'newest')}
+                  onChange={(value) => setConfig('source', value)}
+                  options={[{ value: 'newest', label: 'Newest products' }, { value: 'featured', label: 'Products marked as featured' }, { value: 'collection', label: 'A collection' }]}
+                />
+              ) : field.kind === 'collection' ? (
+                section.config.source === 'collection' ? (
+                  <SelectField
+                    key={field.key}
+                    label={field.label}
+                    disabled={!canEdit}
+                    value={String(section.config.collection ?? '')}
+                    onChange={(value) => setConfig('collection', value)}
+                    placeholder={collections.loading ? 'Loading…' : 'Choose a collection'}
+                    options={(collections.data?.data ?? []).map((c) => ({ value: c.slug, label: c.is_live ? c.name : `${c.name} (not shown now)` }))}
+                    hint="Shown in the collection's own order. A collection that is not shown now leaves the section empty."
+                  />
+                ) : null
+              ) : field.kind === 'image' ? (
                 <div key={field.key} className="sm:col-span-2">
                   <ImageUploadField label={field.label} purpose="banner" disabled={!canEdit} value={String(section.config[field.key] ?? '')} onChange={(value) => setConfig(field.key, value)} hint="A wide JPG or PNG, at least 200 pixels; about 1600 × 800 looks good. Up to 5 MB." />
                 </div>
@@ -138,7 +165,7 @@ export default function SectionEditor({
  * always the original's.
  */
 function SectionTranslation({ section, language, canEdit, onChange }: { section: Section; language: { code: string; name: string; native: string; dir: string }; canEdit: boolean; onChange: (patch: Partial<Section>) => void }) {
-  const texts = (SECTION_FIELDS[section.type] ?? []).filter((field) => field.kind !== 'url' && field.kind !== 'number' && field.kind !== 'image');
+  const texts = (SECTION_FIELDS[section.type] ?? []).filter((field) => field.kind === undefined || field.kind === 'textarea');
   const items = SECTION_ITEMS[section.type];
   if (texts.length === 0 && !items) return null;
   const all = (section.config.translations ?? {}) as Record<string, Record<string, string | SectionItem[]>>;

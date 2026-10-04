@@ -26,7 +26,7 @@ final class PromotionTargetNames
     public function attach(iterable $promotions): void
     {
         $promotions = collect($promotions);
-        $ids = ['product' => [], 'category' => [], 'brand' => []];
+        $ids = ['product' => [], 'category' => [], 'brand' => [], 'collection' => []];
         foreach ($promotions as $promotion) {
             foreach ($promotion->targets as $target) {
                 $type = (string) $target->target_type;
@@ -40,6 +40,7 @@ final class PromotionTargetNames
             'product' => $this->names(Product::class, $ids['product']),
             'category' => $this->names(Category::class, $ids['category']),
             'brand' => $this->names(Brand::class, $ids['brand']),
+            'collection' => $this->names(\App\Domain\Catalog\Models\Collection::class, $ids['collection']),
         ];
 
         foreach ($promotions as $promotion) {
@@ -49,7 +50,7 @@ final class PromotionTargetNames
     }
 
     /**
-     * @param class-string<Product|Category|Brand> $model
+     * @param class-string<Product|Category|Brand|\App\Domain\Catalog\Models\Collection> $model
      * @param list<int> $ids
      * @return array<int, string>
      */

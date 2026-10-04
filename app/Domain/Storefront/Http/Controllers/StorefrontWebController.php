@@ -62,11 +62,32 @@ final class StorefrontWebController
         return $this->listingPage($request, ['brand' => $brandSlug], ['type' => 'brand', 'title' => $data['brand']['name'], 'brand' => $data['brand']], $data['seo']);
     }
 
+    /** Phase B39 (Module 06 §34): a live collection's page; any other answers 404. */
+    public function collection(Request $request, string $collectionSlug): Response
+    {
+        $data = $this->experience->collection($this->store($request), $collectionSlug) ?? throw new NotFoundHttpException();
+        $seo = $this->listingSeo($this->store($request), $data['collection']['name'], 'collections/'.rawurlencode($collectionSlug));
+        if ($data['collection']['description']) {
+            $seo['description'] = $seo['og_description'] = \Illuminate\Support\Str::limit((string) $data['collection']['description'], 160);
+        }
+
+        return $this->listingPage($request, ['collection' => $collectionSlug], ['type' => 'collection', 'title' => $data['collection']['name'], 'collection' => $data['collection']], $seo);
+    }
+
+    /** Phase B39 (Module 06 §35): the products with one tag. Not indexed — tags are labels, not landing pages. */
+    public function tag(Request $request, string $tagSlug): Response
+    {
+        $tag = \App\Domain\Catalog\Models\Tag::query()->where('slug', $tagSlug)->first() ?? throw new NotFoundHttpException();
+        $seo = [...$this->listingSeo($this->store($request), $tag->name, 'tags/'.rawurlencode($tagSlug)), 'robots' => 'noindex, follow'];
+
+        return $this->listingPage($request, ['tag' => $tagSlug], ['type' => 'tag', 'title' => $tag->name], $seo);
+    }
+
     public function product(Request $request, string $productSlug): Response
     {
         $data = $this->experience->product($this->store($request), $productSlug) ?? throw new NotFoundHttpException();
 
-        return $this->render($request, 'Storefront/Product', ['product' => $data['product'], 'related' => $data['related']], $data['seo']);
+        return $this->render($request, 'Storefront/Product', ['product' => $data['product'], 'related' => $data['related'], 'cross_sell' => $data['cross_sell'] ?? [], 'up_sell' => $data['up_sell'] ?? []], $data['seo']);
     }
 
     public function page(Request $request, string $pageSlug): Response
@@ -198,7 +219,7 @@ final class StorefrontWebController
         ]);
 
         $seo ??= $this->listingSeo($store, $context === null ? 'All products' : $context['title'], $context === null ? 'products' : 'search');
-        $refined = array_diff_key($filters, array_flip(['category', 'brand'])) !== [];
+        $refined = array_diff_key($filters, array_flip(['category', 'brand', 'collection', 'tag'])) !== [];
         if ($refined || ($context['type'] ?? null) === 'search') {
             // Filtered, sorted, paged and search result pages would be
             // near-duplicates of the plain listing: kept out of the index.

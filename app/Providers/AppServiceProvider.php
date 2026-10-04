@@ -123,6 +123,7 @@ final class AppServiceProvider extends ServiceProvider
         Gate::policy(Subscription::class, SubscriptionPolicy::class);
         Gate::policy(Product::class, ProductPolicy::class);
         Gate::policy(Category::class, CategoryPolicy::class);
+        Gate::policy(\App\Domain\Catalog\Models\Collection::class, \App\Domain\Catalog\Policies\CollectionPolicy::class); // Phase B39
         Gate::policy(Brand::class, BrandPolicy::class);
         Gate::policy(Attribute::class, AttributePolicy::class);
         Gate::policy(Inventory::class, InventoryPolicy::class);
@@ -146,6 +147,8 @@ final class AppServiceProvider extends ServiceProvider
             \App\Domain\Packages\Models\Subscription::class,
             // Phase B38: a changed translation changes what shoppers read.
             \App\Domain\Settings\Models\ContentTranslation::class,
+            // Phase B39: collections and product relations change what shoppers see.
+            \App\Domain\Catalog\Models\Collection::class, \App\Domain\Catalog\Models\ProductRelation::class,
         ] as $model) {
             $model::observe(\App\Domain\Storefront\Observers\StorefrontCacheObserver::class);
         }

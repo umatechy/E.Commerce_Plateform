@@ -14,7 +14,7 @@ import { adminFetch } from '@/lib/adminApi';
 import { fromMinor, money, toMinor } from '@/lib/money';
 import { dateTimeOrDash, displayTimezoneName, toStoreLocalInput } from '@/lib/datetime';
 import { options } from '@/lib/labels';
-import type { Brand, Category } from '@/lib/catalog';
+import type { Brand, Category, Collection } from '@/lib/catalog';
 import CurrencyField from '@/Components/CurrencyField';
 
 /**
@@ -54,9 +54,9 @@ type Promotion = {
 type Coupon = { id: number; code: string; is_active: boolean; usage_limit: number | null; used_count: number; customer_usage_limit: number | null };
 
 const TYPES = ['percentage', 'fixed_amount', 'free_shipping'] as const;
-const SCOPES = ['order', 'product', 'category', 'brand'] as const;
+const SCOPES = ['order', 'product', 'category', 'brand', 'collection'] as const;
 const STATUSES = ['draft', 'active', 'paused', 'disabled', 'archived'] as const;
-const SCOPE_LABELS: Record<string, string> = { order: 'The whole order', product: 'Chosen products', category: 'Chosen categories', brand: 'Chosen brands' };
+const SCOPE_LABELS: Record<string, string> = { order: 'The whole order', product: 'Chosen products', category: 'Chosen categories', brand: 'Chosen brands', collection: 'Chosen collections' };
 
 type Values = {
   name: string; type: string; target_scope: string; status: string; percentage_value: string; fixed_amount: string; currency: string;
@@ -116,6 +116,8 @@ function discountText(promotion: Promotion): string {
 function Targets({ scope, ids, known, onChange }: { scope: string; ids: number[]; known: Record<number, string>; onChange: (ids: number[]) => void }) {
   const categories = useApi<{ data: Category[] }>(scope === 'category' ? '/categories' : null);
   const brands = useApi<{ data: Brand[] }>(scope === 'brand' ? '/brands' : null);
+  // Phase B39 (Module 14 §9): a live collection — hand-picked or rule-based.
+  const collections = useApi<{ data: Collection[] }>(scope === 'collection' ? '/collections' : null);
   // Names of the products: those saved come with the promotion (its
   // `targets`), those picked in this dialog from the picker. A product
   // deleted since keeps only its number.
@@ -149,12 +151,13 @@ function Targets({ scope, ids, known, onChange }: { scope: string; ids: number[]
     );
   }
 
-  const source = scope === 'category' ? categories : brands;
-  const list = (source.data?.data ?? []) as { id: number; name: string }[];
+  const source = scope === 'category' ? categories : scope === 'brand' ? brands : collections;
+  const list: { id: number; name: string }[] =
+    scope === 'collection' ? (collections.data?.data ?? []).map((c) => ({ id: c.internal_id, name: c.is_live ? c.name : `${c.name} (not shown now)` })) : ((source.data?.data ?? []) as { id: number; name: string }[]);
 
   return (
     <fieldset>
-      <legend className="text-sm font-medium text-slate-700">{scope === 'category' ? 'Categories' : 'Brands'} this applies to</legend>
+      <legend className="text-sm font-medium text-slate-700">{scope === 'category' ? 'Categories' : scope === 'brand' ? 'Brands' : 'Collections'} this applies to</legend>
       {source.error ? (
         <p className="text-sm text-red-700">{source.error}</p>
       ) : source.data === null ? (

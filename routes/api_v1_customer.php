@@ -120,6 +120,8 @@ Route::middleware(['customer.optional', 'storefront.store:api', 'throttle:120,1'
         Route::get('/brands', [$controller, 'brands']);
         Route::get('/brands/{slug}', [$controller, 'brand']);
         Route::get('/pages/{slug}', [$controller, 'page']);
+        Route::get('/collections', [$controller, 'collections']);
+        Route::get('/collections/{slug}', [$controller, 'collection']);
         Route::get('/search/suggest', [$controller, 'suggest']);
 
         // Phase B25: web storefront sign-in (HttpOnly cookie session) and password reset.

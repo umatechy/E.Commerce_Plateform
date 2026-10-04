@@ -24,6 +24,8 @@ $storefrontPages = function (): void {
     Route::get('/products/{productSlug}', [StorefrontWebController::class, 'product']);
     Route::get('/categories/{categorySlug}', [StorefrontWebController::class, 'category']);
     Route::get('/brands/{brandSlug}', [StorefrontWebController::class, 'brand']);
+    Route::get('/collections/{collectionSlug}', [StorefrontWebController::class, 'collection']);
+    Route::get('/tags/{tagSlug}', [StorefrontWebController::class, 'tag']);
     Route::get('/pages/{pageSlug}', [StorefrontWebController::class, 'page']);
     Route::get('/cart', [StorefrontWebController::class, 'cart']);
     Route::get('/checkout', [StorefrontWebController::class, 'checkout']);
@@ -83,7 +85,7 @@ Route::middleware(['auth', 'required.mfa'])->group(function () {
     // page; its data comes from /api/v1, where the policy for that data
     // decides. A page a user may not use shows the API's refusal.
     foreach ([
-        '/products' => 'Catalog/Products', '/categories' => 'Catalog/Categories', '/brands' => 'Catalog/Brands', '/attributes' => 'Catalog/Attributes',
+        '/products' => 'Catalog/Products', '/collections' => 'Catalog/Collections', '/categories' => 'Catalog/Categories', '/brands' => 'Catalog/Brands', '/attributes' => 'Catalog/Attributes',
         '/warehouses' => 'Inventory/Warehouses',
         '/payments' => 'Payments/Index', '/shipments' => 'Shipping/Shipments', '/shipping' => 'Shipping/Settings',
         '/customers' => 'Customers/Index',

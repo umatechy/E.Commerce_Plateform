@@ -35,6 +35,7 @@ final class PermissionSeeder extends Seeder
         ['key' => 'products.delete', 'group' => 'products', 'description' => 'Delete products (Phase B3)'],
         ['key' => 'products.view_cost', 'group' => 'products', 'description' => 'View product cost price — Module 06 §25, never customer-visible (Phase B3)'],
         ['key' => 'categories.manage', 'group' => 'categories', 'description' => 'Create, update, delete categories (Phase B3)'],
+        ['key' => 'collections.manage', 'group' => 'catalog', 'description' => 'Manage collections and tags (Module 06 §34–35 — Phase B39)'],
         ['key' => 'brands.manage', 'group' => 'brands', 'description' => 'Create, update, delete brands (Phase B3)'],
         ['key' => 'attributes.manage', 'group' => 'attributes', 'description' => 'Create, update, delete attributes (Phase B3)'],
         ['key' => 'inventory.view', 'group' => 'inventory', 'description' => 'View inventory, stock levels, and movement history (Phase B4)'],

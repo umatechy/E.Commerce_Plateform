@@ -11,7 +11,14 @@ import { useT } from '@/Storefront/i18n';
 
 const AVAILABILITY: Record<Availability, string> = { in_stock: 'text-sf-success', low_stock: 'text-sf-warning', backorder: 'text-sf-warning', out_of_stock: 'text-sf-error' };
 
-export default function Product({ storefront, seo, product, related }: StorefrontPageProps & { product: ProductDetail; related: ProductCard[] }) {
+export default function Product({
+  storefront,
+  seo,
+  product,
+  related,
+  cross_sell = [],
+  up_sell = [],
+}: StorefrontPageProps & { product: ProductDetail; related: ProductCard[]; cross_sell?: ProductCard[]; up_sell?: ProductCard[] }) {
   const base = storefront.base_path;
   const t = useT();
   const availabilityLabel: Record<Availability, string> = { in_stock: t('In stock'), low_stock: t('Only a few left'), backorder: t('Available on backorder'), out_of_stock: t('Sold out') };
@@ -186,6 +193,19 @@ export default function Product({ storefront, seo, product, related }: Storefron
         </div>
       </div>
 
+      {/* Phase B39 (Module 06 §38): the products the store chose to show with this one. */}
+      {cross_sell.length > 0 && (
+        <section className="mt-16">
+          <h2 className="mb-4 text-2xl font-semibold">{t('Goes well with')}</h2>
+          <ProductGrid products={cross_sell} basePath={base} />
+        </section>
+      )}
+      {up_sell.length > 0 && (
+        <section className="mt-16">
+          <h2 className="mb-4 text-2xl font-semibold">{t('You might prefer')}</h2>
+          <ProductGrid products={up_sell} basePath={base} />
+        </section>
+      )}
       {related.length > 0 && (
         <section className="mt-16">
           <h2 className="mb-4 text-2xl font-semibold">{t('You may also like')}</h2>

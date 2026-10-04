@@ -9,7 +9,9 @@ import type { CategoryNode, ProductCard, Shell, StorefrontPageProps } from '@/St
 type Banner = { type: 'hero' | 'promotional_banner'; heading?: string; subheading?: string; image_url?: string; cta_url?: string; cta_label?: string };
 type Section =
   | Banner
-  | { type: 'featured_products' | 'best_sellers' | 'sale_products'; heading: string | null; products: ProductCard[] }
+  | { type: 'best_sellers' | 'sale_products'; heading: string | null; products: ProductCard[] }
+  // Phase B39: the newest products, those marked featured, or one collection's.
+  | { type: 'featured_products'; heading: string | null; products: ProductCard[]; source?: 'newest' | 'featured' | 'collection'; collection?: string | null }
   | { type: 'featured_categories'; heading: string | null; categories: CategoryNode[] }
   | { type: 'featured_brands'; heading: string | null; brands: { name: string; slug: string }[] }
   | { type: 'testimonials'; heading?: string; items?: { quote: string; name: string; detail?: string }[] }
@@ -95,7 +97,10 @@ function HomeSection({ section, shell }: { section: Section; shell: Shell }) {
     case 'sale_products':
       return section.products.length === 0 ? null : (
         <section>
-          <SectionHeading title={section.heading ?? defaultHeading(t, section.type)} link={{ href: `${base}/products`, label: t('View all') }} />
+          <SectionHeading
+            title={section.heading ?? (section.type === 'featured_products' && section.source && section.source !== 'newest' ? t('Featured products') : defaultHeading(t, section.type))}
+            link={{ href: section.type === 'featured_products' && section.source === 'collection' && section.collection ? `${base}/collections/${section.collection}` : `${base}/products`, label: t('View all') }}
+          />
           <ProductGrid products={section.products} basePath={base} />
         </section>
       );

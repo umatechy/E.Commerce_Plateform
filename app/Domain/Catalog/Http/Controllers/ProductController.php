@@ -66,7 +66,7 @@ final class ProductController
     {
         Gate::forUser($request->user())->authorize('view', $product);
 
-        return new ProductResource($product->load(['brand', 'variants', 'categories']));
+        return new ProductResource($product->load(['brand', 'variants', 'categories', 'tags', 'collections']));
     }
 
     public function store(StoreProductRequest $request, EntitlementService $entitlements): JsonResponse
@@ -96,7 +96,7 @@ final class ProductController
 
         $product = DB::transaction(function () use ($request, $status) {
             $product = Product::query()->create([
-                ...$request->validated(),
+                ...$request->safe()->except(['tags', 'collection_ids']),
                 'slug' => Str::slug($request->string('name')->toString()).'-'.Str::lower(Str::random(6)),
                 'status' => $status,
             ]);
@@ -104,6 +104,7 @@ final class ProductController
             if ($request->has('category_ids')) {
                 $product->categories()->sync($request->input('category_ids', []));
             }
+            $this->syncMerchandising($request, $product);
 
             return $product;
         });
@@ -137,16 +138,17 @@ final class ProductController
         }
 
         DB::transaction(function () use ($request, $product, $newStatus) {
-            $product->update([...$request->validated(), 'status' => $newStatus]);
+            $product->update([...$request->safe()->except(['tags', 'collection_ids']), 'status' => $newStatus]);
 
             if ($request->has('category_ids')) {
                 $product->categories()->sync($request->input('category_ids', []));
             }
+            $this->syncMerchandising($request, $product);
         });
 
         $this->syncUsageForStatusChange($entitlements, $previousStatus, $newStatus);
 
-        return new ProductResource($product->refresh()->load(['brand', 'variants', 'categories']));
+        return new ProductResource($product->refresh()->load(['brand', 'variants', 'categories', 'tags', 'collections']));
     }
 
     public function destroy(Request $request, Product $product, EntitlementService $entitlements): \Illuminate\Http\Response
@@ -162,6 +164,33 @@ final class ProductController
         }
 
         return response()->noContent();
+    }
+
+    /**
+     * Phase B39: the product's tags (by name) and the hand-picked collections
+     * it is in. Collections need collections.manage; only manual collections
+     * of this store can be chosen, and a product joins at the end of each.
+     */
+    private function syncMerchandising(Request $request, Product $product): void
+    {
+        if ($request->has('tags')) {
+            app(\App\Domain\Catalog\Services\ProductTagService::class)->sync($product, array_values($request->input('tags', [])));
+        }
+        if (! $request->has('collection_ids')) {
+            return;
+        }
+        Gate::forUser($request->user())->authorize('manage', \App\Domain\Catalog\Models\Collection::class);
+        $wanted = array_values(array_unique($request->input('collection_ids', [])));
+        $ids = \App\Domain\Catalog\Models\Collection::query()->where('type', 'manual')->whereIn('public_id', $wanted)->pluck('id');
+        if ($ids->count() !== count($wanted)) {
+            throw ValidationException::withMessages(['collection_ids' => 'Choose hand-picked collections of this store.']);
+        }
+        $current = $product->collections()->pluck('collections.id');
+        $product->collections()->detach($current->diff($ids)->all());
+        foreach ($ids->diff($current) as $collectionId) {
+            $product->collections()->attach($collectionId, ['position' => (int) DB::table('collection_product')->where('collection_id', $collectionId)->max('position') + 1]);
+        }
+        \App\Domain\Catalog\Models\Collection::query()->whereIn('id', $current->merge($ids)->unique())->get()->each->touch();
     }
 
     private function syncUsageForStatusChange(

@@ -134,8 +134,8 @@ Route::middleware(['auth:sanctum', 'staff.principal', 'required.mfa'])->group(fu
     // --- Catalog (Modules 06-07, Phase B3) ---
     Route::apiResource('products', ProductController::class);
     // Phase B38 (Module 06 §101, Module 07 §99): translations of catalog content.
-    Route::get('/translations/{type}/{id}', [\App\Domain\Settings\Http\Controllers\TranslationController::class, 'show'])->whereIn('type', ['product', 'category', 'brand']);
-    Route::put('/translations/{type}/{id}', [\App\Domain\Settings\Http\Controllers\TranslationController::class, 'update'])->whereIn('type', ['product', 'category', 'brand'])->middleware('throttle:60,1,translations');
+    Route::get('/translations/{type}/{id}', [\App\Domain\Settings\Http\Controllers\TranslationController::class, 'show'])->whereIn('type', ['product', 'category', 'brand', 'collection']);
+    Route::put('/translations/{type}/{id}', [\App\Domain\Settings\Http\Controllers\TranslationController::class, 'update'])->whereIn('type', ['product', 'category', 'brand', 'collection'])->middleware('throttle:60,1,translations');
     // Phase B24: storefront images of a product.
     Route::get('/products/{product}/images', [\App\Domain\Catalog\Http\Controllers\ProductImageController::class, 'index']);
     Route::post('/products/{product}/images', [\App\Domain\Catalog\Http\Controllers\ProductImageController::class, 'store']);
@@ -146,6 +146,14 @@ Route::middleware(['auth:sanctum', 'staff.principal', 'required.mfa'])->group(fu
     Route::apiResource('categories', CategoryController::class)->except(['show']);
     Route::apiResource('brands', BrandController::class)->except(['show']);
     Route::apiResource('attributes', AttributeController::class)->only(['index', 'store', 'destroy']);
+    // Phase B39 (gap G15): collections, tags, relations, duplicate and bulk changes.
+    Route::apiResource('collections', \App\Domain\Catalog\Http\Controllers\CollectionController::class);
+    Route::put('/collections/{collection}/products', [\App\Domain\Catalog\Http\Controllers\CollectionController::class, 'products']);
+    Route::get('/tags', [\App\Domain\Catalog\Http\Controllers\ProductToolsController::class, 'tags']);
+    Route::post('/products/bulk', [\App\Domain\Catalog\Http\Controllers\ProductToolsController::class, 'bulk'])->middleware('throttle:20,1,products-bulk');
+    Route::post('/products/{product}/duplicate', [\App\Domain\Catalog\Http\Controllers\ProductToolsController::class, 'duplicate'])->middleware('throttle:30,1,products-duplicate');
+    Route::get('/products/{product}/relations', [\App\Domain\Catalog\Http\Controllers\ProductToolsController::class, 'relations']);
+    Route::put('/products/{product}/relations', [\App\Domain\Catalog\Http\Controllers\ProductToolsController::class, 'saveRelations']);
 
     // --- Inventory & Warehouses (Module 08, Phase B4) ---
     Route::apiResource('warehouses', WarehouseController::class)->only(['index', 'store', 'update']);

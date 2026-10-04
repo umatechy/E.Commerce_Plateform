@@ -43,6 +43,10 @@ final class ProductResource extends JsonResource
             'brand_id' => $this->brand_id,
             'primary_category_id' => $this->primary_category_id,
             'category_ids' => $this->whenLoaded('categories', fn () => $this->categories->pluck('id')->values()),
+            // Phase B39 (Module 06 §35–37).
+            'is_featured' => (bool) $this->is_featured,
+            'tags' => $this->whenLoaded('tags', fn () => $this->tags->pluck('name')->values()),
+            'collection_ids' => $this->whenLoaded('collections', fn () => $this->collections->pluck('public_id')->values()),
             'price_minor' => $this->price_minor,
             'sale_price_minor' => $this->sale_price_minor,
             'effective_price_minor' => $this->effectivePriceMinor(),

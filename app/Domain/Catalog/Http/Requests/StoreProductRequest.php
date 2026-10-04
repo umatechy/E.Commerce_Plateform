@@ -51,6 +51,12 @@ final class StoreProductRequest extends FormRequest
             'currency' => ['required', 'string', 'size:3', \App\Domain\Settings\Services\Currencies::rule()],
             'category_ids' => ['array'],
             'category_ids.*' => ['integer', 'exists:categories,id'],
+            // Phase B39 (Module 06 §35–37): tags by name, featured, hand-picked collections.
+            'is_featured' => ['boolean'],
+            'tags' => ['array', 'max:20'],
+            'tags.*' => ['string', 'max:60'],
+            'collection_ids' => ['array', 'max:100'],
+            'collection_ids.*' => ['string', 'size:26'],
         ];
     }
 }

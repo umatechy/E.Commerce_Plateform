@@ -49,6 +49,10 @@ export type Product = {
   currency: string | null;
   cost_price_minor?: number | null;
   variants?: Variant[];
+  /** Phase B39. */
+  is_featured?: boolean;
+  tags?: string[];
+  collection_ids?: string[];
 };
 
 export type Category = {
@@ -116,4 +120,50 @@ export function parseOptionLines(text: string): { values: Record<string, string>
   }
 
   return { values };
+}
+
+/* Phase B39 (gap G15): collections, tags, relations and bulk changes. */
+export const COLLECTION_SORTS = ['manual', 'newest', 'price_asc', 'price_desc', 'name', 'best_selling'] as const;
+export const RULE_FIELDS = ['category', 'brand', 'tag', 'price_min', 'price_max', 'on_sale', 'in_stock', 'featured', 'new_within_days'] as const;
+export const RELATION_TYPES = ['related', 'cross_sell', 'up_sell', 'alternative'] as const;
+export const RELATION_LABELS: Record<(typeof RELATION_TYPES)[number], { title: string; hint: string }> = {
+  related: { title: 'Related products', hint: 'Shown as “You may also like”. Without any, other products of the same category are shown.' },
+  cross_sell: { title: 'Goes well with', hint: 'Products bought together with this one.' },
+  up_sell: { title: 'Better options', hint: 'A more complete or premium choice.' },
+  alternative: { title: 'Alternatives', hint: 'Similar products, shown with the related ones.' },
+};
+
+export type CollectionRule = { field: (typeof RULE_FIELDS)[number]; value: number | boolean | number[] };
+
+export type Collection = {
+  id: string;
+  /** The numeric key promotion targets take. */
+  internal_id: number;
+  name: string;
+  slug: string;
+  description: string | null;
+  type: 'manual' | 'rule';
+  rules: CollectionRule[];
+  match: 'all' | 'any';
+  sort: (typeof COLLECTION_SORTS)[number];
+  status: 'draft' | 'active';
+  is_visible: boolean;
+  is_live: boolean;
+  starts_at: string | null;
+  ends_at: string | null;
+  sort_order: number;
+  product_count: number;
+  products?: { id: string; name: string; status: string; price_minor: number | null }[];
+  preview_count?: number;
+};
+
+export type Tag = { id: number; name: string; slug: string; product_count: number };
+
+export type ProductRef = { id: string; name: string; status: string };
+
+export type BulkResult = { affected: number; skipped: { id: string; name: string; reason: string }[] };
+
+/** Tags typed as "Eid, Gift" → ["Eid", "Gift"] (the server trims and de-duplicates too). */
+export function parseTags(text: string): string[] {
+  return text.split(',').map((tag) => tag.trim()).filter((tag) => tag !== '');
 }

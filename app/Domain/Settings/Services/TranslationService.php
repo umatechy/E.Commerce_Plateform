@@ -25,6 +25,7 @@ final class TranslationService
         'product' => ['name' => 255, 'short_description' => 500, 'description' => 20000],
         'category' => ['name' => 255, 'description' => 5000],
         'brand' => ['name' => 255, 'description' => 5000],
+        'collection' => ['name' => 120, 'description' => 2000], // Phase B39
     ];
 
     /** @var array<string, array<int, array<string, string>>> "type:locale" => id => field => value */

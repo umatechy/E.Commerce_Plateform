@@ -2,7 +2,7 @@ import { FormEvent, useEffect, useRef, useState } from 'react';
 import { router } from '@inertiajs/react';
 import AdminPage from '@/Components/AdminPage';
 import Button, { ButtonLink } from '@/Components/ui/Button';
-import { CheckboxField, FormError, SelectField, TextAreaField, TextField } from '@/Components/ui/Form';
+import { CheckboxField, FormError, SelectField, SwitchField, TextAreaField, TextField } from '@/Components/ui/Form';
 import Dialog, { ConfirmDialog } from '@/Components/ui/Dialog';
 import DataTable, { type Column } from '@/Components/ui/DataTable';
 import { Card, EmptyPanel, ErrorPanel, PackageNotice, Skeleton, Tabs, AccessNotice } from '@/Components/ui/Page';
@@ -16,16 +16,19 @@ import { fromMinor, money, toMinor } from '@/lib/money';
 import { options } from '@/lib/labels';
 import CurrencyField from '@/Components/CurrencyField';
 import TranslationsPanel from '@/Components/TranslationsPanel';
+import RelatedProducts from '@/Components/Catalog/RelatedProducts';
 import {
   categoryTree,
   PRODUCT_STATUSES,
   PRODUCT_TYPES,
   parseOptionLines,
+  parseTags,
   PRODUCT_VISIBILITIES,
   VARIANT_STATUSES,
   variantLabel,
   type Brand,
   type Category,
+  type Collection,
   type Product,
   type ProductImage,
   type Variant,
@@ -53,12 +56,17 @@ type FormValues = {
   sale_price: string;
   cost_price: string;
   currency: string;
+  /** Phase B39 (Module 06 §35–37). */
+  is_featured: boolean;
+  tags: string;
+  collection_ids: string[];
 };
 
 function blank(currency: string): FormValues {
   return {
     type: 'simple', name: '', sku: '', short_description: '', description: '', status: 'draft', visibility: 'public',
     brand_id: '', primary_category_id: '', category_ids: [], price: '', sale_price: '', cost_price: '', currency,
+    is_featured: false, tags: '', collection_ids: [],
   };
 }
 
@@ -80,6 +88,9 @@ function fromProduct(product: Product, fallbackCurrency: string): FormValues {
     sale_price: fromMinor(product.sale_price_minor, currency),
     cost_price: fromMinor(product.cost_price_minor, currency),
     currency,
+    is_featured: product.is_featured ?? false,
+    tags: (product.tags ?? []).join(', '),
+    collection_ids: product.collection_ids ?? [],
   };
 }
 
@@ -98,6 +109,10 @@ function ProductForm({ product, onSaved }: { product: Product | null; onSaved: (
   const form = useForm<FormValues>(product ? fromProduct(product, access.currency) : blank(access.currency));
   const brands = useApi<{ data: Brand[] }>('/brands');
   const categories = useApi<{ data: Category[] }>('/categories');
+  // Phase B39: only hand-picked collections take a product directly; rule-based ones choose by themselves.
+  const canCollections = access.can('collections.manage');
+  const collections = useApi<{ data: Collection[] }>(canCollections ? '/collections' : null);
+  const manualCollections = (collections.data?.data ?? []).filter((collection) => collection.type === 'manual');
   const [amountErrors, setAmountErrors] = useState<Record<string, string>>({});
   const [limitReached, setLimitReached] = useState(false);
   const [tab, setTab] = useState('details');
@@ -145,7 +160,10 @@ function ProductForm({ product, onSaved }: { product: Product | null; onSaved: (
       price_minor: price.minor,
       sale_price_minor: sale.minor,
       currency: values.currency.toUpperCase(),
+      is_featured: values.is_featured,
+      tags: parseTags(values.tags),
     };
+    if (canCollections && collections.data) body.collection_ids = values.collection_ids;
     // A user who cannot see the cost price must not blank it by saving.
     if (canCost) body.cost_price_minor = cost.minor;
     if (product === null) body.type = values.type;
@@ -303,6 +321,34 @@ function ProductForm({ product, onSaved }: { product: Product | null; onSaved: (
             )}
             {errors.category_ids && <p role="alert" className="mt-1 text-xs font-medium text-red-700">{errors.category_ids}</p>}
           </fieldset>
+        </Card>
+        <Card title="Merchandising" description="How this product is grouped and highlighted on your storefront.">
+          <div className="space-y-4">
+            <SwitchField label="Featured product" hint="Featured products can fill the “Featured products” section of your home page." checked={values.is_featured} onChange={(v) => set('is_featured', v)} />
+            <TextField label="Tags" optional value={values.tags} onChange={(v) => set('tags', v)} error={errors.tags ?? errors['tags.0']} hint="Separate tags with commas, for example: Eid, Handmade. Up to 20, each up to 60 characters." />
+            {canCollections && (
+              <fieldset>
+                <legend className="text-sm font-medium text-slate-700">Hand-picked collections</legend>
+                {collections.error ? (
+                  <p className="mt-1 text-sm text-red-700">Collections could not be loaded.</p>
+                ) : manualCollections.length === 0 ? (
+                  <p className="mt-1 text-sm text-slate-600">No hand-picked collections yet. Create them under Catalog → Collections. Rule-based collections pick their products by themselves.</p>
+                ) : (
+                  <div className="mt-2 grid gap-2 sm:grid-cols-2">
+                    {manualCollections.map((collection) => (
+                      <CheckboxField
+                        key={collection.id}
+                        label={collection.name}
+                        checked={values.collection_ids.includes(collection.id)}
+                        onChange={(checked) => set('collection_ids', checked ? [...values.collection_ids, collection.id] : values.collection_ids.filter((id) => id !== collection.id))}
+                      />
+                    ))}
+                  </div>
+                )}
+                {errors.collection_ids && <p role="alert" className="mt-1 text-xs font-medium text-red-700">{errors.collection_ids}</p>}
+              </fieldset>
+            )}
+          </div>
         </Card>
       </div>
 
@@ -567,7 +613,9 @@ function ImagesSection({ product }: { product: Product }) {
 }
 
 export default function ProductEdit({ productId }: { productId: string | null }) {
-  const canTranslate = useAccess().can('products.update');
+  const access = useAccess();
+  const canTranslate = access.can('products.update');
+  const { busy, run } = useAction();
   const state = useApi<{ data: Product }>(productId === null ? null : `/products/${productId}`);
   const product = state.data?.data ?? null;
 
@@ -585,7 +633,27 @@ export default function ProductEdit({ productId }: { productId: string | null })
   }
 
   return (
-    <AdminPage title={product?.name ?? 'Product'} trail={[{ label: product?.name ?? 'Product' }]}>
+    <AdminPage
+      title={product?.name ?? 'Product'}
+      trail={[{ label: product?.name ?? 'Product' }]}
+      actions={
+        product !== null &&
+        access.can('products.create') && (
+          // Phase B39 (Module 06 §60): a hidden draft copy, without SKU, stock or reviews.
+          <Button
+            busy={busy === 'duplicate'}
+            busyLabel="Duplicating…"
+            onClick={() =>
+              run('duplicate', () => adminFetch<{ data: Product }>(`/products/${product.id}/duplicate`, { method: 'POST' }), { success: 'Copy created as a hidden draft.' }).then((copy) => {
+                if (copy) router.visit(`/products/${copy.data.id}`);
+              })
+            }
+          >
+            Duplicate
+          </Button>
+        )
+      }
+    >
       {state.error ? (
         state.errorStatus === 403 ? <AccessNotice message={state.error} /> : state.errorStatus === 404 ? (
           <EmptyPanel title="Product not found" description="It may have been deleted." action={<ButtonLink href="/products">Back to products</ButtonLink>} />
@@ -597,6 +665,7 @@ export default function ProductEdit({ productId }: { productId: string | null })
           <ProductForm key={product.id} product={product} onSaved={(saved) => state.setData({ data: saved })} />
           <VariantsSection product={product} onChanged={state.reload} />
           <ImagesSection product={product} />
+          <RelatedProducts productId={product.id} canEdit={canTranslate} />
           {/* Phase B38: name and descriptions in the other storefront languages. */}
           <Card title="Translations" description="How this product reads in your other storefront languages. A field left empty shows the original.">
             <TranslationsPanel type="product" id={product.id} canEdit={canTranslate} />

@@ -210,7 +210,8 @@ final class ThemeConfigValidator
             SectionType::Hero->value => ['heading', 'subheading', 'image_url', 'cta_url', 'cta_label'],
             SectionType::PromotionalBanner->value => ['heading', 'subheading', 'image_url', 'cta_url', 'cta_label'],
             SectionType::Newsletter->value => ['heading', 'subheading'],
-            SectionType::FeaturedProducts->value => ['heading', 'limit'],
+            // Phase B39: which products — the newest, those marked featured, or a collection's.
+            SectionType::FeaturedProducts->value => ['heading', 'limit', 'source', 'collection'],
             SectionType::FeaturedCategories->value => ['heading', 'limit'],
             SectionType::Header->value => [],
             SectionType::Footer->value => [],
@@ -229,7 +230,7 @@ final class ThemeConfigValidator
         $clean = [];
         // Phase B38 (LOC-002): the section's texts in other languages; numbers and links stay the original's.
         if (isset($config['translations'])) {
-            $texts = array_values(array_diff($allowedKeys, ['limit', 'image_url', 'cta_url']));
+            $texts = array_values(array_diff($allowedKeys, ['limit', 'image_url', 'cta_url', 'source', 'collection']));
             $clean['translations'] = $this->translations($config['translations'], "sections.{$type->value}", function (array $fields, string $context) use ($type, $texts) {
                 $this->assertNoUnknownKeys($fields, $texts, $context);
                 $out = [];
@@ -256,6 +257,8 @@ final class ThemeConfigValidator
                 $key === 'image_url' => $this->validateImageAddress($config[$key], $key),
                 $key === 'cta_url' => $this->validateSafeUrl($config[$key], $key),
                 $key === 'limit' => max(1, min(50, (int) $config[$key])),
+                $key === 'source' => $this->oneOf($config[$key], ['newest', 'featured', 'collection'], 'source'),
+                $key === 'collection' => $this->text($config[$key], 'collection', 120),
                 $key === 'items' => $this->validateItems($type, $config[$key]),
                 $key === 'text' => $this->text($config[$key], 'text', 2000),
                 $key === 'cta_label' => $this->text($config[$key], 'cta_label', 40),

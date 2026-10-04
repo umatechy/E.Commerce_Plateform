@@ -38,6 +38,12 @@ final class UpdateProductRequest extends FormRequest
             'currency' => ['sometimes', 'string', 'size:3', \App\Domain\Settings\Services\Currencies::rule()],
             'category_ids' => ['sometimes', 'array'],
             'category_ids.*' => ['integer', 'exists:categories,id'],
+            // Phase B39 (Module 06 §35–37): tags by name, featured, hand-picked collections.
+            'is_featured' => ['sometimes', 'boolean'],
+            'tags' => ['sometimes', 'array', 'max:20'],
+            'tags.*' => ['string', 'max:60'],
+            'collection_ids' => ['sometimes', 'array', 'max:100'],
+            'collection_ids.*' => ['string', 'size:26'],
         ];
     }
 }

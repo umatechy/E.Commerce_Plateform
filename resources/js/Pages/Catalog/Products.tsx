@@ -15,8 +15,9 @@ import { useAction } from '@/lib/useForm';
 import { adminFetch } from '@/lib/adminApi';
 import { money } from '@/lib/money';
 import { options } from '@/lib/labels';
-import type { Product } from '@/lib/catalog';
+import type { BulkResult, Product } from '@/lib/catalog';
 import { PRODUCT_STATUSES } from '@/lib/catalog';
+import BulkBar from '@/Components/Catalog/BulkBar';
 
 /**
  * Module 06 §64 "Product Listing Admin UX": the store's products, one
@@ -32,11 +33,34 @@ export default function Products() {
   const usage = useApi<{ data: Record<string, { limit: number | null; current: number; unlimited: boolean }> }>('/subscription/usage');
   const [removing, setRemoving] = useState<Product | null>(null);
   const { busy, run } = useAction();
+  // Phase B39 (Module 06 §46): products chosen for one change, on this page.
+  const [selected, setSelected] = useState<string[]>([]);
+  const [report, setReport] = useState<BulkResult | null>(null);
+  const canBulk = access.can('products.update') || access.can('products.delete');
+  const pageIds = (list.rows ?? []).map((product) => product.id);
+  const allOnPage = pageIds.length > 0 && pageIds.every((id) => selected.includes(id));
 
   const limit = usage.data?.data.max_products;
   const filtered = filters.search !== '' || filters.status !== '';
 
   const columns: Column<Product>[] = [
+    ...(canBulk
+      ? [{
+          key: 'select', header: 'Choose', srOnlyHeader: true, priority: true,
+          render: (product: Product) => (
+            <input
+              type="checkbox"
+              aria-label={`Choose ${product.name}`}
+              checked={selected.includes(product.id)}
+              onChange={(e) => {
+                const checked = e.target.checked;
+                setSelected((current) => (checked ? [...current, product.id] : current.filter((id) => id !== product.id)));
+              }}
+              className={`h-4 w-4 rounded border-slate-300 text-indigo-600 ${FOCUS_RING}`}
+            />
+          ),
+        } satisfies Column<Product>]
+      : []),
     {
       key: 'name',
       header: 'Product',
@@ -59,12 +83,33 @@ export default function Products() {
       srOnlyHeader: true,
       align: 'right',
       priority: true,
-      render: (product) =>
-        access.can('products.delete') && (
-          <Button size="sm" variant="ghost" onClick={() => setRemoving(product)}>
-            Delete<span className="sr-only"> {product.name}</span>
-          </Button>
-        ),
+      render: (product) => (
+        <span className="flex justify-end gap-1">
+          {/* Phase B39 (Module 06 §60): a hidden draft copy. */}
+          {access.can('products.create') && (
+            <Button
+              size="sm"
+              variant="ghost"
+              busy={busy === `copy-${product.id}`}
+              onClick={() =>
+                run(`copy-${product.id}`, () => adminFetch(`/products/${product.id}/duplicate`, { method: 'POST' }), { success: 'Copy created as a hidden draft.' }).then((copy) => {
+                  if (copy !== undefined) {
+                    list.reload();
+                    usage.reload();
+                  }
+                })
+              }
+            >
+              Duplicate<span className="sr-only"> {product.name}</span>
+            </Button>
+          )}
+          {access.can('products.delete') && (
+            <Button size="sm" variant="ghost" onClick={() => setRemoving(product)}>
+              Delete<span className="sr-only"> {product.name}</span>
+            </Button>
+          )}
+        </span>
+      ),
     },
   ];
 
@@ -87,6 +132,43 @@ export default function Products() {
         </div>
         {filtered && <Button onClick={() => setFilters(FILTER_DEFAULTS)}>Clear filters</Button>}
       </FilterBar>
+
+      {canBulk && (list.rows ?? []).length > 0 && (
+        <div className="mb-2 flex flex-wrap items-center gap-3">
+          <Button size="sm" onClick={() => setSelected(allOnPage ? selected.filter((id) => !pageIds.includes(id)) : [...new Set([...selected, ...pageIds])])}>
+            {allOnPage ? 'Unchoose this page' : 'Choose all on this page'}
+          </Button>
+        </div>
+      )}
+      {selected.length > 0 && (
+        <BulkBar
+          selected={selected}
+          currency={access.currency}
+          canCollections={access.can('collections.manage')}
+          onClear={() => setSelected([])}
+          onDone={(result) => {
+            setReport(result);
+            setSelected([]);
+            list.reload();
+            usage.reload();
+          }}
+        />
+      )}
+      {report && (
+        <div role="status" className="mb-4 rounded-lg border border-slate-200 bg-white p-3 text-sm">
+          <div className="flex items-start justify-between gap-2">
+            <p className="font-medium">
+              {report.affected} changed{report.skipped.length > 0 ? `, ${report.skipped.length} not changed` : ''}.
+            </p>
+            <Button size="sm" variant="ghost" onClick={() => setReport(null)}>Dismiss</Button>
+          </div>
+          {report.skipped.length > 0 && (
+            <ul className="mt-2 list-disc space-y-1 ps-5 text-slate-700">
+              {report.skipped.map((s) => <li key={s.id}><strong>{s.name || s.id}</strong>: {s.reason}</li>)}
+            </ul>
+          )}
+        </div>
+      )}
 
       <DataTable
         caption="Products"

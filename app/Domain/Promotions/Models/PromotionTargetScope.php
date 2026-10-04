@@ -11,4 +11,5 @@ enum PromotionTargetScope: string
     case Product = 'product';
     case Category = 'category';
     case Brand = 'brand';
+    case Collection = 'collection'; // Phase B39 (Module 14 §9): a live collection, manual or rule-based
 }

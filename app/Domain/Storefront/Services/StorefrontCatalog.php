@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Domain\Storefront\Services;
 
 use App\Domain\Catalog\Models\Brand;
+use App\Domain\Catalog\Models\Collection as CatalogCollection;
 use App\Domain\Catalog\Models\Category;
 use App\Domain\Catalog\Models\CategoryStatus;
 use App\Domain\Catalog\Models\Product;
@@ -39,6 +40,9 @@ final class StorefrontCatalog
 {
     public const SORTS = ['newest', 'price_asc', 'price_desc', 'name'];
 
+    /** Phase B39: a collection page may also follow its own order, or best sellers. */
+    public const COLLECTION_SORTS = [...self::SORTS, 'manual', 'best_selling'];
+
     public const BROWSE_VISIBILITY = [ProductVisibility::Public, ProductVisibility::CatalogOnly];
 
     public const SEARCH_VISIBILITY = [ProductVisibility::Public, ProductVisibility::SearchOnly];
@@ -55,7 +59,7 @@ final class StorefrontCatalog
     private ?Collection $categories = null;
 
     /**
-     * @param array{q?: ?string, category?: ?string, brand?: ?string, min_price?: ?int, max_price?: ?int, in_stock?: ?bool, sort?: ?string, page?: ?int, per_page?: ?int} $filters
+     * @param array{q?: ?string, category?: ?string, brand?: ?string, min_price?: ?int, max_price?: ?int, in_stock?: ?bool, collection?: ?string, tag?: ?string, sort?: ?string, page?: ?int, per_page?: ?int} $filters
      * @return LengthAwarePaginator<int, Product>
      */
     public function search(array $filters): LengthAwarePaginator
@@ -86,6 +90,18 @@ final class StorefrontCatalog
             $query->whereIn('products.brand_id', Brand::query()->where('slug', $filters['brand'])->select('id'));
         }
 
+        // Phase B39 (Module 06 §34–35): a live collection, a tag.
+        $collection = null;
+        if (! empty($filters['collection'])) {
+            $collection = CatalogCollection::query()->live()->where('slug', $filters['collection'])->first();
+            // An unknown, hidden or out-of-schedule collection lists nothing, never everything.
+            $collection === null ? $query->whereRaw('1 = 0') : $this->applyCollection($query, $collection);
+        }
+        if (! empty($filters['tag'])) {
+            $query->whereExists(fn ($sub) => $sub->selectRaw('1')->from('product_tag')->join('tags', 'tags.id', '=', 'product_tag.tag_id')
+                ->whereColumn('product_tag.product_id', 'products.id')->where('tags.slug', $filters['tag']));
+        }
+
         if (isset($filters['min_price'])) {
             $query->whereRaw($this->priceFromSql().' >= ?', [(int) $filters['min_price']]);
         }
@@ -98,7 +114,19 @@ final class StorefrontCatalog
             $query->whereRaw($this->inStockSql().' = 1', $this->inStockBindings());
         }
 
-        match ($filters['sort'] ?? 'newest') {
+        // A collection page without a chosen sort follows the collection's own order.
+        $sort = $filters['sort'] ?? ($collection !== null ? $collection->sort : 'newest');
+        if ($sort === 'manual' && $collection !== null && $collection->type === 'manual') {
+            $query->leftJoin('collection_product as cp_order', fn ($j) => $j->on('cp_order.product_id', '=', 'products.id')->where('cp_order.collection_id', '=', $collection->id))
+                ->orderBy('cp_order.position')->orderByDesc('products.id');
+            $sort = null;
+        } elseif ($sort === 'best_selling') {
+            $query->leftJoinSub($this->unitsSold(), 'sold_rank', 'sold_rank.product_id', '=', 'products.id')->orderByDesc('sold_rank.units')->orderByDesc('products.id');
+            $sort = null;
+        }
+
+        match ($sort ?? 'none') {
+            'none' => null,
             'price_asc' => $query->orderBy('price_from_minor')->orderBy('products.id'),
             'price_desc' => $query->orderByDesc('price_from_minor')->orderByDesc('products.id'),
             'name' => $query->orderBy('products.name')->orderBy('products.id'),
@@ -110,6 +138,155 @@ final class StorefrontCatalog
         $perPage = max(1, min((int) ($filters['per_page'] ?? config('storefront.per_page')), (int) config('storefront.max_per_page')));
 
         return $query->paginate($perPage, ['*'], 'page', max(1, (int) ($filters['page'] ?? 1)));
+    }
+
+    /**
+     * Phase B39: the products of a collection — picked by hand, or matching
+     * its rules (CollectionRules: a fixed set of conditions, never a column
+     * from the request).
+     *
+     * @param Builder<Product> $query
+     */
+    public function applyCollection(Builder $query, CatalogCollection $collection): void
+    {
+        if ($collection->type === 'manual') {
+            $query->whereExists(fn ($sub) => $sub->selectRaw('1')->from('collection_product')
+                ->whereColumn('collection_product.product_id', 'products.id')->where('collection_product.collection_id', $collection->id));
+
+            return;
+        }
+        $rules = $collection->rules ?? [];
+        if ($rules === []) {
+            $query->whereRaw('1 = 0');
+
+            return;
+        }
+        $method = $collection->match === 'any' ? 'orWhere' : 'where';
+        $query->where(function (Builder $w) use ($rules, $method) {
+            foreach ($rules as $rule) {
+                $w->{$method}(fn (Builder $c) => $this->applyRule($c, (string) $rule['field'], $rule['value']));
+            }
+        });
+    }
+
+    /**
+     * Whether one product is in a collection now — for promotions that target
+     * a collection (Module 14 §9). Visibility does not matter here: a product
+     * in the cart is checked by the cart itself.
+     */
+    public function inCollection(CatalogCollection $collection, int $productId): bool
+    {
+        if (! $collection->isLive()) {
+            return false;
+        }
+        $query = $this->withPricing(Product::query()->where('products.id', $productId));
+        $this->applyCollection($query, $collection);
+
+        return $query->exists();
+    }
+
+    /** How many products a collection would show now, live or not (for the admin preview). */
+    public function collectionCount(CatalogCollection $collection): int
+    {
+        $query = $this->withPricing($this->visible(self::BROWSE_VISIBILITY));
+        $this->applyCollection($query, $collection);
+
+        return $query->toBase()->getCountForPagination();
+    }
+
+    /** A collection page: live (active, visible, inside its schedule) only. */
+    public function liveCollection(string $slug): ?CatalogCollection
+    {
+        return CatalogCollection::query()->live()->where('slug', $slug)->first();
+    }
+
+    /** @return Collection<int, CatalogCollection> */
+    public function liveCollections(): Collection
+    {
+        return CatalogCollection::query()->live()->orderBy('sort_order')->orderBy('name')->get();
+    }
+
+    /**
+     * Phase B39 (Module 06 §36): browsable products marked featured, newest first.
+     *
+     * @return Collection<int, Product>
+     */
+    public function featured(int $limit): Collection
+    {
+        return $this->withPricing($this->visible(self::BROWSE_VISIBILITY))
+            ->where('products.is_featured', true)
+            ->with(['brand', 'images'])
+            ->orderByRaw('COALESCE(products.published_at, products.created_at) DESC')->orderByDesc('products.id')
+            ->limit($limit)
+            ->get();
+    }
+
+    /**
+     * Phase B39 (Module 06 §38): the products shown with one product, of the
+     * given relation types, in their set order — browsable ones only.
+     *
+     * @param list<string> $types
+     * @return Collection<int, Product>
+     */
+    public function relatedTo(int $productId, array $types, int $limit): Collection
+    {
+        return $this->withPricing($this->visible(self::BROWSE_VISIBILITY))
+            ->join('product_relations as pr', fn ($j) => $j->on('pr.related_product_id', '=', 'products.id')
+                ->where('pr.product_id', '=', $productId)->whereIn('pr.type', $types))
+            ->where('products.id', '!=', $productId)
+            ->with(['brand', 'images'])
+            ->orderBy('pr.position')->orderBy('pr.id')
+            ->limit($limit)
+            ->get()
+            ->unique('id')->values();
+    }
+
+    /** @param Builder<Product> $query */
+    private function applyRule(Builder $query, string $field, mixed $value): void
+    {
+        match ($field) {
+            'category' => $query->where(function (Builder $w) use ($value) {
+                $ids = $this->withDescendants((array) $value);
+                $w->whereIn('products.primary_category_id', $ids)
+                    ->orWhereExists(fn ($sub) => $sub->selectRaw('1')->from('product_category')
+                        ->whereColumn('product_category.product_id', 'products.id')->whereIn('product_category.category_id', $ids));
+            }),
+            'brand' => $query->whereIn('products.brand_id', (array) $value),
+            'tag' => $query->whereExists(fn ($sub) => $sub->selectRaw('1')->from('product_tag')
+                ->whereColumn('product_tag.product_id', 'products.id')->whereIn('product_tag.tag_id', (array) $value)),
+            'price_min' => $query->whereRaw($this->priceFromSql().' >= ?', [(int) $value]),
+            'price_max' => $query->whereRaw($this->priceFromSql().' <= ?', [(int) $value]),
+            'on_sale' => $query->whereRaw($this->onSaleSql().' = 1'),
+            'in_stock' => $query->whereRaw($this->inStockSql().' = 1', $this->inStockBindings()),
+            'featured' => $query->where('products.is_featured', true),
+            'new_within_days' => $query->whereRaw('COALESCE(products.published_at, products.created_at) >= ?', [now()->subDays((int) $value)]),
+            default => $query->whereRaw('1 = 0'),
+        };
+    }
+
+    /**
+     * @param list<int> $ids
+     * @return list<int>
+     */
+    private function withDescendants(array $ids): array
+    {
+        $all = $ids;
+        foreach (Category::query()->whereIn('id', $ids)->get() as $category) {
+            $all = [...$all, ...$this->descendantIds($category)];
+        }
+
+        return array_values(array_unique($all));
+    }
+
+    /** Units sold per product on this store's orders that count (not draft, cancelled or failed). */
+    private function unitsSold(): \Illuminate\Database\Eloquent\Builder
+    {
+        return \App\Domain\Orders\Models\OrderItem::query()
+            ->join('orders', 'orders.id', '=', 'order_items.order_id')
+            ->whereNotIn('orders.status', ['draft', 'cancelled', 'failed'])
+            ->whereNotNull('order_items.product_id')
+            ->groupBy('order_items.product_id')
+            ->selectRaw('order_items.product_id, SUM(order_items.quantity) AS units');
     }
 
     /** A product page: any searchable or browsable active product. */

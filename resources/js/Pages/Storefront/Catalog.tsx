@@ -8,9 +8,12 @@ import type { CategoryNode, ProductCard, StorefrontPageProps } from '@/Storefron
 import { currencyDigits } from '@/lib/money';
 import { useT } from '@/Storefront/i18n';
 
-type Filters = { q?: string; category?: string; brand?: string; min_price?: number; max_price?: number; in_stock?: boolean; sort?: string; page?: number };
+type Filters = { q?: string; category?: string; brand?: string; collection?: string; tag?: string; min_price?: number; max_price?: number; in_stock?: boolean; sort?: string; page?: number };
 type Context =
   | { type: 'all' | 'search'; title: string }
+  // Phase B39 (Module 06 §34–35).
+  | { type: 'collection'; title: string; collection: { slug: string; name: string; description: string | null } }
+  | { type: 'tag'; title: string }
   | { type: 'category'; title: string; category: CategoryNode & { children: CategoryNode[] } }
   | { type: 'brand'; title: string; brand: { slug: string; name: string; description: string | null } };
 
@@ -35,10 +38,20 @@ export default function Catalog({ storefront, seo, context, filters, listing, fa
       ? `${base}/categories/${context.category.slug}`
       : context.type === 'brand'
         ? `${base}/brands/${context.brand.slug}`
-        : `${base}/${context.type === 'search' ? 'search' : 'products'}`;
+        : context.type === 'collection'
+          ? `${base}/collections/${context.collection.slug}`
+          : context.type === 'tag'
+            ? `${base}/tags/${filters.tag ?? ''}`
+            : `${base}/${context.type === 'search' ? 'search' : 'products'}`;
   // Category/brand pages carry that filter in the path, not the query.
   const query = Object.fromEntries(
-    Object.entries(filters).filter(([key]) => !(key === 'category' && context.type === 'category') && !(key === 'brand' && context.type === 'brand')),
+    Object.entries(filters).filter(
+      ([key]) =>
+        !(key === 'category' && context.type === 'category') &&
+        !(key === 'brand' && context.type === 'brand') &&
+        !(key === 'collection' && context.type === 'collection') &&
+        !(key === 'tag' && context.type === 'tag'),
+    ),
   );
   // ISO 4217 decimals, as the server stores them (browsers show PKR without any).
   const digits = currencyDigits(storefront.store.currency);
@@ -65,6 +78,7 @@ export default function Catalog({ storefront, seo, context, filters, listing, fa
         <h1 className="text-3xl font-bold">{title}</h1>
         {context.type === 'category' && context.category.description && <p className="mt-2 text-sf-muted">{context.category.description}</p>}
         {context.type === 'brand' && context.brand.description && <p className="mt-2 text-sf-muted">{context.brand.description}</p>}
+        {context.type === 'collection' && context.collection.description && <p className="mt-2 text-sf-muted">{context.collection.description}</p>}
         <p className="mt-1 text-sm text-sf-muted">{t('{count} products', { count: listing.pagination.total })}</p>
       </div>
 

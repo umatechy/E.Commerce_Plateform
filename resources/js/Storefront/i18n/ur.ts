@@ -73,6 +73,10 @@ export const ur: Record<string, string> = {
   'Added to your cart.': 'آپ کی کارٹ میں ڈال دیا گیا۔',
   'View cart': 'کارٹ دیکھیں',
   'You may also like': 'آپ کو یہ بھی پسند آ سکتا ہے',
+  // Phase B39: featured products, and the products chosen to show with one.
+  'Featured products': 'نمایاں مصنوعات',
+  'Goes well with': 'اس کے ساتھ خوب جچتا ہے',
+  'You might prefer': 'آپ شاید یہ پسند کریں',
 
   // Catalog
   'Search results': 'تلاش کے نتائج',

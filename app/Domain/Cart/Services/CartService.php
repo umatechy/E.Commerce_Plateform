@@ -284,6 +284,7 @@ final class CartService
             'product_id' => $item->product_id,
             'category_ids' => $item->product?->categories->pluck('id')->all() ?? [],
             'brand_id' => $item->product?->brand_id,
+            'collection_ids' => $item->product_id !== null ? app(\App\Domain\Catalog\Services\CollectionService::class)->promotionCollectionIdsFor($item->product_id) : [],
             'line_total_minor' => $items[array_search($item->id, array_column($items, 'cart_item_id'), true)]['line_total_minor'] ?? 0,
         ])->all();
 

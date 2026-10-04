@@ -63,6 +63,17 @@ final class StorefrontApiController
         return $this->okOr404($this->experience->brand($this->store($request), $slug), 'brand');
     }
 
+    /** Phase B39: the live collections, and one collection's head (its products: /products?collection=slug). */
+    public function collections(Request $request): JsonResponse
+    {
+        return $this->ok($this->experience->collections($this->store($request)));
+    }
+
+    public function collection(Request $request, string $slug): JsonResponse
+    {
+        return $this->okOr404($this->experience->collection($this->store($request), $slug), 'collection');
+    }
+
     public function page(Request $request, string $slug): JsonResponse
     {
         return $this->okOr404($this->experience->page($this->store($request), $slug), 'page');
@@ -85,7 +96,10 @@ final class StorefrontApiController
             'min_price' => ['nullable', 'integer', 'min:0'],
             'max_price' => ['nullable', 'integer', 'min:0'],
             'in_stock' => ['nullable', 'boolean'],
-            'sort' => ['nullable', 'in:newest,price_asc,price_desc,name'],
+            // Phase B39: a collection (live only), a tag; a collection's own order and best sellers.
+            'collection' => ['nullable', 'string', 'max:191'],
+            'tag' => ['nullable', 'string', 'max:80'],
+            'sort' => ['nullable', 'in:'.implode(',', \App\Domain\Storefront\Services\StorefrontCatalog::COLLECTION_SORTS)],
             'page' => ['nullable', 'integer', 'min:1', 'max:1000'],
             'per_page' => ['nullable', 'integer', 'min:1', 'max:'.(int) config('storefront.max_per_page')],
         ];

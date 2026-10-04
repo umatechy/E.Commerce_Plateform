@@ -234,6 +234,7 @@ final class PromotionEligibilityEngine
             PromotionTargetScope::Product => $promotion->targets->contains(fn ($t) => $t->target_type === 'product' && $t->target_id === $item['product_id']),
             PromotionTargetScope::Category => $promotion->targets->contains(fn ($t) => $t->target_type === 'category' && in_array($t->target_id, $item['category_ids'], true)),
             PromotionTargetScope::Brand => $promotion->targets->contains(fn ($t) => $t->target_type === 'brand' && $t->target_id === $item['brand_id']),
+            PromotionTargetScope::Collection => $promotion->targets->contains(fn ($t) => $t->target_type === 'collection' && in_array($t->target_id, $item['collection_ids'] ?? [], true)),
             PromotionTargetScope::Order => true,
         };
     }

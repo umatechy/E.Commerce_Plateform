@@ -51,6 +51,7 @@ final class PromotionController
         if ($targetScope !== 'order' && empty($request->input('target_ids'))) {
             return response()->json(['message' => 'At least one target must be selected for this scope.', 'code' => 'targets_required'], 422);
         }
+        $this->assertTargetsInStore((string) $targetScope, $request->input('target_ids', []));
 
         $promotion = DB::transaction(function () use ($request, $targetScope) {
             $promotion = Promotion::query()->create($request->promotionAttributes());
@@ -79,6 +80,7 @@ final class PromotionController
             $promotion->update($request->promotionAttributes());
 
             if ($request->has('target_ids')) {
+                $this->assertTargetsInStore((string) $targetScope, $request->input('target_ids', []));
                 $promotion->targets()->delete();
                 foreach ($request->input('target_ids', []) as $targetId) {
                     PromotionTarget::query()->create([
@@ -91,5 +93,26 @@ final class PromotionController
         });
 
         return new PromotionResource($promotion->fresh('targets'));
+    }
+
+    /**
+     * Phase B39: a target must be an item of this store (tenant-scoped
+     * lookup) — never another store's id, never a collection that was deleted.
+     *
+     * @param array<int, mixed> $ids
+     */
+    private function assertTargetsInStore(string $scope, array $ids): void
+    {
+        $model = match ($scope) {
+            'product' => \App\Domain\Catalog\Models\Product::class,
+            'category' => \App\Domain\Catalog\Models\Category::class,
+            'brand' => \App\Domain\Catalog\Models\Brand::class,
+            'collection' => \App\Domain\Catalog\Models\Collection::class,
+            default => null,
+        };
+        $ids = array_values(array_unique(array_map('intval', $ids)));
+        if ($model !== null && $ids !== [] && $model::query()->whereIn('id', $ids)->count() !== count($ids)) {
+            throw \Illuminate\Validation\ValidationException::withMessages(['target_ids' => 'One of the targets is not in this store.']);
+        }
     }
 }

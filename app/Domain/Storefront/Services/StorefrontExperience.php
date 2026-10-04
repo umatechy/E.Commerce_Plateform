@@ -154,11 +154,7 @@ final class StorefrontExperience
                     'brands' => $this->catalog->brands()->take((int) ($config['limit'] ?? 12))->map(fn (\App\Domain\Catalog\Models\Brand $b) => ['name' => $b->name, 'slug' => $b->slug])->values()->all(),
                 ],
                 SectionType::Testimonials->value, SectionType::Faq->value, SectionType::RichText->value, SectionType::TrustBadges->value => ['type' => $section['type'], ...$config],
-                SectionType::FeaturedProducts->value => [
-                    'type' => $section['type'],
-                    'heading' => $config['heading'] ?? null, // Phase B38: no heading set — the storefront shows its own, in the visitor's language
-                    'products' => $this->presenter->cards($this->catalog->newest((int) ($config['limit'] ?? 8))),
-                ],
+                SectionType::FeaturedProducts->value => $this->featuredSection($section['type'], $config),
                 SectionType::FeaturedCategories->value => [
                     'type' => $section['type'],
                     'heading' => $config['heading'] ?? null, // Phase B38: no heading set — the storefront shows its own, in the visitor's language
@@ -231,9 +227,22 @@ final class StorefrontExperience
                 'url' => $this->seo->forCategory(Category::query()->where('slug', $crumb['slug'])->firstOrFail())->canonicalUrl,
             ])->all();
 
+            // Phase B39 (Module 06 §38): the products chosen for it; without any
+            // related ones, others of its category not already shown above.
+            $crossSell = $this->catalog->relatedTo($product->id, ['cross_sell'], 8);
+            $upSell = $this->catalog->relatedTo($product->id, ['up_sell'], 8);
+            $related = $this->catalog->relatedTo($product->id, ['related', 'alternative'], 8);
+            if ($related->isEmpty()) {
+                $shown = $crossSell->merge($upSell)->pluck('id')->all();
+                $related = $this->catalog->newest(4 + count($shown), $product->id, $product->primary_category_id)
+                    ->reject(fn (Product $p) => in_array($p->id, $shown, true))->take(4)->values();
+            }
+
             return [
                 'product' => $detail,
-                'related' => $this->presenter->cards($this->catalog->newest(4, $product->id, $product->primary_category_id)),
+                'related' => $this->presenter->cards($related),
+                'cross_sell' => $this->presenter->cards($crossSell),
+                'up_sell' => $this->presenter->cards($upSell),
                 'seo' => $this->presenter->seo($this->seo->forProduct($product), array_values(array_filter([
                     $this->presenter->productStructuredData($product, $detail),
                     $breadcrumbs !== [] ? $this->structuredData->forBreadcrumbs($breadcrumbs) : null,
@@ -263,6 +272,57 @@ final class StorefrontExperience
                 'seo' => $this->presenter->seo($this->seo->forCategory($category)),
             ];
         });
+    }
+
+    /**
+     * Phase B39 (Module 06 §34): a live collection's page head. Its products
+     * come from listing() with the `collection` filter.
+     *
+     * @return ?array<string, mixed>
+     */
+    public function collection(Store $store, string $slug): ?array
+    {
+        return $this->cache->remember($store->id, 'collection:'.$slug, function () use ($slug) {
+            $collection = $this->catalog->liveCollection($slug);
+
+            return $collection === null ? null : ['collection' => $this->presenter->collection($collection)];
+        });
+    }
+
+    /** @return list<array<string, mixed>> the live collections, for headless storefronts */
+    public function collections(Store $store): array
+    {
+        return $this->cache->remember($store->id, 'collections', fn () => $this->catalog->liveCollections()
+            ->map(fn (\App\Domain\Catalog\Models\Collection $c) => $this->presenter->collection($c))->values()->all());
+    }
+
+    /**
+     * Phase B39: the "featured products" section shows the newest products
+     * (as before), those marked featured, or a live collection's — in the
+     * collection's own order. A collection that is not live shows nothing.
+     *
+     * @param array<string, mixed> $config
+     * @return array<string, mixed>
+     */
+    private function featuredSection(string $type, array $config): array
+    {
+        $limit = (int) ($config['limit'] ?? 8);
+        $source = $config['source'] ?? 'newest';
+        $products = match ($source) {
+            'featured' => $this->catalog->featured($limit),
+            'collection' => isset($config['collection']) && $this->catalog->liveCollection((string) $config['collection']) !== null
+                ? collect($this->catalog->search(['collection' => (string) $config['collection'], 'per_page' => $limit])->items())
+                : collect(),
+            default => $this->catalog->newest($limit),
+        };
+
+        return [
+            'type' => $type,
+            'source' => $source,
+            'heading' => $config['heading'] ?? null, // Phase B38: no heading set — the storefront shows its own, in the visitor's language
+            'collection' => $source === 'collection' ? ($config['collection'] ?? null) : null,
+            'products' => $this->presenter->cards($products->all()),
+        ];
     }
 
     /** @return ?array<string, mixed> */

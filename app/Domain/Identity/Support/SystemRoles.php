@@ -26,7 +26,7 @@ final class SystemRoles
     private const MANAGER = [
         'roles.view', 'users.view', 'users.invite',
         'products.view', 'products.create', 'products.update',
-        'categories.manage', 'brands.manage', 'attributes.manage',
+        'categories.manage', 'brands.manage', 'attributes.manage', 'collections.manage',
         'inventory.view', 'inventory.adjust', 'warehouses.manage',
         'orders.view', 'orders.create', 'orders.update', 'orders.cancel',
         'payments.view', 'payments.manage',
@@ -76,7 +76,7 @@ final class SystemRoles
             ]],
             'content-marketing' => ['name' => 'Content & Marketing', 'permissions' => [
                 'products.view', 'products.create', 'products.update',
-                'categories.manage', 'brands.manage', 'attributes.manage',
+                'categories.manage', 'brands.manage', 'attributes.manage', 'collections.manage',
                 'promotions.view', 'promotions.manage', 'marketing.view', 'marketing.manage',
                 'seo.view', 'seo.manage', 'theme.view', 'theme.manage', 'analytics.view',
                 'customers.view',

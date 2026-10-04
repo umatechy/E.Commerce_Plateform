@@ -41,6 +41,7 @@ final class Product extends Model
         'status', 'visibility', 'brand_id', 'primary_category_id',
         'price_minor', 'sale_price_minor', 'cost_price_minor', 'currency',
         'published_at', 'archived_at',
+        'is_featured', // Phase B39 (Module 06 §37)
     ];
 
     protected function casts(): array
@@ -51,6 +52,7 @@ final class Product extends Model
             'visibility' => ProductVisibility::class,
             'published_at' => 'datetime',
             'archived_at' => 'datetime',
+            'is_featured' => 'boolean',
         ];
     }
 
@@ -70,6 +72,30 @@ final class Product extends Model
     public function categories(): BelongsToMany
     {
         return $this->belongsToMany(Category::class, 'product_category');
+    }
+
+    /**
+     * Phase B39 (Module 06 §34): the collections that list this product by hand
+     * (rule-based collections match it through StorefrontCatalog::applyCollection).
+     *
+     * @return BelongsToMany<Collection, $this>
+     */
+    public function collections(): BelongsToMany
+    {
+        return $this->belongsToMany(Collection::class)->withPivot('position');
+    }
+
+    /** @return BelongsToMany<Tag, $this> Phase B39 (Module 06 §35) */
+    public function tags(): BelongsToMany
+    {
+        return $this->belongsToMany(Tag::class)->orderBy('name');
+    }
+
+    /** @return HasMany<ProductRelation, $this> Phase B39 (Module 06 §38) */
+    // Not relations(): Eloquent keeps a model's loaded relations in $relations.
+    public function productRelations(): HasMany
+    {
+        return $this->hasMany(ProductRelation::class)->orderBy('position');
     }
 
     /** @return HasMany<ProductVariant, $this> */
