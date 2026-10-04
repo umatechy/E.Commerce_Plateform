@@ -28,6 +28,9 @@ final class OrderResource extends JsonResource
             'tax_total_minor' => $this->tax_total_minor,
             'shipping_total_minor' => $this->shipping_total_minor,
             'grand_total_minor' => $this->grand_total_minor,
+            // Phase B34 (Module 12 §13): paid with store credit, and what was left for the payment.
+            'store_credit_minor' => (int) $this->store_credit_minor,
+            'payable_minor' => $this->payableMinor(),
             'is_guest_order' => $this->isGuestOrder(),
             'guest_name' => $this->when($this->isGuestOrder(), $this->guest_name),
             'guest_email' => $this->when($this->isGuestOrder(), $this->guest_email),

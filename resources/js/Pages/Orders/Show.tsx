@@ -237,6 +237,12 @@ export default function Show({ orderId }: { orderId: string }) {
                 <div className="flex justify-between"><dt className="text-slate-600">Tax</dt><dd>{money(order.tax_total_minor, order.currency)}</dd></div>
                 <div className="flex justify-between"><dt className="text-slate-600">Shipping</dt><dd>{money(order.shipping_total_minor, order.currency)}</dd></div>
                 <div className="flex justify-between border-t border-slate-200 pt-1 font-semibold"><dt>Total</dt><dd>{money(order.grand_total_minor, order.currency)}</dd></div>
+                {(order.store_credit_minor ?? 0) > 0 && (
+                  <>
+                    <div className="flex justify-between"><dt className="text-slate-600">Paid with store credit</dt><dd>− {money(order.store_credit_minor ?? 0, order.currency)}</dd></div>
+                    <div className="flex justify-between font-semibold"><dt>Left to pay</dt><dd>{money(order.payable_minor ?? 0, order.currency)}</dd></div>
+                  </>
+                )}
               </dl>
             </Card>
 

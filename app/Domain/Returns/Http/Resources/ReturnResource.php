@@ -57,12 +57,17 @@ final class ReturnResource extends JsonResource
             'restocking_fee_minor' => (int) $this->restocking_fee_minor,
             'refund_total_minor' => (int) $this->refund_total_minor,
             'refunded_minor' => (int) $this->refunded_minor,
+            // Phase B34 (Module 09 §52): `payment` or `store_credit`, and what went to the customer's store credit.
+            'refund_method' => $this->refund_method,
+            'refunded_credit_minor' => (int) $this->refunded_credit_minor,
+            ...($this->staff && $this->relationLoaded('order') ? ['store_credit_possible' => app(\App\Domain\Returns\Services\ReturnService::class)->storeCreditPossible($this->resource)] : []),
             'order' => $this->whenLoaded('order', fn () => [
                 'id' => $this->order->public_id, 'order_number' => $this->order->order_number,
                 ...($this->staff ? [
                     'customer_name' => $this->order->customer->name ?? $this->order->guest_name,
                     'payment_status' => $this->order->payment_status->value,
                     'shipping_total_minor' => (int) $this->order->shipping_total_minor,
+                    'store_credit_minor' => (int) $this->order->store_credit_minor,
                 ] : []),
             ]),
             'replacement_order' => $this->whenLoaded('replacementOrder', fn () => $this->replacementOrder === null ? null : [

@@ -57,7 +57,7 @@ final class SystemRoles
                 ...self::MANAGER,
                 'users.manage', 'products.delete', 'products.view_cost', 'payments.refund',
                 'analytics.financial', 'domains.manage', 'storefront.manage', 'audit.view', 'billing.view',
-                'customers.export', 'customers.import',
+                'customers.export', 'customers.import', 'store_credit.manage', // creating store credit by hand is a financial act (Phase B34)
             ]],
             'manager' => ['name' => 'Manager', 'permissions' => self::MANAGER],
             'staff' => ['name' => 'Staff', 'permissions' => [

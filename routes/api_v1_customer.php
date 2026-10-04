@@ -19,8 +19,11 @@ use Illuminate\Support\Facades\Route;
 // provides real domain-based resolution.
 
 // --- Customer authentication (ADR-002 Surface A — `customer` Sanctum guard) ---
-Route::post('/customer/register', [CustomerAuthController::class, 'register'])->middleware('throttle:5,1');
-Route::post('/customer/login', [CustomerAuthController::class, 'login'])->middleware('throttle:10,1');
+// Each limit has its own key: without one it shared a counter with every other
+// unprefixed limit for the same IP (the storefront's 120/min), so a shopper who had
+// just browsed was refused at registration (found in the B34 browser check).
+Route::post('/customer/register', [CustomerAuthController::class, 'register'])->middleware('throttle:5,1,customer-register');
+Route::post('/customer/login', [CustomerAuthController::class, 'login'])->middleware('throttle:10,1,customer-login');
 // Module 10 §9/§13 (Phase B32): the link from the email confirms the address, signed in or not.
 Route::post('/customer/email/verify', [\App\Domain\CustomerAccount\Http\Controllers\CustomerEmailVerificationController::class, 'verify'])->middleware('throttle:10,1,customer-email-verify');
 
@@ -43,6 +46,8 @@ Route::middleware(['auth:customer', 'customer.principal'])->group(function () {
     Route::post('/customer/addresses/{address}/default', [\App\Domain\CustomerAccount\Http\Controllers\CustomerAddressController::class, 'makeDefault']);
     Route::get('/customer/orders', [\App\Domain\CustomerAccount\Http\Controllers\CustomerOrderController::class, 'index']);
     Route::get('/customer/orders/{orderPublicId}', [\App\Domain\CustomerAccount\Http\Controllers\CustomerOrderController::class, 'show']);
+    // Module 09 §52 (Phase B34): the customer's own store credit.
+    Route::get('/customer/store-credit', [\App\Domain\StoreCredit\Http\Controllers\StoreCreditController::class, 'own']);
     // Module 09 §45 (Phase B33): the customer's own returns.
     Route::get('/customer/orders/{orderPublicId}/returnable', [\App\Domain\Returns\Http\Controllers\CustomerReturnController::class, 'returnable']);
     Route::post('/customer/orders/{orderPublicId}/returns', [\App\Domain\Returns\Http\Controllers\CustomerReturnController::class, 'store'])->middleware('throttle:10,10,customer-returns-create');

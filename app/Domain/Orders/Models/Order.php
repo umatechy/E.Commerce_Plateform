@@ -49,6 +49,7 @@ final class Order extends Model
         'cancellation_reason', 'cancellation_note', 'cancelled_by',
         'completed_at', 'cancelled_at',
         'return_status', 'replacement_for_order_id', // Phase B33; written only by OrderService
+        'store_credit_minor', // Phase B34; written only by OrderService::applyStoreCredit()
     ];
 
     protected function casts(): array
@@ -115,6 +116,15 @@ final class Order extends Model
     public function cancelledBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'cancelled_by');
+    }
+
+    /**
+     * Module 12 §13 (Phase B34): order total − store credit used = what the
+     * payment is for.
+     */
+    public function payableMinor(): int
+    {
+        return max(0, (int) $this->grand_total_minor - (int) $this->store_credit_minor);
     }
 
     public function isGuestOrder(): bool

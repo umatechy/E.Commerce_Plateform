@@ -108,6 +108,20 @@ final class CustomerMerger
             $moved['support_tickets'] = DB::table('support_tickets')->whereIn('id', $tickets ?: [0])->update(['requester_id' => $into->id]);
             DB::table('support_messages')->whereIn('ticket_id', $tickets ?: [0])->where('author_type', 'requester')->where('author_id', $from->id)->update(['author_id' => $into->id]);
 
+            // Store credit (Phase B34): each balance joins the target's in the same currency; the entries follow.
+            foreach (DB::table('store_credit_accounts')->where('store_id', $store)->where('customer_id', $from->id)->lockForUpdate()->get() as $account) {
+                $targetAccount = DB::table('store_credit_accounts')->where('store_id', $store)->where('customer_id', $into->id)->where('currency', $account->currency)->lockForUpdate()->first();
+                if ($targetAccount === null) {
+                    DB::table('store_credit_accounts')->where('id', $account->id)->update(['customer_id' => $into->id]);
+                    DB::table('store_credit_entries')->where('account_id', $account->id)->update(['customer_id' => $into->id]);
+                } else {
+                    DB::table('store_credit_accounts')->where('id', $targetAccount->id)->update(['balance_minor' => (int) $targetAccount->balance_minor + (int) $account->balance_minor]);
+                    DB::table('store_credit_entries')->where('account_id', $account->id)->update(['customer_id' => $into->id, 'account_id' => $targetAccount->id]);
+                    DB::table('store_credit_accounts')->where('id', $account->id)->delete();
+                }
+                $moved['store_credit_minor'] = ($moved['store_credit_minor'] ?? 0) + (int) $account->balance_minor;
+            }
+
             // The source keeps nothing it could be used with.
             DB::table('customer_email_verifications')->where('customer_id', $from->id)->delete();
             DB::table('customer_password_resets')->where('customer_id', $from->id)->delete();

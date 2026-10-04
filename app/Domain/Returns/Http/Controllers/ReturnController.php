@@ -169,9 +169,10 @@ final class ReturnController
         $data = $request->validate([
             'shipping_refund_minor' => ['nullable', 'integer', 'min:0'],
             'restocking_fee_minor' => ['nullable', 'integer', 'min:0'],
+            'as_store_credit' => ['nullable', 'boolean'],
         ]);
 
-        return $this->guarded(fn () => $this->one($request, $this->returns->approveRefund($return, (int) ($data['shipping_refund_minor'] ?? 0), (int) ($data['restocking_fee_minor'] ?? 0), $request->user())));
+        return $this->guarded(fn () => $this->one($request, $this->returns->approveRefund($return, (int) ($data['shipping_refund_minor'] ?? 0), (int) ($data['restocking_fee_minor'] ?? 0), $request->user(), (bool) ($data['as_store_credit'] ?? false))));
     }
 
     public function refund(Request $request, ReturnRequest $return): JsonResponse

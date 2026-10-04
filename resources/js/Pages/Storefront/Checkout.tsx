@@ -10,7 +10,7 @@ import type { StorefrontPageProps } from '@/Storefront/types';
 import type { CartData } from './Cart';
 
 type ShippingOption = { id: number; name: string; type: string; cost_minor: number };
-type PlacedOrder = { order_number: string; grand_total_minor: number; currency: string };
+type PlacedOrder = { order_number: string; grand_total_minor: number; currency: string; store_credit_minor?: number; payable_minor?: number };
 
 const PAYMENT_METHODS = [
   { value: 'cod', label: 'Cash on delivery' },
@@ -54,6 +54,9 @@ export default function Checkout({ storefront, seo, payment_methods }: Storefron
   // Signed-in shoppers: contact details and saved addresses fill the form.
   const { customer } = useCustomer(storefront);
   const [addresses, setAddresses] = useState<Address[]>([]);
+  // Module 09 §52 (Phase B34): the signed-in customer's store credit, and whether to use it.
+  const [credit, setCredit] = useState<{ balance_minor: number; currency: string } | null>(null);
+  const [useCredit, setUseCredit] = useState(true);
 
   useEffect(() => {
     if (!customer) return;
@@ -65,6 +68,9 @@ export default function Checkout({ storefront, seo, payment_methods }: Storefron
         if (preferred) setForm((current) => ({ ...current, ...addressFields(preferred, current.phone) }));
       })
       .catch(() => setAddresses([]));
+    storefrontFetch<{ data: { balance_minor: number; currency: string } }>(storefront, '/customer/store-credit')
+      .then((res) => setCredit(res.data))
+      .catch(() => setCredit(null));
   }, [customer, storefront]);
   const base = storefront.base_path;
   const currency = cart?.currency ?? storefront.store.currency;
@@ -94,6 +100,8 @@ export default function Checkout({ storefront, seo, payment_methods }: Storefron
     onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => setForm({ ...form, [key]: e.target.value }),
   });
   const shippingCost = shipping?.find((o) => o.id === shippingId)?.cost_minor ?? 0;
+  // Credit in another currency than the cart's cannot pay for it.
+  const hasCredit = credit !== null && credit.balance_minor > 0 && credit.currency === currency;
 
   async function placeOrder(event: React.FormEvent) {
     event.preventDefault();
@@ -112,6 +120,8 @@ export default function Checkout({ storefront, seo, payment_methods }: Storefron
           shipping_address: address,
           billing_address: address,
           notes: form.notes || null,
+          // A wish only: the server decides how much credit there is and takes it.
+          use_store_credit: hasCredit && useCredit,
           idempotency_key: idempotencyKey,
         },
       });
@@ -132,6 +142,12 @@ export default function Checkout({ storefront, seo, payment_methods }: Storefron
           <p className="mt-4">
             Your order <strong>{order.order_number}</strong> has been placed. Total: {formatMoney(order.grand_total_minor, order.currency)}.
           </p>
+          {(order.store_credit_minor ?? 0) > 0 && (
+            <p className="mt-2">
+              {formatMoney(order.store_credit_minor ?? 0, order.currency)} was paid with your store credit.{' '}
+              {(order.payable_minor ?? 0) > 0 ? `Left to pay: ${formatMoney(order.payable_minor ?? 0, order.currency)}.` : 'Nothing is left to pay.'}
+            </p>
+          )}
           <p className="mt-2 text-sf-muted">A confirmation has been sent to {form.email}.</p>
           {customer && (
             <Link href={`${base}/account/orders`} className="mt-2 block text-sf-accent">
@@ -237,6 +253,15 @@ export default function Checkout({ storefront, seo, payment_methods }: Storefron
               <span>Shipping</span>
               <span>{shippingId ? formatMoney(shippingCost, currency) : '—'}</span>
             </p>
+            {hasCredit && credit && (
+              <label className="flex items-start gap-2 rounded-sf border border-sf-border p-3">
+                <input type="checkbox" checked={useCredit} onChange={(e) => setUseCredit(e.target.checked)} className="mt-1" />
+                <span>
+                  Use my store credit ({formatMoney(credit.balance_minor, credit.currency)})
+                  <span className="block text-xs text-sf-muted">It pays as much of the total as it covers; you pay the rest by the method above.</span>
+                </span>
+              </label>
+            )}
             <p className="text-xs text-sf-muted">The final total, including any discount and tax, is confirmed when you place the order.</p>
             <button type="submit" disabled={busy || cart.has_issues || methods.length === 0} className="w-full rounded-sf bg-sf-primary px-4 py-3 font-semibold text-white disabled:opacity-50">
               {busy ? 'Placing order…' : 'Place order'}

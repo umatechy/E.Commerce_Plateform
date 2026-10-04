@@ -226,12 +226,27 @@ final class CheckoutService
                 $this->promotions->recordUsage($promotionResult, $order, $cart->customer);
             }
 
+            // Phase B34 (Module 12 §13): a signed-in customer may pay with
+            // their store credit. The amount is the server's: as much of the
+            // total as the balance covers, taken under a lock on the balance,
+            // once (only when the order was really created now).
+            if ($order->wasRecentlyCreated && ! empty($checkoutData['use_store_credit']) && $cart->customer !== null) {
+                $used = app(\App\Domain\StoreCredit\Services\StoreCreditService::class)->spendOnOrder($cart->customer, $order);
+                if ($used > 0) {
+                    $this->orders->applyStoreCredit($order, $used);
+                }
+            }
+
             // Payment idempotency key is derived from the order-level
             // key (never the client's raw value reused verbatim as a
             // second, unrelated idempotency scope) — same
             // "{key}:sub-scope" convention already used for per-line-
             // item reservation keys in OrderService (Phase B5).
             $payment = $this->payments->createForOrder($order, $paymentMethod, "{$idempotencyKey}:payment");
+            // The payment may have settled the order at once (nothing left to
+            // pay): the answer must show the order as it is now. `refresh()`
+            // keeps wasRecentlyCreated, which the controller needs for 201/200.
+            $order->refresh();
 
             if ($cart->status === CartStatus::Active) {
                 $cart->update([

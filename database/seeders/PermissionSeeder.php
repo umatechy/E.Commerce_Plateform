@@ -47,6 +47,7 @@ final class PermissionSeeder extends Seeder
         ['key' => 'payments.view', 'group' => 'payments', 'description' => 'View payments and transactions (Module 12 — Phase B7)'],
         ['key' => 'payments.manage', 'group' => 'payments', 'description' => 'Record manual payment confirmations, e.g. bank transfer/COD collection (Phase B7)'],
         ['key' => 'payments.refund', 'group' => 'payments', 'description' => 'Issue refunds — high-risk financial permission (Phase B7)'],
+        ['key' => 'store_credit.manage', 'group' => 'customers', 'description' => 'Give or take back store credit by hand (Module 09 §52 — Phase B34)'],
         ['key' => 'returns.view', 'group' => 'returns', 'description' => 'View return requests (Module 09 — Phase B33)'],
         ['key' => 'returns.manage', 'group' => 'returns', 'description' => 'Create returns for a customer, receive and inspect returned goods, create replacement orders (Phase B33)'],
         ['key' => 'returns.approve', 'group' => 'returns', 'description' => 'Approve or reject return requests (Phase B33)'],

@@ -31,6 +31,8 @@ final class CheckoutRequest extends FormRequest
             'billing_address' => ['nullable', 'array'],
             'shipping_address' => ['nullable', 'array'],
             'notes' => ['nullable', 'string', 'max:1000'],
+            // Phase B34: "pay with my store credit". A wish, not an amount: the server decides how much.
+            'use_store_credit' => ['nullable', 'boolean'],
             'idempotency_key' => ['required', 'string', 'max:100'],
         ];
     }

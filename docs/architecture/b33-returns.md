@@ -142,6 +142,10 @@ sent the items", withdraw. Settings: the two return settings.
 
 ## 10. Not built
 
+> **Update (B34):** photos, store credit, guest returns and the damaged-stock
+> balance were built in Phase B34 — see `docs/architecture/b34-returns-completion.md`.
+> Return labels / courier pickup and tax remain as below.
+
 - Photos on a return request (§45 "Images"): there is no customer upload
   store yet (media backup is not implemented either).
 - Store credit (§52: "future").

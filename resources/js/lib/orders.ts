@@ -60,6 +60,9 @@ export type Order = {
   tax_total_minor: number;
   shipping_total_minor: number;
   grand_total_minor: number;
+  /** Phase B34 (Module 12 §13): paid with store credit, and what was left for the payment. */
+  store_credit_minor?: number;
+  payable_minor?: number;
   /** Phase B33: none, return_requested, partially_returned, returned. */
   return_status?: string;
   /** The order this one replaces (made from a return). */

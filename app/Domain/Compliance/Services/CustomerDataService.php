@@ -78,6 +78,12 @@ final class CustomerDataService
                     'reason' => $return->reason->value, 'description' => $return->description, 'requested_at' => $return->created_at->toIso8601String(),
                     'refunded_minor' => $return->refunded_minor, 'currency' => $return->currency,
                 ])->all(),
+            // Phase B34: store credit, every entry.
+            'store_credit' => \App\Domain\StoreCredit\Models\StoreCreditEntry::query()->where('customer_id', $customer->id)->orderBy('id')->get()
+                ->map(fn (\App\Domain\StoreCredit\Models\StoreCreditEntry $entry) => [
+                    'type' => $entry->type->value, 'amount_minor' => $entry->amount_minor, 'balance_after_minor' => $entry->balance_after_minor,
+                    'currency' => $entry->currency, 'at' => $entry->created_at->toIso8601String(),
+                ])->all(),
             'wishlist' => WishlistItem::query()->where('customer_id', $customer->id)->with('product')->get()
                 ->map(fn (WishlistItem $item) => ['product' => $item->product?->name, 'added_at' => $item->created_at->toIso8601String()])
                 ->all(),
@@ -136,6 +142,8 @@ final class CustomerDataService
             // The address book (B25) was missed by erasure until Phase B32.
             $addresses = \App\Domain\CustomerAccount\Models\CustomerAddress::query()->where('customer_id', $customer->id)->delete();
             $customer->tags()->detach();
+            // Phase B34: nobody can use the balance any more; it ends on the record (the ledger stays, as financial history).
+            app(\App\Domain\StoreCredit\Services\StoreCreditService::class)->endForErasedCustomer($customer);
             // Phase B33: what the person wrote on a return, and their parcel's tracking number. The
             // return itself stays: it belongs to the order's financial record.
             $returns = \App\Domain\Returns\Models\ReturnRequest::query()->where('customer_id', $customer->id)

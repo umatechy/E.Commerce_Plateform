@@ -292,6 +292,9 @@ Route::middleware(['auth:sanctum', 'staff.principal', 'required.mfa'])->group(fu
     Route::post('/customers/{customer}/archive', [\App\Domain\Customers\Http\Controllers\CustomerController::class, 'archive']);
     Route::post('/customers/{customer}/reactivate', [\App\Domain\Customers\Http\Controllers\CustomerController::class, 'reactivate']);
     // Module 10 §56: explicit, audited, the password asked again.
+    // Module 09 §52 (Phase B34): store credit. Giving or taking it by hand asks for the password again.
+    Route::get('/customers/{customer}/store-credit', [\App\Domain\StoreCredit\Http\Controllers\StoreCreditController::class, 'show']);
+    Route::post('/customers/{customer}/store-credit/adjust', [\App\Domain\StoreCredit\Http\Controllers\StoreCreditController::class, 'adjust'])->middleware(['step_up', 'throttle:20,10,store-credit-adjust']);
     Route::post('/customers/{customer}/merge', [\App\Domain\Customers\Http\Controllers\CustomerController::class, 'merge'])->middleware(['step_up', 'throttle:10,10,customers-merge']);
     Route::get('/customers/{customer}/activity', [\App\Domain\Customers\Http\Controllers\CustomerController::class, 'activity']);
     Route::get('/customers/{customer}/notes', [\App\Domain\Customers\Http\Controllers\CustomerRecordsController::class, 'notes']);

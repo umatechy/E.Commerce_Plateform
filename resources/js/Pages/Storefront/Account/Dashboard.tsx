@@ -8,6 +8,13 @@ import { useCustomer } from '@/Storefront/account';
 import { statusLabel, type OrderSummary } from '@/Storefront/orders';
 import type { StorefrontPageProps } from '@/Storefront/types';
 
+const CREDIT_LABELS: Record<string, string> = {
+  return_refund: 'Refund of a return',
+  adjustment: 'Added or changed by the store',
+  spent: 'Used on an order',
+  order_cancelled: 'Order cancelled',
+};
+
 /**
  * Phase B32 (Module 10 §9/§13): an unconfirmed address. Confirming it
  * also brings the customer's earlier guest orders into the account.
@@ -54,6 +61,8 @@ function ConfirmEmail({ storefront, email }: { storefront: StorefrontPageProps['
 export default function Dashboard({ storefront, seo }: StorefrontPageProps) {
   const { customer } = useCustomer(storefront, { required: true });
   const [orders, setOrders] = useState<OrderSummary[] | null>(null);
+  // Module 09 §52 (Phase B34): store credit, shown only when there is some or has been.
+  const [credit, setCredit] = useState<{ balance_minor: number; currency: string; entries: { id: string; type: string; amount_minor: number; currency: string; created_at: string }[] } | null>(null);
   const base = storefront.base_path;
 
   useEffect(() => {
@@ -61,6 +70,9 @@ export default function Dashboard({ storefront, seo }: StorefrontPageProps) {
     storefrontFetch<{ data: { orders: OrderSummary[] } }>(storefront, '/customer/orders', { query: { per_page: '3' } })
       .then((res) => setOrders(res.data.orders))
       .catch(() => setOrders([]));
+    storefrontFetch<{ data: NonNullable<typeof credit> }>(storefront, '/customer/store-credit')
+      .then((res) => setCredit(res.data))
+      .catch(() => setCredit(null));
   }, [customer, storefront]);
 
   return (
@@ -78,6 +90,22 @@ export default function Dashboard({ storefront, seo }: StorefrontPageProps) {
           </Link>
         ))}
       </div>
+
+      {credit && (credit.balance_minor > 0 || credit.entries.length > 0) && (
+        <section className="mt-8 rounded-sf border border-sf-border p-4" aria-label="Store credit">
+          <h2 className="font-semibold">Store credit</h2>
+          <p className="mt-1 text-2xl font-bold">{formatMoney(credit.balance_minor, credit.currency)}</p>
+          <p className="text-sm text-sf-muted">You can use it at checkout.</p>
+          <ul className="mt-3 space-y-1 text-sm">
+            {credit.entries.slice(0, 5).map((entry) => (
+              <li key={entry.id} className="flex justify-between gap-3">
+                <span className="text-sf-muted">{formatDate(entry.created_at)} · {CREDIT_LABELS[entry.type] ?? 'Changed'}</span>
+                <span>{entry.amount_minor < 0 ? '−' : '+'}{formatMoney(Math.abs(entry.amount_minor), entry.currency)}</span>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
 
       <h2 className="mb-3 mt-10 text-xl font-semibold">Recent orders</h2>
       {orders === null && <p className="text-sm text-sf-muted">Loading…</p>}

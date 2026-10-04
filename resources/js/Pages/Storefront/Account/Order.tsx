@@ -71,6 +71,7 @@ export default function Order({ storefront, seo, order_id }: StorefrontPageProps
             <div className="flex justify-between"><dt>Shipping</dt><dd>{money(order.shipping_total_minor)}</dd></div>
             {order.tax_total_minor > 0 && <div className="flex justify-between"><dt>Tax</dt><dd>{money(order.tax_total_minor)}</dd></div>}
             <div className="flex justify-between border-t border-sf-border pt-2 font-semibold"><dt>Total</dt><dd>{money(order.grand_total_minor)}</dd></div>
+            {(order.store_credit_minor ?? 0) > 0 && <div className="flex justify-between"><dt>Paid with store credit</dt><dd>−{money(order.store_credit_minor ?? 0)}</dd></div>}
           </dl>
 
           <div className="grid gap-6 sm:grid-cols-2">

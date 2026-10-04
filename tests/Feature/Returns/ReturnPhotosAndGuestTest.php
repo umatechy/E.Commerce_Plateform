@@ -218,7 +218,7 @@ final class ReturnPhotosAndGuestTest extends TestCase
         $this->getJson('/api/v1/storefront/returns/guest', $link)->assertNotFound()->assertJsonPath('code', 'return_link_invalid');
     }
 
-    public function test_the_storefront_returns_page_is_never_indexed_and_passes_only_a_well_formed_token(): void
+    public function test_the_storefront_returns_page_takes_the_token_out_of_the_address_and_is_never_indexed(): void
     {
         $base = "/shop/{$this->store->slug}/returns";
         $token = str_repeat('k', 64);
@@ -226,8 +226,25 @@ final class ReturnPhotosAndGuestTest extends TestCase
         auth()->guard('web')->logout();
 
         $this->withoutVite()->get($base)->assertOk()->assertInertia(fn ($p) => $p->component('Storefront/Returns')->where('token', '')->where('seo.robots', 'noindex, nofollow'));
-        $this->withoutVite()->get("{$base}?token={$token}")->assertOk()->assertInertia(fn ($p) => $p->where('token', $token));
-        $this->withoutVite()->get("{$base}?token=".urlencode('<script>alert(1)</script>'))->assertOk()->assertInertia(fn ($p) => $p->where('token', ''));
+
+        // The link: the token goes into the visitor's session and the browser is sent on without it.
+        $redirect = $this->get("{$base}?token={$token}")->assertRedirect();
+        $this->assertStringEndsWith($base, (string) $redirect->headers->get('Location'));
+        $this->assertStringNotContainsString('token', (string) $redirect->headers->get('Location'));
+        $this->withoutVite()->get($base)->assertOk()->assertInertia(fn ($p) => $p->where('token', $token));
+
+        // It is for this store only.
+        $other = \App\Domain\Tenancy\Models\Store::factory()->create(['status' => 'active']);
+        $this->entitle($other, ['orders.basic']);
+        $this->withoutVite()->get("/shop/{$other->slug}/returns")->assertOk()->assertInertia(fn ($p) => $p->where('token', ''));
+
+        // Something that is not a token is not kept, and replaces nothing useful.
+        $this->get("{$base}?token=".urlencode('<script>alert(1)</script>'))->assertRedirect();
+        $this->withoutVite()->get($base)->assertOk()->assertInertia(fn ($p) => $p->where('token', ''));
+
+        $this->get("{$base}?token={$token}")->assertRedirect();
+        $this->get("{$base}?forget=1")->assertRedirect();
+        $this->withoutVite()->get($base)->assertOk()->assertInertia(fn ($p) => $p->where('token', ''));
     }
 
     public function test_no_link_is_sent_for_an_order_of_a_customer_with_an_account(): void

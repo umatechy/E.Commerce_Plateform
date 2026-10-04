@@ -65,6 +65,25 @@ final class CustomerAuthTest extends TestCase
         $response->assertCreated();
     }
 
+    public function test_browsing_the_storefront_does_not_use_up_the_registration_limit(): void
+    {
+        // Found in the B34 browser check: registration's 5-per-minute limit had
+        // no key of its own, so it shared a counter with the storefront API's
+        // 120-per-minute limit for the same IP — a shopper who had just browsed
+        // was refused. Each limit now has its own key.
+        $store = Store::factory()->create(['status' => 'active']);
+        $this->entitle($store, ['orders.basic']);
+
+        for ($i = 0; $i < 8; $i++) {
+            $this->getJson('/api/v1/storefront/products', ['X-Store-Slug' => $store->slug])->assertOk();
+        }
+
+        $this->postJson('/api/v1/customer/register', [
+            'name' => 'Jane Shopper', 'email' => 'jane@example.com',
+            'password' => 'correct-horse-battery-staple', 'password_confirmation' => 'correct-horse-battery-staple',
+        ], ['X-Store-Slug' => $store->slug])->assertCreated();
+    }
+
     public function test_customer_can_login_and_receive_a_token(): void
     {
         $store = Store::factory()->create();

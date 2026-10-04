@@ -42,6 +42,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property int $restocking_fee_minor
  * @property int $refund_total_minor
  * @property int $refunded_minor
+ * @property string $refund_method
+ * @property int $refunded_credit_minor
  * @property ?int $refund_transaction_id
  * @property ?int $replacement_order_id
  * @property ?\Illuminate\Support\Carbon $decided_at
@@ -61,7 +63,7 @@ final class ReturnRequest extends Model
 
     protected $guarded = ['id', 'public_id'];
 
-    protected $attributes = ['status' => 'requested'];
+    protected $attributes = ['status' => 'requested', 'refund_method' => 'payment'];
 
     protected function casts(): array
     {

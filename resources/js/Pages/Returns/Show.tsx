@@ -3,7 +3,7 @@ import { Link } from '@inertiajs/react';
 import AdminPage from '@/Components/AdminPage';
 import Button, { ButtonLink, FOCUS_RING } from '@/Components/ui/Button';
 import Dialog, { ConfirmDialog } from '@/Components/ui/Dialog';
-import { FormError, SelectField, TextAreaField, TextField } from '@/Components/ui/Form';
+import { CheckboxField, FormError, SelectField, TextAreaField, TextField } from '@/Components/ui/Form';
 import { StatusBadge } from '@/Components/ui/Badge';
 import { AccessNotice, Card, Details, EmptyPanel, ErrorPanel, Skeleton } from '@/Components/ui/Page';
 import ProductPicker, { type PickedProduct } from '@/Components/ProductPicker';
@@ -184,6 +184,7 @@ function InspectDialog({ record, onClose, onDone }: { record: ReturnRecord; onCl
 
 function ApproveRefundDialog({ record, onClose, onDone }: { record: ReturnRecord; onClose: () => void; onDone: Done }) {
   const form = useForm({ shipping: '', fee: '' });
+  const [asCredit, setAsCredit] = useState(false);
   const [local, setLocal] = useState<string | null>(null);
   const shipping = form.values.shipping.trim() === '' ? 0 : toMinor(form.values.shipping, record.currency);
   const fee = form.values.fee.trim() === '' ? 0 : toMinor(form.values.fee, record.currency);
@@ -198,7 +199,7 @@ function ApproveRefundDialog({ record, onClose, onDone }: { record: ReturnRecord
       return;
     }
     setLocal(null);
-    const saved = await form.submit(() => post(record.id, 'approve-refund', { shipping_refund_minor: shipping, restocking_fee_minor: fee }), 'Refund approved.');
+    const saved = await form.submit(() => post(record.id, 'approve-refund', { shipping_refund_minor: shipping, restocking_fee_minor: fee, as_store_credit: asCredit }), 'Refund approved.');
     if (saved) onDone(saved.data);
   }
 
@@ -212,6 +213,12 @@ function ApproveRefundDialog({ record, onClose, onDone }: { record: ReturnRecord
         )}
         <TextField label={`Restocking fee to deduct (${record.currency})`} optional inputMode="decimal" value={form.values.fee} onChange={(v) => form.set('fee', v)} error={form.errors.restocking_fee_minor} hint="Only where your return policy and the law allow one." />
         <p className="text-sm font-medium text-slate-900" aria-live="polite">Refund: {total === null ? '—' : money(total, record.currency)}</p>
+        {record.store_credit_possible && (
+          <CheckboxField label="Give it as store credit instead of money" checked={asCredit} onChange={setAsCredit} hint="The amount is added to the customer's store credit, which they can use at checkout. No money is paid back." />
+        )}
+        {(record.order?.store_credit_minor ?? 0) > 0 && !asCredit && (
+          <p className="text-xs text-slate-600">Part of this order was paid with store credit ({money(record.order?.store_credit_minor ?? 0, record.currency)}). The refund goes to the payment first; what was paid with credit goes back to the customer's credit.</p>
+        )}
         <div className="flex justify-end gap-2">
           <Button onClick={onClose} disabled={form.busy}>Cancel</Button>
           <Button type="submit" variant="primary" busy={form.busy} busyLabel="Saving…">Approve refund</Button>
@@ -341,7 +348,7 @@ export default function Show({ returnId }: { returnId: string }) {
           {manage && can.inspect && <Button variant="primary" onClick={() => setDialog('inspect')}>Inspect items</Button>}
           {approve && can.approve_refund && <Button variant="primary" onClick={() => setDialog('approve-refund')}>Approve refund</Button>}
           {manage && can.replace && <Button onClick={() => setDialog('replacement')}>Send new items</Button>}
-          {refund && can.refund && <Button variant="primary" onClick={() => setDialog('refund')}>Pay the refund</Button>}
+          {refund && can.refund && <Button variant="primary" onClick={() => setDialog('refund')}>{record.refund_method === 'store_credit' ? 'Give the store credit' : 'Pay the refund'}</Button>}
           {manage && can.cancel && <Button onClick={() => setDialog('cancel')}>Cancel return</Button>}
         </>
       }
@@ -412,11 +419,14 @@ export default function Show({ returnId }: { returnId: string }) {
                   { label: 'Shipping refund', value: money(record.shipping_refund_minor, record.currency) },
                   { label: 'Restocking fee', value: record.restocking_fee_minor > 0 ? `− ${money(record.restocking_fee_minor, record.currency)}` : money(0, record.currency) },
                   { label: 'Refund approved', value: record.status === 'approved_for_refund' || record.refunded_at ? money(record.refund_total_minor, record.currency) : '—' },
-                  { label: 'Paid back', value: record.refunded_at ? money(record.refunded_minor, record.currency) : '—' },
+                  { label: 'Paid back', value: record.refunded_at ? money(record.refund_method === 'store_credit' ? 0 : record.refunded_minor, record.currency) : '—' },
+                  ...((record.refunded_credit_minor ?? 0) > 0 || record.refund_method === 'store_credit'
+                    ? [{ label: 'To store credit', value: record.refunded_at ? money(record.refunded_credit_minor ?? 0, record.currency) : 'When the refund is paid' }]
+                    : []),
                 ]}
               />
-              {record.refunded_at && record.refunded_minor < record.refund_total_minor && (
-                <p className="mt-2 text-xs text-amber-800">Less was paid back than approved: the order's payment did not hold more (for example cash on delivery that was never collected).</p>
+              {record.refunded_at && (record.refund_method === 'store_credit' ? (record.refunded_credit_minor ?? 0) : record.refunded_minor + (record.refunded_credit_minor ?? 0)) < record.refund_total_minor && (
+                <p className="mt-2 text-xs text-amber-800">Less was given back than approved: the order was not paid for more (for example cash on delivery that was never collected).</p>
               )}
               {record.replacement_order && (
                 <p className="mt-3 text-sm">
@@ -451,13 +461,17 @@ export default function Show({ returnId }: { returnId: string }) {
       {dialog === 'replacement' && <ReplacementDialog record={record} onClose={() => setDialog(null)} onDone={done} />}
       <ConfirmDialog
         open={dialog === 'refund'}
-        title={`Pay back ${money(record.refund_total_minor, record.currency)}?`}
-        confirmLabel="Pay the refund"
+        title={record.refund_method === 'store_credit' ? `Give ${money(record.refund_total_minor, record.currency)} as store credit?` : `Pay back ${money(record.refund_total_minor, record.currency)}?`}
+        confirmLabel={record.refund_method === 'store_credit' ? 'Give the store credit' : 'Pay the refund'}
         busy={busy === 'refund'}
         onClose={() => setDialog(null)}
         onConfirm={() => void run('refund', () => post(record.id, 'refund'), { success: 'Refund recorded.' }).then((r) => r && done(r.data))}
       >
-        <p>The refund is recorded on the order's payment, and the return is completed. For cash on delivery or a bank transfer, hand over or send the money yourself: no gateway does it for you. This cannot be undone.</p>
+        {record.refund_method === 'store_credit' ? (
+          <p>The amount is added to the customer's store credit and recorded on the order's payment, so it cannot also be paid back as money. The return is completed. This cannot be undone.</p>
+        ) : (
+          <p>The refund is recorded on the order's payment, and the return is completed. For cash on delivery or a bank transfer, hand over or send the money yourself: no gateway does it for you. This cannot be undone.</p>
+        )}
       </ConfirmDialog>
     </AdminPage>
   );

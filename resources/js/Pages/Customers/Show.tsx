@@ -1,6 +1,7 @@
 import { FormEvent, useState } from 'react';
 import { Link, router } from '@inertiajs/react';
 import AdminPage from '@/Components/AdminPage';
+import StoreCreditCard from '@/Components/Customers/StoreCreditCard';
 import Button, { ButtonLink, FOCUS_RING } from '@/Components/ui/Button';
 import DataTable, { Pagination, type Column } from '@/Components/ui/DataTable';
 import Dialog, { ConfirmDialog } from '@/Components/ui/Dialog';
@@ -582,6 +583,7 @@ export default function Show({ customerId }: { customerId: string }) {
                 </ul>
               )}
             </Card>
+            {!merged && <StoreCreditCard customerId={customer.id} version={version} />}
             <Activity customerId={customer.id} version={version} />
             {access.can('privacy.manage') && <Privacy customer={customer} onErased={() => changed()} />}
           </div>

@@ -294,13 +294,18 @@ final class ReturnService
      * (never more than the order's shipping) and may deduct a restocking
      * fee (never more than the items amount).
      */
-    public function approveRefund(ReturnRequest $return, int $shippingRefundMinor, int $restockingFeeMinor, User $actor): ReturnRequest
+    public function approveRefund(ReturnRequest $return, int $shippingRefundMinor, int $restockingFeeMinor, User $actor, bool $asStoreCredit = false): ReturnRequest
     {
-        $approved = DB::transaction(function () use ($return, $shippingRefundMinor, $restockingFeeMinor, $actor) {
+        $approved = DB::transaction(function () use ($return, $shippingRefundMinor, $restockingFeeMinor, $actor, $asStoreCredit) {
             $locked = ReturnRequest::query()->lockForUpdate()->findOrFail($return->id);
             $this->states->assertCanTransition($locked->status, ReturnStatus::ApprovedForRefund);
             if ($locked->replacement_order_id !== null && $locked->items_refund_minor === 0) {
                 throw new ReturnActionRefusedException('This return was settled with a replacement order. There is nothing left to refund.', 'nothing_to_refund');
+            }
+
+            // Module 09 §52 (Phase B34): the refund may be given as store credit, to a customer who can spend it.
+            if ($asStoreCredit && ! $this->storeCreditPossible($locked)) {
+                throw ValidationException::withMessages(['as_store_credit' => 'Store credit needs a customer with an account. Refund this return to the payment instead.']);
             }
 
             $order = $locked->order;
@@ -319,6 +324,7 @@ final class ReturnService
                 'shipping_refund_minor' => $shippingRefundMinor,
                 'restocking_fee_minor' => $restockingFeeMinor,
                 'refund_total_minor' => $locked->items_refund_minor + $shippingRefundMinor - $restockingFeeMinor,
+                'refund_method' => $asStoreCredit ? 'store_credit' : 'payment',
             ])->save();
             $this->transition($locked, ReturnStatus::ApprovedForRefund, $actor);
 
@@ -327,18 +333,25 @@ final class ReturnService
 
         $this->audit->record('return.refund_approved', [
             'items_minor' => $approved->items_refund_minor, 'shipping_minor' => $approved->shipping_refund_minor,
-            'restocking_fee_minor' => $approved->restocking_fee_minor, 'total_minor' => $approved->refund_total_minor, 'currency' => $approved->currency,
+            'restocking_fee_minor' => $approved->restocking_fee_minor, 'total_minor' => $approved->refund_total_minor, 'method' => $approved->refund_method, 'currency' => $approved->currency,
         ], $approved, actor: $actor);
 
         return $approved->load('items.orderItem');
     }
 
     /**
-     * §49, §51: pays the approved refund back through the order's
-     * payment and completes the return. The payment decides what it can
-     * return (its refundable balance, under its own row lock); an order
-     * that was never paid has nothing to return, and the return is
-     * completed with that recorded.
+     * §49, §51: pays the approved refund back and completes the return.
+     *
+     * Where the money goes (Module 12 §13, Phase B34):
+     * - first to the order's payment, as far as it can return (its
+     *   refundable balance, under its own row lock);
+     * - what the customer had paid with store credit goes back to their
+     *   store credit, never as cash, and never more than was used;
+     * - if staff chose "as store credit", the payment's part is credited
+     *   too: it is recorded on the payment (so it cannot also be refunded
+     *   in cash) and added to the customer's balance.
+     * An order that was never paid has nothing to return; the return is
+     * completed with what was actually refunded on record.
      */
     public function refund(ReturnRequest $return, User $actor): ReturnRequest
     {
@@ -349,28 +362,69 @@ final class ReturnService
                 throw new ReturnActionRefusedException('Approve the refund of this return first.', 'refund_not_approved');
             }
 
+            $order = $locked->order;
+            $asCredit = $locked->refund_method === 'store_credit';
             $payment = Payment::query()->where('order_id', $locked->order_id)->lockForUpdate()->first();
-            $amount = min($locked->refund_total_minor, $payment?->refundableAmountMinor() ?? 0);
+            $fromPayment = min($locked->refund_total_minor, $payment?->refundableAmountMinor() ?? 0);
             $transaction = null;
-            if ($payment !== null && $amount > 0) {
-                $transaction = $this->payments->refund($payment, $amount, "Return {$locked->return_number}", $actor->id, "return:{$locked->id}:refund");
+            if ($payment !== null && $fromPayment > 0) {
+                $transaction = $this->payments->refund($payment, $fromPayment, "Return {$locked->return_number}".($asCredit ? ' (given as store credit)' : ''), $actor->id, "return:{$locked->id}:refund");
+            }
+
+            // The part of the order that was paid with store credit, not yet given back by another return.
+            $creditLeft = max(0, (int) $order->store_credit_minor - $this->creditPartReturned($order, $locked->id));
+            $backToCredit = min($locked->refund_total_minor - $fromPayment, $creditLeft);
+            $credited = $backToCredit + ($asCredit ? $fromPayment : 0);
+            if ($credited > 0 && $order->customer !== null) {
+                app(\App\Domain\StoreCredit\Services\StoreCreditService::class)->credit(
+                    $order->customer, $locked->currency, $credited, \App\Domain\StoreCredit\Models\StoreCreditEntryType::ReturnRefund,
+                    "return:{$locked->id}:store-credit", ['type' => 'return', 'id' => $locked->id], "Return {$locked->return_number}", $actor->id,
+                );
+            } else {
+                $credited = 0;
             }
 
             $locked->forceFill([
-                'refunded_minor' => $amount, 'refund_transaction_id' => $transaction?->id,
+                'refunded_minor' => $fromPayment, 'refunded_credit_minor' => $credited, 'refund_transaction_id' => $transaction?->id,
                 'refunded_at' => now(), 'completed_at' => now(),
             ])->save();
             $this->transition($locked, ReturnStatus::Completed, $actor);
-            $this->orders->noteReturnEvent($locked->order, 'return_refunded', $actor->id, "return:{$locked->return_number}", "refunded_minor:{$amount}");
-            $this->syncOrder($locked->order);
-            $this->outbox->recordEvent('return.refunded', ['return_id' => $locked->id, 'order_id' => $locked->order_id, 'amount_minor' => $amount], "return:{$locked->id}:refunded");
+            $this->orders->noteReturnEvent($order, 'return_refunded', $actor->id, "return:{$locked->return_number}", "refunded_minor:{$fromPayment};store_credit_minor:{$credited}");
+            $this->syncOrder($order);
+            $this->outbox->recordEvent('return.refunded', ['return_id' => $locked->id, 'order_id' => $locked->order_id, 'amount_minor' => $fromPayment, 'store_credit_minor' => $credited], "return:{$locked->id}:refunded");
 
             return $locked;
         });
 
-        $this->audit->record('return.refunded', ['approved_minor' => $done->refund_total_minor, 'refunded_minor' => $done->refunded_minor, 'currency' => $done->currency], $done, actor: $actor);
+        $this->audit->record('return.refunded', [
+            'approved_minor' => $done->refund_total_minor, 'from_payment_minor' => $done->refunded_minor,
+            'to_store_credit_minor' => $done->refunded_credit_minor, 'method' => $done->refund_method, 'currency' => $done->currency,
+        ], $done, actor: $actor);
 
         return $done->load('items.orderItem');
+    }
+
+    /**
+     * How much of the store credit used on this order other returns have
+     * already given back. For a return paid "as store credit" the
+     * payment's part is in `refunded_credit_minor` too and is not counted.
+     */
+    private function creditPartReturned(Order $order, int $exceptReturnId): int
+    {
+        return (int) ReturnRequest::query()->where('order_id', $order->id)->whereKeyNot($exceptReturnId)->get()
+            ->sum(fn (ReturnRequest $other) => (int) $other->refunded_credit_minor - ($other->refund_method === 'store_credit' ? (int) $other->refunded_minor : 0));
+    }
+
+    /**
+     * Whether this return's refund may be given as store credit: the order
+     * belongs to a customer with an account who can use it (credit is
+     * spent at a signed-in checkout).
+     */
+    public function storeCreditPossible(ReturnRequest $return): bool
+    {
+        $customer = $return->order->customer;
+
+        return $customer !== null && $customer->isRegistered() && $customer->erased_at === null;
     }
 
     /**

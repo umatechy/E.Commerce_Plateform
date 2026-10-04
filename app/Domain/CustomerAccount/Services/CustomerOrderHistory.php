@@ -63,6 +63,7 @@ final class CustomerOrderHistory
             'discount_total_minor' => $order->discount_total_minor,
             'shipping_total_minor' => $order->shipping_total_minor,
             'tax_total_minor' => $order->tax_total_minor,
+            'store_credit_minor' => (int) $order->store_credit_minor, // Phase B34
             'cancellation_reason' => $order->cancellation_reason?->value,
             'shipping_address' => $order->shipping_address_snapshot,
             'billing_address' => $order->billing_address_snapshot,

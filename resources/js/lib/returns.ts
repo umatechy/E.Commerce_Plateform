@@ -86,7 +86,12 @@ export type ReturnRecord = {
   restocking_fee_minor: number;
   refund_total_minor: number;
   refunded_minor: number;
-  order?: { id: string; order_number: string; customer_name?: string | null; payment_status?: string; shipping_total_minor?: number };
+  /** Phase B34 (Module 09 §52): `payment` or `store_credit`; what went to the customer's store credit. */
+  refund_method?: 'payment' | 'store_credit';
+  refunded_credit_minor?: number;
+  /** Staff only: the order's customer has an account that can hold store credit. */
+  store_credit_possible?: boolean;
+  order?: { id: string; order_number: string; customer_name?: string | null; payment_status?: string; shipping_total_minor?: number; store_credit_minor?: number };
   replacement_order?: { id: string; order_number: string; grand_total_minor: number } | null;
   items?: ReturnLine[];
   warehouse?: { id: number; name: string } | null;

@@ -36,13 +36,13 @@ trait BuildsReturns
         parent::setUp();
 
         $this->store = Store::factory()->create(['status' => 'active']);
-        $this->entitle($this->store, ['orders.basic', 'payment.cod', 'payment.bank_transfer', 'shipping.basic', 'products.basic']);
+        $this->entitle($this->store, ['orders.basic', 'payment.cod', 'payment.bank_transfer', 'shipping.basic', 'products.basic', 'customers.advanced']);
         $this->owner = User::factory()->create();
         $this->store->users()->attach($this->owner, ['role_id' => $this->systemRole($this->store, 'owner')->id, 'status' => 'active']);
         app(TenantContext::class)->resolveToStore($this->store->id);
 
         // Rs. 1,000 each, 20 in stock.
-        $this->product = Product::factory()->for($this->store)->create(['name' => 'Rose Attar', 'price_minor' => 100000, 'sale_price_minor' => null, 'currency' => 'PKR', 'status' => 'active']);
+        $this->product = Product::factory()->for($this->store)->create(['name' => 'Rose Attar', 'price_minor' => 100000, 'sale_price_minor' => null, 'currency' => 'PKR', 'status' => 'active', 'visibility' => 'public']);
         $warehouse = Warehouse::query()->where('is_default', true)->firstOrFail();
         $this->inventory = Inventory::factory()->for($this->store)->for($warehouse)->create(['product_id' => $this->product->id]);
         app(InventoryService::class)->setOpeningStock($this->inventory, 20, 'Init', actorId: $this->owner->id, idempotencyKey: 'open-'.$this->store->id);
@@ -117,5 +117,24 @@ trait BuildsReturns
     {
         DB::table('store_settings')->updateOrInsert(['store_id' => $this->store->id, 'key' => $key], ['value' => json_encode([$value]), 'created_at' => now(), 'updated_at' => now()]);
         \Illuminate\Support\Facades\Cache::forget("settings:store:{$this->store->id}:{$key}");
+    }
+
+    /**
+     * Back to the staff session after a request made with a customer token:
+     * the customer guard had made itself the default one, so a plain
+     * actingAs() would sign the staff member in as a "customer".
+     */
+    protected function asStaff(): void
+    {
+        $this->app['auth']->forgetGuards();
+        $this->app['auth']->shouldUse('web');
+    }
+
+    /** @return array<string, string> bearer-token headers of the customer API, on this store */
+    protected function as(Customer $customer): array
+    {
+        $this->app['auth']->forgetGuards();
+
+        return ['Authorization' => 'Bearer '.$customer->createToken('t')->plainTextToken, 'X-Store-Slug' => $this->store->slug, 'Accept' => 'application/json'];
     }
 }

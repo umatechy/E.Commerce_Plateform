@@ -229,6 +229,9 @@ final class OrderService
 
             $this->transitionTo($order, OrderStatus::Cancelled, $actorId, $reason->value, $note);
 
+            // Phase B34 (Module 09 §52): store credit used on the order goes back with the cancellation.
+            app(\App\Domain\StoreCredit\Services\StoreCreditService::class)->restoreForCancelledOrder($order, $actorId);
+
             $this->outbox->recordEvent(
                 eventType: 'order.cancelled',
                 payload: ['order_id' => $order->id, 'reason' => $reason->value],
@@ -308,6 +311,22 @@ final class OrderService
     public function noteReturnEvent(Order $order, string $eventType, ?int $actorId, string $reason, ?string $note = null): void
     {
         $this->recordTimelineEvent($order, $eventType, null, null, $actorId, $reason, $note);
+    }
+
+    /**
+     * Phase B34 (Module 12 §13): the part of the order paid with store
+     * credit. The ONLY code path that writes Order.store_credit_minor —
+     * called by CheckoutService right after StoreCreditService took the
+     * amount from the customer's balance, in the same transaction.
+     */
+    public function applyStoreCredit(Order $order, int $amountMinor): void
+    {
+        if ($amountMinor < 0 || $amountMinor > (int) $order->grand_total_minor) {
+            throw new \InvalidArgumentException('Store credit on an order is between nothing and the order total.');
+        }
+
+        $order->update(['store_credit_minor' => $amountMinor]);
+        $this->recordTimelineEvent($order, 'store_credit_applied', null, null, actorId: null, reason: "store_credit_minor:{$amountMinor}");
     }
 
     /** Module 09 §54 (Phase B33): marks an order as the replacement of another. */

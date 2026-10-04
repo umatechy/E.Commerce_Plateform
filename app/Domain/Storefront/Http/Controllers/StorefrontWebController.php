@@ -120,16 +120,31 @@ final class StorefrontWebController
     /**
      * Phase B34 — returns for someone without an account (Module 09
      * §8–9). The page asks for the order number and email, or, opened
-     * from the emailed link, carries its token to the API. Never indexed:
-     * its address can hold that token.
+     * from the emailed link, carries the link's token to the API.
+     *
+     * The token is taken out of the address at once: it is kept in the
+     * visitor's session (for this store) and the browser is sent on to the
+     * same page without it, so it does not stay in the history, in a
+     * bookmark or in a Referer header. `?forget=1` ends it. Never indexed.
      */
-    public function returns(Request $request): Response
+    public function returns(Request $request): Response|\Illuminate\Http\RedirectResponse
     {
-        $token = (string) $request->query('token', '');
+        $key = 'storefront.return_token.'.$this->store($request)->id;
+
+        if ($request->has('token') || $request->has('forget')) {
+            $token = (string) $request->query('token', '');
+            // Only a well-formed token is kept; it is only ever echoed back to the API, which checks it.
+            if (! $request->has('forget') && preg_match('/^[A-Za-z0-9]{64}$/', $token) === 1) {
+                $request->session()->put($key, $token);
+            } else {
+                $request->session()->forget($key);
+            }
+
+            return redirect()->to($request->url());
+        }
 
         return $this->render($request, 'Storefront/Returns', [
-            // Only echoed back to the API, which checks it.
-            'token' => preg_match('/^[A-Za-z0-9]{64}$/', $token) === 1 ? $token : '',
+            'token' => (string) $request->session()->get($key, ''),
         ], $this->privatePageSeo($request, 'Returns'));
     }
 

@@ -31,7 +31,6 @@ const record = (overrides: Partial<ReturnRecord> = {}): ReturnRecord => ({
 
 beforeEach(() => {
   setPage(owner, '/');
-  window.sessionStorage.clear();
   window.history.replaceState(null, '', '/shop/acme/returns');
   URL.createObjectURL = vi.fn(() => 'blob:photo');
   URL.revokeObjectURL = vi.fn();
@@ -64,8 +63,7 @@ describe('returns for a guest', () => {
     expect((screen.getByRole('link', { name: 'Open your orders' })).getAttribute('href')).toBe('/shop/acme/account/orders');
   });
 
-  it('takes the token out of the address bar and sends it as a header', async () => {
-    window.history.replaceState(null, '', `/shop/acme/returns?token=${TOKEN}`);
+  it('passes the token the server kept to the API as a header, never in an address', async () => {
     const fetchMock = routeFetch({
       '/storefront/returns/guest': () => json(200, { data: { enabled: true, blocked: null, window_days: 7, max_photos: 6, order: { id: 'o', order_number: 'ORD-000001', currency: 'PKR' }, lines: [line], returns: [] } }),
     });
@@ -73,19 +71,22 @@ describe('returns for a guest', () => {
     render(<Returns storefront={shell} seo={seo} token={TOKEN} />);
 
     await screen.findByRole('heading', { name: 'Request a return' });
-    expect(window.location.search).toBe('');
-    const [, init] = fetchMock.mock.calls[0];
+    const [url, init] = fetchMock.mock.calls[0];
+    expect(String(url)).not.toContain(TOKEN);
     expect((init?.headers as Record<string, string>)['X-Return-Token']).toBe(TOKEN);
-    expect(window.sessionStorage.getItem('storefront:acme:return-token')).toBe(TOKEN);
   });
 
-  it('goes back to the form when the link is no longer valid', async () => {
-    vi.stubGlobal('fetch', routeFetch({ '/storefront/returns/guest': () => json(404, { message: 'This link is not valid any more. Ask for a new one with your order number and email.', code: 'return_link_invalid' }) }));
+  it('goes back to the form when the link is no longer valid, and has the server forget it', async () => {
+    const fetchMock = routeFetch({
+      '/storefront/returns/guest': () => json(404, { message: 'This link is not valid any more. Ask for a new one with your order number and email.', code: 'return_link_invalid' }),
+      '/shop/acme/returns': () => new Response(null, { status: 200 }),
+    });
+    vi.stubGlobal('fetch', fetchMock);
     render(<Returns storefront={shell} seo={seo} token={TOKEN} />);
 
     expect(await screen.findByText(/This link is not valid any more/)).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Email me the link' })).toBeTruthy();
-    expect(window.sessionStorage.getItem('storefront:acme:return-token')).toBeNull();
+    await waitFor(() => expect(fetchMock.mock.calls.some(([url]) => String(url) === '/shop/acme/returns?forget=1')).toBe(true));
   });
 
   it('sends the request, then its photos to the new return', async () => {

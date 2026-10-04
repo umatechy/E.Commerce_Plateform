@@ -73,14 +73,16 @@ final class PaymentService
                 'customer_id' => $order->customer_id,
                 'method' => $method,
                 'status' => PaymentStatus::Created,
-                'amount_minor' => $order->grand_total_minor, // server-authoritative — see class docblock
+                // Server-authoritative (see class docblock). Module 12 §13 (Phase B34):
+                // order total − store credit used = remaining payable amount.
+                'amount_minor' => $order->payableMinor(),
                 'currency' => $order->currency,
                 'idempotency_key' => $idempotencyKey,
             ]);
 
             // Module 12 §14 "Zero-Value Orders" — no gateway is ever
             // called for a zero-payable order.
-            if ($order->grand_total_minor <= 0) {
+            if ($order->payableMinor() <= 0) {
                 $this->transitionTo($payment, PaymentStatus::Paid);
                 $this->recordTransaction($payment, TransactionType::Sale, TransactionStatus::Succeeded, 0, null, null, null, actorId: null, idempotencyKey: "{$idempotencyKey}:zero-value");
 

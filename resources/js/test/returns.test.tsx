@@ -131,7 +131,7 @@ describe('return detail (staff)', () => {
     expect(within(dialog).getByText('Refund: Rs. 2,150')).toBeTruthy();
     fireEvent.click(within(dialog).getByRole('button', { name: 'Approve refund' }));
 
-    await waitFor(() => expect(sent).toEqual({ shipping_refund_minor: 25000, restocking_fee_minor: 10000 }));
+    await waitFor(() => expect(sent).toEqual({ shipping_refund_minor: 25000, restocking_fee_minor: 10000, as_store_credit: false }));
     expect(await screen.findByRole('button', { name: 'Pay the refund' })).toBeTruthy();
   });
 

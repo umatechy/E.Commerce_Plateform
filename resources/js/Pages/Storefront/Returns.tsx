@@ -12,19 +12,16 @@ import type { StorefrontPageProps } from '@/Storefront/types';
  * 1. They enter the order number and the email of the order. The server
  *    always answers the same and, if the two belong together, sends a
  *    link to that email address.
- * 2. The link opens this page with a token. The token is taken out of
- *    the address bar at once and kept for this browser tab only, so it
- *    does not travel on in a Referer header or stay in the history.
+ * 2. The link opens this page with a token. The server takes it out of
+ *    the address at once (it keeps it in the visitor's session and sends
+ *    the browser on without it), so it does not stay in the history or
+ *    travel on in a Referer header. This page only passes it to the API.
  *
  * A customer with an account uses their account instead.
  */
-function tokenKey(slug: string): string {
-  return `storefront:${slug}:return-token`;
-}
-
 export default function Returns({ storefront, seo, token: fromLink }: StorefrontPageProps & { token: string }) {
   const base = storefront.base_path;
-  const [token, setToken] = useState<string | null>(null);
+  const [token, setToken] = useState<string | null>(fromLink !== '' ? fromLink : null);
   const [invalid, setInvalid] = useState<string | null>(null);
   const [orderNumber, setOrderNumber] = useState('');
   const [email, setEmail] = useState('');
@@ -32,28 +29,15 @@ export default function Returns({ storefront, seo, token: fromLink }: Storefront
   const [state, setState] = useState<'idle' | 'sending' | 'sent'>('idle');
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    let stored: string | null = null;
-    try {
-      if (fromLink !== '') window.sessionStorage.setItem(tokenKey(storefront.store.slug), fromLink);
-      stored = window.sessionStorage.getItem(tokenKey(storefront.store.slug));
-    } catch {
-      stored = fromLink !== '' ? fromLink : null; // no storage: the token lives for this page only
-    }
-    if (fromLink !== '') window.history.replaceState(window.history.state, '', window.location.pathname);
-    setToken(stored);
-  }, [fromLink, storefront.store.slug]);
+  useEffect(() => setToken(fromLink !== '' ? fromLink : null), [fromLink]);
 
   const api = useMemo(() => (token ? guestReturnsApi(storefront, token) : null), [storefront, token]);
 
   function forget(message: string) {
-    try {
-      window.sessionStorage.removeItem(tokenKey(storefront.store.slug));
-    } catch {
-      /* nothing stored */
-    }
     setToken(null);
     setInvalid(message);
+    // The server forgets the token too, so a reload does not bring it back.
+    void fetch(`${base}/returns?forget=1`, { credentials: 'same-origin', redirect: 'manual' }).catch(() => undefined);
   }
 
   async function submit(event: React.FormEvent) {

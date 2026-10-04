@@ -11,6 +11,8 @@ export type OrderSummary = {
 };
 
 export type OrderDetail = OrderSummary & {
+  /** Phase B34: the part paid with store credit. */
+  store_credit_minor?: number;
   subtotal_minor: number;
   discount_total_minor: number;
   shipping_total_minor: number;
