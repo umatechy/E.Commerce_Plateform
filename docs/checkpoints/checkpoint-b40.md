@@ -56,7 +56,7 @@ package limits on imports/exports (no values in the specs — not
 invented); background processing (synchronous, ≤ 2,000 rows); attribute
 import (B41); pictures from addresses (deliberately not fetched).
 
-CI: to be verified after push.
+CI: run on f54e1bf (B40 code) — success, verified 2026-10-04.
 
 Next:
 B41 — attribute sets, category filter configuration and faceted
