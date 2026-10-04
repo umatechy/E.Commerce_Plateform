@@ -45,6 +45,18 @@ final class ProductPolicy extends BaseTenantPolicy
     }
 
     /** Module 06 §25: cost price is restricted through permissions, never customer-visible. */
+    /** Phase B40: starting an import — each row is then checked with create / update. */
+    public function import(User $user): bool
+    {
+        return $this->userHasPermission($user, 'products.create') || $this->userHasPermission($user, 'products.update') || $this->isOwner($user);
+    }
+
+    /** Phase B40: cost prices as a column (import and export), for no product in particular. */
+    public function viewCostPrices(User $user): bool
+    {
+        return $this->userHasPermission($user, 'products.view_cost') || $this->isOwner($user);
+    }
+
     public function viewCostPrice(User $user, Product $product): bool
     {
         return $this->belongsToUsersActiveStore($user, $product)

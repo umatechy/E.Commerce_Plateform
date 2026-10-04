@@ -12,12 +12,15 @@ import { useAccess } from '@/lib/access';
 import { useApi, usePagedApi } from '@/lib/useApi';
 import { useUrlState } from '@/lib/useUrlState';
 import { useAction } from '@/lib/useForm';
-import { adminFetch } from '@/lib/adminApi';
+import { adminErrorMessage, adminFetch } from '@/lib/adminApi';
 import { money } from '@/lib/money';
 import { options } from '@/lib/labels';
 import type { BulkResult, Product } from '@/lib/catalog';
 import { PRODUCT_STATUSES } from '@/lib/catalog';
 import BulkBar from '@/Components/Catalog/BulkBar';
+import ProductImportDialog from '@/Components/Catalog/ProductImportDialog';
+import { toast } from '@/Components/ui/toast';
+import { downloadFile } from '@/lib/download';
 
 /**
  * Module 06 §64 "Product Listing Admin UX": the store's products, one
@@ -35,6 +38,10 @@ export default function Products() {
   const { busy, run } = useAction();
   // Phase B39 (Module 06 §46): products chosen for one change, on this page.
   const [selected, setSelected] = useState<string[]>([]);
+  // Phase B40 (Module 06 §48–51): CSV import and export (the export takes the list's filters).
+  const [importing, setImporting] = useState(false);
+  const [exporting, setExporting] = useState(false);
+  const canImport = access.can('products.create') || access.can('products.update');
   const [report, setReport] = useState<BulkResult | null>(null);
   const canBulk = access.can('products.update') || access.can('products.delete');
   const pageIds = (list.rows ?? []).map((product) => product.id);
@@ -117,8 +124,34 @@ export default function Products() {
     <AdminPage
       title="Products"
       description="What you sell: names, prices, variants and images."
-      actions={access.can('products.create') && <ButtonLink href="/products/new" variant="primary">Add product</ButtonLink>}
+      actions={
+        <span className="flex flex-wrap gap-2">
+          <Button
+            busy={exporting}
+            busyLabel="Exporting…"
+            onClick={() => {
+              setExporting(true);
+              downloadFile('/products/export', { search: filters.search, status: filters.status }, 'products.csv')
+                .catch((e) => toast.error(adminErrorMessage(e)))
+                .finally(() => setExporting(false));
+            }}
+          >
+            Export CSV
+          </Button>
+          {canImport && <Button onClick={() => setImporting(true)}>Import CSV</Button>}
+          {access.can('products.create') && <ButtonLink href="/products/new" variant="primary">Add product</ButtonLink>}
+        </span>
+      }
     >
+      {importing && (
+        <ProductImportDialog
+          onClose={() => setImporting(false)}
+          onDone={() => {
+            list.reload();
+            usage.reload();
+          }}
+        />
+      )}
       {limit && !limit.unlimited && (
         <div className="mb-4 rounded-lg border border-slate-200 bg-white p-3">
           <UsageMeter label="Products on your package" current={limit.current} limit={limit.limit} />

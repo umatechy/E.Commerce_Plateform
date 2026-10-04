@@ -132,6 +132,8 @@ Route::middleware(['auth:sanctum', 'staff.principal', 'required.mfa'])->group(fu
     Route::put('/billing/interval', [BillingController::class, 'changeInterval']);
 
     // --- Catalog (Modules 06-07, Phase B3) ---
+    // Phase B40: before the resource, so "export" is not read as a product id.
+    Route::get('/products/export', [\App\Domain\Catalog\Http\Controllers\ProductTransferController::class, 'export'])->middleware('throttle:10,10,products-export');
     Route::apiResource('products', ProductController::class);
     // Phase B38 (Module 06 §101, Module 07 §99): translations of catalog content.
     Route::get('/translations/{type}/{id}', [\App\Domain\Settings\Http\Controllers\TranslationController::class, 'show'])->whereIn('type', ['product', 'category', 'brand', 'collection']);
@@ -150,6 +152,9 @@ Route::middleware(['auth:sanctum', 'staff.principal', 'required.mfa'])->group(fu
     Route::apiResource('collections', \App\Domain\Catalog\Http\Controllers\CollectionController::class);
     Route::put('/collections/{collection}/products', [\App\Domain\Catalog\Http\Controllers\CollectionController::class, 'products']);
     Route::get('/tags', [\App\Domain\Catalog\Http\Controllers\ProductToolsController::class, 'tags']);
+    // Phase B40 (Module 06 §48–51): CSV import (preview, then confirm) and export.
+    Route::post('/products/import', [\App\Domain\Catalog\Http\Controllers\ProductTransferController::class, 'preview'])->middleware('throttle:10,10,products-import');
+    Route::post('/products/import/{import}/confirm', [\App\Domain\Catalog\Http\Controllers\ProductTransferController::class, 'confirm'])->where('import', '[0-9A-Za-z]{26}')->middleware('throttle:10,10,products-import-confirm');
     Route::post('/products/bulk', [\App\Domain\Catalog\Http\Controllers\ProductToolsController::class, 'bulk'])->middleware('throttle:20,1,products-bulk');
     Route::post('/products/{product}/duplicate', [\App\Domain\Catalog\Http\Controllers\ProductToolsController::class, 'duplicate'])->middleware('throttle:30,1,products-duplicate');
     Route::get('/products/{product}/relations', [\App\Domain\Catalog\Http\Controllers\ProductToolsController::class, 'relations']);
