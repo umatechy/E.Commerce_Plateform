@@ -3,6 +3,7 @@ import { Link } from '@inertiajs/react';
 import StoreLayout from './StoreLayout';
 import LoadingState from '@/Components/LoadingState';
 import { signOut, type Customer } from '@/Storefront/account';
+import { useT } from '@/Storefront/i18n';
 import type { Seo, Shell } from '@/Storefront/types';
 
 const LINKS = [
@@ -23,6 +24,8 @@ export default function AccountLayout({
   title,
   children,
 }: PropsWithChildren<{ shell: Shell; seo: Seo; customer: Customer | null; active: string; title: string }>) {
+  const t = useT();
+
   return (
     <StoreLayout shell={shell} seo={seo}>
       {!customer ? (
@@ -30,9 +33,9 @@ export default function AccountLayout({
       ) : (
         <div className="grid gap-8 md:grid-cols-[200px_1fr]">
           <aside>
-            <p className="mb-3 text-sm text-sf-muted">Signed in as</p>
+            <p className="mb-3 text-sm text-sf-muted">{t('Signed in as')}</p>
             <p className="mb-6 font-semibold">{customer.name}</p>
-            <nav aria-label="Account">
+            <nav aria-label={t('Account')}>
               <ul className="space-y-1 text-sm">
                 {LINKS.map((link) => (
                   <li key={link.path}>
@@ -40,13 +43,13 @@ export default function AccountLayout({
                       href={`${shell.base_path}${link.path}`}
                       className={`block rounded-sf px-3 py-2 ${active === link.path ? 'bg-sf-surface font-semibold' : 'hover:bg-sf-surface'}`}
                     >
-                      {link.label}
+                      {t(link.label)}
                     </Link>
                   </li>
                 ))}
                 <li>
-                  <button type="button" onClick={() => signOut(shell)} className="w-full rounded-sf px-3 py-2 text-left text-sf-muted hover:bg-sf-surface">
-                    Sign out
+                  <button type="button" onClick={() => signOut(shell)} className="w-full rounded-sf px-3 py-2 text-start text-sf-muted hover:bg-sf-surface">
+                    {t('Sign out')}
                   </button>
                 </li>
               </ul>

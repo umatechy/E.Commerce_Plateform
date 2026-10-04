@@ -1,4 +1,5 @@
 import { formatDate } from '@/lib/datetime';
+import { useT } from '@/Storefront/i18n';
 import { Link, router } from '@inertiajs/react';
 import { useEffect, useState, type FormEvent } from 'react';
 import AccountLayout from '@/Components/Storefront/AccountLayout';
@@ -12,6 +13,7 @@ const input = 'w-full rounded-sf border border-sf-border bg-sf-bg px-3 py-2';
 
 /** Phase B26 — a signed-in shopper opens a request, optionally about one of their orders. */
 export default function SupportNew({ storefront, seo }: StorefrontPageProps) {
+  const t = useT();
   const { customer } = useCustomer(storefront, { required: true });
   const [orders, setOrders] = useState<OrderSummary[]>([]);
   const [form, setForm] = useState({ subject: '', category: 'order' as SupportCategory, order: '', message: '' });
@@ -51,17 +53,17 @@ export default function SupportNew({ storefront, seo }: StorefrontPageProps) {
   const fieldError = (field: string) => errors[field]?.[0] && <span className="mt-1 block text-sf-error">{errors[field][0]}</span>;
 
   return (
-    <AccountLayout shell={storefront} seo={seo} customer={customer} active="/account/support" title="New request">
+    <AccountLayout shell={storefront} seo={seo} customer={customer} active="/account/support" title={t('New request')}>
       <Link href={`${base}/account/support`} className="text-sm text-sf-accent">
-        ← All requests
+        <span className="inline-block rtl:rotate-180" aria-hidden="true">←</span> {t('All requests')}
       </Link>
       <form onSubmit={submit} className="mt-6 max-w-xl space-y-4">
         <label className="block text-sm">
-          <span className="mb-1 block text-sf-muted">What is it about?</span>
+          <span className="mb-1 block text-sf-muted">{t('What is it about?')}</span>
           <select value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value as SupportCategory })} className={input} name="category">
             {STORE_CATEGORIES.map((c) => (
               <option key={c} value={c}>
-                {categoryLabel(c)}
+                {t(categoryLabel(c))}
               </option>
             ))}
           </select>
@@ -69,9 +71,9 @@ export default function SupportNew({ storefront, seo }: StorefrontPageProps) {
         </label>
         {orders.length > 0 && (
           <label className="block text-sm">
-            <span className="mb-1 block text-sf-muted">Order (optional)</span>
+            <span className="mb-1 block text-sf-muted">{t('Order (optional)')}</span>
             <select value={form.order} onChange={(e) => setForm({ ...form, order: e.target.value })} className={input} name="order">
-              <option value="">Not about a specific order</option>
+              <option value="">{t('Not about a specific order')}</option>
               {orders.map((o) => (
                 <option key={o.id} value={o.id}>
                   {o.number} — {formatDate(o.placed_at)}
@@ -82,12 +84,12 @@ export default function SupportNew({ storefront, seo }: StorefrontPageProps) {
           </label>
         )}
         <label className="block text-sm">
-          <span className="mb-1 block text-sf-muted">Subject</span>
+          <span className="mb-1 block text-sf-muted">{t('Subject')}</span>
           <input required maxLength={200} value={form.subject} onChange={(e) => setForm({ ...form, subject: e.target.value })} className={input} name="subject" />
           {fieldError('subject')}
         </label>
         <label className="block text-sm">
-          <span className="mb-1 block text-sf-muted">How can we help?</span>
+          <span className="mb-1 block text-sf-muted">{t('How can we help?')}</span>
           <textarea required rows={6} maxLength={10000} value={form.message} onChange={(e) => setForm({ ...form, message: e.target.value })} className={input} name="message" />
           {fieldError('message')}
         </label>
@@ -97,7 +99,7 @@ export default function SupportNew({ storefront, seo }: StorefrontPageProps) {
           </p>
         )}
         <button type="submit" disabled={busy} className="rounded-sf bg-sf-primary px-4 py-2 font-medium text-white disabled:opacity-50">
-          {busy ? 'Sending…' : 'Send request'}
+          {busy ? t('Sending…') : t('Send request')}
         </button>
       </form>
     </AccountLayout>

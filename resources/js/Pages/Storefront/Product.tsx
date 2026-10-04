@@ -7,16 +7,14 @@ import { errorMessage, StorefrontApiError, storefrontFetch } from '@/Storefront/
 import { loginHref } from '@/Storefront/account';
 import { findVariant, initialSelection, isSelectable, type Selection } from '@/Storefront/variants';
 import type { Availability, ProductCard, ProductDetail, StorefrontPageProps } from '@/Storefront/types';
+import { useT } from '@/Storefront/i18n';
 
-const AVAILABILITY: Record<Availability, { label: string; className: string }> = {
-  in_stock: { label: 'In stock', className: 'text-sf-success' },
-  low_stock: { label: 'Only a few left', className: 'text-sf-warning' },
-  backorder: { label: 'Available on backorder', className: 'text-sf-warning' },
-  out_of_stock: { label: 'Sold out', className: 'text-sf-error' },
-};
+const AVAILABILITY: Record<Availability, string> = { in_stock: 'text-sf-success', low_stock: 'text-sf-warning', backorder: 'text-sf-warning', out_of_stock: 'text-sf-error' };
 
 export default function Product({ storefront, seo, product, related }: StorefrontPageProps & { product: ProductDetail; related: ProductCard[] }) {
   const base = storefront.base_path;
+  const t = useT();
+  const availabilityLabel: Record<Availability, string> = { in_stock: t('In stock'), low_stock: t('Only a few left'), backorder: t('Available on backorder'), out_of_stock: t('Sold out') };
   const axes = product.options.map((option) => option.name);
   const [selection, setSelection] = useState<Selection>(() => initialSelection(product.variants));
   const [quantity, setQuantity] = useState(1);
@@ -67,8 +65,8 @@ export default function Product({ storefront, seo, product, related }: Storefron
   return (
     <StoreLayout shell={storefront} seo={seo}>
       {product.breadcrumbs.length > 0 && (
-        <nav aria-label="Breadcrumb" className="mb-4 text-sm text-sf-muted">
-          <Link href={base || '/'}>Home</Link>
+        <nav aria-label={t('Breadcrumb')} className="mb-4 text-sm text-sf-muted">
+          <Link href={base || '/'}>{t('Home')}</Link>
           {product.breadcrumbs.map((crumb) => (
             <span key={crumb.slug}>
               {' / '}
@@ -84,7 +82,7 @@ export default function Product({ storefront, seo, product, related }: Storefron
             {shownImage ? (
               <img src={shownImage.url} alt={shownImage.alt ?? product.name} width={shownImage.width} height={shownImage.height} className="h-full w-full object-cover" />
             ) : (
-              <div className="flex h-full items-center justify-center text-sf-muted">No image</div>
+              <div className="flex h-full items-center justify-center text-sf-muted">{t('No image')}</div>
             )}
           </div>
           {product.images.length > 1 && (
@@ -95,7 +93,7 @@ export default function Product({ storefront, seo, product, related }: Storefron
                   type="button"
                   onClick={() => setActiveImageId(image.id)}
                   className={`h-16 w-16 flex-none overflow-hidden rounded-sf border ${image.id === shownImage?.id ? 'border-sf-primary' : 'border-sf-border'}`}
-                  aria-label={`Show image ${image.alt ?? ''}`}
+                  aria-label={`${t('Show image')} ${image.alt ?? ''}`}
                 >
                   <img src={image.url} alt="" className="h-full w-full object-cover" loading="lazy" />
                 </button>
@@ -138,12 +136,12 @@ export default function Product({ storefront, seo, product, related }: Storefron
             </fieldset>
           ))}
 
-          {availability && <p className={`mt-4 text-sm font-medium ${AVAILABILITY[availability].className}`}>{AVAILABILITY[availability].label}</p>}
-          {hasVariants && !variant && <p className="mt-4 text-sm text-sf-muted">This combination is not available.</p>}
+          {availability && <p className={`mt-4 text-sm font-medium ${AVAILABILITY[availability]}`}>{availabilityLabel[availability]}</p>}
+          {hasVariants && !variant && <p className="mt-4 text-sm text-sf-muted">{t('This combination is not available.')}</p>}
 
           <div className="mt-6 flex items-center gap-3">
             <label className="sr-only" htmlFor="quantity">
-              Quantity
+              {t('Quantity')}
             </label>
             <input
               id="quantity"
@@ -160,20 +158,20 @@ export default function Product({ storefront, seo, product, related }: Storefron
               disabled={!purchasable || status.type === 'busy'}
               className="flex-1 rounded-sf bg-sf-primary px-5 py-3 font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50"
             >
-              {status.type === 'busy' ? 'Adding…' : purchasable ? 'Add to cart' : 'Unavailable'}
+              {status.type === 'busy' ? t('Adding…') : purchasable ? t('Add to cart') : t('Unavailable')}
             </button>
           </div>
           <button type="button" onClick={saveToWishlist} disabled={status.type === 'busy'} className="mt-3 text-sm text-sf-accent disabled:opacity-50">
-            ♡ Save to wishlist
+            ♡ {t('Save to wishlist')}
           </button>
           {status.type === 'saved' && (
             <p className="mt-3 text-sm text-sf-success" role="status">
-              Saved to your wishlist. <Link href={`${base}/account/wishlist`} className="underline">View wishlist</Link>
+              {t('Saved to your wishlist.')} <Link href={`${base}/account/wishlist`} className="underline">{t('View wishlist')}</Link>
             </p>
           )}
           {status.type === 'added' && (
             <p className="mt-3 text-sm text-sf-success" role="status">
-              Added to your cart. <Link href={`${base}/cart`} className="underline">View cart</Link>
+              {t('Added to your cart.')} <Link href={`${base}/cart`} className="underline">{t('View cart')}</Link>
             </p>
           )}
           {status.type === 'error' && (
@@ -190,7 +188,7 @@ export default function Product({ storefront, seo, product, related }: Storefron
 
       {related.length > 0 && (
         <section className="mt-16">
-          <h2 className="mb-4 text-2xl font-semibold">You may also like</h2>
+          <h2 className="mb-4 text-2xl font-semibold">{t('You may also like')}</h2>
           <ProductGrid products={related} basePath={base} />
         </section>
       )}

@@ -133,6 +133,9 @@ Route::middleware(['auth:sanctum', 'staff.principal', 'required.mfa'])->group(fu
 
     // --- Catalog (Modules 06-07, Phase B3) ---
     Route::apiResource('products', ProductController::class);
+    // Phase B38 (Module 06 §101, Module 07 §99): translations of catalog content.
+    Route::get('/translations/{type}/{id}', [\App\Domain\Settings\Http\Controllers\TranslationController::class, 'show'])->whereIn('type', ['product', 'category', 'brand']);
+    Route::put('/translations/{type}/{id}', [\App\Domain\Settings\Http\Controllers\TranslationController::class, 'update'])->whereIn('type', ['product', 'category', 'brand'])->middleware('throttle:60,1,translations');
     // Phase B24: storefront images of a product.
     Route::get('/products/{product}/images', [\App\Domain\Catalog\Http\Controllers\ProductImageController::class, 'index']);
     Route::post('/products/{product}/images', [\App\Domain\Catalog\Http\Controllers\ProductImageController::class, 'store']);

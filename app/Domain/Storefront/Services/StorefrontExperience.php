@@ -62,6 +62,8 @@ final class StorefrontExperience
         // Module 17 §39/§51 (Phase B36): the inherited, package-checked presentation.
         $presentation = $this->themes->present($config, $theme['theme_key'] ?? null);
         $announcement = collect($presentation['sections'])->firstWhere('type', SectionType::AnnouncementBar->value);
+        $language = app(StorefrontLocale::class);
+        $tagline = $branding['translations'][$language->current()]['tagline'] ?? $branding['tagline'] ?? null;
         $counts = $this->catalog->productCountsByCategory();
 
         return [
@@ -69,9 +71,10 @@ final class StorefrontExperience
                 'name' => $store->name,
                 'slug' => $store->slug,
                 'currency' => $this->presenter->currency(),
-                'locale' => $this->config->get('store.default_locale'),
+                // Phase B38: the language of this page (LOC-001); `languages` are the ones offered.
+                'locale' => $language->current(),
                 'timezone' => $this->config->get('store.timezone'), // dates are shown in the store's timezone (Module 33 §50.3)
-                'tagline' => $branding['tagline'] ?? null,
+                'tagline' => $tagline,
                 'logo_url' => $branding['logo_url'] ?? null,
                 'favicon_url' => $branding['favicon_url'] ?? null,
                 'social_links' => $branding['social_links'] ?? (object) [],
@@ -84,7 +87,13 @@ final class StorefrontExperience
                 'motion' => $presentation['motion'],
                 'custom_css' => $theme['custom_css'] ?? null,
             ],
-            'announcement' => $announcement['config']['message'] ?? null,
+            'announcement' => $announcement !== null ? ($this->localized($announcement['config'] ?? [])['message'] ?? null) : null,
+            'language' => [
+                'current' => $language->current(),
+                'default' => $language->default(),
+                'dir' => $language->direction(),
+                'offered' => \App\Domain\Settings\Services\Locales::describe($language->offered()),
+            ],
             'navigation' => [
                 'categories' => array_values(array_filter(
                     $this->presenter->categoryTree($counts),
@@ -125,34 +134,34 @@ final class StorefrontExperience
 
         $resolved = [];
         foreach ($sections as $section) {
-            $config = $section['config'] ?? [];
+            $config = $this->localized($section['config'] ?? []);
             $resolved[] = match ($section['type']) {
                 SectionType::Hero->value, SectionType::PromotionalBanner->value => ['type' => $section['type'], ...$config],
                 // Phase B36 (Module 17 §25): the advanced sections.
                 SectionType::BestSellers->value => [
                     'type' => $section['type'],
-                    'heading' => $config['heading'] ?? 'Best sellers',
-                    'products' => $this->catalog->bestSellers((int) ($config['limit'] ?? 8))->map(fn (Product $p) => $this->presenter->card($p))->all(),
+                    'heading' => $config['heading'] ?? null, // Phase B38: no heading set — the storefront shows its own, in the visitor's language
+                    'products' => $this->presenter->cards($this->catalog->bestSellers((int) ($config['limit'] ?? 8))),
                 ],
                 SectionType::SaleProducts->value => [
                     'type' => $section['type'],
-                    'heading' => $config['heading'] ?? 'On sale',
-                    'products' => $this->catalog->onSale((int) ($config['limit'] ?? 8))->map(fn (Product $p) => $this->presenter->card($p))->all(),
+                    'heading' => $config['heading'] ?? null, // Phase B38: no heading set — the storefront shows its own, in the visitor's language
+                    'products' => $this->presenter->cards($this->catalog->onSale((int) ($config['limit'] ?? 8))),
                 ],
                 SectionType::FeaturedBrands->value => [
                     'type' => $section['type'],
-                    'heading' => $config['heading'] ?? 'Shop by brand',
+                    'heading' => $config['heading'] ?? null, // Phase B38: no heading set — the storefront shows its own, in the visitor's language
                     'brands' => $this->catalog->brands()->take((int) ($config['limit'] ?? 12))->map(fn (\App\Domain\Catalog\Models\Brand $b) => ['name' => $b->name, 'slug' => $b->slug])->values()->all(),
                 ],
                 SectionType::Testimonials->value, SectionType::Faq->value, SectionType::RichText->value, SectionType::TrustBadges->value => ['type' => $section['type'], ...$config],
                 SectionType::FeaturedProducts->value => [
                     'type' => $section['type'],
-                    'heading' => $config['heading'] ?? 'New arrivals',
-                    'products' => $this->catalog->newest((int) ($config['limit'] ?? 8))->map(fn (Product $p) => $this->presenter->card($p))->all(),
+                    'heading' => $config['heading'] ?? null, // Phase B38: no heading set — the storefront shows its own, in the visitor's language
+                    'products' => $this->presenter->cards($this->catalog->newest((int) ($config['limit'] ?? 8))),
                 ],
                 SectionType::FeaturedCategories->value => [
                     'type' => $section['type'],
-                    'heading' => $config['heading'] ?? 'Shop by category',
+                    'heading' => $config['heading'] ?? null, // Phase B38: no heading set — the storefront shows its own, in the visitor's language
                     'categories' => array_slice(array_values(array_filter(
                         $this->presenter->categoryTree($counts),
                         fn (array $c) => ($c['product_count'] ?? 0) > 0,
@@ -186,7 +195,7 @@ final class StorefrontExperience
             $page = $this->catalog->search($filters);
 
             return [
-                'products' => collect($page->items())->map(fn (Product $p) => $this->presenter->card($p))->all(),
+                'products' => $this->presenter->cards($page->items()),
                 'pagination' => [
                     'page' => $page->currentPage(),
                     'per_page' => $page->perPage(),
@@ -224,8 +233,7 @@ final class StorefrontExperience
 
             return [
                 'product' => $detail,
-                'related' => $this->catalog->newest(4, $product->id, $product->primary_category_id)
-                    ->map(fn (Product $p) => $this->presenter->card($p))->all(),
+                'related' => $this->presenter->cards($this->catalog->newest(4, $product->id, $product->primary_category_id)),
                 'seo' => $this->presenter->seo($this->seo->forProduct($product), array_values(array_filter([
                     $this->presenter->productStructuredData($product, $detail),
                     $breadcrumbs !== [] ? $this->structuredData->forBreadcrumbs($breadcrumbs) : null,
@@ -342,5 +350,30 @@ final class StorefrontExperience
             ['type' => SectionType::FeaturedCategories->value, 'config' => ['limit' => 6]],
             ['type' => SectionType::FeaturedProducts->value, 'config' => ['limit' => 8]],
         ];
+    }
+    /**
+     * Phase B38 (LOC-002, Module 35 §4.3): a theme section's texts in the
+     * visitor's language — each text, and each text of a list entry, falls
+     * back to the original when it has no translation. Numbers, links and
+     * icons are always the original's.
+     *
+     * @param array<string, mixed> $config
+     * @return array<string, mixed>
+     */
+    private function localized(array $config): array
+    {
+        $translation = $config['translations'][app(StorefrontLocale::class)->current()] ?? [];
+        unset($config['translations']);
+        foreach ($translation as $key => $value) {
+            if ($key === 'items' && is_array($value) && is_array($config['items'] ?? null)) {
+                foreach ($config['items'] as $i => $item) {
+                    $config['items'][$i] = [...$item, ...array_filter($value[$i] ?? [], fn ($v) => is_string($v) && $v !== '')];
+                }
+            } elseif (is_string($value) && $value !== '') {
+                $config[$key] = $value;
+            }
+        }
+
+        return $config;
     }
 }

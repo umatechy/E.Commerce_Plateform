@@ -1,5 +1,6 @@
 import { formatDateTime } from '@/lib/datetime';
 import type { TicketMessage } from '@/lib/support';
+import { useT } from '@/Storefront/i18n';
 
 /**
  * A ticket's conversation, oldest first. Message text is rendered as
@@ -17,9 +18,10 @@ export default function MessageThread({
   tone: 'storefront' | 'admin';
 }) {
   const sf = tone === 'storefront';
+  const t = useT();
 
   return (
-    <ol className="space-y-4" aria-label="Conversation">
+    <ol className="space-y-4" aria-label={t('Conversation')}>
       {messages.map((message) => {
         const own = perspective === 'requester' ? message.author_type === 'requester' : message.author_type === 'agent';
         const box = message.internal
@@ -37,10 +39,10 @@ export default function MessageThread({
             <div className={`w-full max-w-[90%] border p-4 sm:max-w-[80%] ${sf ? 'rounded-sf' : 'rounded'} ${box}`}>
               <div className={`mb-2 flex flex-wrap items-center gap-2 text-xs ${sf ? 'text-sf-muted' : 'text-gray-500'}`}>
                 <span className={`font-semibold ${sf ? 'text-sf-text' : 'text-gray-800'}`}>{message.author_name}</span>
-                {message.author_type === 'agent' && perspective === 'requester' && <span>· Support team</span>}
+                {message.author_type === 'agent' && perspective === 'requester' && <span>· {t('Support team')}</span>}
                 {message.author_type === 'requester' && perspective === 'agent' && <span>· Requester</span>}
                 {message.internal && <span className="rounded bg-amber-200 px-1.5 py-0.5 font-medium text-amber-900">Internal note</span>}
-                <time dateTime={message.created_at} className="ml-auto">
+                <time dateTime={message.created_at} className="ms-auto">
                   {formatDateTime(message.created_at)}
                 </time>
               </div>

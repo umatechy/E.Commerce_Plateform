@@ -34,12 +34,67 @@ final class StorefrontPresenter
         private readonly ConfigService $config,
     ) {}
 
+    /**
+     * The language of the current request. Read from the container on every
+     * call, never kept: a controller (and with it this presenter) may outlive
+     * one request — a long-running worker, or the router's cached controller —
+     * and must not answer in an earlier visitor's language.
+     */
+    private function locale(): StorefrontLocale
+    {
+        return app(StorefrontLocale::class);
+    }
+
+    private function translations(): \App\Domain\Settings\Services\TranslationService
+    {
+        return app(\App\Domain\Settings\Services\TranslationService::class);
+    }
+
+    /**
+     * Phase B38 (Module 06 §101, Module 07 §99): a field in the visitor's
+     * language, or the original when it has no translation.
+     */
+    private function tr(string $type, int $id, string $field, ?string $original): ?string
+    {
+        return $this->translations()->value($type, $id, $field, $original, $this->locale()->current(), $this->locale()->default());
+    }
+
+    /**
+     * Loads the translations of a list of products (and their brands) with
+     * one query each, before their cards are made.
+     *
+     * @param iterable<Product> $products
+     */
+    public function primeProducts(iterable $products): void
+    {
+        if ($this->locale()->isDefault()) {
+            return;
+        }
+        $list = collect($products);
+        $this->translations()->prime('product', $list->pluck('id')->all(), $this->locale()->current());
+        $this->translations()->prime('brand', $list->pluck('brand_id')->filter()->unique()->all(), $this->locale()->current());
+    }
+
     public function currency(): string
     {
         return (string) $this->config->get('store.default_currency');
     }
 
     /** @return array<string, mixed> */
+    /**
+     * Cards for a list of products, translations loaded in one go (Phase B38).
+     *
+     * @param iterable<Product> $products
+     * @return list<array<string, mixed>>
+     */
+    public function cards(iterable $products): array
+    {
+        $list = collect($products);
+        $this->primeProducts($list);
+
+        return $list->map(fn (Product $product) => $this->card($product))->values()->all();
+    }
+
     public function card(Product $product): array
     {
         $from = $this->int($product->getAttribute('price_from_minor'));
@@ -50,9 +105,9 @@ final class StorefrontPresenter
         return [
             'id' => $product->public_id,
             'slug' => $product->slug,
-            'name' => $product->name,
-            'summary' => $product->short_description !== null ? Str::limit(strip_tags($product->short_description), 160) : null,
-            'brand' => $product->brand !== null ? ['name' => $product->brand->name, 'slug' => $product->brand->slug] : null,
+            'name' => $this->tr('product', $product->id, 'name', $product->name),
+            'summary' => ($summary = $this->tr('product', $product->id, 'short_description', $product->short_description)) !== null ? Str::limit(strip_tags($summary), 160) : null,
+            'brand' => $product->brand !== null ? ['name' => $this->tr('brand', $product->brand->id, 'name', $product->brand->name), 'slug' => $product->brand->slug] : null,
             'price' => [
                 'currency' => $product->currency ?? $this->currency(),
                 'amount_minor' => $from,
@@ -100,7 +155,7 @@ final class StorefrontPresenter
         return [
             ...$this->card($product),
             'sku' => $product->sku,
-            'description_html' => $product->description !== null ? $this->sanitizer->sanitize($product->description) : null,
+            'description_html' => ($description = $this->tr('product', $product->id, 'description', $product->description)) !== null ? $this->sanitizer->sanitize($description) : null,
             'images' => $product->images->map(fn (ProductImage $image) => $this->image($image))->values()->all(),
             'options' => $this->optionAxes($variants->all()),
             'variants' => $presentedVariants,
@@ -119,6 +174,9 @@ final class StorefrontPresenter
      */
     public function categoryTree(array $counts): array
     {
+        if (! $this->locale()->isDefault()) {
+            $this->translations()->prime('category', $this->catalog->visibleCategories()->pluck('id')->all(), $this->locale()->current());
+        }
         $children = $this->catalog->visibleCategories()->groupBy('parent_id');
         $build = function (Category $category, int $depth) use (&$build, $children, $counts): array {
             return [
@@ -141,8 +199,8 @@ final class StorefrontPresenter
         return array_filter([
             'id' => $category->public_id,
             'slug' => $category->slug,
-            'name' => $category->name,
-            'description' => $category->description,
+            'name' => $this->tr('category', $category->id, 'name', $category->name),
+            'description' => $this->tr('category', $category->id, 'description', $category->description),
             'product_count' => $productCount,
             'in_menu' => in_array($category->visibility, ['public', 'navigation_only'], true),
         ], fn ($value) => $value !== null);
@@ -151,7 +209,7 @@ final class StorefrontPresenter
     /** @return array<string, mixed> */
     public function brand(Brand $brand): array
     {
-        return ['slug' => $brand->slug, 'name' => $brand->name, 'description' => $brand->description];
+        return ['slug' => $brand->slug, 'name' => $this->tr('brand', $brand->id, 'name', $brand->name), 'description' => $this->tr('brand', $brand->id, 'description', $brand->description)];
     }
 
     /** @return array<string, mixed> */
@@ -191,12 +249,12 @@ final class StorefrontPresenter
         return array_filter([
             '@context' => 'https://schema.org',
             '@type' => 'Product',
-            'name' => $product->name,
+            'name' => $detail['name'],
             'description' => $seo->metaDescription,
             'sku' => $product->sku,
             'url' => $seo->canonicalUrl,
             'image' => array_column($detail['images'], 'url') ?: null,
-            'brand' => $product->brand !== null ? ['@type' => 'Brand', 'name' => $product->brand->name] : null,
+            'brand' => $detail['brand'] !== null ? ['@type' => 'Brand', 'name' => $detail['brand']['name']] : null,
             'offers' => $detail['price']['amount_minor'] === null ? null : ($detail['price']['max_amount_minor'] !== null ? [
                 '@type' => 'AggregateOffer',
                 'priceCurrency' => $currency,
@@ -279,7 +337,7 @@ final class StorefrontPresenter
 
         $trail = [];
         for ($current = $visible->get($category->id); $current !== null; $current = $current->parent_id !== null ? $visible->get($current->parent_id) : null) {
-            array_unshift($trail, ['name' => $current->name, 'slug' => $current->slug]);
+            array_unshift($trail, ['name' => $this->tr('category', $current->id, 'name', $current->name), 'slug' => $current->slug]);
         }
 
         return $trail;

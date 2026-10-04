@@ -1,4 +1,5 @@
 import { Link } from '@inertiajs/react';
+import { useT } from '@/Storefront/i18n';
 import { useCallback, useEffect, useState } from 'react';
 import AccountLayout from '@/Components/Storefront/AccountLayout';
 import EmptyState from '@/Components/EmptyState';
@@ -18,6 +19,7 @@ type Item = {
 };
 
 export default function Wishlist({ storefront, seo }: StorefrontPageProps) {
+  const t = useT();
   const { customer } = useCustomer(storefront, { required: true });
   const [items, setItems] = useState<Item[] | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
@@ -43,13 +45,13 @@ export default function Wishlist({ storefront, seo }: StorefrontPageProps) {
   }
 
   return (
-    <AccountLayout shell={storefront} seo={seo} customer={customer} active="/account/wishlist" title="Wishlist">
+    <AccountLayout shell={storefront} seo={seo} customer={customer} active="/account/wishlist" title={t('Wishlist')}>
       {notice && (
         <p className="mb-4 text-sm" role="status">
           {notice}
         </p>
       )}
-      {items?.length === 0 && <EmptyState title="Your wishlist is empty" description="Save products you like from their product page." />}
+      {items?.length === 0 && <EmptyState title={t('Your wishlist is empty')} description={t('Save products you like from their product page.')} />}
       <ul className="divide-y divide-sf-border">
         {items?.map((item) => (
           <li key={item.id} className="flex items-center gap-4 py-4">
@@ -60,7 +62,7 @@ export default function Wishlist({ storefront, seo }: StorefrontPageProps) {
                   {item.product_name}
                 </Link>
               ) : (
-                <span className="font-medium">{item.product_name ?? 'No longer available'}</span>
+                <span className="font-medium">{item.product_name ?? t('No longer available')}</span>
               )}
               {item.variant_options && (
                 <span className="block text-sm text-sf-muted">
@@ -70,17 +72,17 @@ export default function Wishlist({ storefront, seo }: StorefrontPageProps) {
                 </span>
               )}
               <span className="block text-sm">
-                {item.availability === 'available' && item.current_price_minor !== null ? formatMoney(item.current_price_minor, storefront.store.currency) : 'Unavailable'}
+                {item.availability === 'available' && item.current_price_minor !== null ? formatMoney(item.current_price_minor, storefront.store.currency) : t('Unavailable')}
               </span>
             </div>
             <div className="flex flex-col items-end gap-2 text-sm">
               {item.availability === 'available' && (
-                <button type="button" onClick={() => act(`/wishlist/${item.id}/move-to-cart`, 'POST', 'Moved to your cart.')} className="rounded-sf bg-sf-primary px-3 py-1 text-white">
-                  Move to cart
+                <button type="button" onClick={() => act(`/wishlist/${item.id}/move-to-cart`, 'POST', t('Moved to your cart.'))} className="rounded-sf bg-sf-primary px-3 py-1 text-white">
+                  {t('Move to cart')}
                 </button>
               )}
-              <button type="button" onClick={() => act(`/wishlist/${item.id}`, 'DELETE', 'Removed.')} className="text-sf-muted">
-                Remove
+              <button type="button" onClick={() => act(`/wishlist/${item.id}`, 'DELETE', t('Removed.'))} className="text-sf-muted">
+                {t('Remove')}
               </button>
             </div>
           </li>

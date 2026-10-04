@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link } from '@inertiajs/react';
 import Price from './Price';
 import { errorMessage, storefrontFetch } from '@/Storefront/api';
+import { useT } from '@/Storefront/i18n';
 import { useStorefrontTheme, type ThemeLayout } from '@/Storefront/theme';
 import type { ProductCard as Card } from '@/Storefront/types';
 
@@ -55,8 +56,9 @@ export default function ProductCard({ product, basePath }: { product: Card; base
 }
 
 function CardImage({ product }: { product: Card }) {
+  const t = useT();
   if (!product.image) {
-    return <div className="flex h-full items-center justify-center text-sm text-sf-muted">No image</div>;
+    return <div className="flex h-full items-center justify-center text-sm text-sf-muted">{t('No image')}</div>;
   }
 
   return (
@@ -84,30 +86,32 @@ function CardImage({ product }: { product: Card }) {
 }
 
 function Badges({ product }: { product: Card }) {
+  const t = useT();
   return (
     <>
-      {product.price.on_sale && <span className="absolute left-2 top-2 rounded-sf bg-sf-error px-2 py-0.5 text-xs font-semibold text-white">Sale</span>}
-      {!product.in_stock && <span className="absolute right-2 top-2 rounded-sf bg-gray-900/85 px-2 py-0.5 text-xs text-white">Sold out</span>}
+      {product.price.on_sale && <span className="absolute start-2 top-2 rounded-sf bg-sf-error px-2 py-0.5 text-xs font-semibold text-white">{t('Sale')}</span>}
+      {!product.in_stock && <span className="absolute end-2 top-2 rounded-sf bg-gray-900/85 px-2 py-0.5 text-xs text-white">{t('Sold out')}</span>}
     </>
   );
 }
 
 function QuickAdd({ product, href }: { product: Card; href: string }) {
   const theme = useStorefrontTheme();
+  const t = useT();
   const [state, setState] = useState<{ type: 'idle' | 'busy' | 'added' } | { type: 'error'; message: string }>({ type: 'idle' });
 
   if (!theme || product.price.amount_minor === null) return null;
   if (product.has_variants) {
     return (
       <Link href={href} className="sf-btn mt-2 inline-flex justify-center rounded-sf border border-sf-border px-3 py-1.5 text-sm font-medium hover:border-sf-accent">
-        Choose options<span className="sr-only"> for {product.name}</span>
+        {t('Choose options')}<span className="sr-only"> {product.name}</span>
       </Link>
     );
   }
   if (!product.in_stock) {
     return (
       <button type="button" disabled className="mt-2 rounded-sf border border-sf-border px-3 py-1.5 text-sm text-sf-muted">
-        Sold out
+        {t('Sold out')}
       </button>
     );
   }
@@ -131,11 +135,11 @@ function QuickAdd({ product, href }: { product: Card; href: string }) {
         disabled={state.type === 'busy'}
         className={`sf-btn w-full rounded-sf bg-sf-primary px-3 py-1.5 text-sm font-semibold text-white hover:opacity-90 disabled:opacity-60 ${state.type === 'added' ? 'sf-added' : ''}`}
       >
-        {state.type === 'busy' ? 'Adding…' : state.type === 'added' ? 'Added ✓' : 'Add to cart'}
+        {state.type === 'busy' ? t('Adding…') : state.type === 'added' ? t('Added ✓') : t('Add to cart')}
         <span className="sr-only"> {product.name}</span>
       </button>
       <p role="status" aria-live="polite" className="sr-only">
-        {state.type === 'added' ? `${product.name} was added to your cart.` : ''}
+        {state.type === 'added' ? t('{name} was added to your cart.', { name: product.name }) : ''}
       </p>
       {state.type === 'error' && (
         <p role="alert" className="mt-1 text-xs text-sf-error">

@@ -371,9 +371,9 @@ Architecture v1.0 arrived after this review was written and are now in
 | PERF-007 | 🟡 | Usage counters; no storage/bandwidth | P2 |
 | PERF-008 | ❌ | No APM/latency monitoring | P1 |
 | REL-001–007 | ✅ | Transactions, idempotency, outbox dead-letter, health checks, docs | P0 |
-| LOC-001–002, 006 | ❌ | **No i18n / RTL** | P1 |
+| LOC-001–002, 006 | ✅ | B38: English and Urdu storefronts, store-chosen languages, Urdu interface, translated catalog and theme texts with fallback, RTL with self-hosted Nastaliq, hreflang (checkpoint-b38). Not yet: admin and emails in Urdu | P1 |
 | LOC-003 | ➖ | — | — |
-| LOC-004 | 🟡 | Timezone respected (B28). Formats follow the browser locale, not the store locale (G11) | P1 |
+| LOC-004 | ✅ | Timezone (B28); storefront dates in the store language (B38) | P1 |
 | LOC-005 | ✅ | Store currency | P1 |
 | A11Y-001–004, 006 | ⚪ | No accessibility audit | P1 |
 | A11Y-005 | ➖ | No animations yet | P1 |
@@ -412,7 +412,7 @@ existing pattern: feature tests plus tenant-isolation tests for every endpoint.
 | G8 | ✅ **Closed in B33** (checkpoint-b33; docs/architecture/b33-returns.md; B34 added request photos, guest returns by emailed link, store credit and the damaged-stock balance — checkpoint-b34; B35 added store credit expiry (off until the owner sets a policy), credit on staff orders and photos in the privacy export — checkpoint-b35; still not built: courier return labels and gateway refunds (G9). Returns, exchanges, refunds flow | ORD-008, M09 §45–54, M13 §70 | Manual handling only | Return request → inspection → refund/restock | P1 | — |
 | G9 | Real payment and courier providers | PAY-002/005, SHIP-007, M12 §20–21 | Online payment not possible | **Owner decision**: providers and merchant credentials; then adapters | P1 | Owner decision |
 | G10 | Real SMS/WhatsApp/push providers | NOTIF-003/004, M21 §18–20 | WhatsApp is central for the Pakistan market (M01 §14) | **Owner decision**: provider; then adapters | P1 | Owner decision |
-| G11 | Localization + RTL (Urdu) | LOC-001/002/006, M05 §40–41, M17 §9 | Cannot serve Urdu storefronts | i18n framework, RTL-aware components | P1 | — |
+| G11 | ✅ **Closed for storefronts in B38** (checkpoint-b38; not built: admin/emails in Urdu, per-language SEO fields — docs/architecture/b38-localization.md §10). Localization + RTL (Urdu) | LOC-001/002/006, M05 §40–41, M17 §9 | Cannot serve Urdu storefronts | i18n framework, RTL-aware components | P1 | — |
 | G12 | Module 34 documentation side | SUP-001/005/006, M34 §6–15, §31–34, §43 | No self-help for merchants | Knowledge base, help center, release notes | P1 | — |
 | G13 | API contract quality: error shape, OpenAPI, E2E tests | API-010/012, TEST-009, Master Prompt §15 | Integrators break; regressions reach users | Standard error envelope, OpenAPI generation, Playwright journeys in CI | P1 | G2 (request IDs) |
 | G14 | Store lifecycle states + closure/retention workflow | STORE-003/009, MT-017, M03 §7–8, §35–37 | Undefined behavior on cancellation/deletion | Add missing states and a retention-safe deletion workflow | P1 | Retention period decision |

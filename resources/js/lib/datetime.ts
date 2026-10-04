@@ -8,6 +8,8 @@
  * per page visit by app.tsx (see timezoneFromProps).
  */
 let displayTimezone: string | undefined;
+// Phase B38 (LOC-004): a storefront formats dates in its language (en-PK, ur-PK); admin pages use the browser's.
+let displayLocale: string | undefined;
 
 type TimezoneProps = {
   auth?: { timezone?: string | null } | null;
@@ -25,13 +27,25 @@ export function setDisplayTimezone(timezone: string | undefined): void {
   displayTimezone = timezone;
 }
 
+/** The language tag of a storefront page (e.g. ur-PK), or undefined on admin pages. */
+export function localeFromProps(pageProps: object): string | undefined {
+  const props = pageProps as { storefront?: { language?: { current?: string; offered?: { code: string; tag: string }[] } } };
+  const language = props.storefront?.language;
+
+  return language?.offered?.find((item) => item.code === language.current)?.tag;
+}
+
+export function setDisplayLocale(locale: string | undefined): void {
+  displayLocale = locale;
+}
+
 function format(iso: string, options: Intl.DateTimeFormatOptions, timeZone: string | undefined): string {
   const date = new Date(iso);
   try {
-    return new Intl.DateTimeFormat(undefined, { ...options, timeZone }).format(date);
+    return new Intl.DateTimeFormat(displayLocale, { ...options, timeZone }).format(date);
   } catch {
     // A timezone this browser does not know: show the date rather than nothing.
-    return new Intl.DateTimeFormat(undefined, options).format(date);
+    return new Intl.DateTimeFormat(displayLocale, options).format(date);
   }
 }
 

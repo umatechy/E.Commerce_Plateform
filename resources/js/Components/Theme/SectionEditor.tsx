@@ -16,6 +16,7 @@ export default function SectionEditor({
   count,
   canEdit,
   canReorder,
+  languages = [],
   onChange,
   onMove,
   onRemove,
@@ -28,6 +29,8 @@ export default function SectionEditor({
   onChange: (patch: Partial<Section>) => void;
   onMove: (by: number) => void;
   onRemove: () => void;
+  /** Phase B38: the store's other storefront languages. */
+  languages?: { code: string; name: string; native: string; dir: string }[];
 }) {
   const name = humanize(section.type);
   const fields = SECTION_FIELDS[section.type] ?? [];
@@ -121,7 +124,68 @@ export default function SectionEditor({
             )}
           </fieldset>
         )}
+        {languages.map((language) => (
+          <SectionTranslation key={language.code} section={section} language={language} canEdit={canEdit} onChange={onChange} />
+        ))}
       </div>
     </li>
+  );
+}
+
+/**
+ * Phase B38 (LOC-002): the section's texts in another storefront language.
+ * Empty fields show the original; numbers, links, images and icons are
+ * always the original's.
+ */
+function SectionTranslation({ section, language, canEdit, onChange }: { section: Section; language: { code: string; name: string; native: string; dir: string }; canEdit: boolean; onChange: (patch: Partial<Section>) => void }) {
+  const texts = (SECTION_FIELDS[section.type] ?? []).filter((field) => field.kind !== 'url' && field.kind !== 'number' && field.kind !== 'image');
+  const items = SECTION_ITEMS[section.type];
+  if (texts.length === 0 && !items) return null;
+  const all = (section.config.translations ?? {}) as Record<string, Record<string, string | SectionItem[]>>;
+  const mine = all[language.code] ?? {};
+  const original = (Array.isArray(section.config.items) ? section.config.items : []) as SectionItem[];
+  const translatedItems = (Array.isArray(mine.items) ? mine.items : []) as SectionItem[];
+  const set = (next: Record<string, string | SectionItem[]>) => onChange({ config: { ...section.config, translations: { ...all, [language.code]: next } } });
+  const filled = Object.values(mine).some((value) => (Array.isArray(value) ? value.some((item) => Object.values(item).some(Boolean)) : value !== ''));
+
+  return (
+    <details className="rounded-md border border-dashed border-slate-300 p-3" open={filled}>
+      <summary className="cursor-pointer text-sm font-medium text-slate-700">
+        {language.name} <span lang={language.code}>({language.native})</span>
+      </summary>
+      <div className="mt-3 grid gap-3 sm:grid-cols-2" dir={language.dir} lang={language.code}>
+        {texts.map((field) =>
+          field.kind === 'textarea' ? (
+            <div key={field.key} className="sm:col-span-2">
+              <TextAreaField label={`${field.label} (${language.name})`} optional rows={3} maxLength={2000} disabled={!canEdit} value={String(mine[field.key] ?? '')} onChange={(value) => set({ ...mine, [field.key]: value })} hint={section.config[field.key] ? `Original: ${String(section.config[field.key]).slice(0, 100)}` : undefined} />
+            </div>
+          ) : (
+            <TextField key={field.key} label={`${field.label} (${language.name})`} optional disabled={!canEdit} value={String(mine[field.key] ?? '')} onChange={(value) => set({ ...mine, [field.key]: value })} hint={section.config[field.key] ? `Original: ${String(section.config[field.key]).slice(0, 100)}` : undefined} />
+          ),
+        )}
+        {items &&
+          original.map((item, i) => (
+            <div key={i} className="grid gap-3 rounded-md bg-slate-50 p-3 sm:col-span-2 sm:grid-cols-2">
+              {items.fields
+                .filter((field) => field.kind !== 'icon')
+                .map((field) => (
+                  <TextField
+                    key={field.key}
+                    label={`${field.label} ${i + 1} (${language.name})`}
+                    optional
+                    disabled={!canEdit}
+                    value={translatedItems[i]?.[field.key] ?? ''}
+                    hint={item[field.key] ? `Original: ${item[field.key].slice(0, 80)}` : undefined}
+                    onChange={(value) => {
+                      const next = original.map((_, n) => ({ ...(translatedItems[n] ?? {}) }));
+                      next[i] = { ...next[i], [field.key]: value };
+                      set({ ...mine, items: next });
+                    }}
+                  />
+                ))}
+            </div>
+          ))}
+      </div>
+    </details>
   );
 }

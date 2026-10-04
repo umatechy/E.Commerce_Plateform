@@ -31,7 +31,7 @@ final class WishlistItemResource extends JsonResource
         return [
             'id' => $this->id,
             'product_id' => $product?->public_id,
-            'product_name' => $product?->name,
+            'product_name' => \App\Domain\Storefront\Support\StorefrontText::productName($product), // Phase B38
             // Phase B25: what a storefront wishlist page shows.
             'product_slug' => $product?->slug,
             'variant_id' => $variant?->public_id,

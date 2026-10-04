@@ -9,12 +9,13 @@ import type { AuthProps } from '@/lib/access';
  *
  *   vi.mock('@inertiajs/react', async () => (await import('@/test/inertiaMock')).inertiaMock);
  */
-const page: { props: { auth: AuthProps }; url: string } = { props: { auth: { user: null, activeStore: null } }, url: '/' };
+const page: { props: { auth: AuthProps } & Record<string, unknown>; url: string } = { props: { auth: { user: null, activeStore: null } }, url: '/' };
 
 export const routerMock = { visit: vi.fn(), reload: vi.fn(), get: vi.fn(), on: vi.fn() };
 
-export function setPage(auth: AuthProps, url = '/'): void {
-  page.props = { auth };
+/** `extra`: other page props, e.g. `{ storefront }` for a storefront page (Phase B38: its language). */
+export function setPage(auth: AuthProps, url = '/', extra: Record<string, unknown> = {}): void {
+  page.props = { auth, ...extra };
   page.url = url;
 }
 

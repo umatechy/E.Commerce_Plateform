@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState, type PropsWithChildren } from 'react';
 import { Head, Link } from '@inertiajs/react';
 import SearchBox from './SearchBox';
 import { loadFont } from '@/Storefront/fonts';
+import { useT } from '@/Storefront/i18n';
 import { CONTAINER, layoutOf, motionOf, StorefrontThemeContext, themeStyle, type ThemeLayout } from '@/Storefront/theme';
 import type { Seo, Shell } from '@/Storefront/types';
 
@@ -23,15 +24,24 @@ export default function StoreLayout({ shell, seo, children }: PropsWithChildren<
   const { style, attributes } = themeStyle(shell);
   const container = CONTAINER[layout.container];
   const context = useMemo(() => ({ shell, layout, motion, reveal: motion.reveal_on_scroll && motion.profile !== 'none' }), [shell, layout, motion]);
+  const t = useT();
+  // Phase B38 (LOC-006, Module 05 §40): the page's language and direction.
+  const locale = shell.language?.current ?? shell.store.locale ?? 'en';
+  const dir = shell.language?.dir ?? 'ltr';
 
   useEffect(() => {
     loadFont(shell.theme.tokens?.font_family);
     loadFont(shell.theme.tokens?.heading_font);
-  }, [shell.theme.tokens?.font_family, shell.theme.tokens?.heading_font]);
+    if (locale === 'ur') loadFont('Noto Nastaliq Urdu');
+  }, [shell.theme.tokens?.font_family, shell.theme.tokens?.heading_font, locale]);
+  useEffect(() => {
+    document.documentElement.lang = locale;
+    document.documentElement.dir = dir;
+  }, [locale, dir]);
 
   return (
     <StorefrontThemeContext.Provider value={context}>
-      <div className="sf-root flex min-h-screen flex-col bg-sf-bg text-sf-text" style={style} {...attributes}>
+      <div className="sf-root flex min-h-screen flex-col bg-sf-bg text-sf-text" style={style} {...attributes} lang={locale} dir={dir}>
         <Head>
           <title>{seo.title}</title>
           {seo.description ? <meta head-key="description" name="description" content={seo.description} /> : null}
@@ -43,15 +53,15 @@ export default function StoreLayout({ shell, seo, children }: PropsWithChildren<
 
         {shell.preview && (
           <div className="bg-amber-500 px-4 py-2 text-center text-sm font-medium text-white">
-            Preview — this store is not launched yet. Only your team can see it.
+            {t('Preview — this store is not launched yet. Only your team can see it.')}
           </div>
         )}
         {shell.theme_preview && (
           <div role="status" className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1 bg-indigo-700 px-4 py-2 text-center text-sm font-medium text-white">
-            <span>Theme preview — you are seeing the unpublished draft. Customers see the published theme.</span>
+            <span>{t('Theme preview — you are seeing the unpublished draft. Customers see the published theme.')}</span>
             {/* A full page load, so the server ends the preview (it forgets the preview cookie). */}
             <a href={`${shell.base_path}/?theme_preview=exit`} className="rounded underline focus:outline-none focus-visible:ring-2 focus-visible:ring-white">
-              End preview
+              {t('End preview')}
             </a>
           </div>
         )}
@@ -80,29 +90,58 @@ function Logo({ shell, size = 'text-xl' }: { shell: Shell; size?: string }) {
 function Actions({ shell, inverted = false }: { shell: Shell; inverted?: boolean }) {
   const base = shell.base_path;
   const hover = inverted ? 'hover:bg-white/10' : 'hover:bg-sf-surface';
+  const t = useT();
 
   return (
     <div className="flex items-center gap-2">
+      <LanguageSwitch shell={shell} className={`sf-btn rounded-sf px-2 py-2 text-sm font-medium ${hover}`} />
       <Link href={`${base}/account`} className={`sf-btn rounded-sf px-3 py-2 text-sm font-medium ${hover}`}>
-        Account
+        {t('Account')}
       </Link>
       <Link href={`${base}/cart`} className={`sf-btn rounded-sf border px-3 py-2 text-sm font-medium ${inverted ? 'border-white/40' : 'border-sf-border'}`}>
-        Cart
+        {t('Cart')}
       </Link>
     </div>
+  );
+}
+
+/**
+ * Phase B38 (Module 05 §41): links to the same page in the store's other
+ * languages. A full page load with ?lang=, so the server renders the page,
+ * remembers the choice and the address is the language's own.
+ */
+function LanguageSwitch({ shell, className }: { shell: Shell; className: string }) {
+  const t = useT();
+  const others = (shell.language?.offered ?? []).filter((language) => language.code !== shell.language?.current);
+  if (others.length === 0 || typeof window === 'undefined') return null;
+  const params = new URLSearchParams(window.location.search);
+
+  return (
+    <nav aria-label={t('Language')} className="flex items-center gap-1">
+      {others.map((language) => {
+        params.set('lang', language.code);
+
+        return (
+          <a key={language.code} href={`${window.location.pathname}?${params.toString()}`} hrefLang={language.code} lang={language.code} className={className}>
+            {language.native}
+          </a>
+        );
+      })}
+    </nav>
   );
 }
 
 /** Category links; on small screens they scroll sideways instead of wrapping onto many lines. */
 function Navigation({ shell, className = '', linkClass = 'hover:text-sf-accent' }: { shell: Shell; className?: string; linkClass?: string }) {
   const base = shell.base_path;
+  const t = useT();
 
   return (
-    <nav aria-label="Categories" className={className}>
+    <nav aria-label={t('Categories')} className={className}>
       <ul className="flex gap-x-5 gap-y-2 overflow-x-auto whitespace-nowrap text-sm sm:flex-wrap sm:overflow-visible">
         <li>
           <Link href={`${base}/products`} className={linkClass}>
-            All products
+            {t('All products')}
           </Link>
         </li>
         {shell.navigation.categories.map((category) => (
@@ -137,7 +176,7 @@ function Header({ shell, layout, container }: { shell: Shell; layout: ThemeLayou
           <div className={`mx-auto flex ${container} flex-wrap items-center gap-x-6 gap-y-3 px-4 py-4`}>
             <Logo shell={shell} size="text-lg" />
             <Navigation shell={shell} className="order-last w-full md:order-none md:w-auto md:flex-1" linkClass="text-sf-muted hover:text-sf-text" />
-            <div className="ml-auto flex items-center gap-2">
+            <div className="ms-auto flex items-center gap-2">
               <div className="hidden w-56 lg:block">
                 <SearchBox shell={shell} />
               </div>
@@ -170,7 +209,7 @@ function Header({ shell, layout, container }: { shell: Shell; layout: ThemeLayou
           <div className={`mx-auto flex ${container} flex-wrap items-center gap-x-8 gap-y-3 px-4 py-4`}>
             <Logo shell={shell} size="text-2xl uppercase tracking-tight" />
             <Navigation shell={shell} className="order-last w-full font-semibold lg:order-none lg:w-auto lg:flex-1" linkClass="text-white/85 hover:text-white" />
-            <div className="ml-auto flex items-center gap-3">
+            <div className="ms-auto flex items-center gap-3">
               <div className="hidden w-60 text-sf-text md:block">
                 <SearchBox shell={shell} />
               </div>
@@ -187,7 +226,7 @@ function Header({ shell, layout, container }: { shell: Shell; layout: ThemeLayou
             <div className="order-last w-full sm:order-none sm:w-auto sm:flex-1">
               <SearchBox shell={shell} />
             </div>
-            <div className="ml-auto">
+            <div className="ms-auto">
               <Actions shell={shell} />
             </div>
           </div>
@@ -199,6 +238,7 @@ function Header({ shell, layout, container }: { shell: Shell; layout: ThemeLayou
 
 function HelpLinks({ shell }: { shell: Shell }) {
   const base = shell.base_path;
+  const t = useT();
 
   return (
     <>
@@ -211,12 +251,12 @@ function HelpLinks({ shell }: { shell: Shell }) {
       ))}
       <li>
         <Link href={`${base}/returns`} className="hover:text-sf-text">
-          Returns
+          {t('Returns')}
         </Link>
       </li>
       <li>
         <Link href={`${base}/contact`} className="hover:text-sf-text">
-          Contact us
+          {t('Contact us')}
         </Link>
       </li>
     </>
@@ -258,6 +298,7 @@ function SimpleFooter({ shell, container }: { shell: Shell; container: string })
 
 function ColumnsFooter({ shell, container }: { shell: Shell; container: string }) {
   const base = shell.base_path;
+  const t = useT();
 
   return (
     <footer className="border-t border-sf-border bg-sf-surface text-sm text-sf-muted" data-footer="columns">
@@ -270,11 +311,11 @@ function ColumnsFooter({ shell, container }: { shell: Shell; container: string }
           </div>
         </div>
         <div>
-          <p className="mb-3 font-semibold uppercase tracking-wider text-sf-text">Shop</p>
+          <p className="mb-3 font-semibold uppercase tracking-wider text-sf-text">{t('Shop')}</p>
           <ul className="space-y-2">
             <li>
               <Link href={`${base}/products`} className="hover:text-sf-text">
-                All products
+                {t('All products')}
               </Link>
             </li>
             {shell.navigation.categories.slice(0, 6).map((category) => (
@@ -287,27 +328,27 @@ function ColumnsFooter({ shell, container }: { shell: Shell; container: string }
           </ul>
         </div>
         <div>
-          <p className="mb-3 font-semibold uppercase tracking-wider text-sf-text">Help</p>
+          <p className="mb-3 font-semibold uppercase tracking-wider text-sf-text">{t('Help')}</p>
           <ul className="space-y-2">
             <HelpLinks shell={shell} />
           </ul>
         </div>
         <div>
-          <p className="mb-3 font-semibold uppercase tracking-wider text-sf-text">Your account</p>
+          <p className="mb-3 font-semibold uppercase tracking-wider text-sf-text">{t('Your account')}</p>
           <ul className="space-y-2">
             <li>
               <Link href={`${base}/account`} className="hover:text-sf-text">
-                Sign in or register
+                {t('Sign in or register')}
               </Link>
             </li>
             <li>
               <Link href={`${base}/account/orders`} className="hover:text-sf-text">
-                Your orders
+                {t('Your orders')}
               </Link>
             </li>
             <li>
               <Link href={`${base}/cart`} className="hover:text-sf-text">
-                Cart
+                {t('Cart')}
               </Link>
             </li>
           </ul>

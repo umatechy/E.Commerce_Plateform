@@ -6,6 +6,7 @@ import Dialog, { ConfirmDialog } from '@/Components/ui/Dialog';
 import { FormError, TextAreaField, TextField } from '@/Components/ui/Form';
 import { EmptyPanel } from '@/Components/ui/Page';
 import { useAccess } from '@/lib/access';
+import TranslationsPanel from '@/Components/TranslationsPanel';
 import { useApi } from '@/lib/useApi';
 import { useAction, useForm } from '@/lib/useForm';
 import { adminFetch } from '@/lib/adminApi';
@@ -22,6 +23,8 @@ export default function Brands() {
   const list = useApi<{ data: Brand[] }>('/brands');
   const [editing, setEditing] = useState<Brand | 'new' | null>(null);
   const [removing, setRemoving] = useState<Brand | null>(null);
+  // Phase B38: the brand's name and description in other storefront languages.
+  const [translating, setTranslating] = useState<Brand | null>(null);
   const form = useForm<Values>(BLANK);
   const { busy, run } = useAction();
 
@@ -53,6 +56,7 @@ export default function Brands() {
         canManage && (
           <span className="flex justify-end gap-1">
             <Button size="sm" variant="ghost" onClick={() => open(brand)}>Edit<span className="sr-only"> {brand.name}</span></Button>
+            <Button size="sm" variant="ghost" onClick={() => setTranslating(brand)}>Translate<span className="sr-only"> {brand.name}</span></Button>
             <Button size="sm" variant="ghost" onClick={() => setRemoving(brand)}>Delete<span className="sr-only"> {brand.name}</span></Button>
           </span>
         ),
@@ -82,6 +86,13 @@ export default function Brands() {
             <Button type="submit" variant="primary" busy={form.busy} busyLabel="Saving…">Save brand</Button>
           </div>
         </form>
+      </Dialog>
+
+      <Dialog open={translating !== null} title={`Translations — ${translating?.name ?? ''}`} onClose={() => setTranslating(null)}>
+        {translating && <TranslationsPanel type="brand" id={translating.id} canEdit={canManage} />}
+        <div className="mt-4 flex justify-end">
+          <Button onClick={() => setTranslating(null)}>Close</Button>
+        </div>
       </Dialog>
 
       <ConfirmDialog

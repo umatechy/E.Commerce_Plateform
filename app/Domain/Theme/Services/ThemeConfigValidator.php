@@ -133,9 +133,16 @@ final class ThemeConfigValidator
 
     private function validateBranding(array $branding): array
     {
-        $this->assertNoUnknownKeys($branding, ['logo_url', 'favicon_url', 'tagline', 'social_links'], 'branding');
+        $this->assertNoUnknownKeys($branding, ['logo_url', 'favicon_url', 'tagline', 'social_links', 'translations'], 'branding');
 
         $clean = [];
+        if (isset($branding['translations'])) {
+            $clean['translations'] = $this->translations($branding['translations'], 'branding', function (array $fields, string $context) {
+                $this->assertNoUnknownKeys($fields, ['tagline'], $context);
+
+                return isset($fields['tagline']) && $fields['tagline'] !== '' ? ['tagline' => $this->text($fields['tagline'], "{$context}.tagline", 255)] : [];
+            });
+        }
 
         foreach (['logo_url', 'favicon_url'] as $key) {
             if (isset($branding[$key])) {
@@ -217,9 +224,30 @@ final class ThemeConfigValidator
         ];
 
         $allowedKeys = $allowedByType[$type->value]; // every SectionType has an entry
-        $this->assertNoUnknownKeys($config, $allowedKeys, "sections.{$type->value}.config");
+        $this->assertNoUnknownKeys($config, [...$allowedKeys, 'translations'], "sections.{$type->value}.config");
 
         $clean = [];
+        // Phase B38 (LOC-002): the section's texts in other languages; numbers and links stay the original's.
+        if (isset($config['translations'])) {
+            $texts = array_values(array_diff($allowedKeys, ['limit', 'image_url', 'cta_url']));
+            $clean['translations'] = $this->translations($config['translations'], "sections.{$type->value}", function (array $fields, string $context) use ($type, $texts) {
+                $this->assertNoUnknownKeys($fields, $texts, $context);
+                $out = [];
+                foreach ($texts as $key) {
+                    if (! isset($fields[$key]) || $fields[$key] === '') {
+                        continue;
+                    }
+                    $out[$key] = match ($key) {
+                        'items' => $this->validateItems($type, $fields[$key], true),
+                        'text' => $this->text($fields[$key], "{$context}.text", 2000),
+                        'cta_label' => $this->text($fields[$key], "{$context}.cta_label", 40),
+                        default => $this->text($fields[$key], "{$context}.{$key}", 500),
+                    };
+                }
+
+                return $out;
+            });
+        }
         foreach ($allowedKeys as $key) {
             if (! isset($config[$key])) {
                 continue;
@@ -239,7 +267,7 @@ final class ThemeConfigValidator
     }
 
     /** @return list<array<string, string>> */
-    private function validateItems(SectionType $type, mixed $items): array
+    private function validateItems(SectionType $type, mixed $items, bool $translation = false): array
     {
         [$fields, $max] = match ($type) {
             SectionType::Testimonials => [['quote' => 500, 'name' => 80, 'detail' => 80], 6],
@@ -256,7 +284,8 @@ final class ThemeConfigValidator
             if (! is_array($item)) {
                 throw new InvalidThemeConfigException("{$type->value} item {$i} must be an object.");
             }
-            $this->assertNoUnknownKeys($item, array_keys($fields), "{$type->value}.items.{$i}");
+            // A translated entry has the texts only; the icon stays the original's.
+            $this->assertNoUnknownKeys($item, array_keys($translation ? array_diff_key($fields, ['icon' => 0]) : $fields), "{$type->value}.items.{$i}");
             $row = [];
             foreach ($fields as $field => $length) {
                 if (! isset($item[$field]) || $item[$field] === '') {
@@ -271,7 +300,7 @@ final class ThemeConfigValidator
                 SectionType::Faq => ['question', 'answer'],
                 default => ['icon', 'title'],
             };
-            foreach ($required as $field) {
+            foreach ($translation ? [] : $required as $field) {
                 if (! isset($row[$field])) {
                     throw new InvalidThemeConfigException("{$type->value} item {$i} needs a {$field}.");
                 }
@@ -280,6 +309,29 @@ final class ThemeConfigValidator
         }
 
         return $clean;
+    }
+
+    /**
+     * `{locale: {...}}` for offered languages only (Phase B38).
+     *
+     * @param callable(array<mixed>, string): array<string, mixed> $fields
+     * @return array<string, array<string, mixed>>
+     */
+    private function translations(mixed $value, string $context, callable $fields): array
+    {
+        $value = $this->object($value, "{$context}.translations");
+        $out = [];
+        foreach ($value as $locale => $set) {
+            if (! \App\Domain\Settings\Services\Locales::isSupported($locale)) {
+                throw new InvalidThemeConfigException("Unknown language in {$context}.translations: {$locale}");
+            }
+            $clean = $fields($this->object($set, "{$context}.translations.{$locale}"), "{$context}.translations.{$locale}");
+            if ($clean !== []) {
+                $out[$locale] = $clean;
+            }
+        }
+
+        return $out;
     }
 
     private function text(mixed $value, string $field, int $max): string

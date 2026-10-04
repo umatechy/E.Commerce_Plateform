@@ -57,6 +57,9 @@ final class AppServiceProvider extends ServiceProvider
         // Phase B18 — same reasoning as TenantContext directly above:
         // scoped(), never singleton(), so it resets per request/job.
         $this->app->scoped(\App\Domain\DeveloperPlatform\Support\ApiKeyContext::class);
+        // Phase B38: the storefront language of this request, and the translations loaded for it.
+        $this->app->scoped(\App\Domain\Storefront\Services\StorefrontLocale::class);
+        $this->app->scoped(\App\Domain\Settings\Services\TranslationService::class);
 
         // Phase B19 — interface bindings so BackupService/RunBackupJob
         // depend only on the abstraction (Module 23 Phase 4/10), never
@@ -141,6 +144,8 @@ final class AppServiceProvider extends ServiceProvider
             Store::class,
             // Phase B36: a package change changes what the theme may show.
             \App\Domain\Packages\Models\Subscription::class,
+            // Phase B38: a changed translation changes what shoppers read.
+            \App\Domain\Settings\Models\ContentTranslation::class,
         ] as $model) {
             $model::observe(\App\Domain\Storefront\Observers\StorefrontCacheObserver::class);
         }

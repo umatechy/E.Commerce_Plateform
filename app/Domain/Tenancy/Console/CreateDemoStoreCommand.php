@@ -194,6 +194,7 @@ final class CreateDemoStoreCommand extends Command
 
         $customer = Customer::query()->create(['name' => 'Demo Customer', 'email' => $customerEmail, 'password' => $customerPassword]);
         $launch = $setup->launch($store);
+        $content->dressLanguages($owner->id);
         $theme = $this->dress($store, $owner->id, $content);
 
         app(AuditLogger::class)->record('demo.store_created', ['products' => $count, 'package' => $package->code], $store, $store->id);
@@ -205,6 +206,7 @@ final class CreateDemoStoreCommand extends Command
             ['Launched', $launch['ok'] ? 'yes' : 'no ('.($launch['code'] ?? '').')'],
             ['Catalogue', "3 categories, {$count} products ({$currency})"],
             ['Theme', $theme],
+            ['Languages', 'English and Urdu (اردو) — add ?lang=ur to any page'],
             ['Owner sign-in', "{$email} / {$ownerPassword}"],
             ['Customer sign-in', "{$customerEmail} / {$customerPassword} (customer: {$customer->public_id})"],
         ]);
@@ -245,6 +247,7 @@ final class CreateDemoStoreCommand extends Command
                 $pictures += $content->picture($product, $category->name, $product->id + $i);
             }
         }
+        $content->dressLanguages((int) $owner?->id);
         $theme = $this->dress($store, (int) $owner?->id, $content);
         app(AuditLogger::class)->record('demo.store_refreshed', ['pictures' => $pictures, 'theme' => $theme], $store, $store->id);
         $this->info("Refreshed /shop/{$store->slug}: {$pictures} pictures added; theme {$theme}.");

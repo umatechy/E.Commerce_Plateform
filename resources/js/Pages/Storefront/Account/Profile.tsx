@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useT } from '@/Storefront/i18n';
 import AccountLayout from '@/Components/Storefront/AccountLayout';
 import { errorMessage, storefrontFetch, validationErrors } from '@/Storefront/api';
 import { useCustomer, type Customer } from '@/Storefront/account';
@@ -7,18 +8,19 @@ import type { StorefrontPageProps } from '@/Storefront/types';
 type Notice = { tone: 'ok' | 'error'; text: string } | null;
 
 export default function Profile({ storefront, seo }: StorefrontPageProps) {
+  const t = useT();
   const { customer, setCustomer } = useCustomer(storefront, { required: true });
 
   return (
-    <AccountLayout shell={storefront} seo={seo} customer={customer} active="/account/profile" title="Profile & security">
+    <AccountLayout shell={storefront} seo={seo} customer={customer} active="/account/profile" title={t('Profile & security')}>
       {customer && (
         <div className="max-w-xl space-y-10">
           <DetailsForm storefront={storefront} customer={customer} onSaved={setCustomer} />
           <EmailForm storefront={storefront} customer={customer} onSaved={setCustomer} />
           <PasswordForm storefront={storefront} />
           <section>
-            <h2 className="mb-2 text-lg font-semibold">Your data</h2>
-            <p className="mb-3 text-sm text-sf-muted">Download a copy of the personal data this store holds about you.</p>
+            <h2 className="mb-2 text-lg font-semibold">{t('Your data')}</h2>
+            <p className="mb-3 text-sm text-sf-muted">{t('Download a copy of the personal data this store holds about you.')}</p>
             <DownloadData storefront={storefront} />
           </section>
         </div>
@@ -41,6 +43,7 @@ function Message({ notice }: { notice: Notice }) {
 }
 
 function DetailsForm({ storefront, customer, onSaved }: Shared & { customer: Customer; onSaved: (c: Customer) => void }) {
+  const t = useT();
   const [form, setForm] = useState({ name: customer.name, phone: customer.phone ?? '', marketing_email_opt_in: Boolean(customer.marketing_email_opt_in) });
   const [notice, setNotice] = useState<Notice>(null);
 
@@ -49,7 +52,7 @@ function DetailsForm({ storefront, customer, onSaved }: Shared & { customer: Cus
     try {
       const res = await storefrontFetch<{ data: Customer }>(storefront, '/customer/profile', { method: 'PATCH', body: { ...form, phone: form.phone || null } });
       onSaved(res.data);
-      setNotice({ tone: 'ok', text: 'Saved.' });
+      setNotice({ tone: 'ok', text: t('Saved.') });
     } catch (e) {
       setNotice({ tone: 'error', text: Object.values(validationErrors(e))[0]?.[0] ?? errorMessage(e) });
     }
@@ -57,21 +60,21 @@ function DetailsForm({ storefront, customer, onSaved }: Shared & { customer: Cus
 
   return (
     <form onSubmit={submit} className="space-y-3">
-      <h2 className="text-lg font-semibold">Details</h2>
+      <h2 className="text-lg font-semibold">{t('Details')}</h2>
       <label className="block text-sm">
-        <span className="mb-1 block text-sf-muted">Name</span>
+        <span className="mb-1 block text-sf-muted">{t('Name')}</span>
         <input required value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} className={input} autoComplete="name" />
       </label>
       <label className="block text-sm">
-        <span className="mb-1 block text-sf-muted">Phone</span>
+        <span className="mb-1 block text-sf-muted">{t('Phone')}</span>
         <input value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} className={input} autoComplete="tel" />
       </label>
       <label className="flex items-center gap-2 text-sm">
         <input type="checkbox" checked={form.marketing_email_opt_in} onChange={(e) => setForm({ ...form, marketing_email_opt_in: e.target.checked })} />
-        Email me news and offers
+        {t('Email me news and offers')}
       </label>
       <button type="submit" className="rounded-sf bg-sf-primary px-4 py-2 font-medium text-white">
-        Save details
+        {t('Save details')}
       </button>
       <Message notice={notice} />
     </form>
@@ -79,6 +82,7 @@ function DetailsForm({ storefront, customer, onSaved }: Shared & { customer: Cus
 }
 
 function EmailForm({ storefront, customer, onSaved }: Shared & { customer: Customer; onSaved: (c: Customer) => void }) {
+  const t = useT();
   const [email, setEmail] = useState(customer.email);
   const [password, setPassword] = useState('');
   const [notice, setNotice] = useState<Notice>(null);
@@ -89,7 +93,7 @@ function EmailForm({ storefront, customer, onSaved }: Shared & { customer: Custo
       const res = await storefrontFetch<{ data: Customer }>(storefront, '/customer/email', { method: 'PUT', body: { email, current_password: password } });
       onSaved(res.data);
       setPassword('');
-      setNotice({ tone: 'ok', text: 'Your email address has been changed.' });
+      setNotice({ tone: 'ok', text: t('Your email address has been changed.') });
     } catch (e) {
       setNotice({ tone: 'error', text: Object.values(validationErrors(e))[0]?.[0] ?? errorMessage(e) });
     }
@@ -97,11 +101,11 @@ function EmailForm({ storefront, customer, onSaved }: Shared & { customer: Custo
 
   return (
     <form onSubmit={submit} className="space-y-3">
-      <h2 className="text-lg font-semibold">Email address</h2>
-      <input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} className={input} aria-label="Email" autoComplete="email" />
-      <input type="password" required value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Current password" aria-label="Current password" className={input} autoComplete="current-password" />
+      <h2 className="text-lg font-semibold">{t('Email address')}</h2>
+      <input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} className={input} aria-label={t('Email')} autoComplete="email" />
+      <input type="password" required value={password} onChange={(e) => setPassword(e.target.value)} placeholder={t('Current password')} aria-label={t('Current password')} className={input} autoComplete="current-password" />
       <button type="submit" className="rounded-sf border border-sf-border px-4 py-2 font-medium">
-        Change email
+        {t('Change email')}
       </button>
       <Message notice={notice} />
     </form>
@@ -109,6 +113,7 @@ function EmailForm({ storefront, customer, onSaved }: Shared & { customer: Custo
 }
 
 function PasswordForm({ storefront }: Shared) {
+  const t = useT();
   const [form, setForm] = useState({ current_password: '', password: '', password_confirmation: '' });
   const [notice, setNotice] = useState<Notice>(null);
 
@@ -117,7 +122,7 @@ function PasswordForm({ storefront }: Shared) {
     try {
       await storefrontFetch(storefront, '/customer/password', { method: 'PUT', body: form });
       setForm({ current_password: '', password: '', password_confirmation: '' });
-      setNotice({ tone: 'ok', text: 'Password changed. Other devices have been signed out.' });
+      setNotice({ tone: 'ok', text: t('Password changed. Other devices have been signed out.') });
     } catch (e) {
       setNotice({ tone: 'error', text: Object.values(validationErrors(e))[0]?.[0] ?? errorMessage(e) });
     }
@@ -125,12 +130,12 @@ function PasswordForm({ storefront }: Shared) {
 
   return (
     <form onSubmit={submit} className="space-y-3">
-      <h2 className="text-lg font-semibold">Password</h2>
-      <input type="password" required value={form.current_password} onChange={(e) => setForm({ ...form, current_password: e.target.value })} placeholder="Current password" aria-label="Current password" className={input} autoComplete="current-password" />
-      <input type="password" required value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} placeholder="New password (at least 10 characters)" aria-label="New password" className={input} autoComplete="new-password" />
-      <input type="password" required value={form.password_confirmation} onChange={(e) => setForm({ ...form, password_confirmation: e.target.value })} placeholder="Confirm new password" aria-label="Confirm new password" className={input} autoComplete="new-password" />
+      <h2 className="text-lg font-semibold">{t('Password')}</h2>
+      <input type="password" required value={form.current_password} onChange={(e) => setForm({ ...form, current_password: e.target.value })} placeholder={t('Current password')} aria-label={t('Current password')} className={input} autoComplete="current-password" />
+      <input type="password" required value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} placeholder={t('New password (at least 10 characters)')} aria-label={t('New password')} className={input} autoComplete="new-password" />
+      <input type="password" required value={form.password_confirmation} onChange={(e) => setForm({ ...form, password_confirmation: e.target.value })} placeholder={t('Confirm new password')} aria-label={t('Confirm new password')} className={input} autoComplete="new-password" />
       <button type="submit" className="rounded-sf border border-sf-border px-4 py-2 font-medium">
-        Change password
+        {t('Change password')}
       </button>
       <Message notice={notice} />
     </form>
@@ -139,6 +144,7 @@ function PasswordForm({ storefront }: Shared) {
 
 function DownloadData({ storefront }: Shared) {
   const [error, setError] = useState<string | null>(null);
+  const t = useT();
 
   async function download() {
     try {
@@ -157,7 +163,7 @@ function DownloadData({ storefront }: Shared) {
   return (
     <>
       <button type="button" onClick={download} className="rounded-sf border border-sf-border px-4 py-2 text-sm font-medium">
-        Download my data
+        {t('Download my data')}
       </button>
       {error && <p className="mt-2 text-sm text-sf-error">{error}</p>}
     </>

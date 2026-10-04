@@ -17,6 +17,8 @@ const LOADERS: Record<string, () => Promise<unknown>[]> = {
   'Playfair Display': () => [import('@fontsource/playfair-display/latin-400.css'), import('@fontsource/playfair-display/latin-600.css'), import('@fontsource/playfair-display/latin-700.css')],
   Merriweather: () => [import('@fontsource/merriweather/latin-400.css'), import('@fontsource/merriweather/latin-700.css')],
   Lora: () => [import('@fontsource/lora/latin-400.css'), import('@fontsource/lora/latin-600.css')],
+  // Phase B38: Urdu (Nastaliq), loaded on Urdu pages only.
+  'Noto Nastaliq Urdu': () => [import('@fontsource/noto-nastaliq-urdu/arabic-400.css'), import('@fontsource/noto-nastaliq-urdu/arabic-700.css')],
 };
 
 const FALLBACK: Record<string, string> = {

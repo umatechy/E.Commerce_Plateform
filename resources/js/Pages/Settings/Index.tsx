@@ -59,9 +59,18 @@ export default function Index() {
         warning: 'Reports group sales by the days of the new timezone from now on, and promotion and campaign times you enter are read in it. Your invoices from the platform stay in UTC.',
       },
       'store.default_locale': {
-        label: 'Store language',
-        description: 'The language code your store uses by default. Without a value of its own, the platform default applies.',
-        itemHint: 'A language code such as en.',
+        label: 'Default storefront language',
+        description: 'The language your storefront opens in. Shoppers can switch to the other languages you offer.',
+        choices: ['en', 'ur'],
+        itemHint: 'en = English, ur = Urdu (اردو, right to left).',
+        warning: 'It must be one of the storefront languages below. Product names you have not translated are shown in the original.',
+      },
+      // Phase B38 (Module 05 §41).
+      'store.languages': {
+        label: 'Storefront languages',
+        description: 'The languages shoppers can choose on your storefront. With more than one, a language link appears in the header, and each language has its own address for search engines.',
+        itemHint: 'One code per line: en (English), ur (Urdu). The default language must stay in the list.',
+        warning: 'Translate your product, category and brand names and your home page texts to show them in each language; the storefront’s own words are already translated.',
       },
     }),
     [access.currencies],

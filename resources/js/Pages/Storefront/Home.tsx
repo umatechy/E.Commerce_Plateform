@@ -3,14 +3,15 @@ import StoreLayout from '@/Components/Storefront/StoreLayout';
 import ProductGrid from '@/Components/Storefront/ProductGrid';
 import Reveal from '@/Components/Storefront/Reveal';
 import { layoutOf } from '@/Storefront/theme';
+import { useT, type Translate } from '@/Storefront/i18n';
 import type { CategoryNode, ProductCard, Shell, StorefrontPageProps } from '@/Storefront/types';
 
 type Banner = { type: 'hero' | 'promotional_banner'; heading?: string; subheading?: string; image_url?: string; cta_url?: string; cta_label?: string };
 type Section =
   | Banner
-  | { type: 'featured_products' | 'best_sellers' | 'sale_products'; heading: string; products: ProductCard[] }
-  | { type: 'featured_categories'; heading: string; categories: CategoryNode[] }
-  | { type: 'featured_brands'; heading: string; brands: { name: string; slug: string }[] }
+  | { type: 'featured_products' | 'best_sellers' | 'sale_products'; heading: string | null; products: ProductCard[] }
+  | { type: 'featured_categories'; heading: string | null; categories: CategoryNode[] }
+  | { type: 'featured_brands'; heading: string | null; brands: { name: string; slug: string }[] }
   | { type: 'testimonials'; heading?: string; items?: { quote: string; name: string; detail?: string }[] }
   | { type: 'faq'; heading?: string; items?: { question: string; answer: string }[] }
   | { type: 'rich_text'; heading?: string; text?: string }
@@ -34,8 +35,20 @@ export default function Home({ storefront, seo, sections }: StorefrontPageProps 
   );
 }
 
+/** The storefront's own heading for a section the owner did not name (Phase B38: in the visitor's language). */
+function defaultHeading(t: Translate, type: string): string {
+  return {
+    featured_products: t('New arrivals'),
+    best_sellers: t('Best sellers'),
+    sale_products: t('On sale'),
+    featured_categories: t('Shop by category'),
+    featured_brands: t('Shop by brand'),
+  }[type] ?? '';
+}
+
 function HomeSection({ section, shell }: { section: Section; shell: Shell }) {
   const base = shell.base_path;
+  const t = useT();
 
   switch (section.type) {
     case 'hero':
@@ -50,7 +63,7 @@ function HomeSection({ section, shell }: { section: Section; shell: Shell }) {
               {section.subheading && <p className="mt-2 text-white/85">{section.subheading}</p>}
             </div>
             <Link href={section.cta_url ?? `${base}/products`} className="sf-btn rounded-sf bg-white px-5 py-2.5 font-semibold text-sf-primary">
-              {section.cta_label || 'Shop now'}
+              {section.cta_label || t('Shop now')}
             </Link>
           </div>
         </Reveal>
@@ -58,7 +71,7 @@ function HomeSection({ section, shell }: { section: Section; shell: Shell }) {
     case 'featured_categories':
       return section.categories.length === 0 ? null : (
         <section>
-          <SectionHeading title={section.heading} />
+          <SectionHeading title={section.heading ?? defaultHeading(t, section.type)} />
           <div className="grid grid-cols-2 gap-4 md:grid-cols-3">
             {section.categories.map((category, i) => (
               <Reveal key={category.id} index={i} className="flex">
@@ -69,7 +82,7 @@ function HomeSection({ section, shell }: { section: Section; shell: Shell }) {
                 >
                   <span className="font-sf-heading text-lg font-semibold">{category.name}</span>
                   <span className="mt-3 flex items-center justify-between text-sm text-sf-muted">
-                    {category.product_count} products <span aria-hidden="true">→</span>
+                    {t('{count} products', { count: category.product_count ?? 0 })} <span aria-hidden="true" className="inline-block rtl:rotate-180">→</span>
                   </span>
                 </Link>
               </Reveal>
@@ -82,14 +95,14 @@ function HomeSection({ section, shell }: { section: Section; shell: Shell }) {
     case 'sale_products':
       return section.products.length === 0 ? null : (
         <section>
-          <SectionHeading title={section.heading} link={{ href: `${base}/products`, label: 'View all' }} />
+          <SectionHeading title={section.heading ?? defaultHeading(t, section.type)} link={{ href: `${base}/products`, label: t('View all') }} />
           <ProductGrid products={section.products} basePath={base} />
         </section>
       );
     case 'featured_brands':
       return section.brands.length === 0 ? null : (
         <section>
-          <SectionHeading title={section.heading} />
+          <SectionHeading title={section.heading ?? defaultHeading(t, section.type)} />
           <ul className="flex flex-wrap gap-3">
             {section.brands.map((brand) => (
               <li key={brand.slug}>
@@ -104,7 +117,7 @@ function HomeSection({ section, shell }: { section: Section; shell: Shell }) {
     case 'testimonials':
       return !section.items?.length ? null : (
         <section>
-          <SectionHeading title={section.heading || 'What our customers say'} />
+          <SectionHeading title={section.heading || t('What our customers say')} />
           <div className="grid gap-4 md:grid-cols-3">
             {section.items.map((item, i) => (
               <Reveal key={i} index={i} as="figure" className="rounded-sf-lg border border-sf-border bg-sf-surface p-6">
@@ -124,7 +137,7 @@ function HomeSection({ section, shell }: { section: Section; shell: Shell }) {
     case 'faq':
       return !section.items?.length ? null : (
         <section className="mx-auto max-w-3xl">
-          <SectionHeading title={section.heading || 'Questions and answers'} />
+          <SectionHeading title={section.heading || t('Questions and answers')} />
           <div className="divide-y divide-sf-border rounded-sf-lg border border-sf-border">
             {section.items.map((item, i) => (
               <details key={i} className="group p-4 [&_summary::-webkit-details-marker]:hidden">
@@ -149,7 +162,7 @@ function HomeSection({ section, shell }: { section: Section; shell: Shell }) {
       );
     case 'trust_badges':
       return !section.items?.length ? null : (
-        <section aria-label="Why shop with us">
+        <section aria-label={t('Why shop with us')}>
           <ul className={`grid gap-4 sm:grid-cols-2 ${section.items.length >= 4 ? 'lg:grid-cols-4' : 'lg:grid-cols-3'}`}>
             {section.items.map((item, i) => (
               <Reveal key={i} index={i} as="li" className="flex items-start gap-3 rounded-sf-lg bg-sf-surface p-4">
@@ -184,10 +197,11 @@ function SectionHeading({ title, link }: { title: string; link?: { href: string;
 /** Module 17 §22 hero styles: simple, centred, split (text beside a panel), full-bleed (colour across the page). */
 function Hero({ section, shell }: { section: Banner; shell: Shell }) {
   const style = layoutOf(shell).hero_style;
+  const t = useT();
   const base = shell.base_path;
   const cta = (
     <Link href={section.cta_url ?? `${base}/products`} className="sf-btn mt-7 inline-block rounded-sf bg-sf-primary px-6 py-3 font-semibold text-white hover:opacity-90">
-      {section.cta_label || 'Shop now'}
+      {section.cta_label || t('Shop now')}
     </Link>
   );
   const text = (inverted: boolean) => (

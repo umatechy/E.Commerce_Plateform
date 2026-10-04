@@ -15,6 +15,7 @@ import { adminErrorMessage, adminFetch, AdminApiError } from '@/lib/adminApi';
 import { fromMinor, money, toMinor } from '@/lib/money';
 import { options } from '@/lib/labels';
 import CurrencyField from '@/Components/CurrencyField';
+import TranslationsPanel from '@/Components/TranslationsPanel';
 import {
   categoryTree,
   PRODUCT_STATUSES,
@@ -566,6 +567,7 @@ function ImagesSection({ product }: { product: Product }) {
 }
 
 export default function ProductEdit({ productId }: { productId: string | null }) {
+  const canTranslate = useAccess().can('products.update');
   const state = useApi<{ data: Product }>(productId === null ? null : `/products/${productId}`);
   const product = state.data?.data ?? null;
 
@@ -595,6 +597,10 @@ export default function ProductEdit({ productId }: { productId: string | null })
           <ProductForm key={product.id} product={product} onSaved={(saved) => state.setData({ data: saved })} />
           <VariantsSection product={product} onChanged={state.reload} />
           <ImagesSection product={product} />
+          {/* Phase B38: name and descriptions in the other storefront languages. */}
+          <Card title="Translations" description="How this product reads in your other storefront languages. A field left empty shows the original.">
+            <TranslationsPanel type="product" id={product.id} canEdit={canTranslate} />
+          </Card>
           <Card title="Stock">
             <p className="text-sm text-slate-700">Stock for this product and its variants is kept per warehouse.</p>
             <div className="mt-3">

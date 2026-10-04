@@ -59,6 +59,8 @@ function requestHeaders(shell: Shell, method: string, extra: Record<string, stri
   // (Phase B25); other sites cannot send it without passing CORS.
   const headers: Record<string, string> = { ...extra, 'X-Storefront-Request': '1' };
   if (shell.base_path !== '') headers['X-Store-Slug'] = shell.store.slug;
+  // Phase B38: answers (cart names, validation messages) in the page's language.
+  if (shell.language?.current) headers['X-Storefront-Locale'] = shell.language.current;
   const token = cartToken(shell);
   if (token) headers['X-Guest-Cart-Token'] = token;
   const xsrf = xsrfToken();

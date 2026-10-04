@@ -1,6 +1,9 @@
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, render, screen } from '@testing-library/react';
 import Price from './Price';
+
+// Phase B38: Price reads the page language through Inertia.
+vi.mock('@inertiajs/react', async () => (await import('@/test/inertiaMock')).inertiaMock);
 
 afterEach(cleanup);
 

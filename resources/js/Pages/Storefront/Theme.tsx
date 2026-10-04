@@ -75,6 +75,9 @@ export function toPayload(config: Config): Config {
   if (config.branding.logo_url) branding.logo_url = config.branding.logo_url;
   if (config.branding.favicon_url) branding.favicon_url = config.branding.favicon_url;
   if (config.branding.tagline) branding.tagline = config.branding.tagline;
+  // Phase B38: the tagline in other storefront languages.
+  const taglines = Object.fromEntries(Object.entries(config.branding.translations ?? {}).filter(([, value]) => (value.tagline ?? '') !== ''));
+  if (Object.keys(taglines).length > 0) branding.translations = taglines;
   if (Object.keys(social).length > 0) branding.social_links = social;
 
   return {
@@ -400,6 +403,20 @@ export default function Theme() {
             <div className="sm:col-span-2">
               <TextField label="Tagline" optional disabled={!canEdit} maxLength={255} value={config.branding.tagline ?? ''} onChange={(value) => change({ ...config, branding: { ...config.branding, tagline: value } })} />
             </div>
+            {(theme.translation_languages ?? []).map((language) => (
+              <div key={language.code} className="sm:col-span-2">
+                <TextField
+                  label={`Tagline (${language.name})`}
+                  optional
+                  disabled={!canEdit}
+                  maxLength={255}
+                  dir={language.dir as 'rtl' | 'ltr'}
+                  lang={language.code}
+                  value={config.branding.translations?.[language.code]?.tagline ?? ''}
+                  onChange={(value) => change({ ...config, branding: { ...config.branding, translations: { ...(config.branding.translations ?? {}), [language.code]: { tagline: value } } } })}
+                />
+              </div>
+            ))}
           </div>
         </Card>
         <Card title="Social links">
@@ -439,6 +456,7 @@ export default function Theme() {
                 onChange={(patch) => section(index, patch)}
                 onMove={(by) => moveSection(index, by)}
                 onRemove={() => change({ ...config, sections: config.sections.filter((_, i) => i !== index) })}
+                languages={theme.translation_languages ?? []}
               />
             ))}
           </ul>

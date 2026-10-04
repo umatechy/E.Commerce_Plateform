@@ -244,7 +244,8 @@ final class CartService
                 'cart_item_id' => $item->id,
                 'product_id' => $product?->public_id,
                 // Phase B24: what a storefront cart needs to show the line.
-                'product_name' => $product?->name,
+                // Phase B38: in the shopper's language when the store has a translation.
+                'product_name' => \App\Domain\Storefront\Support\StorefrontText::productName($product),
                 'product_slug' => $product?->slug,
                 'variant_id' => $variant?->public_id,
                 'variant_options' => $variant?->option_values,

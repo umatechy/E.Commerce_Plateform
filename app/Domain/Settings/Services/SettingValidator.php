@@ -90,6 +90,16 @@ final class SettingValidator
             }
         }
 
+        // Phase B38: storefront languages — offered codes only, each once.
+        if ($definition->key === 'store.languages') {
+            foreach ($items as $item) {
+                if (! Locales::isSupported($item)) {
+                    throw new InvalidSettingValueException("\"{$item}\" is not a language the platform offers (".implode(', ', array_keys(Locales::SUPPORTED)).").");
+                }
+            }
+            $items = array_values(array_unique($items));
+        }
+
         // Currencies: three-letter ISO codes, upper case, each once (owner decision 2026-10-03).
         if ($definition->key === 'platform.supported_currencies') {
             $items = array_map('strtoupper', $items);

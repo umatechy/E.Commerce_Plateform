@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import StoreLayout from '@/Components/Storefront/StoreLayout';
+import { useT } from '@/Storefront/i18n';
 import LoadingState from '@/Components/LoadingState';
 import RequesterTicket from '@/Components/Support/RequesterTicket';
 import { errorMessage, StorefrontApiError, storefrontFetch, storeHref } from '@/Storefront/api';
@@ -20,6 +21,8 @@ export default function SupportTicket({ storefront, seo, ticket_id }: Storefront
 
   // Opening another link to this page may change only the #fragment,
   // which does not reload the page; follow it.
+  const t = useT();
+
   useEffect(() => {
     const read = () => setToken(new URLSearchParams(window.location.hash.slice(1)).get('token') ?? '');
     read();
@@ -35,8 +38,9 @@ export default function SupportTicket({ storefront, seo, ticket_id }: Storefront
     storefrontFetch<{ data: TicketDetail }>(storefront, path, { headers: { 'X-Support-Token': token } })
       .then((res) => setTicket(res.data))
       .catch((e) =>
-        setError(e instanceof StorefrontApiError && e.status === 404 ? 'This link is not valid. Please use the latest link from our email.' : errorMessage(e)),
+        setError(e instanceof StorefrontApiError && e.status === 404 ? t('This link is not valid. Please use the latest link from our email.') : errorMessage(e)),
       );
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [path, storefront, token]);
 
   const call = (suffix: string, body: Record<string, unknown>) =>
@@ -49,7 +53,7 @@ export default function SupportTicket({ storefront, seo, ticket_id }: Storefront
           <div className="rounded-sf border border-sf-border p-6">
             <p className="text-sf-error">{error}</p>
             <a href={storeHref(storefront, '/contact')} className="mt-3 inline-block text-sm text-sf-accent">
-              Contact us again
+              {t('Contact us again')}
             </a>
           </div>
         )}

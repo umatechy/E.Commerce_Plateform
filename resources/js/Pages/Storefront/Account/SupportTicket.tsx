@@ -1,4 +1,5 @@
 import { Link } from '@inertiajs/react';
+import { useT } from '@/Storefront/i18n';
 import { useEffect, useState } from 'react';
 import AccountLayout from '@/Components/Storefront/AccountLayout';
 import RequesterTicket from '@/Components/Support/RequesterTicket';
@@ -9,6 +10,7 @@ import type { StorefrontPageProps } from '@/Storefront/types';
 
 /** Phase B26 — one of the shopper's requests: the conversation, reply, resolve and rate. */
 export default function SupportTicket({ storefront, seo, ticket_id }: StorefrontPageProps & { ticket_id: string }) {
+  const t = useT();
   const { customer } = useCustomer(storefront, { required: true });
   const [ticket, setTicket] = useState<TicketDetail | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -26,9 +28,9 @@ export default function SupportTicket({ storefront, seo, ticket_id }: Storefront
     storefrontFetch<{ data: TicketDetail }>(storefront, `${path}${suffix}`, { method: 'POST', body }).then((res) => res.data);
 
   return (
-    <AccountLayout shell={storefront} seo={seo} customer={customer} active="/account/support" title="Support request">
+    <AccountLayout shell={storefront} seo={seo} customer={customer} active="/account/support" title={t('Support request')}>
       <Link href={`${base}/account/support`} className="text-sm text-sf-accent">
-        ← All requests
+        <span className="inline-block rtl:rotate-180" aria-hidden="true">←</span> {t('All requests')}
       </Link>
       {error && <p className="mt-4 text-sf-error">{error}</p>}
       {ticket && (

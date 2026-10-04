@@ -2,6 +2,7 @@ import { formatDateTime } from '@/lib/datetime';
 import { useState, type FormEvent } from 'react';
 import MessageThread from './MessageThread';
 import { categoryLabel, statusLabel, type TicketDetail } from '@/lib/support';
+import { useT } from '@/Storefront/i18n';
 
 type Tone = 'storefront' | 'admin';
 
@@ -53,6 +54,7 @@ export default function RequesterTicket({
   newRequestHref?: string;
 }) {
   const s = STYLES[tone];
+  const t = useT(); // Phase B38: the shopper's language on storefront pages, English in the admin
   const [body, setBody] = useState('');
   const [rating, setRating] = useState(0);
   const [comment, setComment] = useState('');
@@ -90,13 +92,13 @@ export default function RequesterTicket({
         <div className="flex flex-wrap items-center gap-2 text-sm">
           <span className={`font-mono ${s.muted}`}>{ticket.number}</span>
           <span className={s.badge} data-testid="ticket-status">
-            {statusLabel(ticket.status)}
+            {t(statusLabel(ticket.status))}
           </span>
-          <span className={s.muted}>{categoryLabel(ticket.category)}</span>
-          {ticket.order && <span className={s.muted}>· Order {ticket.order.number}</span>}
+          <span className={s.muted}>{t(categoryLabel(ticket.category))}</span>
+          {ticket.order && <span className={s.muted}>· {t('Order')} {ticket.order.number}</span>}
         </div>
         <h2 className="mt-2 text-2xl font-bold">{ticket.subject}</h2>
-        <p className={`mt-1 text-sm ${s.muted}`}>Opened {formatDateTime(ticket.created_at)}</p>
+        <p className={`mt-1 text-sm ${s.muted}`}>{t('Opened {date}', { date: formatDateTime(ticket.created_at) })}</p>
       </div>
 
       <MessageThread messages={ticket.messages} perspective="requester" tone={tone} />
@@ -110,42 +112,42 @@ export default function RequesterTicket({
       {ticket.can_reply ? (
         <form onSubmit={submitReply} className="space-y-3">
           <label className="block text-sm">
-            <span className={`mb-1 block ${s.muted}`}>{ticket.status === 'resolved' ? 'Reply (this reopens the request)' : 'Your reply'}</span>
+            <span className={`mb-1 block ${s.muted}`}>{ticket.status === 'resolved' ? t('Reply (this reopens the request)') : t('Your reply')}</span>
             <textarea required rows={4} maxLength={10000} value={body} onChange={(e) => setBody(e.target.value)} className={s.input} name="reply" />
           </label>
           <div className="flex flex-wrap gap-3">
             <button type="submit" disabled={busy !== null || body.trim() === ''} className={s.primary}>
-              {busy === 'reply' ? 'Sending…' : 'Send reply'}
+              {busy === 'reply' ? t('Sending…') : t('Send reply')}
             </button>
             {ticket.can_resolve && (
               <button type="button" disabled={busy !== null} onClick={() => run('resolve', resolve)} className={s.secondary}>
-                {busy === 'resolve' ? 'Saving…' : 'My issue is solved'}
+                {busy === 'resolve' ? t('Saving…') : t('My issue is solved')}
               </button>
             )}
           </div>
         </form>
       ) : (
         <div className={`${s.card} text-sm`}>
-          This request is closed.{' '}
+          {t('This request is closed.')}{' '}
           {newRequestHref && (
             <a href={newRequestHref} className="font-medium underline">
-              Open a new request
+              {t('Open a new request')}
             </a>
           )}
         </div>
       )}
 
       {ticket.can_rate && (
-        <form onSubmit={submitRating} className={`${s.card} space-y-3`} aria-label="Rate our support">
-          <p className="font-semibold">How did we do?</p>
-          <div role="radiogroup" aria-label="Rating" className="flex gap-1">
+        <form onSubmit={submitRating} className={`${s.card} space-y-3`} aria-label={t('Rate our support')}>
+          <p className="font-semibold">{t('How did we do?')}</p>
+          <div role="radiogroup" aria-label={t('Rating')} className="flex gap-1">
             {[1, 2, 3, 4, 5].map((value) => (
               <button
                 key={value}
                 type="button"
                 role="radio"
                 aria-checked={rating === value}
-                aria-label={`${value} out of 5`}
+                aria-label={t('{value} out of 5', { value })}
                 onClick={() => setRating(value)}
                 className={`text-2xl leading-none ${value <= rating ? 'text-amber-500' : 'text-gray-300'}`}
               >
@@ -153,16 +155,17 @@ export default function RequesterTicket({
               </button>
             ))}
           </div>
-          <textarea rows={2} maxLength={1000} placeholder="Anything we could do better? (optional)" value={comment} onChange={(e) => setComment(e.target.value)} className={s.input} />
+          <textarea rows={2} maxLength={1000} placeholder={t('Anything we could do better? (optional)')} value={comment} onChange={(e) => setComment(e.target.value)} className={s.input} />
           <button type="submit" disabled={busy !== null || rating < 1} className={s.primary}>
-            {busy === 'rate' ? 'Sending…' : 'Send rating'}
+            {busy === 'rate' ? t('Sending…') : t('Send rating')}
           </button>
         </form>
       )}
 
       {ticket.satisfaction && (
         <p className={`text-sm ${s.muted}`}>
-          You rated this request {ticket.satisfaction.rating} out of 5{ticket.satisfaction.comment ? ` — “${ticket.satisfaction.comment}”` : ''}. Thank you!
+          {t('You rated this request {rating} out of 5. Thank you!', { rating: ticket.satisfaction.rating })}
+          {ticket.satisfaction.comment ? ` “${ticket.satisfaction.comment}”` : ''}
         </p>
       )}
     </div>

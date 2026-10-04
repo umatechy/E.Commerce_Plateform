@@ -6,6 +6,7 @@ import Pagination from '@/Components/Storefront/Pagination';
 import EmptyState from '@/Components/EmptyState';
 import type { CategoryNode, ProductCard, StorefrontPageProps } from '@/Storefront/types';
 import { currencyDigits } from '@/lib/money';
+import { useT } from '@/Storefront/i18n';
 
 type Filters = { q?: string; category?: string; brand?: string; min_price?: number; max_price?: number; in_stock?: boolean; sort?: string; page?: number };
 type Context =
@@ -20,11 +21,15 @@ type Props = StorefrontPageProps & {
   facets: { categories: CategoryNode[]; brands: { slug: string; name: string }[] };
 };
 
-const SORTS: Record<string, string> = { newest: 'Newest', price_asc: 'Price: low to high', price_desc: 'Price: high to low', name: 'Name' };
+const SORTS = ['newest', 'price_asc', 'price_desc', 'name'] as const;
 
 /** Listing for all products, search results, a category or a brand. */
 export default function Catalog({ storefront, seo, context, filters, listing, facets }: Props) {
   const base = storefront.base_path;
+  const t = useT();
+  const sortLabel: Record<(typeof SORTS)[number], string> = { newest: t('Newest'), price_asc: t('Price: low to high'), price_desc: t('Price: high to low'), name: t('Name') };
+  // Phase B38: the page's own titles in the visitor's language; category and brand names come translated from the server.
+  const title = context.type === 'search' ? (filters.q ? t('Results for “{q}”', { q: filters.q }) : t('Search results')) : context.type === 'all' ? t('All products') : context.title;
   const path =
     context.type === 'category'
       ? `${base}/categories/${context.category.slug}`
@@ -57,16 +62,16 @@ export default function Catalog({ storefront, seo, context, filters, listing, fa
   return (
     <StoreLayout shell={storefront} seo={seo}>
       <div className="mb-6">
-        <h1 className="text-3xl font-bold">{context.type === 'search' && filters.q ? `Results for “${filters.q}”` : context.title}</h1>
+        <h1 className="text-3xl font-bold">{title}</h1>
         {context.type === 'category' && context.category.description && <p className="mt-2 text-sf-muted">{context.category.description}</p>}
         {context.type === 'brand' && context.brand.description && <p className="mt-2 text-sf-muted">{context.brand.description}</p>}
-        <p className="mt-1 text-sm text-sf-muted">{listing.pagination.total} products</p>
+        <p className="mt-1 text-sm text-sf-muted">{t('{count} products', { count: listing.pagination.total })}</p>
       </div>
 
       <div className="grid gap-8 md:grid-cols-[220px_1fr]">
         <aside className="space-y-6 text-sm">
           <div>
-            <h2 className="mb-2 font-semibold">Categories</h2>
+            <h2 className="mb-2 font-semibold">{t('Categories')}</h2>
             <ul className="space-y-1">
               {facets.categories.map((category) => (
                 <li key={category.id}>
@@ -74,7 +79,7 @@ export default function Catalog({ storefront, seo, context, filters, listing, fa
                     {category.name} <span className="text-sf-muted">({category.product_count})</span>
                   </Link>
                   {category.children.length > 0 && (
-                    <ul className="ml-3 mt-1 space-y-1">
+                    <ul className="ms-3 mt-1 space-y-1">
                       {category.children.map((child) => (
                         <li key={child.id}>
                           <Link href={`${base}/categories/${child.slug}`} className="text-sf-muted hover:text-sf-accent">
@@ -91,14 +96,14 @@ export default function Catalog({ storefront, seo, context, filters, listing, fa
 
           {facets.brands.length > 0 && context.type !== 'brand' && (
             <div>
-              <h2 className="mb-2 font-semibold">Brand</h2>
+              <h2 className="mb-2 font-semibold">{t('Brand')}</h2>
               <select
                 value={filters.brand ?? ''}
                 onChange={(e) => visit({ brand: e.target.value || undefined })}
                 className="w-full rounded-sf border border-sf-border px-2 py-1"
-                aria-label="Brand"
+                aria-label={t('Brand')}
               >
-                <option value="">All brands</option>
+                <option value="">{t('All brands')}</option>
                 {facets.brands.map((brand) => (
                   <option key={brand.slug} value={brand.slug}>
                     {brand.name}
@@ -109,20 +114,20 @@ export default function Catalog({ storefront, seo, context, filters, listing, fa
           )}
 
           <form onSubmit={applyPrice}>
-            <h2 className="mb-2 font-semibold">Price</h2>
+            <h2 className="mb-2 font-semibold">{t('Price')}</h2>
             <div className="flex items-center gap-2">
-              <input value={minPrice} onChange={(e) => setMinPrice(e.target.value)} inputMode="decimal" placeholder="Min" aria-label="Minimum price" className="w-20 rounded-sf border border-sf-border px-2 py-1" />
+              <input value={minPrice} onChange={(e) => setMinPrice(e.target.value)} inputMode="decimal" placeholder={t('Min')} aria-label={t('Minimum price')} className="w-20 rounded-sf border border-sf-border px-2 py-1" />
               <span>–</span>
-              <input value={maxPrice} onChange={(e) => setMaxPrice(e.target.value)} inputMode="decimal" placeholder="Max" aria-label="Maximum price" className="w-20 rounded-sf border border-sf-border px-2 py-1" />
+              <input value={maxPrice} onChange={(e) => setMaxPrice(e.target.value)} inputMode="decimal" placeholder={t('Max')} aria-label={t('Maximum price')} className="w-20 rounded-sf border border-sf-border px-2 py-1" />
             </div>
             <button type="submit" className="mt-2 rounded-sf border border-sf-border px-3 py-1">
-              Apply
+              {t('Apply')}
             </button>
           </form>
 
           <label className="flex items-center gap-2">
             <input type="checkbox" checked={Boolean(filters.in_stock)} onChange={(e) => visit({ in_stock: e.target.checked ? 1 : undefined })} />
-            In stock only
+            {t('In stock only')}
           </label>
         </aside>
 
@@ -132,18 +137,18 @@ export default function Catalog({ storefront, seo, context, filters, listing, fa
               value={filters.sort ?? 'newest'}
               onChange={(e) => visit({ sort: e.target.value === 'newest' ? undefined : e.target.value })}
               className="rounded-sf border border-sf-border px-2 py-1 text-sm"
-              aria-label="Sort by"
+              aria-label={t('Sort by')}
             >
-              {Object.entries(SORTS).map(([value, label]) => (
+              {SORTS.map((value) => (
                 <option key={value} value={value}>
-                  {label}
+                  {sortLabel[value]}
                 </option>
               ))}
             </select>
           </div>
 
           {listing.products.length === 0 ? (
-            <EmptyState title="No products found" description="Try removing a filter or searching for something else." />
+            <EmptyState title={t('No products found')} description={t('Try removing a filter or searching for something else.')} />
           ) : (
             <ProductGrid products={listing.products} basePath={base} />
           )}

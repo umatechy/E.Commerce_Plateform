@@ -73,7 +73,13 @@ final class SettingRegistry
             ),
             'store.default_locale' => new SettingDefinition(
                 key: 'store.default_locale', scope: SettingScope::Store, type: SettingType::String,
-                default: null, fallsBackToPlatformKey: 'platform.default_locale',
+                default: null, allowedValues: array_keys(Locales::SUPPORTED), fallsBackToPlatformKey: 'platform.default_locale',
+            ),
+            // Phase B38 (Module 05 §41): the languages the storefront offers;
+            // the default language is always one of them.
+            'store.languages' => new SettingDefinition(
+                key: 'store.languages', scope: SettingScope::Store, type: SettingType::StringArray,
+                default: [Locales::DEFAULT],
             ),
             'api.default_rate_limit_per_minute' => new SettingDefinition(
                 key: 'api.default_rate_limit_per_minute', scope: SettingScope::Platform, type: SettingType::Integer,

@@ -5,12 +5,14 @@
  * with the package).
  */
 export type SectionItem = Record<string, string>;
-export type Section = { type: string; position: number; is_visible: boolean; config: Record<string, string | number | SectionItem[]> };
-export type Branding = { logo_url?: string; favicon_url?: string; tagline?: string; social_links?: Record<string, string> };
+// Phase B38: config.translations = { [locale]: { field: text, items: [...] } }.
+export type SectionTranslations = Record<string, Record<string, string | SectionItem[]>>;
+export type Section = { type: string; position: number; is_visible: boolean; config: Record<string, string | number | SectionItem[] | SectionTranslations> };
+export type Branding = { logo_url?: string; favicon_url?: string; tagline?: string; social_links?: Record<string, string>; translations?: Record<string, { tagline?: string }> };
 export type Layout = Record<string, string | number | boolean>;
 export type Motion = Record<string, string | boolean>;
 export type Config = { theme?: string; tokens: Record<string, string>; layout?: Layout; motion?: Motion; branding: Branding; sections: Section[] };
-export type StoreTheme = { theme: string; draft_config: Config; published_config: Config; custom_css: string | null; is_published: boolean; published_at: string | null };
+export type StoreTheme = { theme: string; draft_config: Config; published_config: Config; custom_css: string | null; is_published: boolean; published_at: string | null; translation_languages?: { code: string; name: string; native: string; dir: string }[] };
 export type LibraryTheme = {
   key: string;
   name: string;

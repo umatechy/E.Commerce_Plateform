@@ -4,6 +4,9 @@ import MessageThread from './MessageThread';
 import RequesterTicket from './RequesterTicket';
 import type { TicketDetail, TicketMessage } from '@/lib/support';
 
+// Phase B38: the ticket components read the page language through Inertia.
+vi.mock('@inertiajs/react', async () => (await import('@/test/inertiaMock')).inertiaMock);
+
 afterEach(cleanup);
 
 const message = (overrides: Partial<TicketMessage> = {}): TicketMessage => ({

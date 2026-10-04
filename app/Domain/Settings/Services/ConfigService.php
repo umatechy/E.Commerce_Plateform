@@ -84,6 +84,14 @@ final class ConfigService
             throw new InvalidSettingValueException('Value must be one of the platform\'s supported currencies.');
         }
 
+        // Phase B38: the default language must be offered, and stays offered.
+        if ($key === 'store.default_locale' && ! in_array($validated, (array) $this->get('store.languages'), true)) {
+            throw new InvalidSettingValueException('Offer this language on the storefront first (Storefront languages).');
+        }
+        if ($key === 'store.languages' && ! in_array($this->get('store.default_locale') ?? Locales::DEFAULT, $validated, true)) {
+            throw new InvalidSettingValueException('The default language must stay in the list. Change the default language first.');
+        }
+
         $storedValue = $definition->type === SettingType::Secret ? Crypt::encryptString($validated) : $validated;
 
         $storeId = $definition->scope === SettingScope::Platform ? null : $this->context->storeId();

@@ -19,6 +19,17 @@ final class StoreThemeResource extends JsonResource
             'custom_css' => $this->custom_css,
             'is_published' => $this->isPublished(),
             'published_at' => $this->published_at?->toIso8601String(),
+            // Phase B38: the storefront languages besides the default, whose texts can be translated here.
+            'translation_languages' => $this->translationLanguages(),
         ];
+    }
+
+    /** @return list<array<string, string>> */
+    private function translationLanguages(): array
+    {
+        $config = app(\App\Domain\Settings\Services\ConfigService::class);
+        $default = (string) ($config->get('store.default_locale') ?? \App\Domain\Settings\Services\Locales::DEFAULT);
+
+        return \App\Domain\Settings\Services\Locales::describe(array_values(array_diff((array) $config->get('store.languages'), [$default])));
     }
 }

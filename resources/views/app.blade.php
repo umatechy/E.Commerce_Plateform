@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="{{ $page['props']['storefront']['store']['locale'] ?? 'en' }}">
+<html lang="{{ $page['props']['storefront']['store']['locale'] ?? 'en' }}" dir="{{ $page['props']['storefront']['language']['dir'] ?? 'ltr' }}">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -15,8 +15,15 @@
             <meta name="description" content="{{ $seo['description'] }}" inertia="description">
         @endif
         <link rel="canonical" href="{{ $seo['canonical'] }}" inertia="canonical">
+        {{-- Phase B38 (Module 16 §27): the same page in the store's other languages. --}}
+        @foreach ($seo['alternates'] ?? [] as $alternate)
+            <link rel="alternate" hreflang="{{ $alternate['hreflang'] }}" href="{{ $alternate['href'] }}">
+        @endforeach
         <meta name="robots" content="{{ $seo['robots'] }}" inertia="robots">
         <meta property="og:type" content="website" inertia="og:type">
+        @if (! empty($seo['og_locale']))
+            <meta property="og:locale" content="{{ $seo['og_locale'] }}" inertia="og:locale">
+        @endif
         <meta property="og:title" content="{{ $seo['og_title'] }}" inertia="og:title">
         <meta property="og:url" content="{{ $seo['canonical'] }}" inertia="og:url">
         @if (! empty($seo['og_description']))

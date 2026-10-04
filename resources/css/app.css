@@ -22,6 +22,32 @@
   font-family: var(--sf-font-heading);
 }
 
+/*
+ * Urdu (Phase B38 — Module 05 §39 "appropriate Unicode and script rendering",
+ * Module 17 §8 "Arabic/Urdu font"): Nastaliq for Urdu letters; Latin text
+ * and digits fall through to the theme font (the Urdu files only cover the
+ * Arabic script). Nastaliq is tall, so lines get more room.
+ */
+.sf-root[lang='ur'],
+.sf-root[lang='ur'] h1,
+.sf-root[lang='ur'] h2,
+.sf-root[lang='ur'] h3,
+.sf-root[lang='ur'] .font-sf-heading,
+.sf-root[lang='ur'] input,
+.sf-root[lang='ur'] textarea,
+.sf-root[lang='ur'] select,
+.sf-root[lang='ur'] button {
+  font-family: 'Noto Nastaliq Urdu', var(--sf-font-body);
+}
+.sf-root[lang='ur'] {
+  line-height: 2;
+}
+.sf-root[lang='ur'] h1,
+.sf-root[lang='ur'] h2,
+.sf-root[lang='ur'] h3 {
+  line-height: 1.9;
+}
+
 /* Hover: lift the card, zoom the image, cross-fade to the second image (desktop pointers only — Module 18 §13). */
 .sf-card,
 .sf-btn {

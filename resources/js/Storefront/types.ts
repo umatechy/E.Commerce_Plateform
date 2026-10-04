@@ -80,6 +80,8 @@ export type Shell = {
     custom_css: string | null;
   };
   announcement: string | null;
+  // Phase B38: the page language and the languages the store offers (absent in older fixtures).
+  language?: { current: string; default: string; dir: 'ltr' | 'rtl'; offered: { code: string; name: string; native: string; dir: string; tag: string }[] };
   navigation: { categories: CategoryNode[]; pages: { slug: string; title: string }[] };
   base_path: string;
   preview: boolean;

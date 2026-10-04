@@ -255,7 +255,7 @@ final class StorefrontWebController
                 'theme_preview' => $themePreview['expires_at'] ?? null,
             ],
             // A preview is never indexed.
-            'seo' => $themePreview !== null ? [...$seo, 'robots' => 'noindex, nofollow'] : $seo,
+            'seo' => $this->localizedSeo($themePreview !== null ? [...$seo, 'robots' => 'noindex, nofollow'] : $seo),
         ]);
     }
 
@@ -276,5 +276,40 @@ final class StorefrontWebController
     private function store(Request $request): Store
     {
         return $request->attributes->get('storefront.store');
+    }
+    /**
+     * Phase B38 — Module 16 §27: each language has its own address (`?lang=`
+     * for languages other than the default), the canonical points to the
+     * page's own language, and the other languages are listed as hreflang
+     * alternates with an x-default.
+     *
+     * @param array<string, mixed> $seo
+     * @return array<string, mixed>
+     */
+    private function localizedSeo(array $seo): array
+    {
+        $language = app(\App\Domain\Storefront\Services\StorefrontLocale::class);
+        $base = (string) ($seo['canonical'] ?? '');
+        if ($base === '') {
+            return $seo;
+        }
+        $parts = parse_url($base);
+        parse_str($parts['query'] ?? '', $query);
+        unset($query['lang']);
+        $with = function (string $locale) use ($base, $query, $language): string {
+            $params = $locale === $language->default() ? $query : [...$query, 'lang' => $locale];
+            $path = strtok($base, '?');
+
+            return $path.($params === [] ? '' : '?'.http_build_query($params));
+        };
+        $offered = $language->offered();
+        $seo['canonical'] = $with($language->current());
+        $seo['og_locale'] = str_replace('-', '_', \App\Domain\Settings\Services\Locales::SUPPORTED[$language->current()][3] ?? 'en-PK');
+        $seo['alternates'] = count($offered) < 2 ? [] : [
+            ...array_map(fn (string $code) => ['hreflang' => $code, 'href' => $with($code)], $offered),
+            ['hreflang' => 'x-default', 'href' => $with($language->default())],
+        ];
+
+        return $seo;
     }
 }

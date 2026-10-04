@@ -92,6 +92,8 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->appendToGroup('web', ResolveTenantContext::class);
         $middleware->appendToGroup('web', HandleInertiaRequests::class);
         $middleware->appendToGroup('api', ResolveTenantContext::class);
+        // Phase B38: the storefront's language for cart, checkout and account calls.
+        $middleware->appendToGroup('api', \App\Domain\Storefront\Http\Middleware\ResolveStorefrontLocale::class);
         // Phase B25: the web storefront's HttpOnly session cookie becomes a
         // bearer token before any auth middleware runs. After Sanctum's
         // stateful pipeline in the group (which decrypts cookies).
@@ -118,6 +120,7 @@ return Application::configure(basePath: dirname(__DIR__))
         // isPlatformStaff() themselves, so running them ahead of the
         // route's `can:` gate never skips an authorization check.
         $middleware->appendToPriorityList(ResolveTenantContext::class, EnsureStaffPrincipal::class);
+        $middleware->appendToPriorityList(ResolveTenantContext::class, \App\Domain\Storefront\Http\Middleware\ResolveStorefrontLocale::class);
         $middleware->appendToPriorityList(EnsureStaffPrincipal::class, EnsureCustomerPrincipal::class);
         // Phase B29: MFA and step-up are checked BEFORE the Super Admin
         // context switches, so a request they refuse never starts (or

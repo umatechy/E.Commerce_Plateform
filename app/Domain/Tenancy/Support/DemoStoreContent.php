@@ -31,6 +31,60 @@ final class DemoStoreContent
         'Home & Kitchen' => [[220, 237, 225], [63, 111, 82], 'cup'],
     ];
 
+
+    /** Phase B38: the demo catalogue in Urdu (product SKU => [name, short description]). */
+    private const URDU_PRODUCTS = [
+        'DEMO-ATR-001' => ['گلاب عطر 12 ملی لیٹر', 'طائف کے گلاب کی کلاسک خوشبو، دیرپا اور الکحل سے پاک۔'],
+        'DEMO-ATR-002' => ['عود العرب 6 ملی لیٹر', 'شام کے لیے گہری، دھوئیں جیسی عود کی خوشبو۔'],
+        'DEMO-ATR-003' => ['سفید مشک طہارہ 12 ملی لیٹر', 'روزمرہ کے لیے نرم اور صاف مشک۔'],
+        'DEMO-ATR-004' => ['چنبیلی عطر 6 ملی لیٹر', 'رول آن بوتل میں تازہ چنبیلی کے پھول۔'],
+        'DEMO-ATR-005' => ['عنبر گفٹ سیٹ (3 × 6 ملی لیٹر)', 'گفٹ باکس میں عنبر، عود اور گلاب۔ جان بوجھ کر کم اسٹاک۔'],
+        'DEMO-MCL-001' => ['سفید سوتی کرتا', 'ہوادار سوتی کپڑا، عام فٹنگ۔'],
+        'DEMO-MCL-002' => ['واش اینڈ وئیر شلوار قمیض', 'آسانی سے سنبھلنے والا کپڑا، اَن سِلا سوٹ۔'],
+        'DEMO-MCL-003' => ['کالی واسکٹ', 'شادیوں اور عید کے لیے کلاسک واسکٹ۔'],
+        'DEMO-MCL-004' => ['پشاوری چپل', 'ہاتھ سے بنی چمڑے کی چپل۔'],
+        'DEMO-MCL-005' => ['خالص اونی شال', 'گرم اونی شال۔ جان بوجھ کر اسٹاک ختم۔'],
+        'DEMO-HOM-001' => ['سرامک ٹی سیٹ (6 کپ)', 'چھ کپ، چھ پرچ اور ایک چائے دانی۔'],
+        'DEMO-HOM-002' => ['اسٹیل کا دیگچہ 5 لیٹر', 'شیشے کے ڈھکن کے ساتھ اسٹین لیس اسٹیل۔'],
+        'DEMO-HOM-003' => ['جائے نماز', 'سفری تھیلی میں نرم گدے دار جائے نماز۔'],
+        'DEMO-HOM-004' => ['کشن کورز (4 کا سیٹ)', 'کڑھائی والے سوتی کور، 16 × 16 انچ۔'],
+        'DEMO-HOM-005' => ['لکڑی کی دیوار گھڑی', 'بے آواز مشین، 12 انچ۔'],
+    ];
+
+    /** Category name => [Urdu name, Urdu description]. */
+    private const URDU_CATEGORIES = [
+        'Attar & Fragrances' => ['عطر اور خوشبوئیں', 'الکحل سے پاک عطر اور گفٹ سیٹ۔'],
+        "Men's Clothing" => ['مردانہ لباس', 'روزمرہ اور تہوار کے کپڑے۔'],
+        'Home & Kitchen' => ['گھر اور کچن', 'گھر کی کارآمد چیزیں۔'],
+    ];
+
+    /** The home page texts in Urdu, by section type. */
+    private const URDU_SECTIONS = [
+        'announcement_bar' => ['message' => 'یہ نمونے کی مصنوعات والا ڈیمو اسٹور ہے — آزادی سے دیکھیں، کارٹ میں ڈالیں اور چیک آؤٹ آزمائیں۔'],
+        'hero' => ['heading' => 'ہر موقع کے لیے', 'subheading' => 'خوشبوئیں، کپڑے اور گھر کی چیزیں — اسٹور آزمانے کے لیے نمونے کا کیٹلاگ۔', 'cta_label' => 'کلیکشن دیکھیں'],
+        'trust_badges' => ['items' => [
+            ['title' => 'کیش آن ڈیلیوری', 'text' => 'آرڈر ملنے پر ادائیگی کریں'],
+            ['title' => 'محفوظ چیک آؤٹ', 'text' => 'آپ کی تفصیلات اسٹور کے پاس رہتی ہیں'],
+            ['title' => 'مدد کے لیے حاضر', 'text' => 'رابطہ کے صفحے سے ہمیں لکھیں'],
+            ['title' => 'نمونے کا کیٹلاگ', 'text' => 'یہاں ہر چیز ڈیمو ڈیٹا ہے'],
+        ]],
+        'featured_categories' => ['heading' => 'زمرے کے لحاظ سے خریدیں'],
+        'featured_products' => ['heading' => 'نئی آمد'],
+        'sale_products' => ['heading' => 'ابھی سیل پر'],
+        'best_sellers' => ['heading' => 'سب سے زیادہ فروخت'],
+        'testimonials' => ['heading' => 'تبصروں کا حصہ ایسا دکھتا ہے', 'items' => [
+            ['quote' => 'نمونے کا تبصرہ: خوشبو سارا دن رہی اور پیکنگ صاف ستھری تھی۔', 'name' => 'نمونہ گاہک', 'detail' => 'ڈیمو متن'],
+            ['quote' => 'نمونے کا تبصرہ: کرتے کی فٹنگ اچھی ہے اور کپڑا نرم ہے۔', 'name' => 'نمونہ گاہک', 'detail' => 'ڈیمو متن'],
+            ['quote' => 'نمونے کا تبصرہ: آرڈر دینا آسان تھا اور ادائیگی ڈیلیوری پر کی۔', 'name' => 'نمونہ گاہک', 'detail' => 'ڈیمو متن'],
+        ]],
+        'rich_text' => ['heading' => 'اس اسٹور کے بارے میں', 'text' => "یہ اسٹور دکھاتا ہے کہ پریمیم پیکج کے ساتھ پلیٹ فارم پر ایک دکان کیسی لگتی ہے: تھیم، اس کا لے آؤٹ اور اینیمیشن، اور ہوم پیج کے حصے۔\nیہاں ہر چیز، قیمت اور تبصرہ نمونے کا ڈیٹا ہے۔"],
+        'faq' => ['heading' => 'سوالات', 'items' => [
+            ['question' => 'کیا یہ اصلی اسٹور ہے؟', 'answer' => 'نہیں۔ یہ پلیٹ فارم کو آزمانے کے لیے نمونے کی مصنوعات والا ڈیمو اسٹور ہے۔'],
+            ['question' => 'کیا میں آرڈر دے سکتا ہوں؟', 'answer' => 'جی ہاں۔ آرڈر کیش آن ڈیلیوری کے ساتھ کام کرتے ہیں، اس لیے کارٹ سے اکاؤنٹ تک پورا عمل آزمایا جا سکتا ہے۔'],
+            ['question' => 'کیا شکل بدلی جا سکتی ہے؟', 'answer' => 'جی ہاں۔ ایڈمن میں تھیم سے مالک دوسری تھیم، اس کے رنگ، فونٹ، لے آؤٹ، اینیمیشن اور یہ حصے چن سکتا ہے۔'],
+        ]],
+    ];
+
     public function __construct(private readonly ProductImageService $images, private readonly ThemeService $themes) {}
 
     /** Two pictures for a product that has none (the second is shown on hover). */
@@ -91,6 +145,13 @@ final class DemoStoreContent
             ]]],
             ['type' => 'footer', 'position' => 99, 'is_visible' => true, 'config' => []],
         ];
+        // Phase B38: the same texts in Urdu (shown when the store offers Urdu).
+        $config['branding']['translations'] = ['ur' => ['tagline' => 'عطر، کپڑے اور گھر کی ضروری چیزیں']];
+        foreach ($config['sections'] as $i => $section) {
+            if (isset(self::URDU_SECTIONS[$section['type']])) {
+                $config['sections'][$i]['config']['translations'] = ['ur' => self::URDU_SECTIONS[$section['type']]];
+            }
+        }
         $storeTheme = $this->themes->updateDraft($storeTheme, $config, null, $actorUserId);
         $this->themes->publish($storeTheme, $actorUserId);
     }
@@ -225,5 +286,22 @@ final class DemoStoreContent
         imagefilledrectangle($image, 380, 320, 420, 350, $accent);
         imagefilledrectangle($image, 190, 420, 250, 445, $dark);
         imagefilledrectangle($image, 550, 420, 610, 445, $dark);
+    }
+    /**
+     * Phase B38: the storefront offers Urdu next to English, and the demo
+     * catalogue has its Urdu names and descriptions.
+     */
+    public function dressLanguages(int $userId): void
+    {
+        app(\App\Domain\Settings\Services\ConfigService::class)->set('store.languages', ['en', 'ur'], \App\Domain\Settings\Models\SettingScope::Store, $userId ?: null, 'Demo store: Urdu');
+        $translations = app(\App\Domain\Settings\Services\TranslationService::class);
+        foreach (\App\Domain\Catalog\Models\Product::query()->whereIn('sku', array_keys(self::URDU_PRODUCTS))->get() as $product) {
+            [$name, $summary] = self::URDU_PRODUCTS[$product->sku];
+            $translations->save('product', $product->id, 'ur', ['name' => $name, 'short_description' => $summary, 'description' => $summary."\nیہ اسٹور آزمانے کے لیے ڈیمو پروڈکٹ ہے۔"], $userId ?: null);
+        }
+        foreach (\App\Domain\Catalog\Models\Category::query()->whereIn('name', array_keys(self::URDU_CATEGORIES))->get() as $category) {
+            [$name, $description] = self::URDU_CATEGORIES[$category->name];
+            $translations->save('category', $category->id, 'ur', ['name' => $name, 'description' => $description], $userId ?: null);
+        }
     }
 }

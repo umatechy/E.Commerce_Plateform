@@ -26,7 +26,8 @@ final class StorefrontCache
     public function remember(int $storeId, string $key, callable $compute): mixed
     {
         return Cache::remember(
-            "storefront:{$storeId}:v{$this->version($storeId)}:{$key}",
+            // Phase B38: per language — an Urdu page is never served to an English visitor.
+            "storefront:{$storeId}:v{$this->version($storeId)}:".app(StorefrontLocale::class)->current().":{$key}",
             (int) config('storefront.cache_ttl_seconds'),
             $compute,
         );

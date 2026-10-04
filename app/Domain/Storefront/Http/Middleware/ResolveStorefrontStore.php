@@ -66,6 +66,8 @@ final class ResolveStorefrontStore
         $request->route()?->forgetParameter('storeSlug');
         $request->route()?->forgetParameter('storefrontHost');
         $request->attributes->set('storefront.base_path', $mode === 'path' ? '/shop/'.$store->slug : '');
+        // Phase B38: the language of this visit (after the store, whose settings decide what is offered).
+        app(\App\Domain\Storefront\Services\StorefrontLocale::class)->resolve($request, (string) $request->attributes->get('storefront.base_path'));
 
         $availability = $this->gate->availability($store);
         $preview = $availability === StorefrontAvailability::NotLaunched && $mode !== 'api' && $this->isStaffOf($request, $store);
