@@ -133,6 +133,42 @@ final class StorefrontCatalog
             ->get();
     }
 
+    /**
+     * Module 17 §25 "Best sellers" (Phase B36): browsable products by units
+     * sold on this store's orders (not cancelled, failed or draft). A store
+     * with no sales yet gets none — the section is then not shown, rather
+     * than calling other products best sellers.
+     *
+     * @return Collection<int, Product>
+     */
+    public function bestSellers(int $limit): Collection
+    {
+        $sold = \App\Domain\Orders\Models\OrderItem::query()
+            ->join('orders', 'orders.id', '=', 'order_items.order_id')
+            ->whereNotIn('orders.status', ['draft', 'cancelled', 'failed'])
+            ->whereNotNull('order_items.product_id')
+            ->groupBy('order_items.product_id')
+            ->selectRaw('order_items.product_id, SUM(order_items.quantity) AS units');
+
+        return $this->withPricing($this->visible(self::BROWSE_VISIBILITY))
+            ->joinSub($sold, 'sold', 'sold.product_id', '=', 'products.id')
+            ->with(['brand', 'images'])
+            ->orderByDesc('sold.units')->orderByDesc('products.id')
+            ->limit($limit)
+            ->get();
+    }
+
+    /** @return Collection<int, Product> Module 17 §25 (Phase B36): browsable products on sale, newest first */
+    public function onSale(int $limit): Collection
+    {
+        return $this->withPricing($this->visible(self::BROWSE_VISIBILITY))
+            ->whereRaw($this->onSaleSql().' = 1')
+            ->with(['brand', 'images'])
+            ->orderByRaw('COALESCE(products.published_at, products.created_at) DESC')->orderByDesc('products.id')
+            ->limit($limit)
+            ->get();
+    }
+
     /** @return Collection<int, Product> products whose name (or a word of it) starts with $q */
     public function suggest(string $q, int $limit = 6): Collection
     {

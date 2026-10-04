@@ -55,6 +55,13 @@ export const FEATURE_LABELS: Record<string, string> = {
   'seo.basic': 'SEO and content pages',
   'domains.custom_domain': 'Custom domain',
   'theme.custom_css': 'Custom CSS',
+  'themes.business': 'Business themes (Modern)',
+  'themes.premium': 'Premium themes (Boutique, Bold)',
+  'layout.advanced': 'Premium layouts',
+  'homepage.advanced_sections': 'Advanced home page sections',
+  'homepage.reorder': 'Reorder home page sections',
+  'animation.advanced': 'Standard animation and scroll effects',
+  'animation.premium': 'Premium and playful animation',
   'customers.advanced': 'Customer groups, tags, import/export and merge',
   'products.basic': 'Products',
 };

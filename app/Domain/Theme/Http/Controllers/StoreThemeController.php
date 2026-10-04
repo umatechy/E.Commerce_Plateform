@@ -6,6 +6,10 @@ namespace App\Domain\Theme\Http\Controllers;
 
 use App\Domain\Theme\Exceptions\InvalidThemeConfigException;
 use App\Domain\Theme\Exceptions\StoreThemePublicationNotFoundException;
+use App\Domain\Theme\Exceptions\ThemeNotEntitledException;
+use App\Domain\Theme\Models\Theme;
+use App\Domain\Theme\Services\ThemeEntitlements;
+use App\Domain\Theme\Support\ThemeCatalog;
 use App\Domain\Theme\Http\Requests\UpdateThemeDraftRequest;
 use App\Domain\Theme\Http\Resources\StoreThemePublicationResource;
 use App\Domain\Theme\Http\Resources\StoreThemeResource;
@@ -52,9 +56,11 @@ final class StoreThemeController
         }
 
         try {
-            $updated = $themes->updateDraft($this->currentStoreTheme(), $request->input('config'), $request->input('custom_css'));
+            $updated = $themes->updateDraft($this->currentStoreTheme(), $request->input('config'), $request->input('custom_css'), $request->user()->id);
         } catch (InvalidThemeConfigException $e) {
             return response()->json(['message' => $e->getMessage(), 'code' => 'invalid_theme_config'], 422);
+        } catch (ThemeNotEntitledException $e) {
+            return $this->notEntitled($e);
         }
 
         return (new StoreThemeResource($updated))->response();
@@ -75,11 +81,54 @@ final class StoreThemeController
         return response()->json(['data' => $link]);
     }
 
-    public function publish(Request $request, ThemeService $themes): StoreThemeResource
+    public function publish(Request $request, ThemeService $themes): JsonResponse
     {
         abort_unless(app(ThemePolicy::class)->publish($request->user()), 403);
 
-        return new StoreThemeResource($themes->publish($this->currentStoreTheme(), $request->user()->id));
+        try {
+            return (new StoreThemeResource($themes->publish($this->currentStoreTheme(), $request->user()->id)))->response();
+        } catch (ThemeNotEntitledException $e) {
+            return $this->notEntitled($e);
+        }
+    }
+
+    /**
+     * Module 17 §18, §50 "Theme Library" (Phase B36): every active theme,
+     * with whether the store's package includes it.
+     */
+    public function library(Request $request, ThemeEntitlements $entitlements): JsonResponse
+    {
+        abort_unless(app(ThemePolicy::class)->view($request->user()), 403);
+        $current = $this->currentStoreTheme();
+
+        return response()->json(['data' => Theme::query()->where('status', 'active')->orderBy('sort_order')->orderBy('id')->get()
+            ->map(function (Theme $theme) use ($entitlements, $current) {
+                $definition = ThemeCatalog::get($theme->key);
+
+                return [
+                    'key' => $theme->key, 'name' => $theme->name, 'description' => $theme->description, 'tier' => $theme->tier, 'version' => $theme->version,
+                    'included' => $entitlements->allows(ThemeCatalog::TIER_FEATURE[$theme->tier] ?? null),
+                    'published' => $current->theme_id === $theme->id,
+                    'in_draft' => ($current->draft_config['theme'] ?? $current->theme->key) === $theme->key,
+                    // What the card shows: the theme's own colours, fonts and layout.
+                    'tokens' => $definition['tokens'], 'layout' => $definition['layout'], 'motion' => $definition['motion'],
+                ];
+            })->values()]);
+    }
+
+    /** Module 17 §18 (Phase B36): the draft takes the chosen theme; publishing makes it live. */
+    public function select(Request $request, ThemeService $themes): JsonResponse
+    {
+        abort_unless(app(ThemePolicy::class)->manage($request->user()), 403);
+        $data = $request->validate(['theme' => ['required', 'string', 'max:64']]);
+
+        try {
+            return (new StoreThemeResource($themes->selectTheme($this->currentStoreTheme(), $data['theme'], $request->user()->id)))->response();
+        } catch (InvalidThemeConfigException $e) {
+            return response()->json(['message' => $e->getMessage(), 'code' => 'invalid_theme_config'], 422);
+        } catch (ThemeNotEntitledException $e) {
+            return $this->notEntitled($e);
+        }
     }
 
     public function publications(Request $request): AnonymousResourceCollection
@@ -97,9 +146,16 @@ final class StoreThemeController
             $updated = $themes->rollbackTo($this->currentStoreTheme(), $publicationId, $request->user()->id);
         } catch (StoreThemePublicationNotFoundException $e) {
             return response()->json(['message' => $e->getMessage(), 'code' => 'publication_not_found'], 404);
+        } catch (ThemeNotEntitledException $e) {
+            return $this->notEntitled($e);
         }
 
         return (new StoreThemeResource($updated))->response();
+    }
+
+    private function notEntitled(ThemeNotEntitledException $e): JsonResponse
+    {
+        return response()->json(['message' => $e->getMessage(), 'code' => 'feature_not_entitled', 'violations' => $e->violations], 403);
     }
 
     private function currentStoreTheme(): StoreTheme

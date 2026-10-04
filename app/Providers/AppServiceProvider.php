@@ -139,6 +139,8 @@ final class AppServiceProvider extends ServiceProvider
             \App\Domain\Seo\Models\SeoSetting::class, \App\Domain\Theme\Models\StoreTheme::class,
             \App\Domain\Settings\Models\StoreSetting::class, \App\Domain\Domains\Models\Domain::class,
             Store::class,
+            // Phase B36: a package change changes what the theme may show.
+            \App\Domain\Packages\Models\Subscription::class,
         ] as $model) {
             $model::observe(\App\Domain\Storefront\Observers\StorefrontCacheObserver::class);
         }

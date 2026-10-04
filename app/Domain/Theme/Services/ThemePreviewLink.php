@@ -85,6 +85,7 @@ final class ThemePreviewLink
         return [
             'config' => $storeTheme->draft_config,
             'custom_css' => $storeTheme->custom_css,
+            'theme_key' => $storeTheme->theme?->key, // Phase B36
             'expires_at' => now()->setTimestamp($claims['e'])->toIso8601String(),
         ];
     }

@@ -31,7 +31,7 @@ final class SuperAdminThemeManagementTest extends TestCase
 
     public function test_duplicate_theme_key_is_rejected(): void
     {
-        Theme::query()->create(['key' => 'default', 'name' => 'Default', 'version' => '1.0.0', 'status' => 'active']);
+        Theme::query()->firstOrCreate(['key' => 'default'], ['name' => 'Default', 'version' => '1.0.0', 'status' => 'active']); // registered by the B36 migration already
         $superAdmin = User::factory()->create(['platform_role' => 'support_agent']);
 
         $response = $this->actingAs($superAdmin)->postJson('/api/v1/super-admin/themes', [

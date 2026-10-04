@@ -309,6 +309,9 @@ Route::middleware(['auth:sanctum', 'staff.principal', 'required.mfa'])->group(fu
     Route::get('/store/health/history', [StoreHealthController::class, 'history']);
 
     Route::get('/store/theme', [StoreThemeController::class, 'show']);
+    // Module 17 §18 (Phase B36): the theme library and choosing a theme for the draft.
+    Route::get('/store/themes', [StoreThemeController::class, 'library']);
+    Route::post('/store/theme/select', [StoreThemeController::class, 'select'])->middleware('throttle:30,1,theme-select');
     Route::put('/store/theme/draft', [StoreThemeController::class, 'updateDraft']);
     Route::post('/store/theme/publish', [StoreThemeController::class, 'publish']);
     Route::post('/store/theme/preview', [StoreThemeController::class, 'previewLink'])->middleware('throttle:20,1,theme-preview'); // Phase B32

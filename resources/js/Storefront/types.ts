@@ -18,6 +18,9 @@ export type ProductCard = {
   brand: { name: string; slug: string } | null;
   price: Money;
   image: Image | null;
+  /** Phase B36: shown on hover; absent in older fixtures. */
+  hover_image?: Image | null;
+  has_variants?: boolean;
   in_stock: boolean;
 };
 
@@ -67,7 +70,15 @@ export type Shell = {
     favicon_url: string | null;
     social_links: Record<string, string>;
   };
-  theme: { tokens: Record<string, string>; custom_css: string | null };
+  // Phase B36: the resolved presentation (Module 17/18); layout and motion are absent in older test fixtures.
+  theme: {
+    key?: string;
+    name?: string;
+    tokens: Record<string, string>;
+    layout?: Partial<import('./theme').ThemeLayout>;
+    motion?: Partial<import('./theme').ThemeMotion>;
+    custom_css: string | null;
+  };
   announcement: string | null;
   navigation: { categories: CategoryNode[]; pages: { slug: string; title: string }[] };
   base_path: string;

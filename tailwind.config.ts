@@ -18,9 +18,20 @@ export default {
         'sf-success': 'var(--sf-success, #15803d)',
         'sf-warning': 'var(--sf-warning, #b45309)',
         'sf-error': 'var(--sf-error, #b91c1c)',
+        'sf-secondary': 'var(--sf-secondary, #6b7280)',
       },
       borderRadius: {
         sf: 'var(--sf-radius, 0.5rem)',
+        'sf-lg': 'var(--sf-radius-lg, 0.75rem)',
+      },
+      // Phase B36 (Module 17 §8, §12): theme fonts and elevation.
+      fontFamily: {
+        'sf-heading': 'var(--sf-font-heading, system-ui)',
+        'sf-body': 'var(--sf-font-body, system-ui)',
+      },
+      boxShadow: {
+        sf: 'var(--sf-shadow, none)',
+        'sf-hover': 'var(--sf-shadow-hover, none)',
       },
     },
   },

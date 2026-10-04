@@ -111,8 +111,8 @@ Architecture v1.0 arrived after this review was written and are now in
 | 14 | Discounts, Coupons & Promotions | B9 | 🟡 | Percentage/fixed/free-shipping promotions, coupons, targets, usage limits, order snapshots | Buy X Get Y (§13–14), tiered quantity (§12), customer group/segment/first-order (§17–20), payment-method discounts (§16), collections (§9), bulk codes (§49–51), preview/versioning (§59, §65–67) |
 | 15 | Marketing & Customer Engagement | B10 | 🟡 | Campaigns, whitelisted segments, email opt-in, abandoned-cart detection | SMS/WhatsApp/push channels (§22–26), other triggers (welcome, post-purchase, win-back…, §29–44), send windows/frequency caps (§17, §50), approval/versioning (§68–69), attribution (§60–63), A/B testing (§64) |
 | 16 | SEO & Content | B13 | 🟡 | SEO settings, metadata, canonicals, redirects, sitemap, robots, content pages, sanitization | Blog/articles (§22), landing pages and content blocks (§20–21), revisions/preview (§24–25), multilingual/hreflang (§27), custom head/scripts (§28), verification (§29), SEO diagnostics (§33) |
-| 17 | Theme, Branding & Design System | B15 | 🟡 | One system theme, store theme config, tokens, sections, publish/rollback | Multiple themes and theme versions (§15–17), dark mode (§32), RTL (§9), logo/favicon upload with SVG sanitization (§7), custom CSS entitlement exists; scheduling. Customizer UI built in B31 (colours, type, branding, sections, CSS, history) |
-| 18 | Animation & Interaction | — | ❌ | Nothing | Whole module |
+| 17 | Theme, Branding & Design System | B15 (+B31, B36) | 🟡 | Theme library of 5 themes by package (B36: Classic, Minimal, Modern, Boutique, Bold), selection, inheritance platform → theme → store, tokens (colours, two self-hosted fonts, radius, shadow, density), layout (header, hero, cards, columns, width, sticky, footer), 15 section types with package rules and fixed/free order, draft/preview/publish/rollback, custom CSS, package fallback on downgrade | Dark mode (§32), RTL (§9, G11), logo/favicon upload with SVG sanitization (§7), scheduling (§39), immutable per-version theme records (§17), import/export (§43), custom components (§37), quick view and ratings on cards, product detail presentation settings (§27) — docs/development/b36-inspection-findings.md |
+| 18 | Animation & Interaction | B36 | 🟡 | Motion tokens and 5 profiles (none, minimal, standard, premium, playful) with intensity, by package; hover lift/zoom/second image, press feedback, page entry, reveal on scroll with capped stagger, add-to-cart confirmation after the server; reduced motion always honoured | Scheduling (§39), carousel and gestures (§24–25), shared-element page transitions, animation analytics events (§46), separate motion revisions (motion is part of the theme publication) |
 | 19 | Domain Management | B14 | 🟡 | Platform subdomains, custom domains, DNS TXT verification, primary domain, SSL status field | Real SSL provisioning (§17–18), HTTP verification (§16), registrar/managed domains (§19), automated re-verification |
 | 20 | Hosting & Infrastructure | B20 | ✅ | Health endpoint, Dockerfile/compose, Nginx/PHP-FPM/Supervisor templates, responsibility matrix | Actual provisioning is out of scope by design |
 | 21 | Notifications & Communication | B11 | 🟡 | Templates, messages, delivery attempts, suppressions, email channel, preferences/unsubscribe | Real SMS/WhatsApp/push providers (§18–20), delivery webhooks (§35–36), localization (§15), push device tokens |
@@ -418,7 +418,7 @@ existing pattern: feature tests plus tenant-isolation tests for every endpoint.
 | G14 | Store lifecycle states + closure/retention workflow | STORE-003/009, MT-017, M03 §7–8, §35–37 | Undefined behavior on cancellation/deletion | Add missing states and a retention-safe deletion workflow | P1 | Retention period decision |
 | G15 | Catalog/taxonomy depth: collections, import/export, bulk ops, tags, attribute sets, filters | M05 §16, M06 §34–51, M07 §18–19, §44–47 | Onboarding existing merchants is slow | Collections first (also unblocks M14 §9), then import/export | P1 | — |
 | G16 | Module 25 PWA | PWA-001/003, M25 | Mobile install/offline missing | Build per blueprint (after G11 and G6 theme) | P2 | G11 |
-| G17 | Module 18 Animation | ANIM-001–004, M18 | Visual polish only | Build per blueprint | P2 | M17 |
+| G17 | ✅ **Core built in B36** (checkpoint-b36; open items in docs/development/b36-inspection-findings.md). Module 18 Animation | ANIM-001–004, M18 | Visual polish only | Build per blueprint | P2 | M17 |
 | G18 | Module 26 AI | AI-001–008, M26 | Premium feature missing (M04 §8) | Provider choice, then build with M26 safety layers | P2 | Owner decision on provider |
 | G19 | Module 27 Marketplace | APP-005, M27 | No extension ecosystem | Build on B18 | P2 | G13 |
 | G20 | Module 28 Affiliate & Reseller | AFF-001–005, M28 | No partner growth channel | Build per blueprint | P2 | G7, M29 extensions |
@@ -454,7 +454,7 @@ This follows the Master Prompt §40 dependency order, adjusted for what exists:
 2. **G3 and G9–G10** as soon as the owner's decisions arrive.
 3. **G6 admin UI** (done, B31), **G7** (Module 10, done, B32), then **G8**
    (returns) and **G15** (catalog depth). This is the minimum a merchant needs
-   to run a store without the API. **G8** (returns, done, B33; completed in B34). G15 is next.
+   to run a store without the API. **G8** (returns, done, B33; completed in B34). Owner moved Modules 17/18 (themes, animation) before G15 on 2026-10-04: done in B36. G15 is next.
 4. **G11 localization**, then **G12, G13, G14**.
 5. **New modules in blueprint order:** G17 (Module 18), G16 (Module 25),
    G18 (Module 26), G19 (Module 27), G20 (Module 28), then G21 and G22.

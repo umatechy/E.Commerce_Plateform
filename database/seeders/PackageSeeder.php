@@ -77,6 +77,14 @@ final class PackageSeeder extends Seeder
             'domains.custom_domain' => true, // Module 19 — custom domain attachment available to every tier
             'customers.advanced' => false, // Module 10 §87 (owner decision 2026-10-03): groups, tags, CSV import/export and merge are Business+
             'theme.custom_css' => false, // Module 17 — custom CSS is a Business/Premium differentiator (documented decision, not an invented numeric limit — see b15-inspection-findings.md)
+            // Module 17/18 (Phase B36, owner decision 2026-10-04): themes, layouts, sections, motion by package.
+            'themes.business' => false,
+            'themes.premium' => false,
+            'layout.advanced' => false,
+            'homepage.advanced_sections' => false,
+            'homepage.reorder' => false,
+            'animation.advanced' => false,
+            'animation.premium' => false,
         ],
         'business' => [
             // Module 06 — the catalog itself. ProductController requires this key
@@ -111,6 +119,14 @@ final class PackageSeeder extends Seeder
             'domains.custom_domain' => true, // Module 19 — custom domain attachment available to every tier
             'customers.advanced' => true, // Module 10 §87 (owner decision 2026-10-03)
             'theme.custom_css' => true, // Module 17 — Business/Premium differentiator (see b15-inspection-findings.md)
+            // Module 17/18 (Phase B36, owner decision 2026-10-04): themes, layouts, sections, motion by package.
+            'themes.business' => true,
+            'themes.premium' => false,
+            'layout.advanced' => false,
+            'homepage.advanced_sections' => true,
+            'homepage.reorder' => false,
+            'animation.advanced' => true,
+            'animation.premium' => false,
         ],
         'premium' => [
             // Module 06 — the catalog itself. ProductController requires this key
@@ -145,6 +161,14 @@ final class PackageSeeder extends Seeder
             'domains.custom_domain' => true, // Module 19 — custom domain attachment available to every tier
             'customers.advanced' => true, // Module 10 §87 (owner decision 2026-10-03)
             'theme.custom_css' => true, // Module 17 — Business/Premium differentiator (see b15-inspection-findings.md)
+            // Module 17/18 (Phase B36, owner decision 2026-10-04): themes, layouts, sections, motion by package.
+            'themes.business' => true,
+            'themes.premium' => true,
+            'layout.advanced' => true,
+            'homepage.advanced_sections' => true,
+            'homepage.reorder' => true,
+            'animation.advanced' => true,
+            'animation.premium' => true,
         ],
     ];
 

@@ -46,6 +46,8 @@ export const inertiaMock = {
       {children}
     </a>
   ),
+  // <Head> only changes the document head; nothing to show in a component test.
+  Head: () => null,
 };
 
 /** A JSON response as fetch returns it. */

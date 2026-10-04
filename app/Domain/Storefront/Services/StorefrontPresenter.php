@@ -62,6 +62,10 @@ final class StorefrontPresenter
                 'on_sale' => $onSale,
             ],
             'image' => ($image = $product->images->first()) !== null ? $this->image($image) : null,
+            // Module 17 §26 / Module 18 §13 (Phase B36): the second image the card shows on hover.
+            'hover_image' => ($second = $product->images->get(1)) !== null ? $this->image($second) : null,
+            // A product with variants is chosen on its page; one without can go to the cart from the card.
+            'has_variants' => (bool) $product->getAttribute('has_variants'),
             'in_stock' => (bool) $product->getAttribute('in_stock'),
         ];
     }

@@ -32,6 +32,7 @@ final class ThemePublicController
             return response()->json(['message' => 'No published theme configuration exists for this store.'], 404);
         }
 
-        return response()->json(['data' => $resolved]);
+        // Phase B36: also what the storefront renders (inherited values filled in, package applied).
+        return response()->json(['data' => [...$resolved, 'presentation' => $resolver->present($resolved['config'], $resolved['theme_key'])]]);
     }
 }

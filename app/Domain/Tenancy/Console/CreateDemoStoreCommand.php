@@ -20,6 +20,7 @@ use App\Domain\Packages\Services\SubscriptionLifecycleService;
 use App\Domain\Storefront\Services\StorefrontSetupService;
 use App\Domain\Tenancy\Models\Store;
 use App\Domain\Tenancy\Models\StoreStatus;
+use App\Domain\Tenancy\Support\DemoStoreContent;
 use App\Domain\Tenancy\Support\TenantContext;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Cache;
@@ -44,7 +45,10 @@ final class CreateDemoStoreCommand extends Command
         {--email=demo.owner@example.com : Email of the demo store owner}
         {--customer-email=demo.customer@example.com : Email of the demo customer account}
         {--name=Umar Techy Demo Store : Store name}
-        {--package=premium : Package of the trial (basic, business or premium)}';
+        {--package=premium : Package of the trial (basic, business or premium)}
+        {--theme=boutique : Theme to publish (default, minimal, modern, boutique, bold; the package must include it)}
+        {--no-pictures : Leave the products without demo pictures}
+        {--refresh-look= : Instead of creating a store, give an existing demo store (its slug) the pictures and theme}';
 
     protected $description = 'Create a demo store with 3 categories and 15 products (not in production).';
 
@@ -92,11 +96,16 @@ final class CreateDemoStoreCommand extends Command
         InventoryService $inventory,
         StorefrontSetupService $setup,
         EntitlementService $entitlements,
+        DemoStoreContent $content,
     ): int {
         if (app()->environment('production')) {
             $this->error('demo:store does not run in production.');
 
             return self::FAILURE;
+        }
+
+        if ($this->option('refresh-look')) {
+            return $this->refreshLook((string) $this->option('refresh-look'), $context, $content);
         }
 
         $email = (string) $this->option('email');
@@ -171,6 +180,9 @@ final class CreateDemoStoreCommand extends Command
                     return $product;
                 });
                 $entitlements->recordUsage('max_products');
+                if (! $this->option('no-pictures')) {
+                    $content->picture($product, $categoryName, $count);
+                }
 
                 $record = Inventory::query()->create(['warehouse_id' => $warehouse->id, 'product_id' => $product->id])->refresh();
                 if ($stock > 0) {
@@ -182,6 +194,7 @@ final class CreateDemoStoreCommand extends Command
 
         $customer = Customer::query()->create(['name' => 'Demo Customer', 'email' => $customerEmail, 'password' => $customerPassword]);
         $launch = $setup->launch($store);
+        $theme = $this->dress($store, $owner->id, $content);
 
         app(AuditLogger::class)->record('demo.store_created', ['products' => $count, 'package' => $package->code], $store, $store->id);
 
@@ -191,11 +204,50 @@ final class CreateDemoStoreCommand extends Command
             ['Package', "{$package->code} (trial)"],
             ['Launched', $launch['ok'] ? 'yes' : 'no ('.($launch['code'] ?? '').')'],
             ['Catalogue', "3 categories, {$count} products ({$currency})"],
+            ['Theme', $theme],
             ['Owner sign-in', "{$email} / {$ownerPassword}"],
             ['Customer sign-in', "{$customerEmail} / {$customerPassword} (customer: {$customer->public_id})"],
         ]);
         $this->line('The owner sets up two-step sign-in at the first sign-in (mandatory for store owners).');
         $this->warn('The passwords are shown only now. This is local demo data, not for production.');
+
+        return self::SUCCESS;
+    }
+    /** Publishes the chosen theme with the demo home page; reports what was done. */
+    private function dress(Store $store, int $ownerId, DemoStoreContent $content): string
+    {
+        $key = (string) $this->option('theme');
+        try {
+            $content->dressTheme(\App\Domain\Theme\Models\StoreTheme::query()->where('store_id', $store->id)->firstOrFail(), $key, $ownerId);
+
+            return "{$key}, published with the demo home page";
+        } catch (\App\Domain\Theme\Exceptions\ThemeNotEntitledException|\App\Domain\Theme\Exceptions\InvalidThemeConfigException $e) {
+            $this->warn("Theme not applied: {$e->getMessage()}");
+
+            return 'not changed';
+        }
+    }
+
+    /** --refresh-look: pictures for products without any, and the theme, for a store made by this command. */
+    private function refreshLook(string $slug, TenantContext $context, DemoStoreContent $content): int
+    {
+        $store = Store::query()->where('slug', $slug)->first();
+        if ($store === null || ! str_starts_with($store->slug, 'demo-store-')) {
+            $this->error('Only a store made by demo:store (slug demo-store-…) can be refreshed.');
+
+            return self::FAILURE;
+        }
+        $context->resolveToStore($store->id);
+        $owner = $store->users()->wherePivot('status', 'active')->orderBy('store_user.id')->first();
+        $pictures = 0;
+        foreach (Category::query()->get() as $category) {
+            foreach (Product::query()->where('primary_category_id', $category->id)->orderBy('id')->get() as $i => $product) {
+                $pictures += $content->picture($product, $category->name, $product->id + $i);
+            }
+        }
+        $theme = $this->dress($store, (int) $owner?->id, $content);
+        app(AuditLogger::class)->record('demo.store_refreshed', ['pictures' => $pictures, 'theme' => $theme], $store, $store->id);
+        $this->info("Refreshed /shop/{$store->slug}: {$pictures} pictures added; theme {$theme}.");
 
         return self::SUCCESS;
     }

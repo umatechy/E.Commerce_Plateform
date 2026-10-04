@@ -21,7 +21,7 @@ final class Theme extends Model
         'status' => 'active',
     ];
 
-    protected $fillable = ['key', 'name', 'version', 'status'];
+    protected $fillable = ['key', 'name', 'description', 'tier', 'version', 'status', 'sort_order'];
 
     protected function casts(): array
     {

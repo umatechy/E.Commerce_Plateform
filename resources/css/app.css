@@ -1,3 +1,120 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/*
+ * Module 18 — storefront motion (Phase B36). Everything here reads the
+ * variables StoreLayout sets from the store's resolved motion profile
+ * (Storefront/theme.ts); a profile of NONE sets every duration to 0.
+ *
+ * Rules kept here (Module 18 §4, §22, §27, §30, §43):
+ * - transform and opacity only; nothing that moves the layout;
+ * - nothing is hidden before JavaScript runs: an element is only hidden for
+ *   its reveal after the script marked it (.sf-reveal-pending), so content
+ *   is there without scripts and for crawlers;
+ * - prefers-reduced-motion removes movement and keeps static state cues;
+ * - no flashing, no loops.
+ */
+.sf-root .font-sf-heading,
+.sf-root h1,
+.sf-root h2,
+.sf-root h3 {
+  font-family: var(--sf-font-heading);
+}
+
+/* Hover: lift the card, zoom the image, cross-fade to the second image (desktop pointers only — Module 18 §13). */
+.sf-card,
+.sf-btn {
+  transition:
+    transform var(--sf-dur-fast) var(--sf-ease),
+    box-shadow var(--sf-dur-fast) var(--sf-ease),
+    background-color var(--sf-dur-fast) var(--sf-ease),
+    color var(--sf-dur-fast) var(--sf-ease);
+}
+.sf-card-img {
+  transition:
+    transform var(--sf-dur-normal) var(--sf-ease),
+    opacity var(--sf-dur-normal) var(--sf-ease);
+}
+@media (hover: hover) and (pointer: fine) {
+  .sf-root[data-hover='on'] .sf-card:hover {
+    transform: translateY(var(--sf-lift));
+    box-shadow: var(--sf-shadow-hover);
+  }
+  .sf-root[data-hover='on'] .sf-card:hover .sf-card-img {
+    transform: scale(var(--sf-scale));
+  }
+  .sf-root[data-hover='on'] .sf-card:hover .sf-card-img-alt {
+    opacity: 1;
+  }
+}
+
+/* Press feedback (Module 18 §14): brief, never blocks the action. */
+.sf-root[data-hover='on'] .sf-btn:active:not(:disabled) {
+  transform: scale(0.97);
+}
+
+/* Reveal on scroll (Module 18 §22–23): the stagger delay is capped by the script. */
+.sf-reveal-pending {
+  opacity: 0;
+  transform: translateY(var(--sf-distance));
+}
+.sf-reveal-visible {
+  opacity: 1;
+  transform: none;
+  transition:
+    opacity var(--sf-dur-normal) var(--sf-ease),
+    transform var(--sf-dur-normal) var(--sf-ease);
+  transition-delay: var(--sf-delay, 0ms);
+}
+
+/* Page entry (Module 18 §11): after the page is shown, never before. */
+@keyframes sf-page-in {
+  from {
+    opacity: 0;
+    transform: translateY(calc(var(--sf-distance) / 2));
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.sf-root[data-page-motion='on'] .sf-page {
+  animation: sf-page-in var(--sf-dur-normal) var(--sf-ease) both;
+}
+
+/* Add-to-cart confirmation (Module 18 §16): only after the server said yes. */
+@keyframes sf-pop {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.06);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+.sf-root:not([data-motion='none']) .sf-added {
+  animation: sf-pop var(--sf-dur-normal) var(--sf-ease);
+}
+
+/* Reduced motion (Module 18 §27 — mandatory). */
+@media (prefers-reduced-motion: reduce) {
+  .sf-root *,
+  .sf-root *::before,
+  .sf-root *::after {
+    animation-duration: 1ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 1ms !important;
+    transition-delay: 0ms !important;
+  }
+  .sf-reveal-pending {
+    opacity: 1;
+    transform: none;
+  }
+  .sf-root .sf-card:hover,
+  .sf-root .sf-card:hover .sf-card-img {
+    transform: none !important;
+  }
+}

@@ -25,7 +25,7 @@ use App\Domain\Theme\Services\ThemeResolver;
  */
 final class StorefrontExperience
 {
-    private const CONTENT_SECTIONS = ['hero', 'featured_products', 'featured_categories', 'promotional_banner'];
+    private const CONTENT_SECTIONS = ['hero', 'featured_products', 'featured_categories', 'promotional_banner', 'best_sellers', 'sale_products', 'featured_brands', 'testimonials', 'faq', 'rich_text', 'trust_badges'];
 
     public function __construct(
         private readonly StorefrontCatalog $catalog,
@@ -59,7 +59,9 @@ final class StorefrontExperience
     {
         $config = $theme['config'] ?? [];
         $branding = $config['branding'] ?? [];
-        $announcement = collect($this->sections($config))->firstWhere('type', SectionType::AnnouncementBar->value);
+        // Module 17 §39/§51 (Phase B36): the inherited, package-checked presentation.
+        $presentation = $this->themes->present($config, $theme['theme_key'] ?? null);
+        $announcement = collect($presentation['sections'])->firstWhere('type', SectionType::AnnouncementBar->value);
         $counts = $this->catalog->productCountsByCategory();
 
         return [
@@ -75,7 +77,11 @@ final class StorefrontExperience
                 'social_links' => $branding['social_links'] ?? (object) [],
             ],
             'theme' => [
-                'tokens' => $config['tokens'] ?? (object) [],
+                'key' => $presentation['theme']['key'],
+                'name' => $presentation['theme']['name'],
+                'tokens' => $presentation['tokens'],
+                'layout' => $presentation['layout'],
+                'motion' => $presentation['motion'],
                 'custom_css' => $theme['custom_css'] ?? null,
             ],
             'announcement' => $announcement['config']['message'] ?? null,
@@ -108,7 +114,7 @@ final class StorefrontExperience
      */
     private function buildHome(Store $store, ?array $theme): array
     {
-        $sections = $this->sections($theme['config'] ?? []);
+        $sections = $this->themes->present($theme['config'] ?? [], $theme['theme_key'] ?? null)['sections'];
         // Every store starts on the default theme, which has only a
         // header and footer: until the owner adds content sections,
         // the home page shows sensible defaults instead of nothing.
@@ -122,6 +128,23 @@ final class StorefrontExperience
             $config = $section['config'] ?? [];
             $resolved[] = match ($section['type']) {
                 SectionType::Hero->value, SectionType::PromotionalBanner->value => ['type' => $section['type'], ...$config],
+                // Phase B36 (Module 17 §25): the advanced sections.
+                SectionType::BestSellers->value => [
+                    'type' => $section['type'],
+                    'heading' => $config['heading'] ?? 'Best sellers',
+                    'products' => $this->catalog->bestSellers((int) ($config['limit'] ?? 8))->map(fn (Product $p) => $this->presenter->card($p))->all(),
+                ],
+                SectionType::SaleProducts->value => [
+                    'type' => $section['type'],
+                    'heading' => $config['heading'] ?? 'On sale',
+                    'products' => $this->catalog->onSale((int) ($config['limit'] ?? 8))->map(fn (Product $p) => $this->presenter->card($p))->all(),
+                ],
+                SectionType::FeaturedBrands->value => [
+                    'type' => $section['type'],
+                    'heading' => $config['heading'] ?? 'Shop by brand',
+                    'brands' => $this->catalog->brands()->take((int) ($config['limit'] ?? 12))->map(fn (\App\Domain\Catalog\Models\Brand $b) => ['name' => $b->name, 'slug' => $b->slug])->values()->all(),
+                ],
+                SectionType::Testimonials->value, SectionType::Faq->value, SectionType::RichText->value, SectionType::TrustBadges->value => ['type' => $section['type'], ...$config],
                 SectionType::FeaturedProducts->value => [
                     'type' => $section['type'],
                     'heading' => $config['heading'] ?? 'New arrivals',
@@ -310,19 +333,6 @@ final class StorefrontExperience
             ->get();
     }
 
-    /**
-     * Visible theme sections in their configured order.
-     *
-     * @param array<string, mixed> $config
-     * @return list<array<string, mixed>>
-     */
-    private function sections(array $config): array
-    {
-        return collect($config['sections'] ?? [])
-            ->filter(fn (array $section) => $section['is_visible'] ?? true)
-            ->sortBy('position')
-            ->values()->all();
-    }
 
     /** @return list<array<string, mixed>> the home page of a store that has not published a theme yet */
     private function defaultSections(Store $store): array

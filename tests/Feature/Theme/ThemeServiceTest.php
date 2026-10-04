@@ -29,7 +29,10 @@ final class ThemeServiceTest extends TestCase
         // docs/development/b15-inspection-findings.md ("Second Bug
         // Found") — this must succeed WITHOUT ThemeSeeder ever having
         // been called (RefreshDatabase-based tests never auto-seed).
-        $this->assertSame(0, Theme::query()->count()); // confirms no seeder ran before this test
+        // Since B36 the theme library migration registers the system themes;
+        // removing them recreates the original situation (no row at all).
+        Theme::query()->delete();
+        $this->assertSame(0, Theme::query()->count());
 
         $store = Store::factory()->create();
 
