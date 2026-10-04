@@ -116,6 +116,9 @@ and `customer-login` (regression test in `CustomerAuthTest`).
 
 ## 6. Not built
 
+> **Update (B35):** store credit expiry (off by default), credit on staff orders and
+> photos in the privacy export were built — see `docs/checkpoints/checkpoint-b35.md`.
+
 - Courier return labels and pickup; gateway refunds (gap G9).
 - Store credit expiry (§52 "expiry-aware where applicable"): no expiry today;
   it needs the owner's rule.

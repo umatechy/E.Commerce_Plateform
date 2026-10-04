@@ -141,6 +141,13 @@ final class ReturnPhotosAndGuestTest extends TestCase
         $return = app(ReturnService::class)->request($order, $body['items'], $body, $this->owner, 's-1');
         $photo = app(\App\Domain\Returns\Services\ReturnPhotoService::class)->add($return, $this->photo(), 'staff', $this->owner->id);
         Storage::disk('local')->assertExists($photo->path);
+
+        // Phase B35: their copy of their data carries the photo itself.
+        $exported = app(\App\Domain\Compliance\Services\CustomerDataService::class)->export($customer)['returns'][0]['photos'];
+        $this->assertCount(1, $exported);
+        $this->assertSame('staff', $exported[0]['uploaded_by']);
+        $this->assertSame(Storage::disk('local')->get($photo->path), base64_decode(substr($exported[0]['data_uri'], strlen("data:{$photo->mime};base64,"))));
+
         // Erasure waits for open orders to end; this one is finished.
         DB::table('orders')->where('id', $order->id)->update(['status' => 'completed']);
 

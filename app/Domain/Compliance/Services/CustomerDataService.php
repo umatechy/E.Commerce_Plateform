@@ -72,11 +72,13 @@ final class CustomerDataService
                 ])->all(),
             ])->all(),
             // Phase B33: the returns the customer asked for, with their own words.
-            'returns' => \App\Domain\Returns\Models\ReturnRequest::query()->where('customer_id', $customer->id)->orderBy('id')->get()
+            'returns' => \App\Domain\Returns\Models\ReturnRequest::query()->where('customer_id', $customer->id)->with('photos')->orderBy('id')->get()
                 ->map(fn (\App\Domain\Returns\Models\ReturnRequest $return) => [
                     'return_number' => $return->return_number, 'status' => $return->status->value, 'resolution' => $return->resolution->value,
                     'reason' => $return->reason->value, 'description' => $return->description, 'requested_at' => $return->created_at->toIso8601String(),
                     'refunded_minor' => $return->refunded_minor, 'currency' => $return->currency,
+                    // Phase B35: the photos themselves, so the copy is complete without the store.
+                    'photos' => $return->photos->map(fn (\App\Domain\Returns\Models\ReturnPhoto $photo) => $this->photoForExport($photo))->filter()->values()->all(),
                 ])->all(),
             // Phase B34: store credit, every entry.
             'store_credit' => \App\Domain\StoreCredit\Models\StoreCreditEntry::query()->where('customer_id', $customer->id)->orderBy('id')->get()
@@ -94,6 +96,28 @@ final class CustomerDataService
                     'status' => $message->status->value,
                     'sent_at' => $message->sent_at?->toIso8601String(),
                 ])->all(),
+        ];
+    }
+
+    /**
+     * A return photo as a data URI (it is a re-encoded JPEG/PNG/WebP of at
+     * most a few MB), or null when the file is gone.
+     *
+     * @return array{uploaded_by: string, uploaded_at: string, width: int, height: int, data_uri: string}|null
+     */
+    private function photoForExport(\App\Domain\Returns\Models\ReturnPhoto $photo): ?array
+    {
+        $disk = \Illuminate\Support\Facades\Storage::disk($photo->disk);
+        if (! $disk->exists($photo->path)) {
+            return null;
+        }
+
+        return [
+            'uploaded_by' => $photo->uploaded_by,
+            'uploaded_at' => $photo->created_at->toIso8601String(),
+            'width' => $photo->width,
+            'height' => $photo->height,
+            'data_uri' => 'data:'.$photo->mime.';base64,'.base64_encode((string) $disk->get($photo->path)),
         ];
     }
 

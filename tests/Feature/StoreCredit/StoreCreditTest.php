@@ -148,6 +148,81 @@ final class StoreCreditTest extends TestCase
         $this->assertArrayNotHasKey('by', $own->json('data.entries.0'));
     }
 
+    public function test_an_order_staff_take_can_be_paid_with_the_customers_credit_once_and_names_who_took_it(): void
+    {
+        $customer = $this->member();
+        $this->give($customer, 150000);
+        $order = fn (array $extra, string $key) => $this->actingAs($this->owner)->postJson('/api/v1/orders', [
+            'items' => [['product_id' => $this->product->id, 'quantity' => 2]], 'customer' => $customer->public_id,
+            'source' => 'admin', 'idempotency_key' => $key, ...$extra,
+        ]);
+
+        // Credit needs a customer, and a way to pay the rest.
+        $this->actingAs($this->owner)->postJson('/api/v1/orders', [
+            'items' => [['product_id' => $this->product->id, 'quantity' => 1]], 'guest_name' => 'Walk In', 'guest_email' => 'walk@example.com',
+            'payment_method' => 'cod', 'use_store_credit' => true, 'idempotency_key' => 'staff-guest',
+        ])->assertStatus(422)->assertJsonValidationErrors('use_store_credit');
+        $order(['use_store_credit' => true], 'staff-no-method')->assertStatus(422)->assertJsonValidationErrors('payment_method');
+        $this->assertSame(150000, $this->balance($customer));
+
+        // Rs. 2,000 order, Rs. 1,500 credit: the payment is for Rs. 500.
+        $created = $order(['use_store_credit' => true, 'payment_method' => 'cod'], 'staff-credit')->assertCreated()
+            ->assertJsonPath('data.store_credit_minor', 150000)->assertJsonPath('data.payable_minor', 50000);
+        $this->assertSame(50000, Payment::query()->where('order_id', Order::query()->where('public_id', $created->json('data.id'))->value('id'))->value('amount_minor'));
+        $this->assertSame(0, $this->balance($customer));
+        $this->assertSame($this->owner->id, StoreCreditEntry::query()->where('type', 'spent')->value('actor_user_id'));
+
+        // The same request again spends nothing more.
+        $this->give($customer, 10000);
+        $order(['use_store_credit' => true, 'payment_method' => 'cod'], 'staff-credit')->assertOk();
+        $this->assertSame(10000, $this->balance($customer));
+
+        // Credit that covers everything: nothing is charged, the order is paid.
+        $this->give($customer, 500000);
+        $paid = $order(['use_store_credit' => true, 'payment_method' => 'cod'], 'staff-all-credit')->assertCreated()->assertJsonPath('data.payable_minor', 0);
+        $this->assertSame('paid', Payment::query()->where('order_id', Order::query()->where('public_id', $paid->json('data.id'))->value('id'))->value('status')->value);
+        $this->assertSame(310000, $this->balance($customer));
+    }
+
+    public function test_credit_expires_only_when_the_store_turns_expiry_on_and_the_expiring_credit_is_spent_first(): void
+    {
+        $customer = $this->member();
+
+        // Off by default: credit has no date, and the daily run does nothing.
+        $this->give($customer, 5000);
+        $this->travel(5)->years();
+        $this->artisan('store-credit:expire')->assertSuccessful();
+        $this->assertSame(5000, $this->balance($customer));
+        $this->travelBack();
+
+        // The store turns it on: credit given from now expires after 30 days.
+        $this->storeSetting('store_credit.expires', true);
+        $this->storeSetting('store_credit.expiry_days', 30);
+        $this->give($customer, 10000);
+        $this->assertSame(10000, app(StoreCreditService::class)->nextExpiry($customer, 'PKR')['amount_minor']);
+
+        // Spending takes from the credit that expires first.
+        app(StoreCreditService::class)->debit($customer, 'PKR', 3000, StoreCreditEntryType::Adjustment, 'take-3000', null, 'Test', $this->owner->id);
+        $this->assertSame(7000, app(StoreCreditService::class)->nextExpiry($customer, 'PKR')['amount_minor']);
+        $this->getJson('/api/v1/customer/store-credit', $this->as($customer))->assertOk()->assertJsonPath('data.next_expiry.amount_minor', 7000);
+
+        // Not yet due.
+        $this->travel(29)->days();
+        $this->artisan('store-credit:expire')->assertSuccessful();
+        $this->assertSame(12000, $this->balance($customer));
+
+        // Due: what is left of it lapses, on the record; the older credit stays.
+        $this->travel(2)->days();
+        $this->artisan('store-credit:expire')->assertSuccessful();
+        $this->artisan('store-credit:expire')->assertSuccessful();
+        $this->assertSame(5000, $this->balance($customer));
+        $expired = StoreCreditEntry::query()->where('type', 'expired')->get();
+        $this->assertCount(1, $expired);
+        $this->assertSame(-7000, $expired->first()->amount_minor);
+        $this->assertNull(app(StoreCreditService::class)->nextExpiry($customer, 'PKR'));
+        $this->assertSame(5000, (int) DB::table('store_credit_lots')->sum('remaining_minor'));
+    }
+
     public function test_cancelling_an_order_gives_its_credit_back_once(): void
     {
         $customer = $this->member();
@@ -229,10 +304,14 @@ final class StoreCreditTest extends TestCase
         $this->assertSame(35000, $this->balance($account));
         $this->assertSame(0, $this->balance($duplicate));
         $this->assertSame(2, StoreCreditEntry::query()->where('customer_id', $account->id)->count());
+        // Phase B35: what is left of each credit follows into the joined account.
+        $joined = DB::table('store_credit_accounts')->where('customer_id', $account->id)->value('id');
+        $this->assertSame(35000, (int) DB::table('store_credit_lots')->where('account_id', $joined)->sum('remaining_minor'));
 
         $this->actingAs($this->owner)->postJson("/api/v1/customers/{$account->public_id}/erase", ['reason' => 'Request', 'confirm_email' => 'stay@example.com'])->assertOk();
         $this->assertSame(0, $this->balance($account));
         $this->assertSame(-35000, StoreCreditEntry::query()->where('type', 'erased')->sole()->amount_minor);
         $this->assertSame(0, (int) DB::table('store_credit_accounts')->sum('balance_minor'));
+        $this->assertSame(0, (int) DB::table('store_credit_lots')->sum('remaining_minor'));
     }
 }

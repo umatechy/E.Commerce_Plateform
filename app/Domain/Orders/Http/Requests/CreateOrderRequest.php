@@ -35,7 +35,12 @@ final class CreateOrderRequest extends FormRequest
             // Module 09 §70 (Phase B32): an order taken by staff goes through the
             // same payment step as a storefront order. Offline methods only:
             // no gateway is connected for staff to charge a card.
-            'payment_method' => ['nullable', 'in:cod,bank_transfer'],
+            // With store credit (Phase B35) it says how the rest is paid; when the
+            // credit covers everything nothing is charged, but the order still
+            // gets its zero-value, paid payment.
+            'payment_method' => ['nullable', 'required_if_accepted:use_store_credit', 'in:cod,bank_transfer'],
+            // Phase B35: pay with the customer's store credit as far as it goes.
+            'use_store_credit' => ['sometimes', 'boolean'],
             'guest_phone' => ['nullable', 'string', 'max:32'],
 
             'billing_address' => ['nullable', 'array'],

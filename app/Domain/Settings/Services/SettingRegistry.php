@@ -55,6 +55,18 @@ final class SettingRegistry
                 key: 'returns.window_days', scope: SettingScope::Store, type: SettingType::Integer,
                 default: 7,
             ),
+            // Module 09 §52 (Phase B35): store credit does not expire unless the
+            // store turns it on — the policy is the owner's. When on, credit
+            // given from then on lapses after the number of days below (a
+            // starting value the store sets to its own policy).
+            'store_credit.expires' => new SettingDefinition(
+                key: 'store_credit.expires', scope: SettingScope::Store, type: SettingType::Boolean,
+                default: false,
+            ),
+            'store_credit.expiry_days' => new SettingDefinition(
+                key: 'store_credit.expiry_days', scope: SettingScope::Store, type: SettingType::Integer,
+                default: 365,
+            ),
             'store.timezone' => new SettingDefinition(
                 key: 'store.timezone', scope: SettingScope::Store, type: SettingType::String,
                 default: 'UTC', // closes the multiply-documented gap from B10/B12/B13 — see inspection findings

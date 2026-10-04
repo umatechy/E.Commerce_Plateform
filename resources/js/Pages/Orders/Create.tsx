@@ -13,6 +13,7 @@ import { money } from '@/lib/money';
 import { variantLabel } from '@/lib/catalog';
 import { PAYMENT_METHOD_LABELS, type Order } from '@/lib/orders';
 import type { CustomerRow } from '@/lib/customers';
+import type { StoreCredit } from '@/Components/Customers/StoreCreditCard';
 
 /**
  * An order taken by staff, e.g. by phone or at the counter
@@ -28,6 +29,10 @@ import type { CustomerRow } from '@/lib/customers';
  * payment is then recorded on the order when the money arrives
  * (Payments → Open → Record payment received). Active customers only;
  * the server checks this again.
+ *
+ * Phase B35 (Module 09 §52): a customer's store credit can pay for the
+ * order as far as it goes, as at checkout. The server decides the amount;
+ * the page shows the balance and asks how the rest is paid.
  */
 const ADMIN_PAYMENT_METHODS = ['cod', 'bank_transfer'] as const;
 
@@ -95,6 +100,11 @@ export default function Create() {
   const presetCustomer = useApi<{ data: CustomerRow }>(preset && /^[0-9A-Za-z]{26}$/.test(preset) ? `/customers/${preset}` : null);
   const [mode, setMode] = useState<'customer' | 'guest'>(preset ? 'customer' : 'guest');
   const [customer, setCustomer] = useState<CustomerRow | null>(null);
+  const [useCredit, setUseCredit] = useState(false);
+  const credit = useApi<{ data: StoreCredit }>(mode === 'customer' && customer !== null ? `/customers/${customer.id}/store-credit` : null);
+  const creditBalance = credit.data && credit.data.data.currency === access.currency ? credit.data.data.balance_minor : 0;
+  const creditOffered = mode === 'customer' && customer !== null && creditBalance > 0;
+  useEffect(() => setUseCredit(false), [customer, mode]);
   useEffect(() => {
     const found = presetCustomer.data?.data;
     if (found && found.status === 'active' && !found.erased) setCustomer(found);
@@ -131,12 +141,17 @@ export default function Create() {
 
       return;
     }
+    if (creditOffered && useCredit && form.values.payment_method === '') {
+      form.setFormError('Choose how the rest is paid. If the store credit covers everything, nothing is charged.');
+
+      return;
+    }
     setLimitReached(false);
     const v = form.values;
     const who = mode === 'customer' && customer !== null
       ? { customer: customer.id }
       : { guest_name: v.guest_name, guest_email: v.guest_email, guest_phone: v.guest_phone === '' ? null : v.guest_phone };
-    const body = { items, ...who, payment_method: v.payment_method === '' ? null : v.payment_method, notes: v.notes === '' ? null : v.notes, source: 'admin', idempotency_key: key };
+    const body = { items, ...who, payment_method: v.payment_method === '' ? null : v.payment_method, notes: v.notes === '' ? null : v.notes, source: 'admin', idempotency_key: key, ...(creditOffered && useCredit ? { use_store_credit: true } : {}) };
     const saved = await form.submit(async () => {
       try {
         return await adminFetch<{ data: Order }>('/orders', { method: 'POST', body });
@@ -218,11 +233,20 @@ export default function Create() {
         </Card>
 
         <Card title="Payment">
+          {creditOffered && (
+            <label className="mb-4 flex items-start gap-2 text-sm">
+              <input type="checkbox" checked={useCredit} onChange={(e) => setUseCredit(e.target.checked)} className="mt-0.5 h-4 w-4 rounded border-slate-400 text-indigo-600 focus:ring-indigo-500" />
+              <span>
+                Pay with {customer?.name}&rsquo;s store credit (balance {money(creditBalance, access.currency)})
+                <span className="block text-slate-600">As much of the total as the balance covers. Cancelling the order gives it back.</span>
+              </span>
+            </label>
+          )}
           {methods.length === 0 ? (
             <p className="text-sm text-amber-900">Your package includes neither cash on delivery nor bank transfer. The order is created without a payment and cannot be shipped until it has one.</p>
           ) : (
             <SelectField
-              label="How the customer pays"
+              label={creditOffered && useCredit ? 'How the rest is paid' : 'How the customer pays'}
               value={form.values.payment_method}
               onChange={(v) => form.set('payment_method', v)}
               error={form.errors.payment_method}

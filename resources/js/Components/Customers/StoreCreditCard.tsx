@@ -7,7 +7,7 @@ import { useApi } from '@/lib/useApi';
 import { useForm } from '@/lib/useForm';
 import { adminFetch, idempotencyKey } from '@/lib/adminApi';
 import { money, toMinor } from '@/lib/money';
-import { formatDateTime } from '@/lib/datetime';
+import { formatDate, formatDateTime } from '@/lib/datetime';
 
 /**
  * Module 09 §52 (Phase B34): a customer's store credit — the balance and
@@ -16,7 +16,15 @@ import { formatDateTime } from '@/lib/datetime';
  * decides all three and never lets the balance go below zero.
  */
 export type StoreCreditEntry = { id: string; type: string; amount_minor: number; balance_after_minor: number; currency: string; note: string | null; created_at: string; by?: string | null };
-export type StoreCredit = { currency: string; balance_minor: number; other_balances: { currency: string; balance_minor: number }[]; entries: StoreCreditEntry[]; can_adjust?: boolean };
+export type StoreCredit = {
+  currency: string;
+  balance_minor: number;
+  // Phase B35: the next credit to expire, where the store turned expiry on.
+  next_expiry?: { amount_minor: number; expires_at: string } | null;
+  other_balances: { currency: string; balance_minor: number }[];
+  entries: StoreCreditEntry[];
+  can_adjust?: boolean;
+};
 
 export const STORE_CREDIT_TYPES: Record<string, string> = {
   return_refund: 'Refund of a return',
@@ -24,6 +32,7 @@ export const STORE_CREDIT_TYPES: Record<string, string> = {
   spent: 'Used on an order',
   order_cancelled: 'Order cancelled',
   erased: 'Ended with the erasure of personal data',
+  expired: 'Expired',
 };
 
 function AdjustDialog({ customerId, credit, onClose, onDone }: { customerId: string; credit: StoreCredit; onClose: () => void; onDone: (credit: StoreCredit) => void }) {
@@ -80,6 +89,9 @@ export default function StoreCreditCard({ customerId, version }: { customerId: s
       ) : (
         <>
           <p className="text-2xl font-semibold text-slate-900">{money(credit.balance_minor, credit.currency)}</p>
+          {credit.next_expiry && (
+            <p className="text-sm text-amber-800">{money(credit.next_expiry.amount_minor, credit.currency)} expires on {formatDate(credit.next_expiry.expires_at)}.</p>
+          )}
           {credit.other_balances.map((other) => (
             <p key={other.currency} className="text-sm text-slate-600">Also {money(other.balance_minor, other.currency)}, from when the store used {other.currency}.</p>
           ))}

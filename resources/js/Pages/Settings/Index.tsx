@@ -42,6 +42,15 @@ export default function Index() {
         description: 'How many days after delivery a customer may ask for a return. Your team can still record one later.',
         warning: 'Set this to your own return policy. Make sure the policy page of your store says the same.',
       },
+      'store_credit.expires': {
+        label: 'Store credit expires',
+        description: 'When on, store credit given from now on expires after the number of days below. Credit customers already have never expires.',
+        warning: 'Say so in your store policy. Customers see the date their credit expires in their account.',
+      },
+      'store_credit.expiry_days': {
+        label: 'Store credit expires after (days)',
+        description: 'Used only when “Store credit expires” is on. Counted from the day the credit is given.',
+      },
       'store.timezone': {
         label: 'Store timezone',
         description: 'Dates in the admin and on your storefront are shown in this timezone, and "today" in reports and promotions means the day here.',

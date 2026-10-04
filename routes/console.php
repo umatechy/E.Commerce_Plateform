@@ -47,3 +47,7 @@ Schedule::command('billing:run')->hourly()->withoutOverlapping();
 // Module 34 (Phase B26): flag support tickets that missed their service
 // level; close resolved tickets once the reopen window has passed.
 Schedule::command('support:maintain')->hourly()->withoutOverlapping();
+
+// Module 09 §52 (Phase B35): store credit that reached its expiry date
+// (only where the store turned expiry on). Idempotent.
+Schedule::command('store-credit:expire')->dailyAt('01:30')->timezone('UTC')->withoutOverlapping();

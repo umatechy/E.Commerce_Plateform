@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import StoreCreditCard, { type StoreCredit } from '@/Components/Customers/StoreCreditCard';
 import ReturnShow from '@/Pages/Returns/Show';
+import CreateOrder from '@/Pages/Orders/Create';
 import { clearToasts } from '@/Components/ui/toast';
 import { json, owner, routeFetch, setPage } from '@/test/inertiaMock';
 import type { ReturnRecord } from '@/lib/returns';
@@ -111,5 +112,51 @@ describe('a refund as store credit', () => {
     fireEvent.click(await screen.findByRole('button', { name: 'Approve refund' }));
     const dialog = await screen.findByRole('dialog', { name: 'Approve the refund' });
     expect(within(dialog).queryByLabelText('Give it as store credit instead of money')).toBeNull();
+  });
+});
+
+describe('store credit on an order staff take', () => {
+  const customer = { id: CUSTOMER, name: 'Ayesha Khan', email: 'ayesha@example.com', phone: null, status: 'active', erased: false };
+
+  function openFor(balance: number) {
+    setPage({ ...owner, currency: 'PKR', features: { 'payment.cod': true } }, '/orders/new');
+    window.history.replaceState(null, '', `/orders/new?customer=${CUSTOMER}`);
+    vi.stubGlobal('fetch', routeFetch({
+      [`/customers/${CUSTOMER}`]: () => json(200, { data: customer }),
+      [`/customers/${CUSTOMER}/store-credit`]: () => json(200, { data: credit({ balance_minor: balance }) }),
+      '/products': () => json(200, { data: [] }),
+    }));
+    render(<CreateOrder />);
+  }
+
+  it('offers the customer\'s balance and then asks how the rest is paid', async () => {
+    openFor(150000);
+
+    const box = await screen.findByLabelText(/Pay with Ayesha Khan.s store credit \(balance Rs\. 1,500\)/);
+    expect(screen.getByLabelText('How the customer pays')).toBeTruthy();
+    fireEvent.click(box);
+    expect(screen.getByLabelText('How the rest is paid')).toBeTruthy();
+  });
+
+  it('offers nothing when the customer has no credit', async () => {
+    openFor(0);
+
+    expect(await screen.findByText('ayesha@example.com')).toBeTruthy();
+    await waitFor(() => expect(screen.queryByLabelText(/store credit/)).toBeNull());
+  });
+});
+
+describe('store credit expiry', () => {
+  it('says how much expires next and when, only when there is a date', async () => {
+    vi.stubGlobal('fetch', routeFetch({ [`/customers/${CUSTOMER}/store-credit`]: () => json(200, { data: credit({ next_expiry: { amount_minor: 70000, expires_at: '2026-11-02T10:00:00Z' } }) }) }));
+    render(<StoreCreditCard customerId={CUSTOMER} />);
+
+    expect(await screen.findByText(/Rs\. 700 expires on/)).toBeTruthy();
+    cleanup();
+
+    vi.stubGlobal('fetch', routeFetch({ [`/customers/${CUSTOMER}/store-credit`]: () => json(200, { data: credit({ next_expiry: null }) }) }));
+    render(<StoreCreditCard customerId={CUSTOMER} />);
+    expect(await screen.findByText('Rs. 1,500')).toBeTruthy();
+    expect(screen.queryByText(/expires on/)).toBeNull();
   });
 });

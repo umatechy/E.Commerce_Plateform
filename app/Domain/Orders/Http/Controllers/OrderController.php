@@ -96,6 +96,11 @@ final class OrderController
             throw ValidationException::withMessages(['guest_email' => 'A blocked customer has this email. Unblock them first if they may order again.']);
         }
 
+        // Phase B35: only a customer of the store has store credit to spend.
+        if ($request->boolean('use_store_credit') && $customer === null) {
+            throw ValidationException::withMessages(['use_store_credit' => 'Store credit belongs to a customer. Choose the customer first.']);
+        }
+
         $paymentMethod = $request->filled('payment_method') ? \App\Domain\Payments\Models\PaymentMethod::from($request->string('payment_method')->toString()) : null;
         if ($paymentMethod !== null) {
             try {
@@ -131,6 +136,17 @@ final class OrderController
         }
 
         $wasJustCreated = $order->wasRecentlyCreated;
+
+        // Phase B35 (Module 09 §52): the customer pays with their store credit
+        // as far as it goes, as at checkout. The server decides the amount,
+        // under a lock on the balance, once (only for an order created now);
+        // the ledger names the staff member. Cancelling gives it back.
+        if ($wasJustCreated && $customer !== null && $request->boolean('use_store_credit')) {
+            $used = app(\App\Domain\StoreCredit\Services\StoreCreditService::class)->spendOnOrder($customer, $order, $request->user()->id);
+            if ($used > 0) {
+                $orders->applyStoreCredit($order, $used);
+            }
+        }
 
         // The payment record (idempotent with the order's own key): from now
         // on staff record the money received, and a cash-on-delivery order

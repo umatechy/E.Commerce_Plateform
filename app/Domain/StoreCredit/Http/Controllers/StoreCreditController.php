@@ -98,6 +98,8 @@ final class StoreCreditController
             // The balance in the store's currency is the one a checkout can use.
             'currency' => $currency,
             'balance_minor' => (int) ($accounts->firstWhere('currency', $currency)->balance_minor ?? 0),
+            // Phase B35: the next credit to expire (only where the store turned expiry on).
+            'next_expiry' => app(\App\Domain\StoreCredit\Services\StoreCreditService::class)->nextExpiry($customer, $currency),
             'other_balances' => $accounts->where('currency', '!=', $currency)->where('balance_minor', '>', 0)
                 ->map(fn (StoreCreditAccount $account) => ['currency' => $account->currency, 'balance_minor' => $account->balance_minor])->values(),
             'entries' => StoreCreditEntry::query()->where('customer_id', $customer->id)->with($staff ? ['actor'] : [])->orderByDesc('id')->limit(50)->get()

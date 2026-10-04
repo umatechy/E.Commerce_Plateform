@@ -45,7 +45,7 @@ Module 10; Module 12 §46–49; Module 32 (privacy).
 |---|---|---|
 | F1 | `/customer/register` and `/customer/login` throttles had no key and shared the storefront API counter per IP; registration answered 429 after normal browsing (found in the browser check) | Fixed: own keys; regression test |
 | F2 | The guest link token stayed in the address bar after Inertia loaded the page | Fixed: server keeps it in the session and redirects to a clean URL |
-| F3 | The privacy export lists returns and store credit but not the photo files | Open, small: a follow-up can add them as files to the export archive |
+| F3 | The privacy export lists returns and store credit but not the photo files | Fixed in B35: photos as data URIs in the export |
 | F4 | Checkout response showed a stale payment status when credit paid the whole order | Fixed: order refreshed after spending credit |
 | F5 | Pint reports style differences across most of the older codebase (line endings, import order) | Not touched: not a CI gate; a separate formatting-only commit would be cleaner |
 

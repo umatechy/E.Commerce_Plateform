@@ -13,6 +13,7 @@ const CREDIT_LABELS: Record<string, string> = {
   adjustment: 'Added or changed by the store',
   spent: 'Used on an order',
   order_cancelled: 'Order cancelled',
+  expired: 'Expired',
 };
 
 /**
@@ -62,7 +63,7 @@ export default function Dashboard({ storefront, seo }: StorefrontPageProps) {
   const { customer } = useCustomer(storefront, { required: true });
   const [orders, setOrders] = useState<OrderSummary[] | null>(null);
   // Module 09 §52 (Phase B34): store credit, shown only when there is some or has been.
-  const [credit, setCredit] = useState<{ balance_minor: number; currency: string; entries: { id: string; type: string; amount_minor: number; currency: string; created_at: string }[] } | null>(null);
+  const [credit, setCredit] = useState<{ balance_minor: number; currency: string; next_expiry?: { amount_minor: number; expires_at: string } | null; entries: { id: string; type: string; amount_minor: number; currency: string; created_at: string }[] } | null>(null);
   const base = storefront.base_path;
 
   useEffect(() => {
@@ -96,6 +97,9 @@ export default function Dashboard({ storefront, seo }: StorefrontPageProps) {
           <h2 className="font-semibold">Store credit</h2>
           <p className="mt-1 text-2xl font-bold">{formatMoney(credit.balance_minor, credit.currency)}</p>
           <p className="text-sm text-sf-muted">You can use it at checkout.</p>
+          {credit.next_expiry && (
+            <p className="text-sm font-medium">{formatMoney(credit.next_expiry.amount_minor, credit.currency)} expires on {formatDate(credit.next_expiry.expires_at)}.</p>
+          )}
           <ul className="mt-3 space-y-1 text-sm">
             {credit.entries.slice(0, 5).map((entry) => (
               <li key={entry.id} className="flex justify-between gap-3">

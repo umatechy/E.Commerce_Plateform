@@ -117,6 +117,8 @@ final class CustomerMerger
                 } else {
                     DB::table('store_credit_accounts')->where('id', $targetAccount->id)->update(['balance_minor' => (int) $targetAccount->balance_minor + (int) $account->balance_minor]);
                     DB::table('store_credit_entries')->where('account_id', $account->id)->update(['customer_id' => $into->id, 'account_id' => $targetAccount->id]);
+                    // Phase B35: each credit keeps its own expiry in the joined account.
+                    DB::table('store_credit_lots')->where('account_id', $account->id)->update(['account_id' => $targetAccount->id]);
                     DB::table('store_credit_accounts')->where('id', $account->id)->delete();
                 }
                 $moved['store_credit_minor'] = ($moved['store_credit_minor'] ?? 0) + (int) $account->balance_minor;
