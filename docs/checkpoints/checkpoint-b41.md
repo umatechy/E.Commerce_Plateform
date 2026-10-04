@@ -55,4 +55,4 @@ filters/taxonomy (no values in the specs); attribute translations;
 attributes in CSV import/export; category templates; date/currency types;
 unit conversion; display modes; filters on search pages.
 
-CI: to be verified after push.
+CI: run on c2d93c8 (B41 code) — success, verified 2026-10-04.
