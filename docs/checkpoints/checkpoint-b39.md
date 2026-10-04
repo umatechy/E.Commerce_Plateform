@@ -77,7 +77,7 @@ sections (§37); bulk stock reference and export (§46); import/export
 (B40); attribute sets and faceted filters (B41). Scheduled collections
 follow the storefront cache lifetime (≤ 10 minutes).
 
-CI: to be verified after push.
+CI: run on c726724 (B39 code) — success, verified 2026-10-04.
 
 Next:
 B40 — product import/export (staged upload → validate → preview →
