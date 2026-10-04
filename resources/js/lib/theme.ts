@@ -83,10 +83,10 @@ export const MOTION_PROFILES: (Choice & { description: string })[] = [
 export const MOTION_INTENSITY: Choice[] = [{ value: 'low', label: 'Low' }, { value: 'medium', label: 'Medium' }, { value: 'high', label: 'High', feature: 'animation.premium' }];
 
 /** The fields each section type has (ThemeConfigValidator::validateSectionConfig). */
-export const SECTION_FIELDS: Record<string, { key: string; label: string; kind?: 'url' | 'number' | 'textarea' }[]> = {
+export const SECTION_FIELDS: Record<string, { key: string; label: string; kind?: 'url' | 'number' | 'textarea' | 'image' }[]> = {
   announcement_bar: [{ key: 'message', label: 'Message' }],
-  hero: [{ key: 'heading', label: 'Heading' }, { key: 'subheading', label: 'Subheading' }, { key: 'cta_label', label: 'Button text' }, { key: 'cta_url', label: 'Button link', kind: 'url' }, { key: 'image_url', label: 'Image address', kind: 'url' }],
-  promotional_banner: [{ key: 'heading', label: 'Heading' }, { key: 'subheading', label: 'Text' }, { key: 'cta_label', label: 'Button text' }, { key: 'cta_url', label: 'Link', kind: 'url' }, { key: 'image_url', label: 'Image address', kind: 'url' }],
+  hero: [{ key: 'heading', label: 'Heading' }, { key: 'subheading', label: 'Subheading' }, { key: 'cta_label', label: 'Button text' }, { key: 'cta_url', label: 'Button link', kind: 'url' }, { key: 'image_url', label: 'Image', kind: 'image' }],
+  promotional_banner: [{ key: 'heading', label: 'Heading' }, { key: 'subheading', label: 'Text' }, { key: 'cta_label', label: 'Button text' }, { key: 'cta_url', label: 'Link', kind: 'url' }, { key: 'image_url', label: 'Image', kind: 'image' }],
   newsletter: [{ key: 'heading', label: 'Heading' }, { key: 'subheading', label: 'Subheading' }],
   featured_products: [{ key: 'heading', label: 'Heading' }, { key: 'limit', label: 'How many (1–50)', kind: 'number' }],
   featured_categories: [{ key: 'heading', label: 'Heading' }, { key: 'limit', label: 'How many (1–50)', kind: 'number' }],

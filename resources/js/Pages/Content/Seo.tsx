@@ -1,4 +1,5 @@
 import { FormEvent, useState } from 'react';
+import ImageUploadField from '@/Components/ui/ImageUploadField';
 import AdminPage from '@/Components/AdminPage';
 import Button from '@/Components/ui/Button';
 import DataTable, { type Column } from '@/Components/ui/DataTable';
@@ -83,8 +84,9 @@ function SeoForm({ target, setting, canManage, onSaved, onCancel }: { target: Ta
       <TextField label="Canonical address" optional type="url" value={values.canonical_override} onChange={(v) => set('canonical_override', v)} error={form.errors.canonical_override} hint="Only when this content also lives at another address that should count as the original." />
       <div className="grid gap-4 sm:grid-cols-2">
         <TextField label="Title when shared" optional value={values.og_title} onChange={(v) => set('og_title', v)} error={form.errors.og_title} maxLength={255} />
-        <TextField label="Image when shared" optional type="url" value={values.og_image_url} onChange={(v) => set('og_image_url', v)} error={form.errors.og_image_url} hint="A full web address of an image." />
       </div>
+      <ImageUploadField label="Image when shared" purpose="social" use="url" value={values.og_image_url} onChange={(v) => set('og_image_url', v)} hint="Shown when the page is shared on WhatsApp, Facebook and others. About 1200 × 630 pixels; JPG or PNG, up to 5 MB." />
+      {form.errors.og_image_url && <p role="alert" className="text-sm text-red-700">{form.errors.og_image_url}</p>}
       <TextAreaField label="Description when shared" optional rows={2} value={values.og_description} onChange={(v) => set('og_description', v)} error={form.errors.og_description} maxLength={320} />
       <div className="grid gap-4 sm:grid-cols-2">
         <SelectField

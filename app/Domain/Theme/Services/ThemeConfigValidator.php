@@ -139,7 +139,7 @@ final class ThemeConfigValidator
 
         foreach (['logo_url', 'favicon_url'] as $key) {
             if (isset($branding[$key])) {
-                $clean[$key] = $this->validateSafeUrl($branding[$key], $key);
+                $clean[$key] = $this->validateImageAddress($branding[$key], $key);
             }
         }
 
@@ -225,7 +225,8 @@ final class ThemeConfigValidator
                 continue;
             }
             $clean[$key] = match (true) {
-                in_array($key, ['image_url', 'cta_url'], true) => $this->validateSafeUrl($config[$key], $key),
+                $key === 'image_url' => $this->validateImageAddress($config[$key], $key),
+                $key === 'cta_url' => $this->validateSafeUrl($config[$key], $key),
                 $key === 'limit' => max(1, min(50, (int) $config[$key])),
                 $key === 'items' => $this->validateItems($type, $config[$key]),
                 $key === 'text' => $this->text($config[$key], 'text', 2000),
@@ -326,6 +327,20 @@ final class ThemeConfigValidator
         }
 
         return $value;
+    }
+
+    /**
+     * Phase B37: an image is an https address, or an image the store uploaded
+     * (a path on this site). Whether that upload belongs to the same store is
+     * checked by ThemeService, which knows the store.
+     */
+    private function validateImageAddress(mixed $value, string $field): string
+    {
+        if (is_string($value) && preg_match(\App\Domain\Theme\Services\StoreMediaService::PATH_PATTERN, $value)) {
+            return $value;
+        }
+
+        return $this->validateSafeUrl($value, $field);
     }
 
     private function validateSafeUrl(mixed $value, string $field): string

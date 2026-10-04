@@ -100,7 +100,16 @@ function ProductForm({ product, onSaved }: { product: Product | null; onSaved: (
   const [amountErrors, setAmountErrors] = useState<Record<string, string>>({});
   const [limitReached, setLimitReached] = useState(false);
   const [tab, setTab] = useState('details');
-  useUnsavedWarning(form.dirty);
+  // Phase B37: pictures chosen while creating; uploaded right after the product exists.
+  const [pictures, setPictures] = useState<File[]>([]);
+  const [previews, setPreviews] = useState<string[]>([]);
+  useEffect(() => {
+    const urls = pictures.map((file) => URL.createObjectURL(file));
+    setPreviews(urls);
+
+    return () => urls.forEach((url) => URL.revokeObjectURL(url));
+  }, [pictures]);
+  useUnsavedWarning(form.dirty || pictures.length > 0);
 
   const { values, set } = form;
   const tree = categoryTree(categories.data?.data ?? []);
@@ -148,6 +157,20 @@ function ProductForm({ product, onSaved }: { product: Product | null; onSaved: (
         throw e;
       }
     }, product === null ? 'Product created.' : 'Product saved.');
+    if (saved && product === null && pictures.length > 0) {
+      let failed = 0;
+      for (const file of pictures) {
+        const upload = new FormData();
+        upload.append('image', file);
+        try {
+          await adminFetch(`/products/${saved.data.id}/images`, { method: 'POST', body: upload, timeoutMs: 60000 });
+        } catch {
+          failed++;
+        }
+      }
+      if (failed > 0) toast.error(`${failed} of ${pictures.length} pictures could not be added. Add them again under Images.`);
+      setPictures([]);
+    }
     if (saved) onSaved(saved.data);
   }
 
@@ -195,6 +218,36 @@ function ProductForm({ product, onSaved }: { product: Product | null; onSaved: (
             </div>
           </div>
         </Card>
+        {product === null && (
+          <Card title="Pictures" description="Choose JPG or PNG files from your computer. They are added when you create the product; the first one is the main picture.">
+            <label htmlFor="new-product-pictures" className="block text-sm font-medium text-slate-700">Choose files (JPG, PNG)</label>
+            <input
+              id="new-product-pictures"
+              type="file"
+              multiple
+              accept="image/jpeg,image/png"
+              className="mt-1 block w-full text-sm"
+              onChange={(e) => {
+                const chosen = Array.from(e.target.files ?? []).filter((file) => ['image/jpeg', 'image/png'].includes(file.type));
+                setPictures((current) => [...current, ...chosen].slice(0, 12));
+                e.target.value = '';
+              }}
+            />
+            <p className="mt-1 text-xs text-slate-500">Up to 12 pictures, 5 MB each.</p>
+            {pictures.length > 0 && (
+              <ul className="mt-3 grid grid-cols-3 gap-3 sm:grid-cols-6">
+                {pictures.map((file, index) => (
+                  <li key={`${file.name}-${index}`} className="rounded-md border border-slate-200 p-1">
+                    <img src={previews[index]} alt={`Picture ${index + 1}: ${file.name}`} className="aspect-square w-full rounded object-cover" />
+                    <Button size="sm" variant="ghost" className="mt-1 w-full" onClick={() => setPictures((current) => current.filter((_, i) => i !== index))}>
+                      Remove<span className="sr-only"> {file.name}</span>
+                    </Button>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </Card>
+        )}
       </div>
 
       <div role="tabpanel" hidden={tab !== 'pricing'} className="space-y-4">
@@ -482,7 +535,7 @@ function ImagesSection({ product }: { product: Product }) {
           <div>
             <label htmlFor="product-image" className="block text-sm font-medium text-slate-700">Add an image</label>
             <input id="product-image" ref={file} type="file" accept="image/jpeg,image/png,image/webp" className="mt-1 block w-full text-sm" />
-            <p className="mt-1 text-xs text-slate-500">JPG, PNG or WebP.</p>
+            <p className="mt-1 text-xs text-slate-500">Choose a file: JPG, PNG or WebP.</p>
           </div>
           <TextField label="Description (alt text)" optional value={alt} onChange={setAlt} maxLength={255} hint="Read out to people who cannot see the image." />
           <Button type="submit" busy={busy === 'upload'} busyLabel="Uploading…">Upload</Button>
@@ -523,7 +576,7 @@ export default function ProductEdit({ productId }: { productId: string | null })
 
   if (productId === null) {
     return (
-      <AdminPage title="Add product" trail={[{ label: 'New product' }]} description="Create the product first. Variants and images are added afterwards.">
+      <AdminPage title="Add product" trail={[{ label: 'New product' }]} description="Add the details and pictures. Variants are added after the product is created.">
         <ProductForm product={null} onSaved={(created) => router.visit(`/products/${created.id}`)} />
       </AdminPage>
     );

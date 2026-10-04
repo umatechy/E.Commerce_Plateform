@@ -1,6 +1,7 @@
 import Button from '@/Components/ui/Button';
 import { CheckboxField, SelectField, TextAreaField, TextField } from '@/Components/ui/Form';
 import { humanize } from '@/Components/ui/Badge';
+import ImageUploadField from '@/Components/ui/ImageUploadField';
 import { BADGE_ICONS, SECTION_FIELDS, SECTION_ITEMS, type Section, type SectionItem } from '@/lib/theme';
 
 /**
@@ -64,7 +65,11 @@ export default function SectionEditor({
         {fields.length > 0 && (
           <div className="grid gap-3 sm:grid-cols-2">
             {fields.map((field) =>
-              field.kind === 'textarea' ? (
+              field.kind === 'image' ? (
+                <div key={field.key} className="sm:col-span-2">
+                  <ImageUploadField label={field.label} purpose="banner" disabled={!canEdit} value={String(section.config[field.key] ?? '')} onChange={(value) => setConfig(field.key, value)} hint="A wide JPG or PNG, at least 200 pixels; about 1600 × 800 looks good. Up to 5 MB." />
+                </div>
+              ) : field.kind === 'textarea' ? (
                 <div key={field.key} className="sm:col-span-2">
                   <TextAreaField label={field.label} optional rows={4} maxLength={2000} disabled={!canEdit} value={String(section.config[field.key] ?? '')} onChange={(value) => setConfig(field.key, value)} />
                 </div>

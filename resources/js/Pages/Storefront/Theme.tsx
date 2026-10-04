@@ -6,6 +6,7 @@ import { CheckboxField, FormError, SelectField, TextAreaField, TextField } from 
 import Badge, { humanize } from '@/Components/ui/Badge';
 import { Card, ErrorPanel, PackageNotice, Skeleton, Tabs, AccessNotice } from '@/Components/ui/Page';
 import ThemeLibrary from '@/Components/Theme/ThemeLibrary';
+import ImageUploadField from '@/Components/ui/ImageUploadField';
 import SectionEditor from '@/Components/Theme/SectionEditor';
 import { useAccess, useAuth } from '@/lib/access';
 import { useApi } from '@/lib/useApi';
@@ -392,10 +393,10 @@ export default function Theme() {
       </div>
 
       <div role="tabpanel" hidden={tab !== 'brand'} className="space-y-4">
-        <Card title="Brand" description="Addresses must start with https://. Upload the image somewhere it can be reached, then paste its address.">
+        <Card title="Brand" description="Choose a JPG or PNG from your computer, or paste an address that starts with https://.">
           <div className="grid gap-4 sm:grid-cols-2">
-            <TextField label="Logo address" optional type="url" disabled={!canEdit} value={config.branding.logo_url ?? ''} onChange={(value) => change({ ...config, branding: { ...config.branding, logo_url: value } })} />
-            <TextField label="Favicon address" optional type="url" disabled={!canEdit} value={config.branding.favicon_url ?? ''} onChange={(value) => change({ ...config, branding: { ...config.branding, favicon_url: value } })} />
+            <ImageUploadField label="Logo" purpose="logo" disabled={!canEdit} value={config.branding.logo_url ?? ''} onChange={(value) => change({ ...config, branding: { ...config.branding, logo_url: value } })} hint="Shown in the header instead of the store name. A wide image about 400 × 120 pixels works well. Up to 5 MB." />
+            <ImageUploadField label="Favicon" purpose="favicon" disabled={!canEdit} value={config.branding.favicon_url ?? ''} onChange={(value) => change({ ...config, branding: { ...config.branding, favicon_url: value } })} hint="The small icon in the browser tab. A square image, at least 32 × 32 pixels." />
             <div className="sm:col-span-2">
               <TextField label="Tagline" optional disabled={!canEdit} maxLength={255} value={config.branding.tagline ?? ''} onChange={(value) => change({ ...config, branding: { ...config.branding, tagline: value } })} />
             </div>

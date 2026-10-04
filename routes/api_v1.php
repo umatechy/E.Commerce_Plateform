@@ -312,6 +312,8 @@ Route::middleware(['auth:sanctum', 'staff.principal', 'required.mfa'])->group(fu
     // Module 17 §18 (Phase B36): the theme library and choosing a theme for the draft.
     Route::get('/store/themes', [StoreThemeController::class, 'library']);
     Route::post('/store/theme/select', [StoreThemeController::class, 'select'])->middleware('throttle:30,1,theme-select');
+    // Phase B37 (Module 17 §6–7): logo, favicon, banner and sharing images as JPG/PNG uploads.
+    Route::post('/store/media', [\App\Domain\Theme\Http\Controllers\StoreMediaController::class, 'store'])->middleware('throttle:30,1,store-media');
     Route::put('/store/theme/draft', [StoreThemeController::class, 'updateDraft']);
     Route::post('/store/theme/publish', [StoreThemeController::class, 'publish']);
     Route::post('/store/theme/preview', [StoreThemeController::class, 'previewLink'])->middleware('throttle:20,1,theme-preview'); // Phase B32

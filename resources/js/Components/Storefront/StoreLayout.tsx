@@ -37,6 +37,7 @@ export default function StoreLayout({ shell, seo, children }: PropsWithChildren<
           {seo.description ? <meta head-key="description" name="description" content={seo.description} /> : null}
           <link head-key="canonical" rel="canonical" href={seo.canonical} />
           <meta head-key="robots" name="robots" content={seo.robots} />
+          {shell.store.favicon_url ? <link head-key="icon" rel="icon" href={shell.store.favicon_url} /> : null}
         </Head>
         {shell.theme.custom_css ? <style>{shell.theme.custom_css}</style> : null}
 

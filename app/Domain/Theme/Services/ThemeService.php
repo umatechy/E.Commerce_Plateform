@@ -26,6 +26,7 @@ final class ThemeService
         private readonly CustomCssSanitizer $cssSanitizer,
         private readonly RecordsOutboxEvents $outbox,
         private readonly ThemeEntitlements $entitlements,
+        private readonly StoreMediaService $media,
     ) {}
 
     /** Called once, additively, from StoreObserver for every new store — see docs/development/b15-inspection-findings.md. */
@@ -98,6 +99,7 @@ final class ThemeService
         $validated = $this->validator->validate($config);
         $validated['theme'] ??= $storeTheme->draft_config['theme'] ?? $storeTheme->theme->key;
         $this->assertEntitled($validated);
+        $this->assertOwnMedia($storeTheme, $validated);
         $validated['sections'] = $this->entitlements->normalizeOrder($validated['sections']);
 
         $customCss = $this->cssSanitizer->sanitize($customCss);
@@ -219,6 +221,25 @@ final class ThemeService
 
             return $storeTheme->fresh();
         });
+    }
+
+    /**
+     * Phase B37 (Module 17 §7): an uploaded image the theme points to must be
+     * one of this store's uploads — never another store's file.
+     *
+     * @param array<string, mixed> $config
+     *
+     * @throws \App\Domain\Theme\Exceptions\InvalidThemeConfigException
+     */
+    private function assertOwnMedia(StoreTheme $storeTheme, array $config): void
+    {
+        $addresses = [$config['branding']['logo_url'] ?? null, $config['branding']['favicon_url'] ?? null, ...array_map(fn (array $s) => $s['config']['image_url'] ?? null, $config['sections'] ?? [])];
+        $store = \App\Domain\Tenancy\Models\Store::query()->findOrFail($storeTheme->store_id);
+        foreach (array_filter($addresses, fn ($a) => is_string($a) && str_starts_with($a, '/storage/')) as $address) {
+            if (! $this->media->ownsPath($store, $address)) {
+                throw new \App\Domain\Theme\Exceptions\InvalidThemeConfigException('An image is not one of your store\x27s uploads: '.$address);
+            }
+        }
     }
 
     /**
