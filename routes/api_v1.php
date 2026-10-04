@@ -148,6 +148,17 @@ Route::middleware(['auth:sanctum', 'staff.principal', 'required.mfa'])->group(fu
     Route::apiResource('categories', CategoryController::class)->except(['show']);
     Route::apiResource('brands', BrandController::class)->except(['show']);
     Route::apiResource('attributes', AttributeController::class)->only(['index', 'store', 'destroy']);
+    // Phase B41 (Module 07 §18–19, §27–45): attributes, sets, category attributes, specifications.
+    $taxonomy = \App\Domain\Catalog\Http\Controllers\TaxonomyController::class;
+    Route::put('/attributes/{attribute}', [$taxonomy, 'updateAttribute']);
+    Route::get('/attribute-sets', [$taxonomy, 'sets']);
+    Route::post('/attribute-sets', [$taxonomy, 'saveSet']);
+    Route::put('/attribute-sets/{set}', [$taxonomy, 'updateSet']);
+    Route::delete('/attribute-sets/{set}', [$taxonomy, 'destroySet']);
+    Route::get('/categories/{category}/attributes', [$taxonomy, 'categoryAttributes']);
+    Route::put('/categories/{category}/attributes', [$taxonomy, 'saveCategoryAttributes']);
+    Route::get('/products/{product}/specifications', [$taxonomy, 'specifications']);
+    Route::put('/products/{product}/specifications', [$taxonomy, 'saveSpecifications']);
     // Phase B39 (gap G15): collections, tags, relations, duplicate and bulk changes.
     Route::apiResource('collections', \App\Domain\Catalog\Http\Controllers\CollectionController::class);
     Route::put('/collections/{collection}/products', [\App\Domain\Catalog\Http\Controllers\CollectionController::class, 'products']);

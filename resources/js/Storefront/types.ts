@@ -39,6 +39,8 @@ export type Variant = {
 
 export type ProductDetail = ProductCard & {
   sku: string | null;
+  /** Phase B41: the product's specifications, in the attributes' order. */
+  specifications?: { name: string; group: string | null; value: string; colors: { name: string; code: string }[] }[];
   description_html: string | null;
   images: Image[];
   options: { name: string; values: string[] }[];

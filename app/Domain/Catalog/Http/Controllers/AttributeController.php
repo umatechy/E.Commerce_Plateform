@@ -25,7 +25,7 @@ final class AttributeController
     {
         Gate::forUser($request->user())->authorize('viewAny', Attribute::class);
 
-        return AttributeResource::collection(Attribute::query()->with('values')->get());
+        return AttributeResource::collection(Attribute::query()->with('values')->orderBy('sort_order')->orderBy('name')->get());
     }
 
     public function store(StoreAttributeRequest $request): AttributeResource
@@ -37,15 +37,12 @@ final class AttributeController
                 'name' => $request->string('name')->toString(),
                 'key' => $request->string('key')->toString(),
                 'type' => $request->string('type')->toString(),
+                'group' => $request->input('group'),
+                'unit' => $request->input('unit'),
             ]);
 
-            foreach ($request->input('values', []) as $index => $value) {
-                $attribute->values()->create([
-                    'value' => $value,
-                    'normalized_value' => Str::lower(trim($value)),
-                    'sort_order' => $index,
-                ]);
-            }
+            // Phase B41: values get a slug for filter addresses; a value listed twice is refused.
+            app(\App\Domain\Catalog\Services\AttributeManager::class)->syncValues($attribute, array_values($request->input('values', [])));
 
             return $attribute;
         });

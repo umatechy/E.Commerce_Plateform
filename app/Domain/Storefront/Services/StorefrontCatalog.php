@@ -59,14 +59,88 @@ final class StorefrontCatalog
     private ?Collection $categories = null;
 
     /**
-     * @param array{q?: ?string, category?: ?string, brand?: ?string, min_price?: ?int, max_price?: ?int, in_stock?: ?bool, collection?: ?string, tag?: ?string, sort?: ?string, page?: ?int, per_page?: ?int} $filters
+     * @param array{q?: ?string, category?: ?string, brand?: ?string, min_price?: ?int, max_price?: ?int, in_stock?: ?bool, collection?: ?string, tag?: ?string, attributes?: array<int, array<string, mixed>>, sort?: ?string, page?: ?int, per_page?: ?int} $filters
      * @return LengthAwarePaginator<int, Product>
      */
     public function search(array $filters): LengthAwarePaginator
     {
         $q = trim((string) ($filters['q'] ?? ''));
-        $query = $this->withPricing($this->visible($q === '' ? self::BROWSE_VISIBILITY : self::SEARCH_VISIBILITY))
-            ->with(['brand', 'images']);
+        [$query, $collection] = $this->filtered($filters);
+        $query = $this->withPricing($query)->with(['brand', 'images']);
+
+        // A collection page without a chosen sort follows the collection's own order.
+        $sort = $filters['sort'] ?? ($collection !== null ? $collection->sort : 'newest');
+        if ($sort === 'manual' && $collection !== null && $collection->type === 'manual') {
+            $query->leftJoin('collection_product as cp_order', fn ($j) => $j->on('cp_order.product_id', '=', 'products.id')->where('cp_order.collection_id', '=', $collection->id))
+                ->orderBy('cp_order.position')->orderByDesc('products.id');
+            $sort = null;
+        } elseif ($sort === 'best_selling') {
+            $query->leftJoinSub($this->unitsSold(), 'sold_rank', 'sold_rank.product_id', '=', 'products.id')->orderByDesc('sold_rank.units')->orderByDesc('products.id');
+            $sort = null;
+        }
+
+        match ($sort ?? 'none') {
+            'none' => null,
+            'price_asc' => $query->orderBy('price_from_minor')->orderBy('products.id'),
+            'price_desc' => $query->orderByDesc('price_from_minor')->orderByDesc('products.id'),
+            'name' => $query->orderBy('products.name')->orderBy('products.id'),
+            default => $q !== ''
+                ? $query->orderByRaw('products.name LIKE ? DESC', [addcslashes($q, '%_\\').'%'])->orderByDesc('products.id')
+                : $query->orderByRaw('COALESCE(products.published_at, products.created_at) DESC')->orderByDesc('products.id'),
+        };
+
+        $perPage = max(1, min((int) ($filters['per_page'] ?? config('storefront.per_page')), (int) config('storefront.max_per_page')));
+
+        return $query->paginate($perPage, ['*'], 'page', max(1, (int) ($filters['page'] ?? 1)));
+    }
+
+    /**
+     * Phase B41 (Module 07 §48): for each filter attribute, how many listed
+     * products have each value — counted with every other active filter
+     * applied, but not the attribute's own (so choosing "8 GB" still shows
+     * how many "16 GB" there are). Numbers report their range; yes/no the
+     * count of "yes".
+     *
+     * @param array<string, mixed> $filters as for search()
+     * @param list<\App\Domain\Catalog\Models\Attribute> $attributes
+     * @return array<int, array{counts?: array<int, int>, min?: ?float, max?: ?float, yes?: int}>
+     */
+    public function attributeFacets(array $filters, array $attributes): array
+    {
+        $out = [];
+        foreach ($attributes as $attribute) {
+            [$query] = $this->filtered($filters, skipAttribute: $attribute->id);
+            $ids = $query->select('products.id');
+            $values = DB::table('product_attribute_values as f')
+                ->joinSub($ids, 'p', 'p.id', '=', 'f.product_id')
+                ->where('f.attribute_id', $attribute->id);
+            $out[$attribute->id] = match (true) {
+                $attribute->type->hasValues() => ['counts' => $values->groupBy('f.attribute_value_id')
+                    ->selectRaw('f.attribute_value_id AS v, COUNT(DISTINCT f.product_id) AS c')->pluck('c', 'v')
+                    ->mapWithKeys(fn ($c, $v) => [(int) $v => (int) $c])->all()],
+                $attribute->type === \App\Domain\Catalog\Models\AttributeType::Numeric => (function () use ($values) {
+                    $range = $values->selectRaw('MIN(f.number_value) AS lo, MAX(f.number_value) AS hi')->first();
+
+                    return ['min' => $range?->lo !== null ? (float) $range->lo : null, 'max' => $range?->hi !== null ? (float) $range->hi : null];
+                })(),
+                default => ['yes' => (int) $values->where('f.bool_value', true)->distinct()->count('f.product_id')],
+            };
+        }
+
+        return $out;
+    }
+
+    /**
+     * The visible products that match the filters (no columns chosen, no
+     * order) and the live collection the filters name, if any.
+     *
+     * @param array<string, mixed> $filters
+     * @return array{0: Builder<Product>, 1: ?CatalogCollection}
+     */
+    private function filtered(array $filters, ?int $skipAttribute = null): array
+    {
+        $q = trim((string) ($filters['q'] ?? ''));
+        $query = $this->visible($q === '' ? self::BROWSE_VISIBILITY : self::SEARCH_VISIBILITY);
 
         if ($q !== '') {
             foreach (array_slice(preg_split('/\s+/', $q) ?: [], 0, 5) as $term) {
@@ -114,30 +188,30 @@ final class StorefrontCatalog
             $query->whereRaw($this->inStockSql().' = 1', $this->inStockBindings());
         }
 
-        // A collection page without a chosen sort follows the collection's own order.
-        $sort = $filters['sort'] ?? ($collection !== null ? $collection->sort : 'newest');
-        if ($sort === 'manual' && $collection !== null && $collection->type === 'manual') {
-            $query->leftJoin('collection_product as cp_order', fn ($j) => $j->on('cp_order.product_id', '=', 'products.id')->where('cp_order.collection_id', '=', $collection->id))
-                ->orderBy('cp_order.position')->orderByDesc('products.id');
-            $sort = null;
-        } elseif ($sort === 'best_selling') {
-            $query->leftJoinSub($this->unitsSold(), 'sold_rank', 'sold_rank.product_id', '=', 'products.id')->orderByDesc('sold_rank.units')->orderByDesc('products.id');
-            $sort = null;
+        // Phase B41 (Module 07 §47–49): attribute filters, already checked against the category's filters.
+        foreach ((array) ($filters['attributes'] ?? []) as $attributeId => $wanted) {
+            if ((int) $attributeId === $skipAttribute) {
+                continue;
+            }
+            $query->whereExists(function ($sub) use ($attributeId, $wanted) {
+                $sub->selectRaw('1')->from('product_attribute_values as pav')
+                    ->whereColumn('pav.product_id', 'products.id')->where('pav.attribute_id', (int) $attributeId);
+                if (isset($wanted['values'])) {
+                    $sub->whereIn('pav.attribute_value_id', array_map('intval', (array) $wanted['values']));
+                } elseif (isset($wanted['yes'])) {
+                    $sub->where('pav.bool_value', true);
+                } else {
+                    if (isset($wanted['min'])) {
+                        $sub->where('pav.number_value', '>=', (float) $wanted['min']);
+                    }
+                    if (isset($wanted['max'])) {
+                        $sub->where('pav.number_value', '<=', (float) $wanted['max']);
+                    }
+                }
+            });
         }
 
-        match ($sort ?? 'none') {
-            'none' => null,
-            'price_asc' => $query->orderBy('price_from_minor')->orderBy('products.id'),
-            'price_desc' => $query->orderByDesc('price_from_minor')->orderByDesc('products.id'),
-            'name' => $query->orderBy('products.name')->orderBy('products.id'),
-            default => $q !== ''
-                ? $query->orderByRaw('products.name LIKE ? DESC', [addcslashes($q, '%_\\').'%'])->orderByDesc('products.id')
-                : $query->orderByRaw('COALESCE(products.published_at, products.created_at) DESC')->orderByDesc('products.id'),
-        };
-
-        $perPage = max(1, min((int) ($filters['per_page'] ?? config('storefront.per_page')), (int) config('storefront.max_per_page')));
-
-        return $query->paginate($perPage, ['*'], 'page', max(1, (int) ($filters['page'] ?? 1)));
+        return [$query, $collection];
     }
 
     /**

@@ -10,7 +10,7 @@ export const PRODUCT_VISIBILITIES = ['public', 'catalog_only', 'search_only', 'h
 export const VARIANT_STATUSES = ['active', 'hidden', 'archived'] as const;
 export const CATEGORY_STATUSES = ['draft', 'active', 'hidden', 'scheduled', 'archived'] as const;
 export const CATEGORY_VISIBILITIES = ['public', 'navigation_only', 'search_only', 'hidden', 'private', 'scheduled'] as const;
-export const ATTRIBUTE_TYPES = ['select', 'multi_select', 'boolean', 'numeric', 'text'] as const;
+export const ATTRIBUTE_TYPES = ['select', 'multi_select', 'color', 'boolean', 'numeric', 'text'] as const;
 
 export type Variant = {
   id: string;
@@ -67,7 +67,21 @@ export type Category = {
 };
 
 export type Brand = { id: number; name: string; slug: string; description: string | null };
-export type Attribute = { id: number; name: string; key: string; type: string; values?: string[] };
+export type AttributeOption = { id: number; value: string; slug: string; color_code: string | null; is_active: boolean };
+export type Attribute = {
+  id: number;
+  name: string;
+  key: string;
+  type: string;
+  /** Active values only. */
+  values?: string[];
+  /** Phase B41. */
+  group?: string | null;
+  unit?: string | null;
+  is_active?: boolean;
+  sort_order?: number;
+  options?: AttributeOption[];
+};
 export type ProductImage = { id: string; url: string; alt: string | null; position: number; variant_id: string | null };
 
 /** Categories in tree order, each with its depth, for an indented list or select. */
@@ -188,3 +202,12 @@ export const PRODUCT_IMPORT_TEMPLATE = [
   'LAWN-01-M,,active,,4500,,,,,,,LAWN-01,Size: M',
   'ATR-12,Rose Attar 12 ml,draft,public,1200,,PKR,,Fragrance,,no,,',
 ].join('\n');
+
+/* Phase B41 (Module 07 §18–19, §41–49): attribute sets, category attributes, specifications. */
+export type AttributeSet = { id: number; name: string; attributes: number[] };
+export type CategoryAttributeItem = { attribute_id: number; is_required: boolean; is_filter: boolean };
+export type SpecificationValue = number | number[] | boolean | string | null;
+export type Specifications = { values: { attribute_id: number; value: SpecificationValue }[]; suggested: { attribute_id: number; is_required: boolean }[] };
+
+/** Types whose values are chosen from the attribute's list. */
+export const hasValues = (type: string) => type === 'select' || type === 'multi_select' || type === 'color';

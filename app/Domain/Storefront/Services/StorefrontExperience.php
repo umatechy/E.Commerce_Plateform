@@ -28,7 +28,6 @@ final class StorefrontExperience
     private const CONTENT_SECTIONS = ['hero', 'featured_products', 'featured_categories', 'promotional_banner', 'best_sellers', 'sale_products', 'featured_brands', 'testimonials', 'faq', 'rich_text', 'trust_badges'];
 
     public function __construct(
-        private readonly StorefrontCatalog $catalog,
         private readonly StorefrontPresenter $presenter,
         private readonly StorefrontCache $cache,
         private readonly ThemeResolver $themes,
@@ -64,7 +63,7 @@ final class StorefrontExperience
         $announcement = collect($presentation['sections'])->firstWhere('type', SectionType::AnnouncementBar->value);
         $language = app(StorefrontLocale::class);
         $tagline = $branding['translations'][$language->current()]['tagline'] ?? $branding['tagline'] ?? null;
-        $counts = $this->catalog->productCountsByCategory();
+        $counts = $this->catalog()->productCountsByCategory();
 
         return [
             'store' => [
@@ -130,7 +129,7 @@ final class StorefrontExperience
         if (! collect($sections)->contains(fn (array $s) => in_array($s['type'], self::CONTENT_SECTIONS, true))) {
             $sections = [...$sections, ...$this->defaultSections($store)];
         }
-        $counts = $this->catalog->productCountsByCategory();
+        $counts = $this->catalog()->productCountsByCategory();
 
         $resolved = [];
         foreach ($sections as $section) {
@@ -141,17 +140,17 @@ final class StorefrontExperience
                 SectionType::BestSellers->value => [
                     'type' => $section['type'],
                     'heading' => $config['heading'] ?? null, // Phase B38: no heading set — the storefront shows its own, in the visitor's language
-                    'products' => $this->presenter->cards($this->catalog->bestSellers((int) ($config['limit'] ?? 8))),
+                    'products' => $this->presenter->cards($this->catalog()->bestSellers((int) ($config['limit'] ?? 8))),
                 ],
                 SectionType::SaleProducts->value => [
                     'type' => $section['type'],
                     'heading' => $config['heading'] ?? null, // Phase B38: no heading set — the storefront shows its own, in the visitor's language
-                    'products' => $this->presenter->cards($this->catalog->onSale((int) ($config['limit'] ?? 8))),
+                    'products' => $this->presenter->cards($this->catalog()->onSale((int) ($config['limit'] ?? 8))),
                 ],
                 SectionType::FeaturedBrands->value => [
                     'type' => $section['type'],
                     'heading' => $config['heading'] ?? null, // Phase B38: no heading set — the storefront shows its own, in the visitor's language
-                    'brands' => $this->catalog->brands()->take((int) ($config['limit'] ?? 12))->map(fn (\App\Domain\Catalog\Models\Brand $b) => ['name' => $b->name, 'slug' => $b->slug])->values()->all(),
+                    'brands' => $this->catalog()->brands()->take((int) ($config['limit'] ?? 12))->map(fn (\App\Domain\Catalog\Models\Brand $b) => ['name' => $b->name, 'slug' => $b->slug])->values()->all(),
                 ],
                 SectionType::Testimonials->value, SectionType::Faq->value, SectionType::RichText->value, SectionType::TrustBadges->value => ['type' => $section['type'], ...$config],
                 SectionType::FeaturedProducts->value => $this->featuredSection($section['type'], $config),
@@ -188,7 +187,13 @@ final class StorefrontExperience
         ksort($filters);
 
         return $this->cache->remember($store->id, 'listing:'.md5((string) json_encode($filters)), function () use ($filters) {
-            $page = $this->catalog->search($filters);
+            // Phase B41 (Module 07 §18, §47–49): a category page filters by the attributes its
+            // category exposes; any other `attr` in the address is ignored, never trusted.
+            $attributes = $this->filterAttributes($filters['category'] ?? null);
+            $search = $filters;
+            unset($search['attr']);
+            $search['attributes'] = $this->resolveAttributeFilters((array) ($filters['attr'] ?? []), $attributes);
+            $page = $this->catalog()->search($search);
 
             return [
                 'products' => $this->presenter->cards($page->items()),
@@ -198,16 +203,144 @@ final class StorefrontExperience
                     'total' => $page->total(),
                     'last_page' => $page->lastPage(),
                 ],
+                'filters' => $attributes === [] ? [] : $this->presentFilters($attributes, $search),
             ];
         });
+    }
+
+    /**
+     * The active filter attributes of a visible category (its own list or its
+     * nearest parent's), with their values.
+     *
+     * @return list<\App\Domain\Catalog\Models\Attribute>
+     */
+    private function filterAttributes(?string $categorySlug): array
+    {
+        $category = $categorySlug !== null ? $this->catalog()->category($categorySlug) : null;
+        if ($category === null) {
+            return [];
+        }
+
+        return app(\App\Domain\Catalog\Services\CategoryAttributes::class)->effective($category)
+            ->filter(fn ($ca) => $ca->is_filter && $ca->attribute->type->isFilterable())
+            ->map(fn ($ca) => $ca->attribute)->values()->all();
+    }
+
+    /**
+     * `attr[key]=slug,slug` (choices), `attr[key]=min-max` (numbers, either side may be empty),
+     * `attr[key]=1` (yes/no). Unknown keys and values are dropped.
+     *
+     * @param array<string, mixed> $raw
+     * @param list<\App\Domain\Catalog\Models\Attribute> $attributes
+     * @return array<int, array<string, mixed>>
+     */
+    private function resolveAttributeFilters(array $raw, array $attributes): array
+    {
+        $out = [];
+        foreach ($attributes as $attribute) {
+            $value = $raw[$attribute->key] ?? null;
+            if (! is_string($value) || $value === '') {
+                continue;
+            }
+            if ($attribute->type->hasValues()) {
+                $slugs = array_slice(explode(',', $value), 0, 20);
+                $ids = $attribute->values->filter(fn ($v) => $v->is_active && in_array($v->slug, $slugs, true))->pluck('id')->all();
+                if ($ids !== []) {
+                    $out[$attribute->id] = ['values' => $ids];
+                }
+            } elseif ($attribute->type === \App\Domain\Catalog\Models\AttributeType::Boolean) {
+                if ($value === '1') {
+                    $out[$attribute->id] = ['yes' => true];
+                }
+            } elseif (preg_match('/^(\d{1,12}(?:\.\d{1,4})?)?-(\d{1,12}(?:\.\d{1,4})?)?$/', $value, $m) === 1 && ($m[1] ?? '').($m[2] ?? '') !== '') {
+                $out[$attribute->id] = array_filter(['min' => ($m[1] ?? '') !== '' ? (float) $m[1] : null, 'max' => ($m[2] ?? '') !== '' ? (float) $m[2] : null], fn ($v) => $v !== null);
+            }
+        }
+
+        return $out;
+    }
+
+    /**
+     * @param list<\App\Domain\Catalog\Models\Attribute> $attributes
+     * @param array<string, mixed> $search
+     * @return list<array<string, mixed>>
+     */
+    private function presentFilters(array $attributes, array $search): array
+    {
+        $facets = $this->catalog()->attributeFacets($search, $attributes);
+        $chosen = (array) ($search['attributes'] ?? []);
+        $out = [];
+        foreach ($attributes as $attribute) {
+            $facet = $facets[$attribute->id] ?? [];
+            $selected = $chosen[$attribute->id] ?? null;
+            $picked = (array) ($selected['values'] ?? []);
+            $entry = ['key' => $attribute->key, 'name' => $attribute->name, 'type' => $attribute->type->value, 'unit' => $attribute->unit];
+            if ($attribute->type->hasValues()) {
+                $entry['options'] = $attribute->values
+                    ->filter(fn ($v) => $v->is_active && (($facet['counts'][$v->id] ?? 0) > 0 || in_array($v->id, $picked, true)))
+                    ->map(fn ($v) => ['slug' => $v->slug, 'value' => $v->value, 'color_code' => $v->color_code, 'count' => $facet['counts'][$v->id] ?? 0, 'selected' => in_array($v->id, $picked, true)])
+                    ->values()->all();
+                if ($entry['options'] === []) {
+                    continue; // nothing to choose: no empty filter (§77)
+                }
+            } elseif ($attribute->type === \App\Domain\Catalog\Models\AttributeType::Boolean) {
+                $entry['yes'] = $facet['yes'] ?? 0;
+                $entry['selected'] = $selected !== null;
+                if ($entry['yes'] === 0 && ! $entry['selected']) {
+                    continue;
+                }
+            } else {
+                $entry['range'] = ['min' => $facet['min'] ?? null, 'max' => $facet['max'] ?? null];
+                $entry['selected'] = $selected === null ? null : ['min' => $selected['min'] ?? null, 'max' => $selected['max'] ?? null];
+                if ($entry['range']['min'] === null && $selected === null) {
+                    continue;
+                }
+            }
+            $out[] = $entry;
+        }
+
+        return $out;
+    }
+
+    /**
+     * Phase B41 (Module 07 §41, §46): a product's specifications for its page,
+     * in the attributes' order; inactive attributes and values are left out.
+     *
+     * @return list<array{name: string, group: ?string, value: string, colors: list<array{name: string, code: string}>}>
+     */
+    private function specifications(Product $product): array
+    {
+        $rows = \App\Domain\Catalog\Models\ProductAttributeValue::query()->where('product_id', $product->id)
+            ->with(['attribute', 'choice'])->get()
+            ->filter(fn ($row) => $row->attribute !== null && $row->attribute->is_active && ($row->attribute_value_id === null || ($row->choice !== null && $row->choice->is_active)))
+            ->groupBy('attribute_id')
+            ->sortBy(fn ($group) => sprintf('%08d|%s', $group->first()->attribute->sort_order, mb_strtolower($group->first()->attribute->name)));
+
+        $out = [];
+        foreach ($rows as $group) {
+            $attribute = $group->first()->attribute;
+            $first = $group->first();
+            $value = match ($attribute->type) {
+                \App\Domain\Catalog\Models\AttributeType::Numeric => rtrim(rtrim(number_format((float) $first->number_value, 4, '.', ''), '0'), '.').($attribute->unit ? ' '.$attribute->unit : ''),
+                \App\Domain\Catalog\Models\AttributeType::Boolean => $first->bool_value ? 'yes' : 'no',
+                \App\Domain\Catalog\Models\AttributeType::Text => (string) $first->text_value,
+                default => $group->sortBy(fn ($row) => $row->choice->sort_order)->map(fn ($row) => $row->choice->value)->implode(', '),
+            };
+            $colors = $attribute->type === \App\Domain\Catalog\Models\AttributeType::Color
+                ? $group->filter(fn ($row) => $row->choice->color_code !== null)->map(fn ($row) => ['name' => $row->choice->value, 'code' => (string) $row->choice->color_code])->values()->all()
+                : [];
+            $out[] = ['name' => $attribute->name, 'group' => $attribute->group, 'value' => $value, 'colors' => $colors];
+        }
+
+        return $out;
     }
 
     /** @return array<string, mixed> category tree (with counts) and brands for filter menus */
     public function facets(Store $store): array
     {
         return $this->cache->remember($store->id, 'facets', fn () => [
-            'categories' => $this->presenter->categoryTree($this->catalog->productCountsByCategory()),
-            'brands' => $this->catalog->brands()->map(fn (Brand $b) => $this->presenter->brand($b))->values()->all(),
+            'categories' => $this->presenter->categoryTree($this->catalog()->productCountsByCategory()),
+            'brands' => $this->catalog()->brands()->map(fn (Brand $b) => $this->presenter->brand($b))->values()->all(),
         ]);
     }
 
@@ -215,7 +348,7 @@ final class StorefrontExperience
     public function product(Store $store, string $slug): ?array
     {
         return $this->cache->remember($store->id, 'product:'.$slug, function () use ($slug) {
-            $product = $this->catalog->product($slug);
+            $product = $this->catalog()->product($slug);
 
             if ($product === null) {
                 return null;
@@ -229,17 +362,17 @@ final class StorefrontExperience
 
             // Phase B39 (Module 06 §38): the products chosen for it; without any
             // related ones, others of its category not already shown above.
-            $crossSell = $this->catalog->relatedTo($product->id, ['cross_sell'], 8);
-            $upSell = $this->catalog->relatedTo($product->id, ['up_sell'], 8);
-            $related = $this->catalog->relatedTo($product->id, ['related', 'alternative'], 8);
+            $crossSell = $this->catalog()->relatedTo($product->id, ['cross_sell'], 8);
+            $upSell = $this->catalog()->relatedTo($product->id, ['up_sell'], 8);
+            $related = $this->catalog()->relatedTo($product->id, ['related', 'alternative'], 8);
             if ($related->isEmpty()) {
                 $shown = $crossSell->merge($upSell)->pluck('id')->all();
-                $related = $this->catalog->newest(4 + count($shown), $product->id, $product->primary_category_id)
+                $related = $this->catalog()->newest(4 + count($shown), $product->id, $product->primary_category_id)
                     ->reject(fn (Product $p) => in_array($p->id, $shown, true))->take(4)->values();
             }
 
             return [
-                'product' => $detail,
+                'product' => [...$detail, 'specifications' => $this->specifications($product)],
                 'related' => $this->presenter->cards($related),
                 'cross_sell' => $this->presenter->cards($crossSell),
                 'up_sell' => $this->presenter->cards($upSell),
@@ -255,14 +388,14 @@ final class StorefrontExperience
     public function category(Store $store, string $slug): ?array
     {
         return $this->cache->remember($store->id, 'category:'.$slug, function () use ($slug) {
-            $category = $this->catalog->category($slug);
+            $category = $this->catalog()->category($slug);
 
             if ($category === null) {
                 return null;
             }
 
-            $counts = $this->catalog->productCountsByCategory();
-            $children = $this->catalog->visibleCategories()->where('parent_id', $category->id);
+            $counts = $this->catalog()->productCountsByCategory();
+            $children = $this->catalog()->visibleCategories()->where('parent_id', $category->id);
 
             return [
                 'category' => [
@@ -283,7 +416,7 @@ final class StorefrontExperience
     public function collection(Store $store, string $slug): ?array
     {
         return $this->cache->remember($store->id, 'collection:'.$slug, function () use ($slug) {
-            $collection = $this->catalog->liveCollection($slug);
+            $collection = $this->catalog()->liveCollection($slug);
 
             return $collection === null ? null : ['collection' => $this->presenter->collection($collection)];
         });
@@ -292,7 +425,7 @@ final class StorefrontExperience
     /** @return list<array<string, mixed>> the live collections, for headless storefronts */
     public function collections(Store $store): array
     {
-        return $this->cache->remember($store->id, 'collections', fn () => $this->catalog->liveCollections()
+        return $this->cache->remember($store->id, 'collections', fn () => $this->catalog()->liveCollections()
             ->map(fn (\App\Domain\Catalog\Models\Collection $c) => $this->presenter->collection($c))->values()->all());
     }
 
@@ -309,11 +442,11 @@ final class StorefrontExperience
         $limit = (int) ($config['limit'] ?? 8);
         $source = $config['source'] ?? 'newest';
         $products = match ($source) {
-            'featured' => $this->catalog->featured($limit),
-            'collection' => isset($config['collection']) && $this->catalog->liveCollection((string) $config['collection']) !== null
-                ? collect($this->catalog->search(['collection' => (string) $config['collection'], 'per_page' => $limit])->items())
+            'featured' => $this->catalog()->featured($limit),
+            'collection' => isset($config['collection']) && $this->catalog()->liveCollection((string) $config['collection']) !== null
+                ? collect($this->catalog()->search(['collection' => (string) $config['collection'], 'per_page' => $limit])->items())
                 : collect(),
-            default => $this->catalog->newest($limit),
+            default => $this->catalog()->newest($limit),
         };
 
         return [
@@ -329,7 +462,7 @@ final class StorefrontExperience
     public function brand(Store $store, string $slug): ?array
     {
         return $this->cache->remember($store->id, 'brand:'.$slug, function () use ($slug) {
-            $brand = $this->catalog->brand($slug);
+            $brand = $this->catalog()->brand($slug);
 
             return $brand === null ? null : [
                 'brand' => $this->presenter->brand($brand),
@@ -378,12 +511,12 @@ final class StorefrontExperience
     /** @return list<array<string, mixed>> quick search results (uncached: every keystroke differs) */
     public function suggestions(string $q): array
     {
-        $products = $this->catalog->suggest($q)->map(fn (Product $p) => [
+        $products = $this->catalog()->suggest($q)->map(fn (Product $p) => [
             'type' => 'product',
             ...array_intersect_key($this->presenter->card($p), array_flip(['slug', 'name', 'price', 'image'])),
         ]);
         $needle = mb_strtolower($q);
-        $categories = $this->catalog->visibleCategories()
+        $categories = $this->catalog()->visibleCategories()
             ->filter(fn (Category $c) => str_contains(mb_strtolower($c->name), $needle))
             ->take(4)
             ->map(fn (Category $c) => ['type' => 'category', 'slug' => $c->slug, 'name' => $c->name]);
@@ -435,5 +568,14 @@ final class StorefrontExperience
         }
 
         return $config;
+    }
+
+    /**
+     * The catalog of this request (scoped): the controller holding this service is cached on
+     * its route, so a catalog kept in a property would carry one request's memos into the next.
+     */
+    private function catalog(): StorefrontCatalog
+    {
+        return app(StorefrontCatalog::class);
     }
 }

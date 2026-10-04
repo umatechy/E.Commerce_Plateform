@@ -5,14 +5,11 @@ declare(strict_types=1);
 namespace App\Domain\Catalog\Models;
 
 /**
- * Module 07 §29 "Attribute Types". The module also describes dedicated
- * Measurement and Color sub-types (§34–35) with unit/hex-specific
- * behavior — simplified in B3 to Numeric and Select respectively
- * (documented simplification, not silently done): a "color" attribute
- * is a Select attribute whose values happen to be color names, and a
- * "measurement" attribute is a Numeric attribute with a unit stored in
- * AttributeValue's metadata. Revisit if the storefront actually needs a
- * native color-swatch or unit-conversion UI.
+ * Module 07 §29 "Attribute Types".
+ *
+ * Phase B41: `color` is its own type (§35) — a single choice whose values
+ * carry a colour code, shown as swatches. A measurement (§34) is a number
+ * with the attribute's `unit`; no unit conversion yet.
  */
 enum AttributeType: string
 {
@@ -21,4 +18,17 @@ enum AttributeType: string
     case Boolean = 'boolean';
     case Numeric = 'numeric';
     case Text = 'text';
+    case Color = 'color';
+
+    /** Types whose product values are chosen from the attribute's values. */
+    public function hasValues(): bool
+    {
+        return in_array($this, [self::Select, self::MultiSelect, self::Color], true);
+    }
+
+    /** Types a customer can filter by (Module 07 §47): choices, yes/no and number ranges. */
+    public function isFilterable(): bool
+    {
+        return $this !== self::Text;
+    }
 }

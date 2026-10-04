@@ -28,7 +28,6 @@ use Illuminate\Support\Str;
 final class StorefrontPresenter
 {
     public function __construct(
-        private readonly StorefrontCatalog $catalog,
         private readonly SeoResolver $seo,
         private readonly HtmlSanitizer $sanitizer,
         private readonly ConfigService $config,
@@ -135,7 +134,7 @@ final class StorefrontPresenter
 
         $presentedVariants = $variants->map(function (ProductVariant $variant) use ($product, $store, $variantImages, $purchasableVisibility) {
             $price = $variant->effectivePriceMinor();
-            $availability = $this->availability($this->catalog->stockLevel($product->id, $variant->id), $store);
+            $availability = $this->availability($this->catalog()->stockLevel($product->id, $variant->id), $store);
 
             return [
                 'id' => $variant->public_id,
@@ -150,7 +149,7 @@ final class StorefrontPresenter
         })->values()->all();
 
         $ownPrice = $product->effectivePriceMinor();
-        $ownAvailability = $variants->isEmpty() ? $this->availability($this->catalog->stockLevel($product->id, null), $store) : null;
+        $ownAvailability = $variants->isEmpty() ? $this->availability($this->catalog()->stockLevel($product->id, null), $store) : null;
 
         return [
             ...$this->card($product),
@@ -175,9 +174,9 @@ final class StorefrontPresenter
     public function categoryTree(array $counts): array
     {
         if (! $this->locale()->isDefault()) {
-            $this->translations()->prime('category', $this->catalog->visibleCategories()->pluck('id')->all(), $this->locale()->current());
+            $this->translations()->prime('category', $this->catalog()->visibleCategories()->pluck('id')->all(), $this->locale()->current());
         }
-        $children = $this->catalog->visibleCategories()->groupBy('parent_id');
+        $children = $this->catalog()->visibleCategories()->groupBy('parent_id');
         $build = function (Category $category, int $depth) use (&$build, $children, $counts): array {
             return [
                 ...$this->category($category, $counts[$category->id] ?? 0),
@@ -187,7 +186,7 @@ final class StorefrontPresenter
         };
         // Roots only: a category under a hidden parent is unreachable,
         // exactly as it is for the category filter.
-        return $this->catalog->visibleCategories()
+        return $this->catalog()->visibleCategories()
             ->whereNull('parent_id')
             ->map(fn (Category $category) => $build($category, 0))
             ->values()->all();
@@ -339,7 +338,7 @@ final class StorefrontPresenter
     /** @return list<array{name: string, slug: string}> */
     private function breadcrumbs(?Category $category): array
     {
-        $visible = $this->catalog->visibleCategories()->keyBy('id');
+        $visible = $this->catalog()->visibleCategories()->keyBy('id');
 
         if ($category === null || ! $visible->has($category->id)) {
             return [];
@@ -356,5 +355,14 @@ final class StorefrontPresenter
     private function int(mixed $value): ?int
     {
         return $value === null ? null : (int) $value;
+    }
+
+    /**
+     * The catalog of this request (scoped): the controller holding this service is cached on
+     * its route, so a catalog kept in a property would carry one request's memos into the next.
+     */
+    private function catalog(): StorefrontCatalog
+    {
+        return app(StorefrontCatalog::class);
     }
 }

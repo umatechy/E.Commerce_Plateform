@@ -17,6 +17,7 @@ import { options } from '@/lib/labels';
 import CurrencyField from '@/Components/CurrencyField';
 import TranslationsPanel from '@/Components/TranslationsPanel';
 import RelatedProducts from '@/Components/Catalog/RelatedProducts';
+import SpecificationsCard from '@/Components/Catalog/SpecificationsCard';
 import {
   categoryTree,
   PRODUCT_STATUSES,
@@ -665,6 +666,7 @@ export default function ProductEdit({ productId }: { productId: string | null })
           <ProductForm key={product.id} product={product} onSaved={(saved) => state.setData({ data: saved })} />
           <VariantsSection product={product} onChanged={state.reload} />
           <ImagesSection product={product} />
+          <SpecificationsCard key={`specs-${product.primary_category_id ?? 0}`} productId={product.id} canEdit={canTranslate} />
           <RelatedProducts productId={product.id} canEdit={canTranslate} />
           {/* Phase B38: name and descriptions in the other storefront languages. */}
           <Card title="Translations" description="How this product reads in your other storefront languages. A field left empty shows the original.">

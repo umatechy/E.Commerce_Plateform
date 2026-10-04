@@ -20,7 +20,7 @@ use Illuminate\Support\Str;
  *
  * - name "… (copy)", status draft, hidden (so it never counts against the
  *   product limit or shows before it is ready); SKU and barcodes empty;
- * - categories, tags, hand-picked collections and variants copied (variants
+ * - categories, tags, specifications, hand-picked collections and variants copied (variants
  *   without SKU or barcode);
  * - images copied as new files ("copy media references safely" — removing a
  *   picture from one product never removes it from the other);
@@ -47,6 +47,13 @@ final class ProductDuplicator
                 ]);
                 $copy->categories()->sync($original->categories->pluck('id')->all());
                 $copy->tags()->sync($original->tags->pluck('id')->all());
+                // Phase B41: specifications are product content and are copied too.
+                foreach (\App\Domain\Catalog\Models\ProductAttributeValue::query()->where('product_id', $original->id)->get() as $spec) {
+                    \App\Domain\Catalog\Models\ProductAttributeValue::query()->create([
+                        ...$spec->only(['attribute_id', 'attribute_value_id', 'number_value', 'bool_value', 'text_value']),
+                        'product_id' => $copy->id,
+                    ]);
+                }
                 foreach ($original->collections as $collection) {
                     $copy->collections()->attach($collection->id, ['position' => (int) DB::table('collection_product')->where('collection_id', $collection->id)->max('position') + 1]);
                 }

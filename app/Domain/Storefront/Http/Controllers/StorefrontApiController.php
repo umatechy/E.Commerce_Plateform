@@ -99,6 +99,9 @@ final class StorefrontApiController
             // Phase B39: a collection (live only), a tag; a collection's own order and best sellers.
             'collection' => ['nullable', 'string', 'max:191'],
             'tag' => ['nullable', 'string', 'max:80'],
+            // Phase B41: attribute filters of a category page, attr[key]=... (checked against the category filters).
+            'attr' => ['nullable', 'array', 'max:10'],
+            'attr.*' => ['string', 'max:200'],
             'sort' => ['nullable', 'in:'.implode(',', \App\Domain\Storefront\Services\StorefrontCatalog::COLLECTION_SORTS)],
             'page' => ['nullable', 'integer', 'min:1', 'max:1000'],
             'per_page' => ['nullable', 'integer', 'min:1', 'max:'.(int) config('storefront.max_per_page')],
@@ -124,13 +127,35 @@ final class StorefrontApiController
             $out[$key] = match ($key) {
                 'min_price', 'max_price', 'page', 'per_page' => (int) $value,
                 'in_stock' => filter_var($value, FILTER_VALIDATE_BOOLEAN),
+                'attr' => self::attr($value),
                 default => trim((string) $value),
             };
+        }
+
+        if (($out['attr'] ?? null) === []) {
+            unset($out['attr']);
         }
 
         if (($out['in_stock'] ?? null) === false) {
             unset($out['in_stock']);
         }
+
+        return $out;
+    }
+
+    /**
+     * @return array<string, string> keys sorted (one cache entry per filter set), only key-shaped
+     *         names with a plain value
+     */
+    private static function attr(mixed $value): array
+    {
+        $out = [];
+        foreach (is_array($value) ? $value : [] as $key => $item) {
+            if (is_string($key) && preg_match('/^[A-Za-z0-9_-]{1,64}$/', $key) === 1 && is_string($item) && trim($item) !== '') {
+                $out[$key] = trim($item);
+            }
+        }
+        ksort($out);
 
         return $out;
     }

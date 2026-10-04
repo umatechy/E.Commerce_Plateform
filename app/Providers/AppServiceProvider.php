@@ -60,6 +60,8 @@ final class AppServiceProvider extends ServiceProvider
         // Phase B38: the storefront language of this request, and the translations loaded for it.
         $this->app->scoped(\App\Domain\Storefront\Services\StorefrontLocale::class);
         $this->app->scoped(\App\Domain\Settings\Services\TranslationService::class);
+        // Phase B41: the catalog memoizes categories and the default warehouse per request.
+        $this->app->scoped(\App\Domain\Storefront\Services\StorefrontCatalog::class);
 
         // Phase B19 — interface bindings so BackupService/RunBackupJob
         // depend only on the abstraction (Module 23 Phase 4/10), never
@@ -149,6 +151,8 @@ final class AppServiceProvider extends ServiceProvider
             \App\Domain\Settings\Models\ContentTranslation::class,
             // Phase B39: collections and product relations change what shoppers see.
             \App\Domain\Catalog\Models\Collection::class, \App\Domain\Catalog\Models\ProductRelation::class,
+            // Phase B41: attributes (values change with them — AttributeManager touches the attribute) and category filters.
+            \App\Domain\Catalog\Models\Attribute::class, \App\Domain\Catalog\Models\CategoryAttribute::class,
         ] as $model) {
             $model::observe(\App\Domain\Storefront\Observers\StorefrontCacheObserver::class);
         }

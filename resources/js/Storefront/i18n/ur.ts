@@ -77,6 +77,11 @@ export const ur: Record<string, string> = {
   'Featured products': 'نمایاں مصنوعات',
   'Goes well with': 'اس کے ساتھ خوب جچتا ہے',
   'You might prefer': 'آپ شاید یہ پسند کریں',
+  // Phase B41: specifications and attribute filters.
+  Specifications: 'تفصیلات',
+  Yes: 'ہاں',
+  No: 'نہیں',
+  'Clear filters': 'فلٹر ہٹائیں',
 
   // Catalog
   'Search results': 'تلاش کے نتائج',

@@ -193,6 +193,24 @@ export default function Product({
         </div>
       </div>
 
+      {/* Phase B41 (Module 07 §41, §46): specifications, as a list; colours as swatches. */}
+      {(product.specifications ?? []).length > 0 && (
+        <section className="mt-12">
+          <h2 className="mb-4 text-2xl font-semibold">{t('Specifications')}</h2>
+          <dl className="grid gap-x-8 gap-y-2 sm:grid-cols-2">
+            {(product.specifications ?? []).map((spec) => (
+              <div key={spec.name} className="flex gap-3 border-b border-sf-border py-2">
+                <dt className="w-1/2 text-sf-muted">{spec.name}</dt>
+                <dd className="flex flex-wrap items-center gap-1">
+                  {spec.colors.map((c) => <span key={c.code} aria-hidden className="inline-block h-4 w-4 rounded-full border border-sf-border" style={{ backgroundColor: c.code }} />)}
+                  {spec.value === 'yes' ? t('Yes') : spec.value === 'no' ? t('No') : spec.value}
+                </dd>
+              </div>
+            ))}
+          </dl>
+        </section>
+      )}
+
       {/* Phase B39 (Module 06 §38): the products the store chose to show with this one. */}
       {cross_sell.length > 0 && (
         <section className="mt-16">

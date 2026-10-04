@@ -8,6 +8,7 @@ import { StatusBadge } from '@/Components/ui/Badge';
 import { EmptyPanel } from '@/Components/ui/Page';
 import { useAccess } from '@/lib/access';
 import TranslationsPanel from '@/Components/TranslationsPanel';
+import CategoryAttributesDialog from '@/Components/Catalog/CategoryAttributesDialog';
 import { useApi } from '@/lib/useApi';
 import { useAction, useForm } from '@/lib/useForm';
 import { adminFetch } from '@/lib/adminApi';
@@ -31,6 +32,9 @@ export default function Categories() {
   const [removing, setRemoving] = useState<Category | null>(null);
   // Phase B38: the category's name and description in other storefront languages.
   const [translating, setTranslating] = useState<Category | null>(null);
+  // Phase B41: the attributes that apply to a category and its storefront filters.
+  const [attributing, setAttributing] = useState<Category | null>(null);
+  const canAttributes = canManage || access.can('attributes.manage');
   const form = useForm<Values>(BLANK);
   const { busy, run } = useAction();
 
@@ -86,11 +90,12 @@ export default function Categories() {
     {
       key: 'actions', header: 'Actions', srOnlyHeader: true, align: 'right', priority: true,
       render: ({ category }) =>
-        canManage && (
-          <span className="flex justify-end gap-1">
-            <Button size="sm" variant="ghost" onClick={() => open(category)}>Edit<span className="sr-only"> {category.name}</span></Button>
-            <Button size="sm" variant="ghost" onClick={() => setTranslating(category)}>Translate<span className="sr-only"> {category.name}</span></Button>
-            <Button size="sm" variant="ghost" onClick={() => setRemoving(category)}>Delete<span className="sr-only"> {category.name}</span></Button>
+        (canManage || canAttributes) && (
+          <span className="flex flex-wrap justify-end gap-1">
+            {canAttributes && <Button size="sm" variant="ghost" onClick={() => setAttributing(category)}>Attributes &amp; filters<span className="sr-only"> of {category.name}</span></Button>}
+            {canManage && <Button size="sm" variant="ghost" onClick={() => open(category)}>Edit<span className="sr-only"> {category.name}</span></Button>}
+            {canManage && <Button size="sm" variant="ghost" onClick={() => setTranslating(category)}>Translate<span className="sr-only"> {category.name}</span></Button>}
+            {canManage && <Button size="sm" variant="ghost" onClick={() => setRemoving(category)}>Delete<span className="sr-only"> {category.name}</span></Button>}
           </span>
         ),
     },
@@ -131,6 +136,8 @@ export default function Categories() {
           </div>
         </form>
       </Dialog>
+
+      {attributing && <CategoryAttributesDialog category={attributing} canEdit={canManage} onClose={() => setAttributing(null)} />}
 
       <Dialog open={translating !== null} title={`Translations — ${translating?.name ?? ''}`} onClose={() => setTranslating(null)}>
         {translating && <TranslationsPanel type="category" id={translating.id} canEdit={canManage} />}

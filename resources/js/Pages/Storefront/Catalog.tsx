@@ -7,8 +7,9 @@ import EmptyState from '@/Components/EmptyState';
 import type { CategoryNode, ProductCard, StorefrontPageProps } from '@/Storefront/types';
 import { currencyDigits } from '@/lib/money';
 import { useT } from '@/Storefront/i18n';
+import AttributeFilters, { type FilterFacet } from '@/Components/Storefront/AttributeFilters';
 
-type Filters = { q?: string; category?: string; brand?: string; collection?: string; tag?: string; min_price?: number; max_price?: number; in_stock?: boolean; sort?: string; page?: number };
+type Filters = { q?: string; category?: string; brand?: string; collection?: string; tag?: string; min_price?: number; max_price?: number; in_stock?: boolean; sort?: string; page?: number; attr?: Record<string, string> };
 type Context =
   | { type: 'all' | 'search'; title: string }
   // Phase B39 (Module 06 §34–35).
@@ -20,7 +21,7 @@ type Context =
 type Props = StorefrontPageProps & {
   context: Context;
   filters: Filters;
-  listing: { products: ProductCard[]; pagination: { page: number; per_page: number; total: number; last_page: number } };
+  listing: { products: ProductCard[]; pagination: { page: number; per_page: number; total: number; last_page: number }; filters?: FilterFacet[] };
   facets: { categories: CategoryNode[]; brands: { slug: string; name: string }[] };
 };
 
@@ -50,9 +51,14 @@ export default function Catalog({ storefront, seo, context, filters, listing, fa
         !(key === 'category' && context.type === 'category') &&
         !(key === 'brand' && context.type === 'brand') &&
         !(key === 'collection' && context.type === 'collection') &&
-        !(key === 'tag' && context.type === 'tag'),
+        !(key === 'tag' && context.type === 'tag') &&
+        key !== 'attr',
     ),
   );
+  // Phase B41: attribute filters travel flat as attr[key]=value.
+  for (const [key, value] of Object.entries(filters.attr ?? {})) {
+    query[`attr[${key}]`] = value;
+  }
   // ISO 4217 decimals, as the server stores them (browsers show PKR without any).
   const digits = currencyDigits(storefront.store.currency);
   const [minPrice, setMinPrice] = useState(filters.min_price !== undefined ? String(filters.min_price / 10 ** digits) : '');
@@ -143,6 +149,13 @@ export default function Catalog({ storefront, seo, context, filters, listing, fa
             <input type="checkbox" checked={Boolean(filters.in_stock)} onChange={(e) => visit({ in_stock: e.target.checked ? 1 : undefined })} />
             {t('In stock only')}
           </label>
+
+          <AttributeFilters facets={listing.filters ?? []} onChange={(key, value) => visit({ [`attr[${key}]`]: value })} />
+          {Object.keys(filters.attr ?? {}).length > 0 && (
+            <button type="button" className="text-sf-accent underline" onClick={() => visit(Object.fromEntries(Object.keys(filters.attr ?? {}).map((key) => [`attr[${key}]`, undefined])))}>
+              {t('Clear filters')}
+            </button>
+          )}
         </aside>
 
         <div>
