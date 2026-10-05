@@ -99,7 +99,7 @@ final class StoreOnboardingTest extends TestCase
         $this->register()->assertStatus(403)->assertJsonPath('code', 'signup_closed');
         $this->assertDatabaseMissing('users', ['email' => 'ayesha@example.com']);
         $this->assertSame(0, Store::query()->count());
-        $this->get('/register')->assertOk()->assertInertia(fn ($page) => $page->where('signupOpen', false));
+        $this->withoutVite()->get('/register')->assertOk()->assertInertia(fn ($page) => $page->where('signupOpen', false));
     }
 
     public function test_staff_create_a_store_for_a_customer_who_takes_it_over_by_invitation(): void
