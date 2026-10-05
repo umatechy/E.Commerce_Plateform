@@ -424,6 +424,7 @@ existing pattern: feature tests plus tenant-isolation tests for every endpoint.
 | G20 | Module 28 Affiliate & Reseller | AFF-001–005, M28 | No partner growth channel | Build per blueprint | P2 | G7, M29 extensions |
 | G21 | Billing depth: proration, refunds/credit notes, add-ons, PDF, card gateway | BILL-006, M29 §42–54, §75 | Manual finance work | Extend B23 | P2 | G9 |
 | G22 | Feature flags + Module 35 extension points | CFG-005, M33 §16–17, M35 §5, §10 | Risky rollouts | Feature-flag service distinct from entitlements | P2 | — |
+| G23 | Store onboarding: platform-assisted and self-service creation (owner decision 13), sign-up switch, live-after-payment rule, business-category starter templates, lifecycle states ONBOARDING/TRIAL/GRACE_PERIOD | M03 §5–8, §24, §57–58; M07 §20, §105–106; M01 §16 | Umar Techy cannot run a managed service; stores go live unpaid | One StoreCreationService for both flows; Super Admin create-store + owner invitation; platform settings; industry templates | P0 | — |
 
 ## 5. Owner decisions (answered 2026-09-30)
 
@@ -444,6 +445,7 @@ The owner answered every question the same day. The full text is in
 | 10 | Customer features by package (asked in B32, answered 2026-10-03 in the session) | Module 10 §87 mapping: Basic keeps accounts, profiles, addresses, search, notes, blocking, privacy; **groups, tags, CSV import/export and merge are Business and Premium** (`customers.advanced`). **No "Maximum Customers" limit** for now | Seeder + migration `2028_05_01_000003`; enforced in the customer API |
 | 11 | Customer merge (Module 10 §56, reserved in B32) | Build it | Built in B32 follow-up (`CustomerMerger`) |
 | 12 | Currency (answered 2026-10-03 in the session) | Pakistan first: default **PKR (Rs.)**; the platform also offers USD, EUR, GBP, AED, SAR for later use; nothing converted | `Currencies`, migration `2028_05_01_000005`, `docs/development/b32-currency-pakistan-first.md` |
+| 13 | Store creation model (asked and answered 2026-10-04 in the session) | **Both** models of Module 03 §5, through one store-creation service: (A) Umar Techy staff create a store for a customer (business category and package by the customer's budget; the owner is invited by email); (B) customers sign up and create their own store. Platform settings decide whether public sign-up is open and whether a store may go live only after its first payment (not during the trial) | Gap G23; next phase |
 
 ## 6. Recommended order
 
