@@ -71,6 +71,6 @@ Not built (b45-starter-templates.md §6): Urdu names in templates; templates
 edited in the Super Admin (marketplace); store cloning; connect external
 catalogue; AI suggestions.
 
-CI: not yet run.
+CI: run on cdbd1d7 — success, verified 2026-10-05.
 
 Next (on the owner's word): B46 — tax engine (G3).
