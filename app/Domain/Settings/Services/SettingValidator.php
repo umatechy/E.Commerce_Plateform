@@ -68,6 +68,28 @@ final class SettingValidator
             throw new InvalidSettingValueException('Value must be a valid IANA timezone identifier (e.g. "America/New_York").');
         }
 
+        // Phase B44: business information and the trial package.
+        $max = ['store.legal_name' => 200, 'store.contact_email' => 191, 'store.contact_phone' => 32][$definition->key] ?? null;
+        if ($max !== null && mb_strlen($normalized) > $max) {
+            throw new InvalidSettingValueException("At most {$max} characters.");
+        }
+        if ($definition->key === 'store.contact_email' && filter_var($normalized, FILTER_VALIDATE_EMAIL) === false) {
+            throw new InvalidSettingValueException('Value must be an email address.');
+        }
+        if ($definition->key === 'store.contact_phone' && preg_match('/^\+?[0-9][0-9 ()\-]{6,30}$/', $normalized) !== 1) {
+            throw new InvalidSettingValueException('Value must be a phone number such as +92 300 1234567.');
+        }
+        if ($definition->key === 'store.country') {
+            $normalized = strtoupper($normalized);
+            if (preg_match('/^[A-Z]{2}$/', $normalized) !== 1) {
+                throw new InvalidSettingValueException('Value must be a two-letter country code such as PK.');
+            }
+        }
+        if ($definition->key === 'platform.trial_package'
+            && ! \App\Domain\Packages\Models\Package::query()->where('code', $normalized)->where('is_active', true)->exists()) {
+            throw new InvalidSettingValueException('Value must be the code of an active package.');
+        }
+
         return $normalized;
     }
 

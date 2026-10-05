@@ -154,5 +154,9 @@ Route::middleware('guest')->group(function () use ($intendedPath) {
     // Named: the auth middleware sends signed-out visitors of admin pages
     // here (without the name they got a 500, "Route [login] not defined").
     Route::get('/login', fn (Request $request) => Inertia::render('Auth/Login', ['intended' => $intendedPath($request)]))->name('login');
-    Route::get('/register', fn () => Inertia::render('Auth/Register'));
+    // Phase B44 (owner decision 13): sign-up may be closed; the page then says whom to contact.
+    Route::get('/register', fn () => Inertia::render('Auth/Register', [
+        'signupOpen' => app(\App\Domain\Settings\Services\ConfigService::class)->get('platform.self_signup_enabled') !== false,
+        'businessCategories' => collect(\App\Domain\Tenancy\Support\BusinessCategories::ALL)->map(fn ($label, $key) => ['value' => $key, 'label' => $label])->values(),
+    ]));
 });

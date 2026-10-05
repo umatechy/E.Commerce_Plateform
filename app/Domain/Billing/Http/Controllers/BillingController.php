@@ -105,6 +105,26 @@ final class BillingController
         return $this->respond(fn () => $billing->changeInterval($this->subscription($context), BillingInterval::from($validated['billing_interval'])));
     }
 
+    /**
+     * Phase B44 (owner decision 13): a store that may go live only after its
+     * first payment asks for its first invoice now instead of at the end of
+     * the trial. The invoice covers the first paid period (it starts when
+     * the trial ends); Umar Techy records the payment, and the store can
+     * launch. Asking again returns the same open invoice.
+     */
+    public function firstInvoice(Request $request, TenantContext $context, \App\Domain\Billing\Services\InvoiceLedger $ledger): JsonResponse
+    {
+        $this->authorize($request, 'manage');
+        $subscription = $this->subscription($context);
+        // Issuing writes the invoice and its outbox event together (ADR-004).
+        $invoice = \Illuminate\Support\Facades\DB::transaction(fn () => $ledger->issueNextPeriod($subscription));
+        if ($invoice === null) {
+            return response()->json(['message' => 'Your package has no price yet. Contact the Umar Techy team.', 'code' => 'no_price'], 422);
+        }
+
+        return response()->json(['data' => new \App\Domain\Billing\Http\Resources\InvoiceResource($invoice)], 201);
+    }
+
     /** @param callable(): Subscription $action */
     private function respond(callable $action): JsonResponse
     {

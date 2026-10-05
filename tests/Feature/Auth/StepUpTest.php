@@ -120,6 +120,9 @@ final class StepUpTest extends TestCase
             'POST api/v1/super-admin/packages',
             'POST api/v1/super-admin/restore-jobs/{backupRestoreJob}/authorize',
             'POST api/v1/super-admin/settings/revisions/{revisionId}/rollback',
+            // Phase B44: creating a store for a customer, and inviting its owner.
+            'POST api/v1/super-admin/stores',
+            'POST api/v1/super-admin/stores/{store}/owner-invitation',
             'POST api/v1/super-admin/users/{user}/deactivate',
             'POST api/v1/super-admin/users/{user}/reactivate',
             'PUT api/v1/super-admin/packages/{package}',

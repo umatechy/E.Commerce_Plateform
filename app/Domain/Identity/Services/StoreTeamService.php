@@ -79,6 +79,63 @@ final class StoreTeamService
     }
 
     /** A fresh token and expiry; the old link stops working. */
+    /**
+     * Phase B44 (owner decision 13, Module 03 §26): the owner invitation of a
+     * store Umar Techy staff created for a customer. Not a team action — the
+     * owner role is never grantable inside a store — so it is reached only
+     * from StoreProvisioningService and the Super Admin, with the store's
+     * context resolved. Accepting it goes through accept() like any
+     * invitation: a new account, or the customer's existing one.
+     */
+    public function inviteOwner(Store $store, string $email, User $staff): StoreInvitation
+    {
+        $email = Str::lower(trim($email));
+        if (filter_var($email, FILTER_VALIDATE_EMAIL) === false) {
+            throw new TeamActionRefusedException('invalid_email', 'Enter the owner\'s email address.', 'owner_email');
+        }
+        $this->expireStaleInvitations();
+        if ($this->hasOwner()) {
+            throw new TeamActionRefusedException('owner_exists', 'This store already has an owner.', 'owner_email');
+        }
+
+        $role = Role::query()->where('slug', 'owner')->firstOrFail();
+        // One open owner invitation at a time: a new one replaces the old link.
+        StoreInvitation::query()->where('role_id', $role->id)->where('status', InvitationStatus::Pending)
+            ->update(['status' => InvitationStatus::Revoked->value, 'pending_email' => null, 'revoked_at' => now(), 'revoked_by_user_id' => $staff->id]);
+
+        $token = Str::random(64);
+        $invitation = StoreInvitation::query()->create([
+            'store_id' => $store->id,
+            'email' => $email,
+            'pending_email' => $email,
+            'role_id' => $role->id,
+            'token_hash' => hash('sha256', $token),
+            'status' => InvitationStatus::Pending,
+            'expires_at' => now()->addDays((int) config('team.owner_invitation_ttl_days', 14)),
+            'invited_by_user_id' => $staff->id,
+        ]);
+
+        $this->sendOwnerInvitation($store, $invitation, $token);
+        $this->audit->record('store.owner_invited', ['email' => $email], $invitation, $store->id, $staff);
+
+        return $invitation;
+    }
+
+    /** The store's open owner invitation, if it has one (Phase B44). */
+    public function openOwnerInvitation(): ?StoreInvitation
+    {
+        $this->expireStaleInvitations();
+
+        return StoreInvitation::query()->where('status', InvitationStatus::Pending)
+            ->whereHas('role', fn ($q) => $q->where('slug', 'owner'))->latest('id')->first();
+    }
+
+    public function hasOwner(): bool
+    {
+        return StoreMembership::query()->where('status', MembershipStatus::Active)
+            ->whereHas('role', fn ($q) => $q->where('slug', 'owner'))->exists();
+    }
+
     public function resend(User $actor, StoreInvitation $invitation): StoreInvitation
     {
         $this->assertOpen($invitation);
@@ -269,6 +326,22 @@ final class StoreTeamService
         );
     }
 
+    private function sendOwnerInvitation(Store $store, StoreInvitation $invitation, string $token): void
+    {
+        $link = rtrim((string) config('app.url'), '/')."/invitations/{$invitation->public_id}#token={$token}";
+
+        $this->notifications->send(
+            NotificationMessageType::Administrative, NotificationChannel::Email,
+            RecipientType::User, null, $invitation->email,
+            'Your store {{store.name}} is ready',
+            'Hi, Umar Techy has created your online store {{store.name}}. Open this link within {{ttl}} days to set your password and take over your store: {{invitation.link}} You will also turn on two-step sign-in to keep it safe. If you were not expecting this, you can ignore this email.',
+            ['store.name' => $store->name, 'ttl' => (string) config('team.owner_invitation_ttl_days', 14)],
+            "owner-invitation:{$invitation->id}",
+            'store.owner_invited',
+            secretVariables: ['invitation.link' => $link],
+        );
+    }
+
     private function seatsUsed(): int
     {
         $members = StoreMembership::query()
@@ -276,7 +349,9 @@ final class StoreTeamService
             ->where(fn ($q) => $q->whereNull('role_id')->orWhereDoesntHave('role', fn ($r) => $r->where('slug', 'owner')))
             ->count();
 
-        return $members + StoreInvitation::query()->where('status', InvitationStatus::Pending)->where('expires_at', '>', now())->count();
+        // The owner does not take a seat; nor does their open invitation (Phase B44).
+        return $members + StoreInvitation::query()->where('status', InvitationStatus::Pending)->where('expires_at', '>', now())
+            ->whereDoesntHave('role', fn ($r) => $r->where('slug', 'owner'))->count();
     }
 
     private function assertSeatAvailable(int $additional = 1): void

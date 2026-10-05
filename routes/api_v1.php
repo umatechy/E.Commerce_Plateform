@@ -126,6 +126,7 @@ Route::middleware(['auth:sanctum', 'staff.principal', 'required.mfa'])->group(fu
     // --- Billing, Invoices & Renewals (Module 29, Phase B23) — the store's own only ---
     Route::get('/billing', [BillingController::class, 'show']);
     Route::get('/billing/invoices', [BillingController::class, 'invoices']);
+    Route::post('/billing/first-invoice', [BillingController::class, 'firstInvoice'])->middleware('throttle:10,10,first-invoice'); // Phase B44
     Route::get('/billing/invoices/{invoice}', [BillingController::class, 'invoice']);
     Route::post('/billing/cancel', [BillingController::class, 'cancel']);
     Route::post('/billing/resume', [BillingController::class, 'resume']);
@@ -398,6 +399,9 @@ Route::middleware(['auth:sanctum', 'staff.principal', 'required.mfa'])->group(fu
 
             Route::get('/dashboard', [SuperAdminDashboardController::class, 'show']);
             Route::get('/stores', [SuperAdminStoreController::class, 'index']);
+            // Phase B44 (owner decision 13): Umar Techy creates a store for a customer.
+            Route::post('/stores', [SuperAdminStoreController::class, 'store'])->middleware(['step_up', 'throttle:30,10,super-admin-store-create']);
+            Route::get('/business-categories', [SuperAdminStoreController::class, 'businessCategories']);
             Route::get('/users', [SuperAdminUserController::class, 'index']);
             Route::get('/users/{user}', [SuperAdminUserController::class, 'show']);
             Route::post('/users/{user}/deactivate', [SuperAdminUserController::class, 'deactivate'])->middleware('step_up');
@@ -461,6 +465,7 @@ Route::middleware(['auth:sanctum', 'staff.principal', 'required.mfa'])->group(fu
         ->group(function () {
             Route::get('/stores/{store}/impersonate', [SuperAdminStoreController::class, 'impersonate'])->middleware('step_up'); // SRS SA-004
             Route::get('/stores/{store}', [SuperAdminStoreController::class, 'show']);
+            Route::post('/stores/{store}/owner-invitation', [SuperAdminStoreController::class, 'inviteOwner'])->middleware('step_up'); // Phase B44
             Route::get('/stores/{store}/health', [SuperAdminMonitoringController::class, 'storeHealth']);
 
             // Package/subscription platform administration (Module 04

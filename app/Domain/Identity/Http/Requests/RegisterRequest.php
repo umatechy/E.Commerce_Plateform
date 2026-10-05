@@ -26,6 +26,8 @@ final class RegisterRequest extends FormRequest
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email'],
             'password' => ['required', 'confirmed', Password::defaults()],
             'store_name' => ['required', 'string', 'max:255'],
+            // Phase B44: what the store sells (starter templates build on it in B45).
+            'business_category' => ['nullable', 'string', \Illuminate\Validation\Rule::in(\App\Domain\Tenancy\Support\BusinessCategories::keys())],
         ];
     }
 }

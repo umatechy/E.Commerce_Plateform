@@ -49,6 +49,11 @@ final class Store extends Model
         'name',
         'slug',
         'status',
+        // Phase B44 (Module 03 §5, §14): what it sells, how and by whom it was created, when it went live.
+        'business_category',
+        'created_via',
+        'created_by_user_id',
+        'activated_at',
         'allow_overselling',
         'payment_webhook_secret',
         'shipment_webhook_secret',
@@ -60,6 +65,7 @@ final class Store extends Model
         return [
             'status' => StoreStatus::class,
             'allow_overselling' => 'boolean',
+            'activated_at' => 'datetime',
         ];
     }
 

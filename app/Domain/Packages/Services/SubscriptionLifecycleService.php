@@ -41,13 +41,17 @@ final class SubscriptionLifecycleService
      * NOT hard-coded, per §14's explicit "should be configurable by
      * Umar Techy" requirement.
      */
-    public function startTrial(Store $store): Subscription
+    public function startTrial(Store $store, ?Package $package = null, ?int $trialDays = null): Subscription
     {
-        $package = Package::query()
-            ->where('code', config('packages.default_trial_package_code'))
+        // Phase B44: Umar Techy sets the trial package and length in the
+        // platform settings (Module 04 §14); staff creating a store may
+        // choose the package (by the customer's budget) and the length.
+        $config = app(\App\Domain\Settings\Services\ConfigService::class);
+        $package ??= Package::query()
+            ->where('code', (string) ($config->get('platform.trial_package') ?? config('packages.default_trial_package_code')))
             ->firstOrFail();
 
-        $trialDays = (int) config('packages.default_trial_days');
+        $trialDays ??= (int) ($config->get('platform.trial_days') ?? config('packages.default_trial_days'));
 
         return DB::transaction(function () use ($store, $package, $trialDays) {
             $subscription = Subscription::query()->withoutTenantScope()->create([

@@ -34,6 +34,28 @@ final class SettingRegistry
                 key: 'platform.default_locale', scope: SettingScope::Platform, type: SettingType::String,
                 default: 'en',
             ),
+            // Phase B44 (owner decision 13, Module 03 §5, Module 04 §14): how stores come to exist and go live.
+            'platform.self_signup_enabled' => new SettingDefinition(
+                key: 'platform.self_signup_enabled', scope: SettingScope::Platform, type: SettingType::Boolean,
+                default: true,
+            ),
+            'platform.launch_requires_payment' => new SettingDefinition(
+                key: 'platform.launch_requires_payment', scope: SettingScope::Platform, type: SettingType::Boolean,
+                default: false,
+            ),
+            'platform.trial_package' => new SettingDefinition(
+                key: 'platform.trial_package', scope: SettingScope::Platform, type: SettingType::String,
+                default: 'basic', // a package code; checked to exist and be active
+            ),
+            'platform.trial_days' => new SettingDefinition(
+                key: 'platform.trial_days', scope: SettingScope::Platform, type: SettingType::Integer,
+                default: 14,
+            ),
+            // Phase B44 (Module 03 §14, §24): the store's business information.
+            'store.legal_name' => new SettingDefinition(key: 'store.legal_name', scope: SettingScope::Store, type: SettingType::String, default: null),
+            'store.contact_email' => new SettingDefinition(key: 'store.contact_email', scope: SettingScope::Store, type: SettingType::String, default: null),
+            'store.contact_phone' => new SettingDefinition(key: 'store.contact_phone', scope: SettingScope::Store, type: SettingType::String, default: null),
+            'store.country' => new SettingDefinition(key: 'store.country', scope: SettingScope::Store, type: SettingType::String, default: 'PK'),
             'platform.maintenance_mode' => new SettingDefinition(
                 key: 'platform.maintenance_mode', scope: SettingScope::Platform, type: SettingType::Boolean,
                 default: false,

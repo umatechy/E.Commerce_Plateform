@@ -7,14 +7,12 @@ namespace App\Domain\Identity\Http\Controllers;
 use App\Domain\Identity\Http\Requests\LoginRequest;
 use App\Domain\Identity\Http\Requests\RegisterRequest;
 use App\Domain\Identity\Http\Resources\UserResource;
-use App\Domain\Identity\Models\Role;
 use App\Domain\Identity\Models\User;
 use App\Domain\Identity\Services\InvalidMfaCodeException;
 use App\Domain\Identity\Services\MfaService;
 use App\Domain\Identity\Support\SecuritySession;
-use App\Domain\Packages\Services\SubscriptionLifecycleService;
-use App\Domain\Tenancy\Models\Store;
-use App\Domain\Tenancy\Models\StoreStatus;
+use App\Domain\Settings\Services\ConfigService;
+use App\Domain\Tenancy\Services\StoreProvisioningService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -29,43 +27,26 @@ use Illuminate\Validation\ValidationException;
  */
 final class AuthController
 {
-    public function register(RegisterRequest $request, SubscriptionLifecycleService $subscriptions): JsonResponse
+    public function register(RegisterRequest $request, StoreProvisioningService $provisioning, ConfigService $config): JsonResponse
     {
-        // Registration creates User + Store + owner Role + membership +
-        // trial Subscription (Module 04 §18: "Every Store/Tenant must
-        // have a current package entitlement" — B2 fix, see
-        // docs/development/b2-inspection-findings.md item B: B1 left a
-        // newly registered store with no Subscription row at all) as
-        // ONE atomic unit — this is the one place in the platform where
-        // no TenantContext exists yet (there is no store until this
-        // transaction commits), so it deliberately does NOT go through
-        // BelongsToTenant's auto-fill; store_id values are set explicitly.
-        $user = DB::transaction(function () use ($request, $subscriptions) {
+        // Phase B44 (owner decision 13): Umar Techy may close public sign-up
+        // and create stores for customers itself (Super Admin).
+        if ($config->get('platform.self_signup_enabled') === false) {
+            return response()->json(['message' => 'New stores are set up by the Umar Techy team. Contact us and we will create your store.', 'code' => 'signup_closed'], 403);
+        }
+
+        // User + store + owner membership + trial subscription as ONE atomic
+        // unit (Module 04 §18: every store has a current package from its
+        // first moment). The store is made by StoreProvisioningService, the
+        // one creation path for both creation models (Module 03 §5, §55).
+        $user = DB::transaction(function () use ($request, $provisioning) {
             $user = User::query()->create([
                 'name' => $request->string('name')->toString(),
                 'email' => $request->string('email')->toString(),
                 'password' => $request->string('password')->toString(), // hashed via cast
             ]);
 
-            $store = Store::query()->create([
-                'name' => $request->string('store_name')->toString(),
-                'slug' => Str::slug($request->string('store_name')->toString()).'-'.Str::lower(Str::random(6)),
-                'status' => StoreStatus::PendingSetup,
-            ]);
-
-            // StoreObserver (registered in AppServiceProvider — see
-            // docs/development/b1-inspection-findings.md) seeds the
-            // default Owner/Manager/Staff roles for this store on
-            // creation; we look up the seeded Owner role here rather
-            // than creating a duplicate one.
-            $ownerRole = Role::query()->withoutTenantScope()
-                ->where('store_id', $store->id)
-                ->where('slug', 'owner')
-                ->firstOrFail();
-
-            $store->users()->attach($user, ['role_id' => $ownerRole->id, 'status' => 'active']);
-
-            $subscriptions->startTrial($store);
+            $provisioning->selfService($user, $request->string('store_name')->toString(), $request->input('business_category'));
 
             return $user;
         });

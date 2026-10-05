@@ -28,7 +28,8 @@ export class AdminApiError extends Error {
 export const DEFAULT_TIMEOUT_MS = 15000;
 
 type Query = Record<string, string | number | boolean | undefined | null>;
-type Init = { method?: string; body?: unknown; query?: Query; timeoutMs?: number };
+// headers: extra request headers, e.g. Idempotency-Key (Phase B44); they never replace the security headers.
+type Init = { method?: string; body?: unknown; query?: Query; timeoutMs?: number; headers?: Record<string, string> };
 
 /**
  * Asks the user for the password (and the two-step code) again. Resolves
@@ -75,7 +76,7 @@ function buildUrl(path: string, query?: Query): string {
 }
 
 async function send(path: string, init: Init): Promise<Response> {
-  const headers: Record<string, string> = { Accept: 'application/json', 'X-Requested-With': 'XMLHttpRequest' };
+  const headers: Record<string, string> = { ...(init.headers ?? {}), Accept: 'application/json', 'X-Requested-With': 'XMLHttpRequest' };
   const method = init.method ?? 'GET';
   const isForm = typeof FormData !== 'undefined' && init.body instanceof FormData;
   if (init.body !== undefined && !isForm) headers['Content-Type'] = 'application/json';

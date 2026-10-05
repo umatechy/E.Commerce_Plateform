@@ -424,7 +424,7 @@ existing pattern: feature tests plus tenant-isolation tests for every endpoint.
 | G20 | Module 28 Affiliate & Reseller | AFF-001–005, M28 | No partner growth channel | Build per blueprint | P2 | G7, M29 extensions |
 | G21 | Billing depth: proration, refunds/credit notes, add-ons, PDF, card gateway | BILL-006, M29 §42–54, §75 | Manual finance work | Extend B23 | P2 | G9 |
 | G22 | Feature flags + Module 35 extension points | CFG-005, M33 §16–17, M35 §5, §10 | Risky rollouts | Feature-flag service distinct from entitlements | P2 | — |
-| G23 | Store onboarding: platform-assisted and self-service creation (owner decision 13), sign-up switch, live-after-payment rule, business-category starter templates, lifecycle states ONBOARDING/TRIAL/GRACE_PERIOD | M03 §5–8, §24, §57–58; M07 §20, §105–106; M01 §16 | Umar Techy cannot run a managed service; stores go live unpaid | One StoreCreationService for both flows; Super Admin create-store + owner invitation; platform settings; industry templates | P0 | — |
+| G23 | 🟡 **Core done in B44** (checkpoint-b44; docs/architecture/b44-store-onboarding.md): one provisioning service, staff-created stores with owner invitation, sign-up switch, live-after-payment, stage, setup checklist; starter templates next (B45). Store onboarding: platform-assisted and self-service creation (owner decision 13), sign-up switch, live-after-payment rule, business-category starter templates, lifecycle states ONBOARDING/TRIAL/GRACE_PERIOD | M03 §5–8, §24, §57–58; M07 §20, §105–106; M01 §16 | Umar Techy cannot run a managed service; stores go live unpaid | One StoreCreationService for both flows; Super Admin create-store + owner invitation; platform settings; industry templates | P0 | — |
 
 ## 5. Owner decisions (answered 2026-09-30)
 

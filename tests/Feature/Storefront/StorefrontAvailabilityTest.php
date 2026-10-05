@@ -97,6 +97,9 @@ final class StorefrontAvailabilityTest extends TestCase
             ->assertStatus(422)->assertJsonPath('code', 'setup_incomplete');
 
         $this->product($store, ['price_minor' => 2500]);
+        // Phase B44: business information is a launch requirement too (Module 03 §25).
+        $this->assertFalse($checks['business_info']['done']);
+        $this->actingAs($owner)->putJson('/api/v1/store/settings/store.contact_email', ['value' => 'hello@example.com'])->assertOk();
         $this->actingAs($owner)->postJson('/api/v1/storefront/launch')
             ->assertOk()->assertJsonPath('data.launched', true)->assertJsonPath('data.availability', 'open');
 

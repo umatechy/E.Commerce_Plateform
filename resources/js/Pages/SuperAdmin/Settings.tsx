@@ -16,6 +16,17 @@ const INFO: Record<string, SettingInfo> = {
     warning: 'A store keeps its currency even if you remove it here; only new choices are limited.',
   },
   'platform.default_locale': { label: 'Default language', description: 'Used by a store that has not chosen its own.', itemHint: 'A language code such as en.' },
+  // Phase B44 (owner decision 13, Module 04 §14).
+  'platform.self_signup_enabled': {
+    label: 'Customers can sign up and create a store themselves',
+    description: 'When off, the sign-up page tells visitors to contact the Umar Techy team, and only the team creates stores (Stores → Create store for a customer).',
+  },
+  'platform.launch_requires_payment': {
+    label: 'A store goes live only after its first payment',
+    description: 'When on, an owner cannot launch during the trial until their first invoice is paid. They get the invoice from their setup steps; the team records the payment under Billing.',
+  },
+  'platform.trial_package': { label: 'Trial package', description: 'The package a new self-service store starts its trial on.', itemHint: 'A package code such as basic.' },
+  'platform.trial_days': { label: 'Trial length (days)', description: 'How long a new store’s trial lasts. Staff creating a store may choose another length.' },
   'platform.maintenance_mode': {
     label: 'Maintenance mode',
     description: 'Marks the platform as under maintenance.',

@@ -47,6 +47,11 @@ export default function Index() {
         description: 'When on, store credit given from now on expires after the number of days below. Credit customers already have never expires.',
         warning: 'Say so in your store policy. Customers see the date their credit expires in their account.',
       },
+      // Phase B44 (Module 03 §14, §24): business information.
+      'store.legal_name': { label: 'Business name (legal)', description: 'Your registered business name, for invoices and your policies.' },
+      'store.contact_email': { label: 'Contact email', description: 'Where customers and Umar Techy can reach your store. Needed before you launch.' },
+      'store.contact_phone': { label: 'Contact phone', description: 'For example +92 300 1234567.' },
+      'store.country': { label: 'Country', description: 'Where your business is, as a two-letter code (PK for Pakistan).' },
       'store_credit.expiry_days': {
         label: 'Store credit expires after (days)',
         description: 'Used only when “Store credit expires” is on. Counted from the day the credit is given.',

@@ -83,6 +83,32 @@ final class TenantContext
         }
     }
 
+    /**
+     * Phase B44: runs one piece of trusted platform work inside a store's
+     * context — e.g. writing a newly provisioned store's owner invitation
+     * and its email, whose tenant-scoped records must belong to that store —
+     * and puts the previous context back, whatever happens. Like
+     * asPlatform(), it grants nothing: the caller must already be
+     * authorized (a Super Admin action or the sign-up itself).
+     *
+     * @template T
+     * @param \Closure(): T $work
+     * @return T
+     */
+    public function asStore(int $storeId, \Closure $work): mixed
+    {
+        $previous = [$this->storeId, $this->platform, $this->impersonation, $this->actingSuperAdminId];
+        $this->impersonation = false;
+        $this->actingSuperAdminId = null;
+        $this->resolveToStore($storeId);
+
+        try {
+            return $work();
+        } finally {
+            [$this->storeId, $this->platform, $this->impersonation, $this->actingSuperAdminId] = $previous;
+        }
+    }
+
     public function markImpersonation(int $actingSuperAdminId, int $storeId): void
     {
         $this->impersonation = true;

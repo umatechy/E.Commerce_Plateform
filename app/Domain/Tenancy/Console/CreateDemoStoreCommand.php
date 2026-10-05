@@ -7,19 +7,15 @@ namespace App\Domain\Tenancy\Console;
 use App\Domain\Catalog\Models\Category;
 use App\Domain\Catalog\Models\Product;
 use App\Domain\Compliance\Services\AuditLogger;
-use App\Domain\Identity\Models\Role;
 use App\Domain\Identity\Models\User;
 use App\Domain\Inventory\Models\Inventory;
 use App\Domain\Inventory\Models\Warehouse;
 use App\Domain\Inventory\Services\InventoryService;
 use App\Domain\Orders\Models\Customer;
 use App\Domain\Packages\Models\Package;
-use App\Domain\Packages\Models\Subscription;
 use App\Domain\Packages\Services\EntitlementService;
-use App\Domain\Packages\Services\SubscriptionLifecycleService;
 use App\Domain\Storefront\Services\StorefrontSetupService;
 use App\Domain\Tenancy\Models\Store;
-use App\Domain\Tenancy\Models\StoreStatus;
 use App\Domain\Tenancy\Support\DemoStoreContent;
 use App\Domain\Tenancy\Support\TenantContext;
 use Illuminate\Console\Command;
@@ -92,7 +88,6 @@ final class CreateDemoStoreCommand extends Command
 
     public function handle(
         TenantContext $context,
-        SubscriptionLifecycleService $subscriptions,
         InventoryService $inventory,
         StorefrontSetupService $setup,
         EntitlementService $entitlements,
@@ -127,23 +122,19 @@ final class CreateDemoStoreCommand extends Command
         $ownerPassword = Str::password(16, symbols: false);
         $customerPassword = Str::password(16, symbols: false);
 
-        [$owner, $store] = DB::transaction(function () use ($email, $ownerPassword, $subscriptions, $package) {
+        [$owner, $store] = DB::transaction(function () use ($email, $ownerPassword, $package) {
             $owner = User::query()->create(['name' => 'Demo Owner', 'email' => $email, 'password' => $ownerPassword]);
-            $store = Store::query()->create([
-                'name' => (string) $this->option('name'),
-                'slug' => 'demo-store-'.Str::lower(Str::random(6)),
-                'status' => StoreStatus::PendingSetup,
-            ]);
-            $ownerRole = Role::query()->withoutTenantScope()->where('store_id', $store->id)->where('slug', 'owner')->firstOrFail();
-            $store->users()->attach($owner, ['role_id' => $ownerRole->id, 'status' => 'active']);
-            $subscriptions->startTrial($store);
-            Subscription::query()->withoutTenantScope()->where('store_id', $store->id)->update(['package_id' => $package->id]);
+            // Phase B44: the one store creation path (Module 03 §55); "demo-store" keeps the slug recognisable.
+            $store = app(\App\Domain\Tenancy\Services\StoreProvisioningService::class)
+                ->selfService($owner, (string) $this->option('name'), 'other', $package, 'demo-store');
 
             return [$owner, $store];
         });
         Cache::flush(); // entitlements of the new package
 
         $context->resolveToStore($store->id);
+        // Business information (a launch requirement since B44).
+        app(\App\Domain\Settings\Services\ConfigService::class)->set('store.contact_email', $email, \App\Domain\Settings\Models\SettingScope::Store, $owner->id, 'Demo store');
         $currency = (string) app(\App\Domain\Settings\Services\ConfigService::class)->get('store.default_currency');
         $warehouse = Warehouse::query()->where('is_default', true)->firstOrFail();
         $count = 0;

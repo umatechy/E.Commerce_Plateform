@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link } from '@inertiajs/react';
+import { Link, router } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { PageHeader, Card, StatCard, QueryState, EmptyPanel, UsageMeter, ErrorPanel, Skeleton } from '@/Components/ui/Page';
 import Button, { ButtonLink, FOCUS_RING } from '@/Components/ui/Button';
@@ -41,16 +41,26 @@ type Summary = {
 
 type Comparison = { current: Summary; previous: Summary; revenue_change_percent?: number | null; order_count_change_percent: number | null };
 
-type SetupCheck = { key: string; required: boolean; done: boolean; message: string };
-type Setup = { launched: boolean; availability: string; checks: SetupCheck[] };
+type SetupCheck = { key: string; group?: string; required: boolean; done: boolean; message: string };
+// Phase B44 (Module 03 §24, §57): progress, what blocks the launch, whether payment comes first.
+type Setup = { launched: boolean; availability: string; checks: SetupCheck[]; progress?: { done: number; total: number; percent: number }; blocking?: string[]; requires_payment?: boolean };
+
+const SETUP_GROUPS: Record<string, string> = { essentials: 'Essentials', operations: 'Running your store', growth: 'Growing it' };
 
 type OrderRow = { id: string; order_number: string; status: string; grand_total_minor: number; currency: string; created_at: string };
 type Health = { status: HealthStatus; checked_at: string; checks: HealthCheck[] };
 type Usage = Record<string, { limit: number | null; current: number; unlimited: boolean }>;
 
 const SETUP_LINK: Record<string, string> = {
+  business_info: '/settings',
   products: '/products',
+  categories: '/categories',
   subscription: '/billing',
+  payment: '/billing',
+  payment_methods: '/payments',
+  policies: '/content/pages',
+  test_order: '/orders/new',
+  seo: '/content/seo',
   warehouse: '/warehouses',
   shipping: '/shipping',
   branding: '/storefront/theme',
@@ -134,24 +144,62 @@ function SetupSection() {
         )
       }
     >
-      <ul className="space-y-2 text-sm">
-        {setup.checks.map((check) => (
-          <li key={check.key} className="flex flex-wrap items-center justify-between gap-2">
-            <span>
-              <span className={check.done ? 'text-green-700' : 'text-slate-500'} aria-hidden="true">
-                {check.done ? '✓' : '○'}
-              </span>{' '}
-              <span className="sr-only">{check.done ? 'Done: ' : 'To do: '}</span>
-              {check.message} {check.required ? <span className="text-xs text-slate-500">(required)</span> : <span className="text-xs text-slate-500">(optional)</span>}
-            </span>
-            {!check.done && SETUP_LINK[check.key] && (
-              <Link href={SETUP_LINK[check.key]} className={`rounded text-indigo-700 hover:underline ${FOCUS_RING}`}>
-                Open
-              </Link>
-            )}
-          </li>
-        ))}
-      </ul>
+      {setup.progress && (
+        <div className="mb-4">
+          <div className="flex justify-between text-sm">
+            <span className="font-medium">{setup.progress.percent}% done</span>
+            <span className="text-slate-600">{setup.progress.done} of {setup.progress.total} steps</span>
+          </div>
+          <div className="mt-1 h-2 rounded-full bg-slate-100" role="progressbar" aria-valuenow={setup.progress.percent} aria-valuemin={0} aria-valuemax={100} aria-label="Setup progress">
+            <div className="h-2 rounded-full bg-indigo-600" style={{ width: `${setup.progress.percent}%` }} />
+          </div>
+          {!setup.launched && (setup.blocking ?? []).length > 0 && (
+            <p className="mt-2 text-sm text-amber-800">Still needed before you can launch: {(setup.blocking ?? []).length} required step{(setup.blocking ?? []).length === 1 ? '' : 's'}.</p>
+          )}
+        </div>
+      )}
+      {Object.entries(SETUP_GROUPS).map(([group, title]) => {
+        const checks = setup.checks.filter((check) => (check.group ?? 'essentials') === group);
+        if (checks.length === 0) return null;
+
+        return (
+          <div key={group} className="mb-4 last:mb-0">
+            <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">{title}</h3>
+            <ul className="space-y-2 text-sm">
+              {checks.map((check) => (
+                <li key={check.key} className="flex flex-wrap items-center justify-between gap-2">
+                  <span>
+                    <span className={check.done ? 'text-green-700' : 'text-slate-500'} aria-hidden="true">
+                      {check.done ? '✓' : '○'}
+                    </span>{' '}
+                    <span className="sr-only">{check.done ? 'Done: ' : 'To do: '}</span>
+                    {check.message} {check.required ? <span className="text-xs text-slate-500">(required)</span> : <span className="text-xs text-slate-500">(optional)</span>}
+                  </span>
+                  {!check.done && check.key === 'payment' ? (
+                    <Button
+                      size="sm"
+                      busy={busy === 'first-invoice'}
+                      onClick={() =>
+                        run('first-invoice', () => adminFetch('/billing/first-invoice', { method: 'POST' }), { success: 'Your first invoice is ready under Billing.' }).then(
+                          (result) => result && router.visit('/billing'),
+                        )
+                      }
+                    >
+                      Get my first invoice
+                    </Button>
+                  ) : (
+                    !check.done && SETUP_LINK[check.key] && (
+                      <Link href={SETUP_LINK[check.key]} className={`rounded text-indigo-700 hover:underline ${FOCUS_RING}`}>
+                        Open
+                      </Link>
+                    )
+                  )}
+                </li>
+              ))}
+            </ul>
+          </div>
+        );
+      })}
     </Card>
   );
 }
