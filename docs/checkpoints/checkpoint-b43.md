@@ -65,4 +65,4 @@ Not built (b43-badges-and-ranking.md §5): per-category manual order;
 rating/popularity badges and sorts (no reviews yet); badge schedules and
 animation; package limits on badges (none in the specs).
 
-CI: to be verified after push.
+CI: run on a94403c (B43 code) — success, verified 2026-10-04.
