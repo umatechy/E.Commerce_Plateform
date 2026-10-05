@@ -64,6 +64,6 @@ Not built (b44-store-onboarding.md §6): starter templates (B45); online
 first payment (B48); trial abuse controls; ownership transfer; closure
 (B51).
 
-CI: to be verified after push.
+CI: the first run on bb3bf3e failed in one test (the sign-up page test needed withoutVite(); CI has no frontend build) — fixed in c21c382; run on c21c382 — success, verified 2026-10-05.
 
 Next (on the owner's word): B45 — business-category starter templates.
