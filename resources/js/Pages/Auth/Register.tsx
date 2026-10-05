@@ -20,6 +20,7 @@ export default function Register({ signupOpen = true, businessCategories = [] }:
     password_confirmation: '',
     store_name: '',
     business_category: '',
+    starter_template: '1', // '1' or '0' (the form holds text)
   });
 
   function submit(e: FormEvent) {
@@ -86,6 +87,18 @@ export default function Register({ signupOpen = true, businessCategories = [] }:
               ))}
             </select>
             {errors.business_category && <p className="mt-1 text-sm text-red-600">{errors.business_category}</p>}
+            {/* Phase B45 (Module 07 §105): start from the category's ready-made structure, or empty. */}
+            {data.business_category !== '' && (
+              <label className="mt-2 flex items-start gap-2 text-sm text-gray-700">
+                <input
+                  type="checkbox"
+                  checked={data.starter_template === '1'}
+                  onChange={(e) => setData('starter_template', e.target.checked ? '1' : '0')}
+                  className="mt-0.5 h-4 w-4 rounded border-gray-300 focus-visible:ring-2 focus-visible:ring-indigo-600"
+                />
+                <span>Set up categories and filters for what I sell (you can change everything later)</span>
+              </label>
+            )}
           </div>
         )}
 

@@ -46,7 +46,8 @@ final class AuthController
                 'password' => $request->string('password')->toString(), // hashed via cast
             ]);
 
-            $provisioning->selfService($user, $request->string('store_name')->toString(), $request->input('business_category'));
+            // Phase B45: the business category's starter template, unless the customer chose to start empty.
+            $provisioning->selfService($user, $request->string('store_name')->toString(), $request->input('business_category'), starterTemplate: $request->boolean('starter_template'));
 
             return $user;
         });

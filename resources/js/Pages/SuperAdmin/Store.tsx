@@ -57,6 +57,7 @@ type StoreDetail = {
   activated_at?: string | null;
   owner_invitation?: { email: string; expires_at: string } | null;
   setup?: { progress: { done: number; total: number; percent: number }; blocking: string[]; launched: boolean };
+  starter_templates?: { key: string; version: number; applied_at: string }[];
 };
 type Health = { status: HealthStatus; checks: HealthCheck[] };
 type Domain = { id: string; hostname: string; domain_type: string; status: string; is_primary: boolean; ssl_status: string };
@@ -193,6 +194,13 @@ export default function Store({ storeId }: { storeId: string }) {
                   </p>
                 </div>
               )}
+              {/* Phase B45: which starter template the store began from. */}
+              <p className="mt-2 text-sm text-slate-700">
+                Starter template:{' '}
+                {data.starter_templates && data.starter_templates.length > 0
+                  ? data.starter_templates.map((t) => `${(categories.data?.data ?? []).find((c) => c.value === t.key)?.label ?? t.key} (${formatDate(t.applied_at, 'UTC')})`).join(', ')
+                  : 'none — started empty'}
+              </p>
             </Card>
           )}
         </QueryState>

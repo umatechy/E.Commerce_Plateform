@@ -62,11 +62,12 @@ describe('Super Admin stores', () => {
     fireEvent.change(screen.getByLabelText('Package'), { target: { value: 'basic' } });
     fireEvent.change(screen.getByLabelText(/Trial/), { target: { value: '0' } });
     fireEvent.change(screen.getByLabelText(/Owner’s email/), { target: { value: 'ali@example.com' } });
+    fireEvent.click(screen.getByLabelText('Set it up from the starter template')); // Phase B45: on by default; this customer starts empty
     fireEvent.click(screen.getByRole('button', { name: 'Create store' }));
 
     await waitFor(() => expect(routerMock.visit).toHaveBeenCalledWith('/super-admin/stores/8'));
     expect(calls).toBe(1);
-    expect(sent!.body).toEqual({ store_name: 'Lahore Sweets', business_category: 'food', package_code: 'basic', owner_email: 'ali@example.com', trial_days: 0 });
+    expect(sent!.body).toEqual({ store_name: 'Lahore Sweets', business_category: 'food', package_code: 'basic', owner_email: 'ali@example.com', trial_days: 0, starter_template: false });
     expect(sent!.key).toMatch(/.{8,}/);
   });
 });

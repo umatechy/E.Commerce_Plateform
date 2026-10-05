@@ -4,7 +4,7 @@ import AdminPage from '@/Components/AdminPage';
 import DataTable, { Pagination, type Column } from '@/Components/ui/DataTable';
 import Button, { FOCUS_RING } from '@/Components/ui/Button';
 import Dialog from '@/Components/ui/Dialog';
-import { FormError, SelectField, TextField } from '@/Components/ui/Form';
+import { CheckboxField, FormError, SelectField, TextField } from '@/Components/ui/Form';
 import { FilterBar, SearchField } from '@/Components/ui/Filters';
 import Badge from '@/Components/ui/Badge';
 import { EmptyPanel } from '@/Components/ui/Page';
@@ -91,18 +91,18 @@ export default function Stores() {
   );
 }
 
-type Values = { store_name: string; business_category: string; package_code: string; trial_days: string; owner_email: string };
+type Values = { store_name: string; business_category: string; package_code: string; trial_days: string; owner_email: string; starter_template: boolean };
 
 function CreateStoreDialog({ categories, onClose }: { categories: Option[]; onClose: () => void }) {
   const packages = useApi<{ data: { code: string; name: string; is_active?: boolean }[] }>('/super-admin/packages');
-  const form = useForm<Values>({ store_name: '', business_category: '', package_code: '', trial_days: '', owner_email: '' });
+  const form = useForm<Values>({ store_name: '', business_category: '', package_code: '', trial_days: '', owner_email: '', starter_template: true });
   // One key per dialog: a double click or a retry never makes two stores.
   const [key] = useState(() => idempotencyKey());
   const { values: v, set } = form;
 
   async function save(event: FormEvent) {
     event.preventDefault();
-    const body = { store_name: v.store_name, business_category: v.business_category, package_code: v.package_code, owner_email: v.owner_email, trial_days: v.trial_days === '' ? null : Number(v.trial_days) };
+    const body = { store_name: v.store_name, business_category: v.business_category, package_code: v.package_code, owner_email: v.owner_email, trial_days: v.trial_days === '' ? null : Number(v.trial_days), starter_template: v.starter_template };
     const created = await form.submit(
       () => adminFetch<{ data: { id: number } }>('/super-admin/stores', { method: 'POST', body, headers: { 'Idempotency-Key': key } }),
       'Store created. The owner invitation is on its way.',
@@ -125,6 +125,13 @@ function CreateStoreDialog({ categories, onClose }: { categories: Option[]; onCl
           options={(packages.data?.data ?? []).filter((p) => p.is_active !== false).map((p) => ({ value: p.code, label: p.name }))}
         />
         <TextField label="Trial (days)" optional inputMode="numeric" value={v.trial_days} onChange={(x) => set('trial_days', x)} error={form.errors.trial_days} hint="0 to 90. Empty: the platform’s trial length. 0: the first invoice is due now." />
+        {/* Phase B45: the category's starter template — categories, filters and the suggested theme the package includes. */}
+        <CheckboxField
+          label="Set it up from the starter template"
+          checked={v.starter_template}
+          onChange={(x) => set('starter_template', x)}
+          hint="Categories, attributes and filters for what it sells, and the suggested theme the package includes. No products are added."
+        />
         <TextField label="Owner’s email" type="email" value={v.owner_email} onChange={(x) => set('owner_email', x)} error={form.errors.owner_email} required hint="They get an email to set a password, turn on two-step sign-in and take over the store." />
         <div className="flex justify-end gap-2">
           <Button onClick={onClose} disabled={form.busy}>Cancel</Button>

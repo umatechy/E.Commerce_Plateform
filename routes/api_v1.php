@@ -163,6 +163,11 @@ Route::middleware(['auth:sanctum', 'staff.principal', 'required.mfa'])->group(fu
     Route::put('/categories/{category}/attributes', [$taxonomy, 'saveCategoryAttributes']);
     Route::get('/products/{product}/specifications', [$taxonomy, 'specifications']);
     Route::put('/products/{product}/specifications', [$taxonomy, 'saveSpecifications']);
+    // Phase B45 (Module 07 §20, §105–106): starter templates for the store's business category.
+    $starter = \App\Domain\Catalog\Http\Controllers\StarterTemplateController::class;
+    Route::get('/starter-templates', [$starter, 'index']);
+    Route::get('/starter-templates/{key}', [$starter, 'show'])->where('key', '[a-z_]{1,32}');
+    Route::post('/starter-templates/{key}/apply', [$starter, 'apply'])->where('key', '[a-z_]{1,32}')->middleware('throttle:10,1,starter-template');
     // Phase B39 (gap G15): collections, tags, relations, duplicate and bulk changes.
     Route::apiResource('collections', \App\Domain\Catalog\Http\Controllers\CollectionController::class);
     Route::put('/collections/{collection}/products', [\App\Domain\Catalog\Http\Controllers\CollectionController::class, 'products']);

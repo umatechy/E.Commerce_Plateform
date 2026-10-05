@@ -60,13 +60,14 @@ final class StoreProvisioningService
      * $package and $slugBase are for platform tooling (the demo store);
      * sign-up uses the platform's trial package and the store's name.
      */
-    public function selfService(User $owner, string $storeName, ?string $businessCategory, ?Package $package = null, ?string $slugBase = null): Store
+    public function selfService(User $owner, string $storeName, ?string $businessCategory, ?Package $package = null, ?string $slugBase = null, bool $starterTemplate = false): Store
     {
-        return DB::transaction(function () use ($owner, $storeName, $businessCategory, $package, $slugBase) {
+        return DB::transaction(function () use ($owner, $storeName, $businessCategory, $package, $slugBase, $starterTemplate) {
             $store = $this->createStore($storeName, $businessCategory, self::VIA_SELF_SERVICE, $owner->id, $slugBase);
             $this->attachOwner($store, $owner);
             $this->subscriptions->startTrial($store, $package);
-            $this->record($store, $owner, ['via' => self::VIA_SELF_SERVICE]);
+            $template = $starterTemplate ? $this->applyStarterTemplate($store, $owner) : null;
+            $this->record($store, $owner, ['via' => self::VIA_SELF_SERVICE, 'starter_template' => $template]);
 
             return $store;
         });
@@ -75,7 +76,7 @@ final class StoreProvisioningService
     /**
      * Umar Techy staff create a store for a customer (Module 03 §5A, §38).
      *
-     * @param array{store_name: string, business_category: string, package_code: string, trial_days?: ?int, owner_email: string, idempotency_key?: ?string} $data
+     * @param array{store_name: string, business_category: string, package_code: string, trial_days?: ?int, owner_email: string, idempotency_key?: ?string, starter_template?: bool} $data
      */
     public function forCustomer(User $staff, array $data): Store
     {
@@ -93,7 +94,8 @@ final class StoreProvisioningService
             $this->subscriptions->startTrial($store, $package, $data['trial_days'] ?? null);
             // The invitation and its email belong to the new store.
             $this->tenant->asStore($store->id, fn () => app(StoreTeamService::class)->inviteOwner($store, $email, $staff));
-            $this->record($store, $staff, ['via' => self::VIA_PLATFORM, 'package' => $package->code, 'owner_email' => $email]);
+            $template = ($data['starter_template'] ?? false) ? $this->applyStarterTemplate($store, $staff) : null;
+            $this->record($store, $staff, ['via' => self::VIA_PLATFORM, 'package' => $package->code, 'owner_email' => $email, 'starter_template' => $template]);
 
             return $store;
         });
@@ -123,6 +125,24 @@ final class StoreProvisioningService
             'created_via' => $via,
             'created_by_user_id' => $createdBy,
         ]);
+    }
+
+    /**
+     * Phase B45 (Module 03 §58, Module 07 §105): the starter template of the
+     * store's business category — categories, attributes, filters, the
+     * suggested theme the package includes and the default order. Inside
+     * the provisioning transaction: a store is never left half dressed.
+     * Brands are left to the owner (they choose them in the catalogue).
+     */
+    private function applyStarterTemplate(Store $store, User $actor): ?string
+    {
+        $key = \App\Domain\Catalog\Support\StarterTemplates::forBusinessCategory($store->business_category);
+        if ($key !== null) {
+            $this->tenant->asStore($store->id, fn () => app(\App\Domain\Catalog\Services\StarterTemplateService::class)
+                ->apply($store, $key, $actor, ['theme' => true, 'default_sort' => true]));
+        }
+
+        return $key;
     }
 
     private function attachOwner(Store $store, User $owner): void

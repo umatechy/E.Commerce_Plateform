@@ -93,6 +93,7 @@ final class SuperAdminStoreController
             'package_code' => ['required', 'string', 'max:64'],
             'trial_days' => ['nullable', 'integer', 'min:0', 'max:90'],
             'owner_email' => ['required', 'email', 'max:191'],
+            'starter_template' => ['sometimes', 'boolean'], // Phase B45
         ]);
         $data['idempotency_key'] = (string) $request->header('Idempotency-Key', '');
 
@@ -131,6 +132,11 @@ final class SuperAdminStoreController
             'stage' => \App\Domain\Tenancy\Services\StoreLifecycle::stage($store, $subscription, $hasOwner),
             'owner_invitation' => $invitation === null ? null : ['email' => $invitation->email, 'expires_at' => $invitation->expires_at->toIso8601String()],
             'setup' => ['progress' => $setup['progress'], 'blocking' => $setup['blocking'], 'launched' => $setup['launched']],
+            // Phase B45: starter templates applied to the store, newest first.
+            'starter_templates' => \App\Domain\Catalog\Models\StarterTemplateApplication::query()->withoutTenantScope()
+                ->where('store_id', $store->id)->latest('id')->limit(5)->get()
+                ->map(fn (\App\Domain\Catalog\Models\StarterTemplateApplication $a) => ['key' => $a->template_key, 'version' => $a->template_version, 'applied_at' => $a->created_at->toIso8601String()])
+                ->values(),
         ]]);
     }
 

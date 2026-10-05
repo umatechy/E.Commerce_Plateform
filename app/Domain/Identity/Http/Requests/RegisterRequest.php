@@ -28,6 +28,8 @@ final class RegisterRequest extends FormRequest
             'store_name' => ['required', 'string', 'max:255'],
             // Phase B44: what the store sells (starter templates build on it in B45).
             'business_category' => ['nullable', 'string', \Illuminate\Validation\Rule::in(\App\Domain\Tenancy\Support\BusinessCategories::keys())],
+            // Phase B45: start from the category's starter template (Module 07 §105).
+            'starter_template' => ['sometimes', 'boolean'],
         ];
     }
 }

@@ -9,6 +9,7 @@ import { EmptyPanel } from '@/Components/ui/Page';
 import { useAccess } from '@/lib/access';
 import TranslationsPanel from '@/Components/TranslationsPanel';
 import CategoryAttributesDialog from '@/Components/Catalog/CategoryAttributesDialog';
+import StarterTemplateDialog from '@/Components/Catalog/StarterTemplateDialog';
 import { useApi } from '@/lib/useApi';
 import { useAction, useForm } from '@/lib/useForm';
 import { adminFetch } from '@/lib/adminApi';
@@ -35,6 +36,9 @@ export default function Categories() {
   // Phase B41: the attributes that apply to a category and its storefront filters.
   const [attributing, setAttributing] = useState<Category | null>(null);
   const canAttributes = canManage || access.can('attributes.manage');
+  // Phase B45 (Module 07 §105): a starter template writes categories and attributes, so it needs both.
+  const canTemplate = access.can('categories.manage') && access.can('attributes.manage');
+  const [templating, setTemplating] = useState(false);
   const form = useForm<Values>(BLANK);
   const { busy, run } = useAction();
 
@@ -108,7 +112,18 @@ export default function Categories() {
     .map(({ category, depth }) => ({ value: String(category.id), label: `${'— '.repeat(depth)}${category.name}` }));
 
   return (
-    <AdminPage title="Categories" description="How your products are grouped on the storefront." actions={canManage && <Button variant="primary" onClick={() => open('new')}>Add category</Button>}>
+    <AdminPage
+      title="Categories"
+      description="How your products are grouped on the storefront."
+      actions={
+        (canManage || canTemplate) && (
+          <>
+            {canTemplate && <Button onClick={() => setTemplating(true)}>Start from a template</Button>}
+            {canManage && <Button variant="primary" onClick={() => open('new')}>Add category</Button>}
+          </>
+        )
+      }
+    >
       <DataTable
         caption="Categories"
         columns={columns}
@@ -117,7 +132,20 @@ export default function Categories() {
         loading={list.loading}
         error={list.error}
         onRetry={list.reload}
-        empty={<EmptyPanel title="No categories yet" description="Categories help customers find products." action={canManage ? <Button variant="primary" onClick={() => open('new')}>Add category</Button> : undefined} />}
+        empty={
+          <EmptyPanel
+            title="No categories yet"
+            description="Categories help customers find products. Start with the ready-made structure for what you sell, or add your own."
+            action={
+              canManage || canTemplate ? (
+                <span className="flex flex-wrap justify-center gap-2">
+                  {canTemplate && <Button variant="primary" onClick={() => setTemplating(true)}>Start from a template</Button>}
+                  {canManage && <Button onClick={() => open('new')}>Add category</Button>}
+                </span>
+              ) : undefined
+            }
+          />
+        }
       />
 
       <Dialog open={editing !== null} title={editing === 'new' ? 'Add category' : 'Edit category'} onClose={() => setEditing(null)} busy={form.busy}>
@@ -148,6 +176,16 @@ export default function Categories() {
           </div>
         </form>
       </Dialog>
+
+      {templating && (
+        <StarterTemplateDialog
+          onClose={() => setTemplating(false)}
+          onApplied={() => {
+            setTemplating(false);
+            list.reload();
+          }}
+        />
+      )}
 
       {attributing && <CategoryAttributesDialog category={attributing} canEdit={canManage} onClose={() => setAttributing(null)} />}
 
