@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import AttributeFilters, { type FilterFacet } from '@/Components/Storefront/AttributeFilters';
 import SpecificationsCard from '@/Components/Catalog/SpecificationsCard';
+import AttributeTranslationsDialog from '@/Components/Catalog/AttributeTranslationsDialog';
 import { clearToasts } from '@/Components/ui/toast';
 import { json, owner, routeFetch, setPage } from '@/test/inertiaMock';
 
@@ -39,6 +40,33 @@ describe('AttributeFilters', () => {
     fireEvent.change(screen.getByLabelText('Screen (inch): Min'), { target: { value: '6.5' } });
     fireEvent.click(screen.getByRole('button', { name: 'Apply' }));
     expect(onChange).toHaveBeenLastCalledWith('screen', '6.5-');
+  });
+});
+
+describe('AttributeTranslationsDialog', () => {
+  it('saves the name and every value of one language together', async () => {
+    let sent: unknown = null;
+    vi.stubGlobal('fetch', routeFetch({
+      '/attributes/7/translations': () => json(200, { data: {
+        languages: [{ code: 'ur', name: 'Urdu', native: 'اردو', dir: 'rtl' }],
+        original: { name: 'Colour', values: [{ id: 70, value: 'Black', is_active: true }, { id: 71, value: 'White', is_active: false }] },
+        translations: {},
+      } }),
+      'PUT /attributes/7/translations': (_url, init) => {
+        sent = JSON.parse(String(init.body));
+
+        return json(200, { data: { languages: [], original: { name: 'Colour', values: [] }, translations: {} } });
+      },
+    }));
+    render(<AttributeTranslationsDialog attribute={{ id: 7, name: 'Colour', key: 'colour', type: 'color' }} canEdit onClose={() => undefined} />);
+
+    fireEvent.change(await screen.findByLabelText(/^Name/), { target: { value: 'رنگ' } });
+    fireEvent.change(screen.getByLabelText(/^Black/), { target: { value: 'کالا' } });
+    expect(screen.getByText('Not offered now')).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: 'Save Urdu' }));
+
+    await waitFor(() => expect(sent).not.toBeNull());
+    expect(sent).toEqual({ locale: 'ur', name: 'رنگ', values: { '70': 'کالا', '71': null } });
   });
 });
 

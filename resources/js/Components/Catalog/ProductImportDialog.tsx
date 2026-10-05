@@ -86,7 +86,8 @@ export default function ProductImportDialog({ onClose, onDone }: { onClose: () =
             A CSV file (a spreadsheet saved as CSV) whose first row names the columns. A row with an <span className="font-mono">id</span> or the{' '}
             <span className="font-mono">sku</span> of an existing product updates it — an empty cell keeps the current value; other rows add products. Variants are rows with{' '}
             <span className="font-mono">parent_sku</span> and <span className="font-mono">options</span> such as “Size: M; Colour: Red”. Lists (tags, categories) are separated by “;”. A
-            category may be a path, “Clothing &gt; Men”. Up to 2,000 rows, 4 MB. Nothing is saved until you confirm the check.
+            category may be a path, “Clothing &gt; Men”. Specifications go in <span className="font-mono">attributes</span> as “ram: 16 GB; colour: Black; features: NFC, 5G”
+            (attribute keys from Catalog → Attributes). Up to 2,000 rows, 4 MB. Nothing is saved until you confirm the check.
           </p>
           <p className="text-sm text-slate-700">Tip: export your products first — the exported file has the same columns and can be edited and imported back.</p>
           <a href={`data:text/csv;charset=utf-8,${encodeURIComponent(PRODUCT_IMPORT_TEMPLATE)}`} download="products-template.csv" className={`inline-block rounded text-sm font-medium text-indigo-700 underline ${FOCUS_RING}`}>

@@ -196,11 +196,11 @@ export type ProductImportPreview = {
 export type ProductImportResult = { created: number; updated: number; variants_created: number; variants_updated: number; skipped: { row: number; reason: string }[] };
 
 export const PRODUCT_IMPORT_TEMPLATE = [
-  'sku,name,status,visibility,price,sale_price,currency,brand,category,tags,featured,parent_sku,options',
-  'LAWN-01,Printed Lawn Suit,active,public,4500,3999,PKR,Gul Ahmed,Clothing > Women,Eid; Summer,yes,,',
-  'LAWN-01-S,,active,,4500,,,,,,,LAWN-01,Size: S',
-  'LAWN-01-M,,active,,4500,,,,,,,LAWN-01,Size: M',
-  'ATR-12,Rose Attar 12 ml,draft,public,1200,,PKR,,Fragrance,,no,,',
+  'sku,name,status,visibility,price,sale_price,currency,brand,category,tags,featured,parent_sku,options,attributes',
+  'LAWN-01,Printed Lawn Suit,active,public,4500,3999,PKR,Gul Ahmed,Clothing > Women,Eid; Summer,yes,,,',
+  'LAWN-01-S,,active,,4500,,,,,,,LAWN-01,Size: S,',
+  'LAWN-01-M,,active,,4500,,,,,,,LAWN-01,Size: M,',
+  'ATR-12,Rose Attar 12 ml,draft,public,1200,,PKR,,Fragrance,,no,,,',
 ].join('\n');
 
 /* Phase B41 (Module 07 §18–19, §41–49): attribute sets, category attributes, specifications. */

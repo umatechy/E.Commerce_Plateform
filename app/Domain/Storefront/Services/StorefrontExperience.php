@@ -268,17 +268,18 @@ final class StorefrontExperience
     private function presentFilters(array $attributes, array $search): array
     {
         $facets = $this->catalog()->attributeFacets($search, $attributes);
+        $this->presenter->primeAttributes($attributes); // Phase B42: names and values in the visitor's language
         $chosen = (array) ($search['attributes'] ?? []);
         $out = [];
         foreach ($attributes as $attribute) {
             $facet = $facets[$attribute->id] ?? [];
             $selected = $chosen[$attribute->id] ?? null;
             $picked = (array) ($selected['values'] ?? []);
-            $entry = ['key' => $attribute->key, 'name' => $attribute->name, 'type' => $attribute->type->value, 'unit' => $attribute->unit];
+            $entry = ['key' => $attribute->key, 'name' => $this->presenter->attributeName($attribute), 'type' => $attribute->type->value, 'unit' => $attribute->unit];
             if ($attribute->type->hasValues()) {
                 $entry['options'] = $attribute->values
                     ->filter(fn ($v) => $v->is_active && (($facet['counts'][$v->id] ?? 0) > 0 || in_array($v->id, $picked, true)))
-                    ->map(fn ($v) => ['slug' => $v->slug, 'value' => $v->value, 'color_code' => $v->color_code, 'count' => $facet['counts'][$v->id] ?? 0, 'selected' => in_array($v->id, $picked, true)])
+                    ->map(fn ($v) => ['slug' => $v->slug, 'value' => $this->presenter->attributeValue($v), 'color_code' => $v->color_code, 'count' => $facet['counts'][$v->id] ?? 0, 'selected' => in_array($v->id, $picked, true)])
                     ->values()->all();
                 if ($entry['options'] === []) {
                     continue; // nothing to choose: no empty filter (§77)
@@ -315,6 +316,7 @@ final class StorefrontExperience
             ->filter(fn ($row) => $row->attribute !== null && $row->attribute->is_active && ($row->attribute_value_id === null || ($row->choice !== null && $row->choice->is_active)))
             ->groupBy('attribute_id')
             ->sortBy(fn ($group) => sprintf('%08d|%s', $group->first()->attribute->sort_order, mb_strtolower($group->first()->attribute->name)));
+        $this->presenter->primeAttributes($rows->map(fn ($group) => $group->first()->attribute->setRelation('values', $group->pluck('choice')->filter()->values()))->values());
 
         $out = [];
         foreach ($rows as $group) {
@@ -324,12 +326,12 @@ final class StorefrontExperience
                 \App\Domain\Catalog\Models\AttributeType::Numeric => rtrim(rtrim(number_format((float) $first->number_value, 4, '.', ''), '0'), '.').($attribute->unit ? ' '.$attribute->unit : ''),
                 \App\Domain\Catalog\Models\AttributeType::Boolean => $first->bool_value ? 'yes' : 'no',
                 \App\Domain\Catalog\Models\AttributeType::Text => (string) $first->text_value,
-                default => $group->sortBy(fn ($row) => $row->choice->sort_order)->map(fn ($row) => $row->choice->value)->implode(', '),
+                default => $group->sortBy(fn ($row) => $row->choice->sort_order)->map(fn ($row) => $this->presenter->attributeValue($row->choice))->implode(', '),
             };
             $colors = $attribute->type === \App\Domain\Catalog\Models\AttributeType::Color
-                ? $group->filter(fn ($row) => $row->choice->color_code !== null)->map(fn ($row) => ['name' => $row->choice->value, 'code' => (string) $row->choice->color_code])->values()->all()
+                ? $group->filter(fn ($row) => $row->choice->color_code !== null)->map(fn ($row) => ['name' => $this->presenter->attributeValue($row->choice), 'code' => (string) $row->choice->color_code])->values()->all()
                 : [];
-            $out[] = ['name' => $attribute->name, 'group' => $attribute->group, 'value' => $value, 'colors' => $colors];
+            $out[] = ['name' => $this->presenter->attributeName($attribute), 'group' => $attribute->group, 'value' => $value, 'colors' => $colors];
         }
 
         return $out;

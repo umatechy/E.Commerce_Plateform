@@ -33,7 +33,7 @@ final class ProductExport
         $withCost = Gate::forUser($actor)->allows('viewCostPrices', Product::class);
         $header = array_values(array_filter(ProductImport::COLUMNS, fn ($c) => $withCost || $c !== 'cost_price'));
         $query = Product::query()
-            ->with(['brand', 'primaryCategory', 'categories', 'tags', 'collections', 'images', 'variants' => fn ($q) => $q->orderBy('id')])
+            ->with(['brand', 'primaryCategory', 'categories', 'tags', 'collections', 'images', 'variants' => fn ($q) => $q->orderBy('id'), 'attributeValues.attribute', 'attributeValues.choice'])
             ->when($filters['search'] ?? null, function ($q, string $search) {
                 $like = '%'.addcslashes($search, '%_\\').'%';
                 $q->where(fn ($w) => $w->where('name', 'like', $like)->orWhere('sku', 'like', $like));
@@ -69,6 +69,7 @@ final class ProductExport
                         'collections' => $product->collections->pluck('name')->implode('; '),
                         'featured' => $product->is_featured ? 'yes' : 'no',
                         'image_urls' => $product->images->map(fn ($image) => $image->url())->implode('; '),
+                        'attributes' => self::attributes($product),
                     ]);
                     foreach ($product->variants as $variant) {
                         $this->line($out, $header, [
@@ -114,6 +115,24 @@ final class ProductExport
         }
 
         return $paths;
+    }
+
+    /** Phase B42: the product's specifications in the import's "key: value; …" form. */
+    private static function attributes(Product $product): string
+    {
+        return $product->attributeValues->filter(fn ($row) => $row->attribute !== null)->groupBy('attribute_id')
+            ->map(function ($group) {
+                $attribute = $group->first()->attribute;
+                $first = $group->first();
+                $value = match ($attribute->type) {
+                    \App\Domain\Catalog\Models\AttributeType::Numeric => rtrim(rtrim(number_format((float) $first->number_value, 4, '.', ''), '0'), '.'),
+                    \App\Domain\Catalog\Models\AttributeType::Boolean => $first->bool_value ? 'yes' : 'no',
+                    \App\Domain\Catalog\Models\AttributeType::Text => str_replace([';', '|'], ',', (string) $first->text_value),
+                    default => $group->map(fn ($row) => $row->choice?->value)->filter()->implode(', '),
+                };
+
+                return "{$attribute->key}: {$value}";
+            })->values()->implode('; ');
     }
 
     /** @return list<string> statuses accepted as an export filter */

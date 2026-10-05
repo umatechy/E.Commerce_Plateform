@@ -151,6 +151,9 @@ Route::middleware(['auth:sanctum', 'staff.principal', 'required.mfa'])->group(fu
     // Phase B41 (Module 07 §18–19, §27–45): attributes, sets, category attributes, specifications.
     $taxonomy = \App\Domain\Catalog\Http\Controllers\TaxonomyController::class;
     Route::put('/attributes/{attribute}', [$taxonomy, 'updateAttribute']);
+    // Phase B42 (Module 07 §38): an attribute's name and values in other languages, together.
+    Route::get('/attributes/{attribute}/translations', [\App\Domain\Catalog\Http\Controllers\AttributeTranslationController::class, 'show']);
+    Route::put('/attributes/{attribute}/translations', [\App\Domain\Catalog\Http\Controllers\AttributeTranslationController::class, 'update'])->middleware('throttle:60,1,translations');
     Route::get('/attribute-sets', [$taxonomy, 'sets']);
     Route::post('/attribute-sets', [$taxonomy, 'saveSet']);
     Route::put('/attribute-sets/{set}', [$taxonomy, 'updateSet']);

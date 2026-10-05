@@ -74,6 +74,32 @@ final class StorefrontPresenter
         $this->translations()->prime('brand', $list->pluck('brand_id')->filter()->unique()->all(), $this->locale()->current());
     }
 
+    /**
+     * Phase B42 (Module 07 §38): loads the translations of these attributes
+     * and their values with two queries, before they are shown.
+     *
+     * @param iterable<\App\Domain\Catalog\Models\Attribute> $attributes
+     */
+    public function primeAttributes(iterable $attributes): void
+    {
+        if ($this->locale()->isDefault()) {
+            return;
+        }
+        $list = collect($attributes);
+        $this->translations()->prime('attribute', $list->pluck('id')->all(), $this->locale()->current());
+        $this->translations()->prime('attribute_value', $list->flatMap(fn ($a) => $a->values->pluck('id'))->all(), $this->locale()->current());
+    }
+
+    public function attributeName(\App\Domain\Catalog\Models\Attribute $attribute): string
+    {
+        return (string) $this->tr('attribute', $attribute->id, 'name', $attribute->name);
+    }
+
+    public function attributeValue(\App\Domain\Catalog\Models\AttributeValue $value): string
+    {
+        return (string) $this->tr('attribute_value', $value->id, 'value', $value->value);
+    }
+
     public function currency(): string
     {
         return (string) $this->config->get('store.default_currency');

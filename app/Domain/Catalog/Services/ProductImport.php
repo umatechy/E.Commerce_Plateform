@@ -62,6 +62,7 @@ final class ProductImport
         'id', 'sku', 'name', 'type', 'status', 'visibility', 'short_description', 'description',
         'price', 'sale_price', 'cost_price', 'currency', 'brand', 'category', 'categories', 'tags', 'collections', 'featured',
         'parent_sku', 'parent_id', 'options', 'barcode', 'image_urls',
+        'attributes', // Phase B42: "key: value; key: value, value" (specifications)
     ];
 
     private const TYPES = ['simple', 'variable', 'digital', 'service', 'bundle'];
@@ -100,6 +101,8 @@ final class ProductImport
         $collections = Collection::query()->get()->keyBy(fn (Collection $c) => mb_strtolower($c->name));
         $brands = Brand::query()->pluck('name')->map(fn ($n) => mb_strtolower((string) $n))->flip();
         $categoryPaths = $this->categoryPaths();
+        $attributeIndex = \App\Domain\Catalog\Models\Attribute::query()->with('values')->get()
+            ->keyBy(fn (\App\Domain\Catalog\Models\Attribute $a) => mb_strtolower($a->key));
 
         $plan = [];
         $report = [];
@@ -139,6 +142,7 @@ final class ProductImport
                     'tags' => $this->list($r['tags'] ?? ''),
                     'collections' => $this->list($r['collections'] ?? ''),
                     'featured' => $this->flag($r['featured'] ?? '', $messages),
+                    'attributes' => $this->attributesCell($r['attributes'] ?? '', $attributeIndex, $messages),
                 ];
                 $this->checkSale($row, $messages, $row['action'] === 'update' ? Product::query()->find($row['product_id'] ?? 0)?->price_minor : null);
                 if (count($row['tags']) > ProductTagService::MAX_PER_PRODUCT || array_filter($row['tags'], fn ($t) => mb_strlen($t) > 60) !== []) {
@@ -238,6 +242,9 @@ final class ProductImport
                     $result['skipped'][] = ['row' => (int) $row['row'], 'reason' => $e->getMessage()];
                 } catch (\Illuminate\Database\UniqueConstraintViolationException) {
                     $result['skipped'][] = ['row' => (int) $row['row'], 'reason' => 'The SKU was taken by another product since the preview.'];
+                } catch (\Illuminate\Validation\ValidationException $e) {
+                    // e.g. a specification the category requires is missing (Phase B42); the whole row is undone.
+                    $result['skipped'][] = ['row' => (int) $row['row'], 'reason' => (string) collect($e->errors())->flatten()->first()];
                 }
             }
         }
@@ -463,6 +470,15 @@ final class ProductImport
         if ($categoryIds !== []) {
             $product->categories()->syncWithoutDetaching($categoryIds);
         }
+        if (($row['attributes'] ?? []) !== []) {
+            // Phase B42: the listed attributes are set; the product's other specifications stay.
+            $specs = app(ProductSpecifications::class);
+            $merged = collect($specs->values($product))->keyBy('attribute_id');
+            foreach ($row['attributes'] as $attributeId => $value) {
+                $merged[(int) $attributeId] = ['attribute_id' => (int) $attributeId, 'value' => $value];
+            }
+            $specs->save($product, $merged->values()->all(), $actor);
+        }
         if ($row['tags'] !== []) {
             $this->tags->sync($product, $row['tags']);
         }
@@ -658,6 +674,60 @@ final class ProductImport
         }
 
         return count($out) > 5 ? null : $out;
+    }
+
+    /**
+     * Phase B42: "ram: 16 GB; colour: Black; features: NFC, 5G; screen: 6.1;
+     * waterproof: yes" → attribute id => value as ProductSpecifications takes
+     * it. Attributes by key (or name), values by their text or slug; inactive
+     * values are refused like in the admin.
+     *
+     * @param \Illuminate\Support\Collection<string, \App\Domain\Catalog\Models\Attribute> $index
+     * @param list<string> $messages
+     * @return array<int, mixed>
+     */
+    private function attributesCell(string $value, $index, array &$messages): array
+    {
+        $out = [];
+        foreach ($this->list($value) as $pair) {
+            $parts = array_map('trim', explode(':', $pair, 2));
+            if (count($parts) !== 2 || $parts[0] === '' || $parts[1] === '') {
+                $messages[] = "The attribute \"{$pair}\" is not written as \"key: value\".";
+
+                continue;
+            }
+            $attribute = $index->get(mb_strtolower($parts[0])) ?? $index->first(fn ($a) => mb_strtolower($a->name) === mb_strtolower($parts[0]));
+            if ($attribute === null) {
+                $messages[] = "There is no attribute \"{$parts[0]}\".";
+
+                continue;
+            }
+            $find = function (string $text) use ($attribute, &$messages): ?int {
+                $needle = mb_strtolower(trim($text));
+                $found = $attribute->values->first(fn ($v) => $v->normalized_value === $needle || $v->slug === $needle);
+                if ($found === null || ! $found->is_active) {
+                    $messages[] = "\"{$text}\" is not a value of {$attribute->name}.";
+
+                    return null;
+                }
+
+                return $found->id;
+            };
+            $raw = $parts[1];
+            $out[$attribute->id] = match ($attribute->type) {
+                \App\Domain\Catalog\Models\AttributeType::MultiSelect => array_values(array_filter(array_map($find, explode(',', $raw)), fn ($id) => $id !== null)),
+                \App\Domain\Catalog\Models\AttributeType::Select, \App\Domain\Catalog\Models\AttributeType::Color => $find($raw),
+                \App\Domain\Catalog\Models\AttributeType::Numeric => is_numeric($raw) ? (float) $raw : (function () use ($attribute, $raw, &$messages) {
+                    $messages[] = "{$attribute->name}: \"{$raw}\" is not a number.";
+
+                    return null;
+                })(),
+                \App\Domain\Catalog\Models\AttributeType::Boolean => $this->flag($raw, $messages),
+                \App\Domain\Catalog\Models\AttributeType::Text => mb_substr($raw, 0, 500),
+            };
+        }
+
+        return array_filter($out, fn ($v) => $v !== null && $v !== []);
     }
 
     /** @return list<string> a list cell, separated by ; or | */

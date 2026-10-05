@@ -12,6 +12,7 @@ import { useAction, useForm } from '@/lib/useForm';
 import { adminFetch } from '@/lib/adminApi';
 import { options } from '@/lib/labels';
 import { ATTRIBUTE_TYPES, hasValues, type Attribute, type AttributeSet } from '@/lib/catalog';
+import AttributeTranslationsDialog from '@/Components/Catalog/AttributeTranslationsDialog';
 
 /**
  * Module 07 "Attribute Management" (/api/v1/attributes). Phase B41: an
@@ -40,6 +41,8 @@ export default function Attributes() {
   const [editing, setEditing] = useState<Attribute | 'new' | null>(null);
   const [editingSet, setEditingSet] = useState<AttributeSet | 'new' | null>(null);
   const [removing, setRemoving] = useState<Attribute | null>(null);
+  // Phase B42: the attribute's name and values in other storefront languages.
+  const [translating, setTranslating] = useState<Attribute | null>(null);
   const { busy, run } = useAction();
   const attributes = list.data?.data ?? [];
 
@@ -77,6 +80,7 @@ export default function Attributes() {
         canManage && (
           <span className="flex justify-end gap-1">
             <Button size="sm" variant="ghost" onClick={() => setEditing(attribute)}>Edit<span className="sr-only"> {attribute.name}</span></Button>
+            <Button size="sm" variant="ghost" onClick={() => setTranslating(attribute)}>Translate<span className="sr-only"> {attribute.name}</span></Button>
             <Button size="sm" variant="ghost" onClick={() => setRemoving(attribute)}>Delete<span className="sr-only"> {attribute.name}</span></Button>
           </span>
         ),
@@ -133,6 +137,7 @@ export default function Attributes() {
       </div>
 
       {editing !== null && <AttributeDialog attribute={editing === 'new' ? null : editing} onClose={() => setEditing(null)} onSaved={() => { setEditing(null); list.reload(); }} />}
+      {translating !== null && <AttributeTranslationsDialog attribute={translating} canEdit={canManage} onClose={() => setTranslating(null)} />}
       {editingSet !== null && <SetDialog set={editingSet === 'new' ? null : editingSet} attributes={attributes} onClose={() => setEditingSet(null)} onSaved={() => { setEditingSet(null); sets.reload(); }} />}
 
       <ConfirmDialog

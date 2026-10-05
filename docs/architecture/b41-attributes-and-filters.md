@@ -78,9 +78,9 @@ including another store's. It is now **request-scoped** and resolved per call
 - Package limits and "advanced filtering" by package (§51–52): the specs give
   no values ("exact limits must be finalized with Module 04"). Not invented;
   filters are available to every package.
-- Attribute and value **translations** (§38) — the identifiers are stable, but
-  names and values show in the original language on Urdu pages.
-- Attributes in the CSV import/export (§48), category templates (§20), date and
+- ~~Attribute and value translations (§38)~~ and ~~attributes in the CSV~~ —
+  built in B42 (checkpoint-b42).
+- Category templates (§20), date and
   currency types (§29 future), unit conversion (§34), display modes per
   attribute (§46: list only), filters on search and all-products pages.
 - Facets run one count query per filter attribute; fine for the current catalog

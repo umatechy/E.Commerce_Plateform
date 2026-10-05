@@ -92,6 +92,12 @@ final class Product extends Model
     }
 
     /** @return HasMany<ProductRelation, $this> Phase B39 (Module 06 §38) */
+    /** @return HasMany<ProductAttributeValue, $this> Phase B41: specifications (written by ProductSpecifications) */
+    public function attributeValues(): HasMany
+    {
+        return $this->hasMany(ProductAttributeValue::class)->orderBy('id');
+    }
+
     // Not relations(): Eloquent keeps a model's loaded relations in $relations.
     public function productRelations(): HasMany
     {

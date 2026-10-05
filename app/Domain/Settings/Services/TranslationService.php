@@ -26,6 +26,9 @@ final class TranslationService
         'category' => ['name' => 255, 'description' => 5000],
         'brand' => ['name' => 255, 'description' => 5000],
         'collection' => ['name' => 120, 'description' => 2000], // Phase B39
+        // Phase B42 (Module 07 §38): saved through AttributeTranslationController, which checks the attribute.
+        'attribute' => ['name' => 255],
+        'attribute_value' => ['value' => 255],
     ];
 
     /** @var array<string, array<int, array<string, string>>> "type:locale" => id => field => value */
