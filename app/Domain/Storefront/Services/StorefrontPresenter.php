@@ -105,7 +105,6 @@ final class StorefrontPresenter
         return (string) $this->config->get('store.default_currency');
     }
 
-    /** @return array<string, mixed> */
     /**
      * Cards for a list of products, translations loaded in one go (Phase B38).
      *
@@ -117,10 +116,17 @@ final class StorefrontPresenter
         $list = collect($products);
         $this->primeProducts($list);
 
-        return $list->map(fn (Product $product) => $this->card($product))->values()->all();
+        // Phase B43: the badges of the whole list in one go.
+        $badges = app(ProductBadges::class)->forProducts($list);
+
+        return $list->map(fn (Product $product) => $this->card($product, $badges[$product->id] ?? []))->values()->all();
     }
 
-    public function card(Product $product): array
+    /**
+     * @param list<array<string, mixed>> $badges Phase B43: worked out by ProductBadges for the list
+     * @return array<string, mixed>
+     */
+    public function card(Product $product, array $badges = []): array
     {
         $from = $this->int($product->getAttribute('price_from_minor'));
         $to = $this->int($product->getAttribute('price_to_minor'));
@@ -147,6 +153,8 @@ final class StorefrontPresenter
             // A product with variants is chosen on its page; one without can go to the cart from the card.
             'has_variants' => (bool) $product->getAttribute('has_variants'),
             'in_stock' => (bool) $product->getAttribute('in_stock'),
+            // Phase B43 (Module 06 §36): {type, label (own badges only), tone, percent?}, in order.
+            'badges' => $badges,
         ];
     }
 
@@ -178,7 +186,7 @@ final class StorefrontPresenter
         $ownAvailability = $variants->isEmpty() ? $this->availability($this->catalog()->stockLevel($product->id, null), $store) : null;
 
         return [
-            ...$this->card($product),
+            ...$this->card($product, app(ProductBadges::class)->forProducts([$product])[$product->id] ?? []),
             'sku' => $product->sku,
             'description_html' => ($description = $this->tr('product', $product->id, 'description', $product->description)) !== null ? $this->sanitizer->sanitize($description) : null,
             'images' => $product->images->map(fn (ProductImage $image) => $this->image($image))->values()->all(),

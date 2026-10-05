@@ -36,7 +36,7 @@ final class Collection extends Model
     use BelongsToTenant, HasPublicId, SoftDeletes;
 
     public const TYPES = ['manual', 'rule'];
-    public const SORTS = ['manual', 'newest', 'price_asc', 'price_desc', 'name', 'best_selling'];
+    public const SORTS = ['manual', 'featured', 'newest', 'price_asc', 'price_desc', 'name', 'best_selling']; // featured: Phase B43
 
     protected $attributes = ['type' => 'manual', 'match' => 'all', 'sort' => 'manual', 'status' => 'active', 'is_visible' => true, 'sort_order' => 0];
 

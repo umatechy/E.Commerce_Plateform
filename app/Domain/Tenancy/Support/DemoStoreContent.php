@@ -304,4 +304,27 @@ final class DemoStoreContent
             $translations->save('category', $category->id, 'ur', ['name' => $name, 'description' => $description], $userId ?: null);
         }
     }
+
+    /**
+     * Phase B43: featured products with sort priorities, two badges of the
+     * store's own (with their Urdu labels) and "featured first" as the
+     * listing order — so the demo shows badges and merchandising at work.
+     * Safe to run again.
+     */
+    public function dressMerchandising(int $userId): void
+    {
+        $products = \App\Domain\Catalog\Models\Product::query()->whereIn('sku', ['DEMO-ATR-001', 'DEMO-MCL-004', 'DEMO-HOM-001'])->get()->keyBy('sku');
+        foreach (['DEMO-ATR-001' => 30, 'DEMO-MCL-004' => 20, 'DEMO-HOM-001' => 10] as $sku => $priority) {
+            $products->get($sku)?->update(['is_featured' => true, 'sort_priority' => $priority]);
+        }
+        $translations = app(\App\Domain\Settings\Services\TranslationService::class);
+        foreach ([['Handmade', 'success', 95, 'ہاتھ سے بنا', 'DEMO-MCL-004'], ['Eid special', 'accent', 55, 'عید اسپیشل', 'DEMO-ATR-005']] as [$label, $tone, $priority, $urdu, $sku]) {
+            $badge = \App\Domain\Catalog\Models\Badge::query()->firstOrCreate(['label' => $label], ['tone' => $tone, 'priority' => $priority]);
+            $translations->save('badge', $badge->id, 'ur', ['label' => $urdu], $userId ?: null);
+            $product = \App\Domain\Catalog\Models\Product::query()->where('sku', $sku)->first();
+            $product?->badges()->syncWithoutDetaching([$badge->id]);
+            $product?->touch();
+        }
+        app(\App\Domain\Settings\Services\ConfigService::class)->set('catalog.default_sort', 'featured', \App\Domain\Settings\Models\SettingScope::Store, $userId ?: null, 'Demo store: featured first');
+    }
 }

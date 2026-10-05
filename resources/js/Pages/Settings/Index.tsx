@@ -65,6 +65,29 @@ export default function Index() {
         itemHint: 'en = English, ur = Urdu (اردو, right to left).',
         warning: 'It must be one of the storefront languages below. Product names you have not translated are shown in the original.',
       },
+      // Phase B43 (Module 05 §19, Module 06 §36–37).
+      'catalog.default_sort': {
+        label: 'Default product order',
+        description: 'The order product lists open in. A category can choose its own; shoppers can always pick another.',
+        choices: ['featured', 'newest', 'best_selling', 'price_asc', 'price_desc', 'name'],
+        itemHint: 'featured = featured products first, then higher sort priority, then newest. best_selling = most units sold.',
+      },
+      'catalog.featured_in_search': {
+        label: 'Lift featured products in search',
+        description: 'Among products that match a search equally well, featured and higher-priority products come first. A better match always comes before a featured one.',
+      },
+      'badges.new': { label: 'Badge: New', description: 'On products published within the number of days below.' },
+      'badges.new_days': { label: 'New for (days)', description: 'How long a product shows the “New” badge after it is published.' },
+      'badges.sale': { label: 'Badge: Sale', description: 'On products with a sale price.' },
+      'badges.sale_percent': { label: 'Show the percent off', description: 'Shows “25% off” instead of “Sale” when the product has one price.' },
+      'badges.bestseller': { label: 'Badge: Bestseller', description: 'On your top sellers (units sold on orders that count) of the last days below.' },
+      'badges.bestseller_count': { label: 'Bestsellers: how many products', description: 'The number of top-selling products that show the badge.' },
+      'badges.bestseller_days': { label: 'Bestsellers: over the last (days)', description: 'The period sales are counted over.' },
+      'badges.low_stock': { label: 'Badge: Only a few left', description: 'On products whose stock is at or under the number below. Off by default: it shows shoppers that stock is low.' },
+      'badges.low_stock_threshold': { label: 'Only a few left: at or under (units)', description: 'Counted in your default warehouse. Products whose stock you do not track never show it.' },
+      'badges.featured': { label: 'Badge: Featured', description: 'On products you mark as featured.' },
+      'badges.out_of_stock': { label: 'Badge: Sold out', description: 'On products that cannot be bought now.' },
+      'badges.max_per_product': { label: 'Badges per product (most)', description: 'How many badges a card or product page shows at most; the highest priority ones are kept.' },
       // Phase B38 (Module 05 §41).
       'store.languages': {
         label: 'Storefront languages',

@@ -21,17 +21,28 @@ type Context =
 type Props = StorefrontPageProps & {
   context: Context;
   filters: Filters;
-  listing: { products: ProductCard[]; pagination: { page: number; per_page: number; total: number; last_page: number }; filters?: FilterFacet[] };
+  listing: { products: ProductCard[]; pagination: { page: number; per_page: number; total: number; last_page: number }; filters?: FilterFacet[]; sort?: string };
   facets: { categories: CategoryNode[]; brands: { slug: string; name: string }[] };
 };
 
-const SORTS = ['newest', 'price_asc', 'price_desc', 'name'] as const;
+// Phase B43 (Module 05 §19): featured (the store's merchandising order) and best selling join; relevance on
+// searches, the collection's own order on collection pages.
+const SORTS = ['featured', 'newest', 'best_selling', 'price_asc', 'price_desc', 'name', 'relevance', 'manual'] as const;
 
 /** Listing for all products, search results, a category or a brand. */
 export default function Catalog({ storefront, seo, context, filters, listing, facets }: Props) {
   const base = storefront.base_path;
   const t = useT();
-  const sortLabel: Record<(typeof SORTS)[number], string> = { newest: t('Newest'), price_asc: t('Price: low to high'), price_desc: t('Price: high to low'), name: t('Name') };
+  const sortLabel: Record<(typeof SORTS)[number], string> = {
+    featured: t('Featured'),
+    newest: t('Newest'),
+    best_selling: t('Best selling'),
+    price_asc: t('Price: low to high'),
+    price_desc: t('Price: high to low'),
+    name: t('Name'),
+    relevance: t('Most relevant'),
+    manual: t('Recommended'),
+  };
   // Phase B38: the page's own titles in the visitor's language; category and brand names come translated from the server.
   const title = context.type === 'search' ? (filters.q ? t('Results for “{q}”', { q: filters.q }) : t('Search results')) : context.type === 'all' ? t('All products') : context.title;
   const path =
@@ -75,6 +86,14 @@ export default function Catalog({ storefront, seo, context, filters, listing, fa
     const toMinor = (value: string) => (value === '' ? undefined : Math.round(Number(value) * 10 ** digits));
     visit({ min_price: toMinor(minPrice), max_price: toMinor(maxPrice) });
   }
+
+  // The order shown: the shopper's choice, or the page's default (category, collection, store or relevance).
+  const currentSort = filters.sort ?? listing.sort ?? 'newest';
+  const sortChoices = SORTS.filter(
+    (value) =>
+      (value !== 'relevance' || context.type === 'search' || Boolean(filters.q) || currentSort === value) &&
+      (value !== 'manual' || context.type === 'collection' || currentSort === value),
+  );
 
   const pageHref = (page: number) => `${path}?${new URLSearchParams({ ...(query as Record<string, string>), page: String(page) }).toString()}`;
 
@@ -161,12 +180,12 @@ export default function Catalog({ storefront, seo, context, filters, listing, fa
         <div>
           <div className="mb-4 flex justify-end">
             <select
-              value={filters.sort ?? 'newest'}
-              onChange={(e) => visit({ sort: e.target.value === 'newest' ? undefined : e.target.value })}
+              value={currentSort}
+              onChange={(e) => visit({ sort: e.target.value })}
               className="rounded-sf border border-sf-border px-2 py-1 text-sm"
               aria-label={t('Sort by')}
             >
-              {SORTS.map((value) => (
+              {sortChoices.map((value) => (
                 <option key={value} value={value}>
                   {sortLabel[value]}
                 </option>

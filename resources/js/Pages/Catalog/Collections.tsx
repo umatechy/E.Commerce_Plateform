@@ -39,7 +39,7 @@ const RULE_LABELS: Record<RuleField, string> = {
 };
 
 const SORT_LABELS: Record<(typeof COLLECTION_SORTS)[number], string> = {
-  manual: 'Your order (hand-picked only)', newest: 'Newest first', price_asc: 'Price, low to high', price_desc: 'Price, high to low', name: 'Name, A to Z', best_selling: 'Best selling',
+  manual: 'Your order (hand-picked only)', featured: 'Featured first, then sort priority', newest: 'Newest first', price_asc: 'Price, low to high', price_desc: 'Price, high to low', name: 'Name, A to Z', best_selling: 'Best selling',
 };
 
 type Values = {

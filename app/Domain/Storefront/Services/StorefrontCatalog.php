@@ -38,10 +38,11 @@ use Illuminate\Support\Facades\DB;
  */
 final class StorefrontCatalog
 {
-    public const SORTS = ['newest', 'price_asc', 'price_desc', 'name'];
+    /** Phase B43: featured (merchandising order), best selling and relevance (search) join the list. */
+    public const SORTS = ['newest', 'featured', 'best_selling', 'price_asc', 'price_desc', 'name', 'relevance'];
 
     /** Phase B39: a collection page may also follow its own order, or best sellers. */
-    public const COLLECTION_SORTS = [...self::SORTS, 'manual', 'best_selling'];
+    public const COLLECTION_SORTS = [...self::SORTS, 'manual'];
 
     public const BROWSE_VISIBILITY = [ProductVisibility::Public, ProductVisibility::CatalogOnly];
 
@@ -55,11 +56,14 @@ final class StorefrontCatalog
 
     private bool $warehouseResolved = false;
 
+    /** @var array<string, list<int>> Phase B43: bestseller ids per "count:days" */
+    private array $bestsellers = [];
+
     /** @var ?Collection<int, Category> */
     private ?Collection $categories = null;
 
     /**
-     * @param array{q?: ?string, category?: ?string, brand?: ?string, min_price?: ?int, max_price?: ?int, in_stock?: ?bool, collection?: ?string, tag?: ?string, attributes?: array<int, array<string, mixed>>, sort?: ?string, page?: ?int, per_page?: ?int} $filters
+     * @param array{q?: ?string, category?: ?string, brand?: ?string, min_price?: ?int, max_price?: ?int, in_stock?: ?bool, collection?: ?string, tag?: ?string, attributes?: array<int, array<string, mixed>>, default_sort?: ?string, featured_boost?: bool, sort?: ?string, page?: ?int, per_page?: ?int} $filters
      * @return LengthAwarePaginator<int, Product>
      */
     public function search(array $filters): LengthAwarePaginator
@@ -68,8 +72,7 @@ final class StorefrontCatalog
         [$query, $collection] = $this->filtered($filters);
         $query = $this->withPricing($query)->with(['brand', 'images']);
 
-        // A collection page without a chosen sort follows the collection's own order.
-        $sort = $filters['sort'] ?? ($collection !== null ? $collection->sort : 'newest');
+        $sort = self::effectiveSort($filters, $collection);
         if ($sort === 'manual' && $collection !== null && $collection->type === 'manual') {
             $query->leftJoin('collection_product as cp_order', fn ($j) => $j->on('cp_order.product_id', '=', 'products.id')->where('cp_order.collection_id', '=', $collection->id))
                 ->orderBy('cp_order.position')->orderByDesc('products.id');
@@ -84,14 +87,125 @@ final class StorefrontCatalog
             'price_asc' => $query->orderBy('price_from_minor')->orderBy('products.id'),
             'price_desc' => $query->orderByDesc('price_from_minor')->orderByDesc('products.id'),
             'name' => $query->orderBy('products.name')->orderBy('products.id'),
-            default => $q !== ''
-                ? $query->orderByRaw('products.name LIKE ? DESC', [addcslashes($q, '%_\\').'%'])->orderByDesc('products.id')
-                : $query->orderByRaw('COALESCE(products.published_at, products.created_at) DESC')->orderByDesc('products.id'),
+            'featured' => $this->merchandisingOrder($query),
+            // Phase B43 (Module 06 §37): name matches first; then, when the store boosts them, featured
+            // and higher-priority products; then the newest. Deterministic: the id breaks every tie.
+            'relevance' => $q === '' ? $this->newestOrder($query) : (function () use ($query, $q, $filters) {
+                $query->orderByRaw('products.name LIKE ? DESC', [addcslashes($q, '%_\\').'%']);
+                if (! empty($filters['featured_boost'])) {
+                    $query->orderByDesc('products.is_featured')->orderByDesc('products.sort_priority');
+                }
+                $query->orderByDesc('products.id');
+            })(),
+            default => $this->newestOrder($query),
         };
 
         $perPage = max(1, min((int) ($filters['per_page'] ?? config('storefront.per_page')), (int) config('storefront.max_per_page')));
 
         return $query->paginate($perPage, ['*'], 'page', max(1, (int) ($filters['page'] ?? 1)));
+    }
+
+    /**
+     * Phase B43 (Module 05 §19, Module 07 §17): the order a listing uses — the
+     * shopper's choice; else a collection's own; else relevance for a search;
+     * else the default the page was given (the category's, or the store's);
+     * else newest.
+     *
+     * @param array<string, mixed> $filters
+     */
+    public static function effectiveSort(array $filters, ?CatalogCollection $collection = null): string
+    {
+        return (string) ($filters['sort']
+            ?? ($collection !== null ? $collection->sort : null)
+            ?? (trim((string) ($filters['q'] ?? '')) !== '' ? 'relevance' : null)
+            ?? $filters['default_sort']
+            ?? 'newest');
+    }
+
+    /**
+     * Phase B43 (Module 06 §37, §93): the store's merchandising order —
+     * featured first, then higher sort priority, then newest, then id. The
+     * same products always come in the same order.
+     *
+     * @param Builder<Product> $query
+     */
+    private function merchandisingOrder(Builder $query): void
+    {
+        $query->orderByDesc('products.is_featured')->orderByDesc('products.sort_priority');
+        $this->newestOrder($query);
+    }
+
+    /** @param Builder<Product> $query */
+    private function newestOrder(Builder $query): void
+    {
+        $query->orderByRaw('COALESCE(products.published_at, products.created_at) DESC')->orderByDesc('products.id');
+    }
+
+    /**
+     * Phase B43 (Module 06 §36): the products that sold most units in the
+     * last days, on orders that count — the store's "bestsellers". Memoized
+     * for the request.
+     *
+     * @return list<int>
+     */
+    public function bestsellerIds(int $count, int $days): array
+    {
+        return $this->bestsellers["{$count}:{$days}"] ??= \App\Domain\Orders\Models\OrderItem::query()
+            ->join('orders', 'orders.id', '=', 'order_items.order_id')
+            ->whereNotIn('orders.status', ['draft', 'cancelled', 'failed'])
+            ->where('orders.created_at', '>=', now()->subDays($days))
+            ->whereNotNull('order_items.product_id')
+            ->groupBy('order_items.product_id')
+            ->orderByRaw('SUM(order_items.quantity) DESC')->orderBy('order_items.product_id')
+            ->limit($count)
+            ->pluck('order_items.product_id')->map(fn ($id) => (int) $id)->all();
+    }
+
+    /**
+     * Phase B43: units that can be bought now in the default warehouse, per
+     * product (a product with variants: its active variants together). A
+     * product without stock records is untracked and not in the answer.
+     *
+     * @param list<int> $productIds
+     * @return array<int, int>
+     */
+    public function stockUnits(array $productIds): array
+    {
+        $warehouseId = $this->defaultWarehouseId();
+        if ($productIds === [] || $warehouseId === null) {
+            return [];
+        }
+        $available = 'GREATEST(CAST(i.on_hand AS SIGNED) - CAST(i.reserved AS SIGNED), 0)';
+        $simple = DB::table('inventories as i')->where('i.warehouse_id', $warehouseId)->whereNull('i.product_variant_id')->whereIn('i.product_id', $productIds)
+            ->groupBy('i.product_id')->selectRaw("i.product_id AS pid, SUM({$available}) AS units")->pluck('units', 'pid');
+        $variants = DB::table('inventories as i')->join('product_variants as v', 'v.id', '=', 'i.product_variant_id')
+            ->where('i.warehouse_id', $warehouseId)->whereNull('v.deleted_at')->where('v.status', 'active')->whereIn('v.product_id', $productIds)
+            ->groupBy('v.product_id')->selectRaw("v.product_id AS pid, SUM({$available}) AS units")->pluck('units', 'pid');
+        $out = [];
+        foreach ([$simple, $variants] as $set) {
+            foreach ($set as $pid => $units) {
+                $out[(int) $pid] = ($out[(int) $pid] ?? 0) + (int) $units;
+            }
+        }
+
+        return $out;
+    }
+
+    /**
+     * Phase B43 (Module 06 §37 "recommendations"): browsable products of a
+     * category in the merchandising order, for "You may also like".
+     *
+     * @return Collection<int, Product>
+     */
+    public function recommended(int $limit, int $exceptId, ?int $categoryId): Collection
+    {
+        $query = $this->withPricing($this->visible(self::BROWSE_VISIBILITY))
+            ->with(['brand', 'images'])
+            ->where('products.id', '!=', $exceptId)
+            ->when($categoryId !== null, fn ($q) => $q->where('products.primary_category_id', $categoryId));
+        $this->merchandisingOrder($query);
+
+        return $query->limit($limit)->get();
     }
 
     /**
@@ -287,12 +401,12 @@ final class StorefrontCatalog
      */
     public function featured(int $limit): Collection
     {
-        return $this->withPricing($this->visible(self::BROWSE_VISIBILITY))
+        $query = $this->withPricing($this->visible(self::BROWSE_VISIBILITY))
             ->where('products.is_featured', true)
-            ->with(['brand', 'images'])
-            ->orderByRaw('COALESCE(products.published_at, products.created_at) DESC')->orderByDesc('products.id')
-            ->limit($limit)
-            ->get();
+            ->with(['brand', 'images']);
+        $this->merchandisingOrder($query); // Phase B43: sort priority decides among featured products
+
+        return $query->limit($limit)->get();
     }
 
     /**

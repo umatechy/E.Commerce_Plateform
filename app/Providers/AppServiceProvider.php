@@ -127,6 +127,7 @@ final class AppServiceProvider extends ServiceProvider
         Gate::policy(Category::class, CategoryPolicy::class);
         Gate::policy(\App\Domain\Catalog\Models\Collection::class, \App\Domain\Catalog\Policies\CollectionPolicy::class); // Phase B39
         Gate::policy(Brand::class, BrandPolicy::class);
+        Gate::policy(\App\Domain\Catalog\Models\Badge::class, \App\Domain\Catalog\Policies\BadgePolicy::class); // Phase B43
         Gate::policy(Attribute::class, AttributePolicy::class);
         Gate::policy(Inventory::class, InventoryPolicy::class);
         Gate::policy(Warehouse::class, WarehousePolicy::class);
@@ -153,6 +154,8 @@ final class AppServiceProvider extends ServiceProvider
             \App\Domain\Catalog\Models\Collection::class, \App\Domain\Catalog\Models\ProductRelation::class,
             // Phase B41: attributes (values change with them — AttributeManager touches the attribute) and category filters.
             \App\Domain\Catalog\Models\Attribute::class, \App\Domain\Catalog\Models\CategoryAttribute::class,
+            // Phase B43: the store's own badges.
+            \App\Domain\Catalog\Models\Badge::class,
         ] as $model) {
             $model::observe(\App\Domain\Storefront\Observers\StorefrontCacheObserver::class);
         }

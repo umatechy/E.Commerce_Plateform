@@ -13,16 +13,16 @@ import { useApi } from '@/lib/useApi';
 import { useAction, useForm } from '@/lib/useForm';
 import { adminFetch } from '@/lib/adminApi';
 import { options } from '@/lib/labels';
-import { CATEGORY_STATUSES, CATEGORY_VISIBILITIES, categoryTree, type Category } from '@/lib/catalog';
+import { CATEGORY_STATUSES, CATEGORY_VISIBILITIES, categoryTree, LISTING_SORTS, type Category } from '@/lib/catalog';
 
 /**
  * Module 07 "Category Management": the store's category tree
  * (/api/v1/categories). The server refuses a category as its own parent
  * and any circular tree; its message is shown on the Parent field.
  */
-type Values = { name: string; parent_id: string; description: string; status: string; visibility: string; sort_order: string };
+type Values = { name: string; parent_id: string; description: string; status: string; visibility: string; sort_order: string; default_sort: string };
 
-const BLANK: Values = { name: '', parent_id: '', description: '', status: 'active', visibility: 'public', sort_order: '0' };
+const BLANK: Values = { name: '', parent_id: '', description: '', status: 'active', visibility: 'public', sort_order: '0', default_sort: '' };
 
 export default function Categories() {
   const access = useAccess();
@@ -46,7 +46,7 @@ export default function Categories() {
     form.reset(
       target === 'new'
         ? BLANK
-        : { name: target.name, parent_id: target.parent_id === null ? '' : String(target.parent_id), description: target.description ?? '', status: target.status, visibility: target.visibility, sort_order: String(target.sort_order) },
+        : { name: target.name, parent_id: target.parent_id === null ? '' : String(target.parent_id), description: target.description ?? '', status: target.status, visibility: target.visibility, sort_order: String(target.sort_order), default_sort: target.default_sort ?? '' },
     );
     setEditing(target);
   }
@@ -62,6 +62,7 @@ export default function Categories() {
       status: v.status,
       visibility: v.visibility,
       sort_order: v.sort_order === '' ? 0 : Number(v.sort_order),
+      default_sort: v.default_sort === '' ? null : v.default_sort,
     };
     const saved = await form.submit(
       () => adminFetch(target === 'new' ? '/categories' : `/categories/${(target as Category).id}`, { method: target === 'new' ? 'POST' : 'PUT', body }),
@@ -129,6 +130,17 @@ export default function Categories() {
             <SelectField label="Status" value={form.values.status} onChange={(v) => form.set('status', v)} options={options(CATEGORY_STATUSES)} error={form.errors.status} />
             <SelectField label="Visibility" value={form.values.visibility} onChange={(v) => form.set('visibility', v)} options={options(CATEGORY_VISIBILITIES)} error={form.errors.visibility} />
             <TextField label="Order" type="number" min={0} value={form.values.sort_order} onChange={(v) => form.set('sort_order', v)} error={form.errors.sort_order} hint="Lower comes first." />
+            {/* Phase B43 (Module 07 §17). */}
+            <SelectField
+              label="Products on its page"
+              optional
+              value={form.values.default_sort}
+              onChange={(v) => form.set('default_sort', v)}
+              error={form.errors.default_sort}
+              placeholder="Your store's default order"
+              options={Object.entries(LISTING_SORTS).map(([value, label]) => ({ value, label }))}
+              hint="The order shoppers see first; they can still choose another."
+            />
           </div>
           <div className="flex justify-end gap-2">
             <Button onClick={() => setEditing(null)} disabled={form.busy}>Cancel</Button>

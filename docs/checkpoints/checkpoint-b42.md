@@ -56,7 +56,7 @@ production build): 4 of 4.
 Not built: package limits for filters/taxonomy (no values in the specs);
 category templates; date/currency attribute types; unit conversion.
 
-CI: to be verified after push.
+CI: run on 584e668 (B42 code) — success, verified 2026-10-04.
 
 Next: B43 — product badges and featured ranking (Module 06 §36–37, §93;
 Module 05 §19; Module 07 §17).

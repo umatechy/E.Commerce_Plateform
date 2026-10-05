@@ -77,6 +77,14 @@ export const ur: Record<string, string> = {
   'Featured products': 'نمایاں مصنوعات',
   'Goes well with': 'اس کے ساتھ خوب جچتا ہے',
   'You might prefer': 'آپ شاید یہ پسند کریں',
+  // Phase B43: badges and orders.
+  '{percent}% off': '{percent}٪ رعایت',
+  New: 'نیا',
+  Bestseller: 'سب سے زیادہ فروخت ہونے والا',
+  Featured: 'نمایاں',
+  'Best selling': 'سب سے زیادہ فروخت',
+  'Most relevant': 'سب سے موزوں',
+  Recommended: 'تجویز کردہ',
   // Phase B41: specifications and attribute filters.
   Specifications: 'تفصیلات',
   Yes: 'ہاں',

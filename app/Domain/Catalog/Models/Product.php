@@ -42,6 +42,7 @@ final class Product extends Model
         'price_minor', 'sale_price_minor', 'cost_price_minor', 'currency',
         'published_at', 'archived_at',
         'is_featured', // Phase B39 (Module 06 §37)
+        'sort_priority', // Phase B43 (Module 06 §93)
     ];
 
     protected function casts(): array
@@ -53,6 +54,7 @@ final class Product extends Model
             'published_at' => 'datetime',
             'archived_at' => 'datetime',
             'is_featured' => 'boolean',
+            'sort_priority' => 'integer',
         ];
     }
 
@@ -83,6 +85,12 @@ final class Product extends Model
     public function collections(): BelongsToMany
     {
         return $this->belongsToMany(Collection::class)->withPivot('position');
+    }
+
+    /** @return BelongsToMany<Badge, $this> Phase B43 (Module 06 §36): the store's own badges on this product */
+    public function badges(): BelongsToMany
+    {
+        return $this->belongsToMany(Badge::class, 'product_badge');
     }
 
     /** @return BelongsToMany<Tag, $this> Phase B39 (Module 06 §35) */

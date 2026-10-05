@@ -3,6 +3,7 @@ import { useMemo, useState } from 'react';
 import StoreLayout from '@/Components/Storefront/StoreLayout';
 import ProductGrid from '@/Components/Storefront/ProductGrid';
 import Price from '@/Components/Storefront/Price';
+import ProductBadges from '@/Components/Storefront/ProductBadges';
 import { errorMessage, StorefrontApiError, storefrontFetch } from '@/Storefront/api';
 import { loginHref } from '@/Storefront/account';
 import { findVariant, initialSelection, isSelectable, type Selection } from '@/Storefront/variants';
@@ -116,6 +117,8 @@ export default function Product({
             </Link>
           )}
           <h1 className="mt-1 text-3xl font-bold">{product.name}</h1>
+          {/* Phase B43 (Module 06 §36). */}
+          <ProductBadges badges={product.badges ?? []} className="mt-2" />
           <Price price={price} className="mt-3 text-xl" />
           {product.summary && <p className="mt-4 text-sf-muted">{product.summary}</p>}
 

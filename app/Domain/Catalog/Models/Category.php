@@ -38,6 +38,7 @@ final class Category extends Model
     protected $fillable = [
         'store_id', 'parent_id', 'name', 'slug', 'description',
         'status', 'visibility', 'sort_order', 'archived_at',
+        'default_sort', // Phase B43 (Module 07 §17): the order its page opens in; null = the store's
     ];
 
     protected function casts(): array

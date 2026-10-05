@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link } from '@inertiajs/react';
 import Price from './Price';
+import ProductBadges from './ProductBadges';
 import { errorMessage, storefrontFetch } from '@/Storefront/api';
 import { useT } from '@/Storefront/i18n';
 import { useStorefrontTheme, type ThemeLayout } from '@/Storefront/theme';
@@ -87,6 +88,11 @@ function CardImage({ product }: { product: Card }) {
 
 function Badges({ product }: { product: Card }) {
   const t = useT();
+  // Phase B43: the store's badge settings decide; the server sends the list.
+  if (product.badges) {
+    return <ProductBadges badges={product.badges} className="pointer-events-none absolute start-2 top-2 max-w-[calc(100%-1rem)]" />;
+  }
+
   return (
     <>
       {product.price.on_sale && <span className="absolute start-2 top-2 rounded-sf bg-sf-error px-2 py-0.5 text-xs font-semibold text-white">{t('Sale')}</span>}

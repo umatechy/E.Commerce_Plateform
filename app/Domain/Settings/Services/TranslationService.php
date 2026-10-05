@@ -29,6 +29,7 @@ final class TranslationService
         // Phase B42 (Module 07 §38): saved through AttributeTranslationController, which checks the attribute.
         'attribute' => ['name' => 255],
         'attribute_value' => ['value' => 255],
+        'badge' => ['label' => 40], // Phase B43
     ];
 
     /** @var array<string, array<int, array<string, string>>> "type:locale" => id => field => value */

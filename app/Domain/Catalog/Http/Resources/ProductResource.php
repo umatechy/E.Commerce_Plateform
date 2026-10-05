@@ -47,6 +47,9 @@ final class ProductResource extends JsonResource
             'is_featured' => (bool) $this->is_featured,
             'tags' => $this->whenLoaded('tags', fn () => $this->tags->pluck('name')->values()),
             'collection_ids' => $this->whenLoaded('collections', fn () => $this->collections->pluck('public_id')->values()),
+            // Phase B43 (Module 06 §36, §93).
+            'sort_priority' => (int) $this->sort_priority,
+            'badge_ids' => $this->whenLoaded('badges', fn () => $this->badges->pluck('id')->values()),
             'price_minor' => $this->price_minor,
             'sale_price_minor' => $this->sale_price_minor,
             'effective_price_minor' => $this->effectivePriceMinor(),

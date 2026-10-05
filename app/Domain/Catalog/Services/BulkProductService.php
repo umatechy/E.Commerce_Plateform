@@ -29,6 +29,8 @@ use Illuminate\Validation\ValidationException;
  * others; the answer lists how many changed and why the others did not. One
  * audit entry records the action and the ids.
  *
+ * Phase B43 added add_badge, remove_badge and set_sort_priority.
+ *
  * Actions: publish, unpublish, archive, delete, set_visibility, set_featured,
  * set_category (main category), add_category, add_to_collection,
  * remove_from_collection, add_tags, remove_tags, set_price, adjust_price
@@ -41,6 +43,7 @@ final class BulkProductService
     public const ACTIONS = [
         'publish', 'unpublish', 'archive', 'delete', 'set_visibility', 'set_featured', 'set_category', 'add_category',
         'add_to_collection', 'remove_from_collection', 'add_tags', 'remove_tags', 'set_price', 'adjust_price', 'set_sale_percent', 'clear_sale',
+        'add_badge', 'remove_badge', 'set_sort_priority',
     ];
 
     public function __construct(private readonly EntitlementService $entitlements, private readonly ProductTagService $tags) {}
@@ -107,6 +110,8 @@ final class BulkProductService
         return match ($action) {
             'set_visibility' => in_array($params['visibility'] ?? null, ['public', 'catalog_only', 'search_only', 'hidden'], true) ? [] : $fail('Choose a visibility.'),
             'set_featured' => is_bool($params['featured'] ?? null) ? [] : $fail('Featured is on or off.'),
+            'add_badge', 'remove_badge' => ['badge' => \App\Domain\Catalog\Models\Badge::query()->find((int) ($params['badge_id'] ?? 0)) ?? $fail('Choose one of your badges.')],
+            'set_sort_priority' => is_int($params['sort_priority'] ?? null) && $params['sort_priority'] >= -1000 && $params['sort_priority'] <= 1000 ? [] : $fail('Sort priority is a whole number from -1000 to 1000.'),
             'set_category', 'add_category' => ['category' => Category::query()->find((int) ($params['category_id'] ?? 0)) ?? $fail('Choose one of your categories.')],
             'add_to_collection', 'remove_from_collection' => (function () use ($params, $fail) {
                 $collection = Collection::query()->where('public_id', (string) ($params['collection'] ?? ''))->first() ?? $fail('Choose one of your collections.');
@@ -134,6 +139,9 @@ final class BulkProductService
             'delete' => $this->delete($product),
             'set_visibility' => $this->fill($product, ['visibility' => $params['visibility']]),
             'set_featured' => $this->fill($product, ['is_featured' => (bool) $params['featured']]),
+            'set_sort_priority' => $this->fill($product, ['sort_priority' => (int) $params['sort_priority']]),
+            'add_badge' => $this->badge($product, $context['badge'], add: true),
+            'remove_badge' => $this->badge($product, $context['badge'], add: false),
             'set_category' => $this->category($product, $context['category'], primary: true),
             'add_category' => $this->category($product, $context['category'], primary: false),
             'add_to_collection' => $this->addToCollection($product, $context['collection']),
@@ -235,6 +243,18 @@ final class BulkProductService
         $collection->touch();
 
         return true;
+    }
+
+    private function badge(Product $product, \App\Domain\Catalog\Models\Badge $badge, bool $add): bool
+    {
+        $changed = $add
+            ? $product->badges()->syncWithoutDetaching([$badge->id])['attached'] !== []
+            : $product->badges()->detach($badge->id) > 0;
+        if ($changed) {
+            $product->touch(); // the storefront cache follows the product
+        }
+
+        return $changed;
     }
 
     /** @param list<string> $names */

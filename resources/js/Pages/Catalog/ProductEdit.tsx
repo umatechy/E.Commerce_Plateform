@@ -29,6 +29,7 @@ import {
   variantLabel,
   type Brand,
   type Category,
+  type Badge as StoreBadge,
   type Collection,
   type Product,
   type ProductImage,
@@ -61,13 +62,16 @@ type FormValues = {
   is_featured: boolean;
   tags: string;
   collection_ids: string[];
+  /** Phase B43 (Module 06 §36, §93). */
+  sort_priority: string;
+  badge_ids: number[];
 };
 
 function blank(currency: string): FormValues {
   return {
     type: 'simple', name: '', sku: '', short_description: '', description: '', status: 'draft', visibility: 'public',
     brand_id: '', primary_category_id: '', category_ids: [], price: '', sale_price: '', cost_price: '', currency,
-    is_featured: false, tags: '', collection_ids: [],
+    is_featured: false, tags: '', collection_ids: [], sort_priority: '0', badge_ids: [],
   };
 }
 
@@ -92,6 +96,8 @@ function fromProduct(product: Product, fallbackCurrency: string): FormValues {
     is_featured: product.is_featured ?? false,
     tags: (product.tags ?? []).join(', '),
     collection_ids: product.collection_ids ?? [],
+    sort_priority: String(product.sort_priority ?? 0),
+    badge_ids: product.badge_ids ?? [],
   };
 }
 
@@ -114,6 +120,8 @@ function ProductForm({ product, onSaved }: { product: Product | null; onSaved: (
   const canCollections = access.can('collections.manage');
   const collections = useApi<{ data: Collection[] }>(canCollections ? '/collections' : null);
   const manualCollections = (collections.data?.data ?? []).filter((collection) => collection.type === 'manual');
+  // Phase B43: the store's own badges.
+  const badges = useApi<{ data: StoreBadge[] }>('/badges');
   const [amountErrors, setAmountErrors] = useState<Record<string, string>>({});
   const [limitReached, setLimitReached] = useState(false);
   const [tab, setTab] = useState('details');
@@ -163,7 +171,10 @@ function ProductForm({ product, onSaved }: { product: Product | null; onSaved: (
       currency: values.currency.toUpperCase(),
       is_featured: values.is_featured,
       tags: parseTags(values.tags),
+      badge_ids: values.badge_ids,
     };
+    // Phase B43: a whole number from -1000 to 1000; the server checks it too.
+    if (/^-?\d{1,4}$/.test(values.sort_priority.trim())) body.sort_priority = Number(values.sort_priority.trim());
     if (canCollections && collections.data) body.collection_ids = values.collection_ids;
     // A user who cannot see the cost price must not blank it by saving.
     if (canCost) body.cost_price_minor = cost.minor;
@@ -326,6 +337,30 @@ function ProductForm({ product, onSaved }: { product: Product | null; onSaved: (
         <Card title="Merchandising" description="How this product is grouped and highlighted on your storefront.">
           <div className="space-y-4">
             <SwitchField label="Featured product" hint="Featured products can fill the “Featured products” section of your home page." checked={values.is_featured} onChange={(v) => set('is_featured', v)} />
+            <TextField
+              label="Sort priority"
+              optional
+              inputMode="numeric"
+              value={values.sort_priority}
+              onChange={(v) => set('sort_priority', v)}
+              error={errors.sort_priority}
+              hint="-1000 to 1000. In the “Featured” order, featured products come first, then higher priority, then newer."
+            />
+            {(badges.data?.data ?? []).length > 0 && (
+              <fieldset>
+                <legend className="text-sm font-medium text-slate-700">Your badges</legend>
+                <div className="mt-2 grid gap-2 sm:grid-cols-3">
+                  {(badges.data?.data ?? []).map((badge) => (
+                    <CheckboxField
+                      key={badge.id}
+                      label={badge.is_active ? badge.label : `${badge.label} (hidden)`}
+                      checked={values.badge_ids.includes(badge.id)}
+                      onChange={(checked) => set('badge_ids', checked ? [...values.badge_ids, badge.id] : values.badge_ids.filter((id) => id !== badge.id))}
+                    />
+                  ))}
+                </div>
+              </fieldset>
+            )}
             <TextField label="Tags" optional value={values.tags} onChange={(v) => set('tags', v)} error={errors.tags ?? errors['tags.0']} hint="Separate tags with commas, for example: Eid, Handmade. Up to 20, each up to 60 characters." />
             {canCollections && (
               <fieldset>

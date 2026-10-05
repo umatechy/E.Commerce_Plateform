@@ -57,6 +57,10 @@ final class StoreProductRequest extends FormRequest
             'tags.*' => ['string', 'max:60'],
             'collection_ids' => ['array', 'max:100'],
             'collection_ids.*' => ['string', 'size:26'],
+            // Phase B43 (Module 06 §36, §93).
+            'sort_priority' => ['sometimes', 'integer', 'min:-1000', 'max:1000'],
+            'badge_ids' => ['sometimes', 'array', 'max:20'],
+            'badge_ids.*' => ['integer'],
         ];
     }
 }

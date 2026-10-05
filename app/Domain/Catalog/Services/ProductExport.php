@@ -33,7 +33,7 @@ final class ProductExport
         $withCost = Gate::forUser($actor)->allows('viewCostPrices', Product::class);
         $header = array_values(array_filter(ProductImport::COLUMNS, fn ($c) => $withCost || $c !== 'cost_price'));
         $query = Product::query()
-            ->with(['brand', 'primaryCategory', 'categories', 'tags', 'collections', 'images', 'variants' => fn ($q) => $q->orderBy('id'), 'attributeValues.attribute', 'attributeValues.choice'])
+            ->with(['brand', 'primaryCategory', 'categories', 'tags', 'collections', 'images', 'variants' => fn ($q) => $q->orderBy('id'), 'attributeValues.attribute', 'attributeValues.choice', 'badges'])
             ->when($filters['search'] ?? null, function ($q, string $search) {
                 $like = '%'.addcslashes($search, '%_\\').'%';
                 $q->where(fn ($w) => $w->where('name', 'like', $like)->orWhere('sku', 'like', $like));
@@ -70,6 +70,8 @@ final class ProductExport
                         'featured' => $product->is_featured ? 'yes' : 'no',
                         'image_urls' => $product->images->map(fn ($image) => $image->url())->implode('; '),
                         'attributes' => self::attributes($product),
+                        'sort_priority' => (string) $product->sort_priority,
+                        'badges' => $product->badges->pluck('label')->implode('; '),
                     ]);
                     foreach ($product->variants as $variant) {
                         $this->line($out, $header, [

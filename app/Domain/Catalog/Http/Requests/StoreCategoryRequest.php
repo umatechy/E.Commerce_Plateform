@@ -28,6 +28,8 @@ final class StoreCategoryRequest extends FormRequest
             'status' => ['nullable', 'in:draft,active,hidden,scheduled,archived'],
             'visibility' => ['nullable', 'in:public,navigation_only,search_only,hidden,private,scheduled'],
             'sort_order' => ['nullable', 'integer', 'min:0'],
+            // Phase B43 (Module 07 §17): the order the category page opens in; empty = the store's default.
+            'default_sort' => ['nullable', 'in:featured,newest,best_selling,price_asc,price_desc,name'],
         ];
     }
 }

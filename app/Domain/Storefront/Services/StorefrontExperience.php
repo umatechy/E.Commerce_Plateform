@@ -193,6 +193,12 @@ final class StorefrontExperience
             $search = $filters;
             unset($search['attr']);
             $search['attributes'] = $this->resolveAttributeFilters((array) ($filters['attr'] ?? []), $attributes);
+            // Phase B43 (Module 05 §19, Module 07 §17, Module 06 §37): the order a page opens in —
+            // its category's, else the store's — and whether a search lifts featured products.
+            $category = isset($filters['category']) ? $this->catalog()->category((string) $filters['category']) : null;
+            $search['default_sort'] = ($category !== null ? $category->default_sort : null) ?? (string) $this->config->get('catalog.default_sort');
+            $search['featured_boost'] = (bool) $this->config->get('catalog.featured_in_search');
+            $collection = isset($filters['collection']) ? $this->catalog()->liveCollection((string) $filters['collection']) : null;
             $page = $this->catalog()->search($search);
 
             return [
@@ -204,6 +210,8 @@ final class StorefrontExperience
                     'last_page' => $page->lastPage(),
                 ],
                 'filters' => $attributes === [] ? [] : $this->presentFilters($attributes, $search),
+                // Phase B43: the order shown, so the sort menu shows the page's real default.
+                'sort' => StorefrontCatalog::effectiveSort($search, $collection),
             ];
         });
     }
@@ -369,7 +377,8 @@ final class StorefrontExperience
             $related = $this->catalog()->relatedTo($product->id, ['related', 'alternative'], 8);
             if ($related->isEmpty()) {
                 $shown = $crossSell->merge($upSell)->pluck('id')->all();
-                $related = $this->catalog()->newest(4 + count($shown), $product->id, $product->primary_category_id)
+                // Phase B43 (Module 06 §37): the category's products in the merchandising order.
+                $related = $this->catalog()->recommended(4 + count($shown), $product->id, $product->primary_category_id)
                     ->reject(fn (Product $p) => in_array($p->id, $shown, true))->take(4)->values();
             }
 

@@ -21,9 +21,9 @@ type Data = {
   translations: Record<string, Record<string, string>>;
 };
 
-const FIELD_LABEL: Record<string, string> = { name: 'Name', short_description: 'Short description', description: 'Description' };
+const FIELD_LABEL: Record<string, string> = { name: 'Name', short_description: 'Short description', description: 'Description', label: 'Label' };
 
-export default function TranslationsPanel({ type, id, canEdit }: { type: 'product' | 'category' | 'brand' | 'collection'; id: string | number; canEdit: boolean }) {
+export default function TranslationsPanel({ type, id, canEdit }: { type: 'product' | 'category' | 'brand' | 'collection' | 'badge'; id: string | number; canEdit: boolean }) {
   const state = useApi<{ data: Data }>(`/translations/${type}/${id}`);
   const data = state.data?.data ?? null;
   const [values, setValues] = useState<Record<string, Record<string, string>>>({});

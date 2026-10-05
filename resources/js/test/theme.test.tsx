@@ -126,7 +126,7 @@ describe('theme library (admin)', () => {
     const sections = saved!.config.sections;
     expect(sections.map((s) => s.type)).toEqual(['hero', 'header', 'footer', 'testimonials']);
     expect(sections[3].config.items).toEqual([{ quote: 'Lovely', name: 'Sana' }]);
-  });
+  }, 15000); // a long UI flow: over 5 s when the whole suite runs in parallel on a slow machine
 
   it('keeps the fixed order on Basic: no move buttons, advanced sections offered but disabled', async () => {
     openThemePage(false);

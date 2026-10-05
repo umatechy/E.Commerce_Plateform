@@ -6,7 +6,7 @@ import { useApi } from '@/lib/useApi';
 import { useAction } from '@/lib/useForm';
 import { adminFetch } from '@/lib/adminApi';
 import { toMinor } from '@/lib/money';
-import { categoryTree, parseTags, type BulkResult, type Category, type Collection } from '@/lib/catalog';
+import { categoryTree, parseTags, type Badge as StoreBadge, type BulkResult, type Category, type Collection } from '@/lib/catalog';
 
 /**
  * Phase B39 (Module 06 §46–47): one change to the chosen products
@@ -16,14 +16,18 @@ import { categoryTree, parseTags, type BulkResult, type Category, type Collectio
  */
 type ActionKey =
   | 'publish' | 'unpublish' | 'archive' | 'delete' | 'set_visibility' | 'set_featured' | 'set_category' | 'add_category'
-  | 'add_to_collection' | 'remove_from_collection' | 'add_tags' | 'remove_tags' | 'set_price' | 'adjust_price' | 'set_sale_percent' | 'clear_sale';
+  | 'add_to_collection' | 'remove_from_collection' | 'add_tags' | 'remove_tags' | 'set_price' | 'adjust_price' | 'set_sale_percent' | 'clear_sale'
+  | 'add_badge' | 'remove_badge' | 'set_sort_priority';
 
-const ACTIONS: { value: ActionKey; label: string; needs?: 'visibility' | 'featured' | 'category' | 'collection' | 'tags' | 'price' | 'percent' }[] = [
+const ACTIONS: { value: ActionKey; label: string; needs?: 'visibility' | 'featured' | 'category' | 'collection' | 'tags' | 'price' | 'percent' | 'badge' | 'priority' }[] = [
   { value: 'publish', label: 'Publish (make active)' },
   { value: 'unpublish', label: 'Move to draft' },
   { value: 'archive', label: 'Archive' },
   { value: 'set_visibility', label: 'Set visibility', needs: 'visibility' },
   { value: 'set_featured', label: 'Mark or unmark as featured', needs: 'featured' },
+  { value: 'set_sort_priority', label: 'Set sort priority', needs: 'priority' },
+  { value: 'add_badge', label: 'Add a badge', needs: 'badge' },
+  { value: 'remove_badge', label: 'Remove a badge', needs: 'badge' },
   { value: 'set_category', label: 'Set main category', needs: 'category' },
   { value: 'add_category', label: 'Also list in a category', needs: 'category' },
   { value: 'add_to_collection', label: 'Add to a collection', needs: 'collection' },
@@ -46,6 +50,7 @@ export default function BulkBar({ selected, currency, canCollections, onDone, on
   const needs = ACTIONS.find((a) => a.value === action)?.needs;
   const categories = useApi<{ data: Category[] }>(needs === 'category' ? '/categories' : null);
   const collections = useApi<{ data: Collection[] }>(needs === 'collection' ? '/collections' : null);
+  const badges = useApi<{ data: StoreBadge[] }>(needs === 'badge' ? '/badges' : null);
 
   function params(): Record<string, unknown> | null {
     switch (needs) {
@@ -53,6 +58,8 @@ export default function BulkBar({ selected, currency, canCollections, onDone, on
       case 'featured': return param === '' ? null : { featured: param === 'yes' };
       case 'category': return param === '' ? null : { category_id: Number(param) };
       case 'collection': return param === '' ? null : { collection: param };
+      case 'badge': return param === '' ? null : { badge_id: Number(param) };
+      case 'priority': return /^-?\d{1,4}$/.test(param.trim()) ? { sort_priority: Number(param.trim()) } : null;
       case 'tags': return parseTags(param).length === 0 ? null : { tags: parseTags(param) };
       case 'price': {
         const minor = toMinor(param, currency);
@@ -127,6 +134,12 @@ export default function BulkBar({ selected, currency, canCollections, onDone, on
             />
           </div>
         )}
+        {needs === 'badge' && (
+          <div className="w-56">
+            <SelectField label="Badge" value={param} onChange={setParam} placeholder="Choose" options={(badges.data?.data ?? []).map((b) => ({ value: String(b.id), label: b.label }))} />
+          </div>
+        )}
+        {needs === 'priority' && <div className="w-40"><TextField label="Sort priority" inputMode="numeric" value={param} onChange={setParam} hint="-1000 to 1000" /></div>}
         {needs === 'tags' && <div className="w-56"><TextField label="Tags" value={param} onChange={setParam} hint="Separate with commas." /></div>}
         {needs === 'price' && <div className="w-40"><TextField label={`New price (${currency})`} inputMode="decimal" value={param} onChange={setParam} /></div>}
         {needs === 'percent' && (

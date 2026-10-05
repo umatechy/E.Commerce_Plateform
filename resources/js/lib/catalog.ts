@@ -53,6 +53,9 @@ export type Product = {
   is_featured?: boolean;
   tags?: string[];
   collection_ids?: string[];
+  /** Phase B43. */
+  sort_priority?: number;
+  badge_ids?: number[];
 };
 
 export type Category = {
@@ -64,6 +67,8 @@ export type Category = {
   status: string;
   visibility: string;
   sort_order: number;
+  /** Phase B43: the order its page opens in; null = the store's default. */
+  default_sort?: string | null;
 };
 
 export type Brand = { id: number; name: string; slug: string; description: string | null };
@@ -137,7 +142,7 @@ export function parseOptionLines(text: string): { values: Record<string, string>
 }
 
 /* Phase B39 (gap G15): collections, tags, relations and bulk changes. */
-export const COLLECTION_SORTS = ['manual', 'newest', 'price_asc', 'price_desc', 'name', 'best_selling'] as const;
+export const COLLECTION_SORTS = ['manual', 'featured', 'newest', 'price_asc', 'price_desc', 'name', 'best_selling'] as const;
 export const RULE_FIELDS = ['category', 'brand', 'tag', 'price_min', 'price_max', 'on_sale', 'in_stock', 'featured', 'new_within_days'] as const;
 export const RELATION_TYPES = ['related', 'cross_sell', 'up_sell', 'alternative'] as const;
 export const RELATION_LABELS: Record<(typeof RELATION_TYPES)[number], { title: string; hint: string }> = {
@@ -211,3 +216,15 @@ export type Specifications = { values: { attribute_id: number; value: Specificat
 
 /** Types whose values are chosen from the attribute's list. */
 export const hasValues = (type: string) => type === 'select' || type === 'multi_select' || type === 'color';
+
+/* Phase B43 (Module 06 §36–37): the store's own badges and listing orders. */
+export const BADGE_TONES = ['accent', 'success', 'warning', 'danger', 'neutral'] as const;
+export type Badge = { id: number; label: string; tone: (typeof BADGE_TONES)[number]; priority: number; is_active: boolean; product_count: number };
+export const LISTING_SORTS: Record<string, string> = {
+  featured: 'Featured first (then sort priority, then newest)',
+  newest: 'Newest first',
+  best_selling: 'Best selling',
+  price_asc: 'Price, low to high',
+  price_desc: 'Price, high to low',
+  name: 'Name, A to Z',
+};

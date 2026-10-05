@@ -37,7 +37,7 @@ final class ProductDuplicator
             $copy = DB::transaction(function () use ($original, &$copiedFiles) {
                 $name = Str::limit($original->name.' (copy)', 255, '');
                 $copy = Product::query()->create([
-                    ...$original->only(['type', 'short_description', 'description', 'brand_id', 'primary_category_id', 'price_minor', 'sale_price_minor', 'cost_price_minor', 'currency']),
+                    ...$original->only(['type', 'short_description', 'description', 'brand_id', 'primary_category_id', 'price_minor', 'sale_price_minor', 'cost_price_minor', 'currency', 'sort_priority']),
                     'name' => $name,
                     'slug' => Str::slug($name).'-'.Str::lower(Str::random(6)),
                     'sku' => null,
@@ -47,6 +47,7 @@ final class ProductDuplicator
                 ]);
                 $copy->categories()->sync($original->categories->pluck('id')->all());
                 $copy->tags()->sync($original->tags->pluck('id')->all());
+                $copy->badges()->sync($original->badges()->pluck('badges.id')->all()); // Phase B43
                 // Phase B41: specifications are product content and are copied too.
                 foreach (\App\Domain\Catalog\Models\ProductAttributeValue::query()->where('product_id', $original->id)->get() as $spec) {
                     \App\Domain\Catalog\Models\ProductAttributeValue::query()->create([

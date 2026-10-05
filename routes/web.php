@@ -85,7 +85,7 @@ Route::middleware(['auth', 'required.mfa'])->group(function () {
     // page; its data comes from /api/v1, where the policy for that data
     // decides. A page a user may not use shows the API's refusal.
     foreach ([
-        '/products' => 'Catalog/Products', '/collections' => 'Catalog/Collections', '/categories' => 'Catalog/Categories', '/brands' => 'Catalog/Brands', '/attributes' => 'Catalog/Attributes',
+        '/products' => 'Catalog/Products', '/collections' => 'Catalog/Collections', '/badges' => 'Catalog/Badges', '/categories' => 'Catalog/Categories', '/brands' => 'Catalog/Brands', '/attributes' => 'Catalog/Attributes',
         '/warehouses' => 'Inventory/Warehouses',
         '/payments' => 'Payments/Index', '/shipments' => 'Shipping/Shipments', '/shipping' => 'Shipping/Settings',
         '/customers' => 'Customers/Index',

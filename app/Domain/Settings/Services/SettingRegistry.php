@@ -81,6 +81,28 @@ final class SettingRegistry
                 key: 'store.languages', scope: SettingScope::Store, type: SettingType::StringArray,
                 default: [Locales::DEFAULT],
             ),
+            // Phase B43 (Module 05 §19, Module 06 §37): how listings are ordered.
+            'catalog.default_sort' => new SettingDefinition(
+                key: 'catalog.default_sort', scope: SettingScope::Store, type: SettingType::String,
+                default: 'newest', allowedValues: ['featured', 'newest', 'best_selling', 'price_asc', 'price_desc', 'name'],
+            ),
+            'catalog.featured_in_search' => new SettingDefinition(
+                key: 'catalog.featured_in_search', scope: SettingScope::Store, type: SettingType::Boolean,
+                default: true,
+            ),
+            // Phase B43 (Module 06 §36): automatic badges, each on or off, and their thresholds.
+            'badges.new' => new SettingDefinition(key: 'badges.new', scope: SettingScope::Store, type: SettingType::Boolean, default: true),
+            'badges.new_days' => new SettingDefinition(key: 'badges.new_days', scope: SettingScope::Store, type: SettingType::Integer, default: 14),
+            'badges.sale' => new SettingDefinition(key: 'badges.sale', scope: SettingScope::Store, type: SettingType::Boolean, default: true),
+            'badges.sale_percent' => new SettingDefinition(key: 'badges.sale_percent', scope: SettingScope::Store, type: SettingType::Boolean, default: true),
+            'badges.bestseller' => new SettingDefinition(key: 'badges.bestseller', scope: SettingScope::Store, type: SettingType::Boolean, default: true),
+            'badges.bestseller_count' => new SettingDefinition(key: 'badges.bestseller_count', scope: SettingScope::Store, type: SettingType::Integer, default: 10),
+            'badges.bestseller_days' => new SettingDefinition(key: 'badges.bestseller_days', scope: SettingScope::Store, type: SettingType::Integer, default: 30),
+            'badges.low_stock' => new SettingDefinition(key: 'badges.low_stock', scope: SettingScope::Store, type: SettingType::Boolean, default: false),
+            'badges.low_stock_threshold' => new SettingDefinition(key: 'badges.low_stock_threshold', scope: SettingScope::Store, type: SettingType::Integer, default: 5),
+            'badges.featured' => new SettingDefinition(key: 'badges.featured', scope: SettingScope::Store, type: SettingType::Boolean, default: true),
+            'badges.out_of_stock' => new SettingDefinition(key: 'badges.out_of_stock', scope: SettingScope::Store, type: SettingType::Boolean, default: true),
+            'badges.max_per_product' => new SettingDefinition(key: 'badges.max_per_product', scope: SettingScope::Store, type: SettingType::Integer, default: 2),
             'api.default_rate_limit_per_minute' => new SettingDefinition(
                 key: 'api.default_rate_limit_per_minute', scope: SettingScope::Platform, type: SettingType::Integer,
                 default: 60, // Module 31 §17/§43 "Rate Limiting / Configuration" — Phase B18's own integration point

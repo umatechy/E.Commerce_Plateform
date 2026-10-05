@@ -66,7 +66,7 @@ final class ProductController
     {
         Gate::forUser($request->user())->authorize('view', $product);
 
-        return new ProductResource($product->load(['brand', 'variants', 'categories', 'tags', 'collections']));
+        return new ProductResource($product->load(['brand', 'variants', 'categories', 'tags', 'collections', 'badges']));
     }
 
     public function store(StoreProductRequest $request, EntitlementService $entitlements): JsonResponse
@@ -96,7 +96,7 @@ final class ProductController
 
         $product = DB::transaction(function () use ($request, $status) {
             $product = Product::query()->create([
-                ...$request->safe()->except(['tags', 'collection_ids']),
+                ...$request->safe()->except(['tags', 'collection_ids', 'badge_ids']),
                 'slug' => Str::slug($request->string('name')->toString()).'-'.Str::lower(Str::random(6)),
                 'status' => $status,
             ]);
@@ -138,7 +138,7 @@ final class ProductController
         }
 
         DB::transaction(function () use ($request, $product, $newStatus) {
-            $product->update([...$request->safe()->except(['tags', 'collection_ids']), 'status' => $newStatus]);
+            $product->update([...$request->safe()->except(['tags', 'collection_ids', 'badge_ids']), 'status' => $newStatus]);
 
             if ($request->has('category_ids')) {
                 $product->categories()->sync($request->input('category_ids', []));
@@ -148,7 +148,7 @@ final class ProductController
 
         $this->syncUsageForStatusChange($entitlements, $previousStatus, $newStatus);
 
-        return new ProductResource($product->refresh()->load(['brand', 'variants', 'categories', 'tags', 'collections']));
+        return new ProductResource($product->refresh()->load(['brand', 'variants', 'categories', 'tags', 'collections', 'badges']));
     }
 
     public function destroy(Request $request, Product $product, EntitlementService $entitlements): \Illuminate\Http\Response
@@ -175,6 +175,15 @@ final class ProductController
     {
         if ($request->has('tags')) {
             app(\App\Domain\Catalog\Services\ProductTagService::class)->sync($product, array_values($request->input('tags', [])));
+        }
+        // Phase B43 (Module 06 §36): the store's own badges on this product (ids of this store only).
+        if ($request->has('badge_ids')) {
+            $wantedBadges = array_values(array_unique(array_map('intval', $request->input('badge_ids', []))));
+            if (\App\Domain\Catalog\Models\Badge::query()->whereIn('id', $wantedBadges)->count() !== count($wantedBadges)) {
+                throw ValidationException::withMessages(['badge_ids' => 'Choose badges of this store.']);
+            }
+            $product->badges()->sync($wantedBadges);
+            $product->touch();
         }
         if (! $request->has('collection_ids')) {
             return;

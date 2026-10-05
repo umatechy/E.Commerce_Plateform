@@ -22,7 +22,12 @@ export type ProductCard = {
   hover_image?: Image | null;
   has_variants?: boolean;
   in_stock: boolean;
+  /** Phase B43: in the server's order; absent in older fixtures (then the card falls back to sale / sold out). */
+  badges?: ProductBadge[];
 };
+
+/** Phase B43 (Module 06 §36). */
+export type ProductBadge = { type: 'out_of_stock' | 'sale' | 'low_stock' | 'new' | 'bestseller' | 'featured' | 'custom'; label: string | null; tone: string; percent?: number };
 
 export type Availability = 'in_stock' | 'low_stock' | 'out_of_stock' | 'backorder';
 

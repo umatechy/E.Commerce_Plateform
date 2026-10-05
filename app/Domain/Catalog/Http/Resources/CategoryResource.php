@@ -21,6 +21,7 @@ final class CategoryResource extends JsonResource
             'status' => $this->status->value,
             'visibility' => $this->visibility,
             'sort_order' => $this->sort_order,
+            'default_sort' => $this->default_sort, // Phase B43 (Module 07 §17)
         ];
     }
 }

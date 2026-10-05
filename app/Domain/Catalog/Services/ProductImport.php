@@ -63,6 +63,7 @@ final class ProductImport
         'price', 'sale_price', 'cost_price', 'currency', 'brand', 'category', 'categories', 'tags', 'collections', 'featured',
         'parent_sku', 'parent_id', 'options', 'barcode', 'image_urls',
         'attributes', // Phase B42: "key: value; key: value, value" (specifications)
+        'sort_priority', 'badges', // Phase B43: merchandising order; the store's own badges by label
     ];
 
     private const TYPES = ['simple', 'variable', 'digital', 'service', 'bundle'];
@@ -101,6 +102,7 @@ final class ProductImport
         $collections = Collection::query()->get()->keyBy(fn (Collection $c) => mb_strtolower($c->name));
         $brands = Brand::query()->pluck('name')->map(fn ($n) => mb_strtolower((string) $n))->flip();
         $categoryPaths = $this->categoryPaths();
+        $badgeIndex = \App\Domain\Catalog\Models\Badge::query()->pluck('id', 'label')->mapWithKeys(fn ($id, $label) => [mb_strtolower((string) $label) => (int) $id]);
         $attributeIndex = \App\Domain\Catalog\Models\Attribute::query()->with('values')->get()
             ->keyBy(fn (\App\Domain\Catalog\Models\Attribute $a) => mb_strtolower($a->key));
 
@@ -143,6 +145,8 @@ final class ProductImport
                     'collections' => $this->list($r['collections'] ?? ''),
                     'featured' => $this->flag($r['featured'] ?? '', $messages),
                     'attributes' => $this->attributesCell($r['attributes'] ?? '', $attributeIndex, $messages),
+                    'sort_priority' => $this->sortPriority($r['sort_priority'] ?? '', $messages),
+                    'badges' => $this->badgesCell($r['badges'] ?? '', $badgeIndex, $messages),
                 ];
                 $this->checkSale($row, $messages, $row['action'] === 'update' ? Product::query()->find($row['product_id'] ?? 0)?->price_minor : null);
                 if (count($row['tags']) > ProductTagService::MAX_PER_PRODUCT || array_filter($row['tags'], fn ($t) => mb_strlen($t) > 60) !== []) {
@@ -409,6 +413,7 @@ final class ProductImport
             'name' => $row['name'], 'sku' => $row['sku'], 'short_description' => $row['short_description'], 'description' => $row['description'],
             'visibility' => $row['visibility'], 'price_minor' => $row['price_minor'], 'sale_price_minor' => $row['sale_price_minor'],
             'cost_price_minor' => $row['cost_price_minor'], 'currency' => $row['currency'], 'is_featured' => $row['featured'],
+            'sort_priority' => $row['sort_priority'] ?? null,
         ], fn ($v) => $v !== null);
         if ($row['brand'] !== null) {
             $values['brand_id'] = $this->brand((string) $row['brand'])->id;
@@ -469,6 +474,9 @@ final class ProductImport
         $categoryIds = array_map(fn (string $path) => $this->category($path)->id, array_values(array_filter([$row['category'], ...$row['categories']])));
         if ($categoryIds !== []) {
             $product->categories()->syncWithoutDetaching($categoryIds);
+        }
+        if (($row['badges'] ?? []) !== []) {
+            $product->badges()->syncWithoutDetaching($row['badges']); // Phase B43: listed badges are added
         }
         if (($row['attributes'] ?? []) !== []) {
             // Phase B42: the listed attributes are set; the product's other specifications stay.
@@ -728,6 +736,42 @@ final class ProductImport
         }
 
         return array_filter($out, fn ($v) => $v !== null && $v !== []);
+    }
+
+    /** @param list<string> $messages */
+    private function sortPriority(string $value, array &$messages): ?int
+    {
+        $value = trim($value);
+        if ($value === '') {
+            return null;
+        }
+        if (preg_match('/^-?\d{1,4}$/', $value) !== 1 || abs((int) $value) > 1000) {
+            $messages[] = 'sort_priority is a whole number from -1000 to 1000.';
+
+            return null;
+        }
+
+        return (int) $value;
+    }
+
+    /**
+     * @param \Illuminate\Support\Collection<string, int> $index lower-cased label => id
+     * @param list<string> $messages
+     * @return list<int>
+     */
+    private function badgesCell(string $value, $index, array &$messages): array
+    {
+        $ids = [];
+        foreach ($this->list($value) as $label) {
+            $id = $index->get(mb_strtolower($label));
+            if ($id === null) {
+                $messages[] = "There is no badge \"{$label}\". Create it under Catalog → Badges first.";
+            } else {
+                $ids[] = $id;
+            }
+        }
+
+        return array_values(array_unique($ids));
     }
 
     /** @return list<string> a list cell, separated by ; or | */

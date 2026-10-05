@@ -136,8 +136,8 @@ Route::middleware(['auth:sanctum', 'staff.principal', 'required.mfa'])->group(fu
     Route::get('/products/export', [\App\Domain\Catalog\Http\Controllers\ProductTransferController::class, 'export'])->middleware('throttle:10,10,products-export');
     Route::apiResource('products', ProductController::class);
     // Phase B38 (Module 06 §101, Module 07 §99): translations of catalog content.
-    Route::get('/translations/{type}/{id}', [\App\Domain\Settings\Http\Controllers\TranslationController::class, 'show'])->whereIn('type', ['product', 'category', 'brand', 'collection']);
-    Route::put('/translations/{type}/{id}', [\App\Domain\Settings\Http\Controllers\TranslationController::class, 'update'])->whereIn('type', ['product', 'category', 'brand', 'collection'])->middleware('throttle:60,1,translations');
+    Route::get('/translations/{type}/{id}', [\App\Domain\Settings\Http\Controllers\TranslationController::class, 'show'])->whereIn('type', ['product', 'category', 'brand', 'collection', 'badge']);
+    Route::put('/translations/{type}/{id}', [\App\Domain\Settings\Http\Controllers\TranslationController::class, 'update'])->whereIn('type', ['product', 'category', 'brand', 'collection', 'badge'])->middleware('throttle:60,1,translations');
     // Phase B24: storefront images of a product.
     Route::get('/products/{product}/images', [\App\Domain\Catalog\Http\Controllers\ProductImageController::class, 'index']);
     Route::post('/products/{product}/images', [\App\Domain\Catalog\Http\Controllers\ProductImageController::class, 'store']);
@@ -166,6 +166,8 @@ Route::middleware(['auth:sanctum', 'staff.principal', 'required.mfa'])->group(fu
     Route::apiResource('collections', \App\Domain\Catalog\Http\Controllers\CollectionController::class);
     Route::put('/collections/{collection}/products', [\App\Domain\Catalog\Http\Controllers\CollectionController::class, 'products']);
     Route::get('/tags', [\App\Domain\Catalog\Http\Controllers\ProductToolsController::class, 'tags']);
+    // Phase B43 (Module 06 §36): the store's own badges.
+    Route::apiResource('badges', \App\Domain\Catalog\Http\Controllers\BadgeController::class)->except(['show']);
     // Phase B40 (Module 06 §48–51): CSV import (preview, then confirm) and export.
     Route::post('/products/import', [\App\Domain\Catalog\Http\Controllers\ProductTransferController::class, 'preview'])->middleware('throttle:10,10,products-import');
     Route::post('/products/import/{import}/confirm', [\App\Domain\Catalog\Http\Controllers\ProductTransferController::class, 'confirm'])->where('import', '[0-9A-Za-z]{26}')->middleware('throttle:10,10,products-import-confirm');
