@@ -200,7 +200,7 @@ function RequestForm({ shell, api, info, onDone }: { shell: Shell; api: ReturnsA
           {files.length > 0 && <span className="mt-1 block text-sf-muted">{t('{count} chosen. Only the store sees them.', { count: files.length })}</span>}
         </label>
       )}
-      <button type="submit" disabled={busy} className="rounded-sf bg-sf-primary px-4 py-2 font-semibold text-white disabled:opacity-60">
+      <button type="submit" disabled={busy} className="sf-btn rounded-sf bg-sf-primary px-4 py-2 font-semibold text-white disabled:opacity-60">
         {busy ? t('Sending…') : t('Send request')}
       </button>
     </form>
@@ -269,7 +269,7 @@ function ReturnCard({ shell, api, record, maxPhotos, onChanged }: { shell: Shell
             <input aria-label={t('Courier')} placeholder={t('Courier (optional)')} value={carrier} onChange={(e) => setCarrier(e.target.value)} maxLength={64} className="rounded-sf border border-sf-border px-3 py-2" />
             <input aria-label={t('Tracking number')} placeholder={t('Tracking number (optional)')} value={tracking} onChange={(e) => setTracking(e.target.value)} maxLength={128} className="rounded-sf border border-sf-border px-3 py-2" />
           </div>
-          <button type="button" disabled={busy !== null} onClick={() => act('shipped', { carrier: carrier || null, tracking_number: tracking || null })} className="rounded-sf bg-sf-primary px-4 py-2 font-semibold text-white disabled:opacity-60">
+          <button type="button" disabled={busy !== null} onClick={() => act('shipped', { carrier: carrier || null, tracking_number: tracking || null })} className="sf-btn rounded-sf bg-sf-primary px-4 py-2 font-semibold text-white disabled:opacity-60">
             {busy === 'shipped' ? t('Saving…') : t('I have sent the items')}
           </button>
         </div>

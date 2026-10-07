@@ -29,7 +29,8 @@ export type LibraryTheme = {
 
 export const TIER_LABEL: Record<LibraryTheme['tier'], string> = { basic: 'Every package', business: 'Business and Premium', premium: 'Premium' };
 
-export const FONTS = ['system-ui', 'Inter', 'Roboto', 'Poppins', 'Montserrat', 'DM Sans', 'Georgia', 'Playfair Display', 'Merriweather', 'Lora'];
+// Owner decision 14 (2026-10-07): sans-serif fonts only.
+export const FONTS = ['system-ui', 'Inter', 'Roboto', 'Poppins', 'Montserrat', 'DM Sans'];
 
 type Choice = { value: string; label: string; feature?: string };
 

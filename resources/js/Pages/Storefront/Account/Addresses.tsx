@@ -66,7 +66,7 @@ export default function Addresses({ storefront, seo }: StorefrontPageProps) {
           />
         </div>
       ) : (
-        <button type="button" onClick={() => setEditing('new')} className="mb-6 rounded-sf bg-sf-primary px-4 py-2 font-medium text-white">
+        <button type="button" onClick={() => setEditing('new')} className="sf-btn mb-6 rounded-sf bg-sf-primary px-4 py-2 font-medium text-white">
           {t('Add an address')}
         </button>
       )}

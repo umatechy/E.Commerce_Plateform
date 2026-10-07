@@ -163,7 +163,7 @@ const seo = { title: 'Shop', description: null, canonical: '/', robots: 'index, 
 const shellWith = (layout: Record<string, unknown> = {}, motion: Record<string, unknown> = {}): Shell =>
   ({
     store: { name: 'Acme', slug: 'acme', currency: 'PKR', locale: null, timezone: 'UTC', tagline: 'Good things', logo_url: null, favicon_url: null, social_links: {} },
-    theme: { key: 'boutique', name: 'Boutique', tokens: { primary: '#3F2A1D', heading_font: 'Playfair Display', font_family: 'Lora', radius: 'sm', shadow: 'subtle', density: 'comfortable' }, layout, motion, custom_css: null },
+    theme: { key: 'boutique', name: 'Boutique', tokens: { primary: '#3F2A1D', heading_font: 'Poppins', font_family: 'DM Sans', radius: 'sm', shadow: 'subtle', density: 'comfortable' }, layout, motion, custom_css: null },
     announcement: null,
     navigation: { categories: [{ id: 'c1', slug: 'attar', name: 'Attar', product_count: 3, in_menu: true, children: [] }], pages: [] },
     base_path: '/shop/acme',
@@ -188,7 +188,7 @@ describe('storefront theme rendering', () => {
     expect(container.querySelector('[data-footer="columns"]')).toBeTruthy();
     expect(root.dataset.motion).toBe('premium');
     expect(root.style.getPropertyValue('--sf-primary')).toBe('#3F2A1D');
-    expect(root.style.getPropertyValue('--sf-font-heading')).toContain('Playfair Display');
+    expect(root.style.getPropertyValue('--sf-font-heading')).toContain('Poppins');
     expect(root.style.getPropertyValue('--sf-dur-normal')).toBe('480ms');
 
     rerender(<StoreLayout shell={shellWith({ header_style: 'split' }, { profile: 'none' })} seo={seo}>x</StoreLayout>);

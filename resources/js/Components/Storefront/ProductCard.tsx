@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link } from '@inertiajs/react';
 import Price from './Price';
 import ProductBadges from './ProductBadges';
+import Stars from './Stars';
 import { errorMessage, storefrontFetch } from '@/Storefront/api';
 import { useT } from '@/Storefront/i18n';
 import { useStorefrontTheme, type ThemeLayout } from '@/Storefront/theme';
@@ -49,6 +50,7 @@ export default function ProductCard({ product, basePath }: { product: Card; base
         <Link href={href} className={style === 'overlay' ? 'sr-only' : 'font-medium text-sf-text hover:text-sf-accent focus:outline-none focus-visible:underline'}>
           {product.name}
         </Link>
+        {product.rating && <Stars average={product.rating.average} count={product.rating.count} />}
         {style !== 'overlay' && <Price price={product.price} className="mt-auto pt-1" />}
         <QuickAdd product={product} href={href} />
       </div>

@@ -72,14 +72,14 @@ final class ThemeCatalog
         ],
         'boutique' => [
             'name' => 'Boutique',
-            'description' => 'Elegant and warm: serif headings, a centred logo, gold details and refined motion. For fashion, fragrance and gifts.',
+            'description' => 'Elegant and warm: soft rounded headings, a centred logo, gold details and refined motion. For fashion, fragrance and gifts.',
             'tier' => 'premium',
             'version' => '1.0.0',
             'performance' => 'rich',
             'tokens' => [
                 'primary' => '#3F2A1D', 'secondary' => '#7A6656', 'accent' => '#8A6212', 'background' => '#FFFAF5', 'surface' => '#F7EFE6',
                 'text' => '#2B1D14', 'muted' => '#6B5646', 'border' => '#EADCCC', 'success' => '#3F6212', 'warning' => '#92400E', 'error' => '#9F1239',
-                'radius' => 'sm', 'font_family' => 'Lora', 'heading_font' => 'Playfair Display', 'shadow' => 'subtle', 'density' => 'comfortable',
+                'radius' => 'sm', 'font_family' => 'DM Sans', 'heading_font' => 'Poppins', 'shadow' => 'subtle', 'density' => 'comfortable',
             ],
             'layout' => ['header_style' => 'centered', 'container' => 'standard', 'product_card' => 'elevated', 'grid_columns' => 3, 'hero_style' => 'split', 'sticky_header' => true, 'footer_style' => 'columns'],
             'motion' => ['profile' => 'premium', 'intensity' => 'medium', 'reveal_on_scroll' => true, 'hover_effects' => true],

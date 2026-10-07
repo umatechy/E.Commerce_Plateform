@@ -42,7 +42,7 @@ export default function ForgotPassword({ storefront, seo }: StorefrontPageProps)
               <span className="mb-1 block text-sf-muted">{t('Email')}</span>
               <input type="email" required autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} className="w-full rounded-sf border border-sf-border px-3 py-2" />
             </label>
-            <button type="submit" className="w-full rounded-sf bg-sf-primary px-4 py-3 font-semibold text-white">
+            <button type="submit" className="sf-btn w-full rounded-sf bg-sf-primary px-4 py-3 font-semibold text-white">
               {t('Send reset link')}
             </button>
           </form>

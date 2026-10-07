@@ -195,7 +195,7 @@ export default function Checkout({ storefront, seo, payment_methods }: Storefron
             </Link>
           )}
           {payment === 'bank_transfer' && <p className="mt-2 text-sf-muted">{t('Please use your order number as the transfer reference.')}</p>}
-          <Link href={base || '/'} className="mt-8 inline-block rounded-sf bg-sf-primary px-5 py-2 font-medium text-white">
+          <Link href={base || '/'} className="sf-btn mt-8 inline-block rounded-sf bg-sf-primary px-5 py-2 font-medium text-white">
             {t('Continue shopping')}
           </Link>
         </div>
@@ -325,7 +325,7 @@ export default function Checkout({ storefront, seo, payment_methods }: Storefron
               </label>
             )}
             <p className="text-xs text-sf-muted">{t('The final total, including any discount and tax, is confirmed when you place the order.')}</p>
-            <button type="submit" disabled={busy || cart.has_issues || methods.length === 0} className="w-full rounded-sf bg-sf-primary px-4 py-3 font-semibold text-white disabled:opacity-50">
+            <button type="submit" disabled={busy || cart.has_issues || methods.length === 0} className="sf-btn w-full rounded-sf bg-sf-primary px-4 py-3 font-semibold text-white disabled:opacity-50">
               {busy ? t('Placing order…') : t('Place order')}
             </button>
           </aside>

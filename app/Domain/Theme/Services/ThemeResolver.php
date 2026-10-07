@@ -65,6 +65,12 @@ final class ThemeResolver
         $theme = $this->entitlements->allows(ThemeCatalog::requiredFeature($key)) ? ThemeCatalog::get($key) : $base;
 
         $tokens = [...$base['tokens'], ...$theme['tokens'], ...($config['tokens'] ?? [])];
+        // Owner decision 14: a retired serif font (in an old configuration) renders as its sans-serif replacement.
+        foreach (['font_family', 'heading_font'] as $font) {
+            if (is_string($tokens[$font] ?? null) && isset(ThemeOptions::RETIRED_FONTS[$tokens[$font]])) {
+                $tokens[$font] = ThemeOptions::RETIRED_FONTS[$tokens[$font]];
+            }
+        }
         $layout = [...$base['layout'], ...$theme['layout'], ...($config['layout'] ?? [])];
         $motion = [...$base['motion'], ...$theme['motion'], ...($config['motion'] ?? [])];
 
@@ -109,6 +115,9 @@ final class ThemeResolver
         while (isset(ThemeOptions::MOTION_PROFILE_FEATURE[$motion['profile']]) && ! $this->entitlements->allows(ThemeOptions::MOTION_PROFILE_FEATURE[$motion['profile']])) {
             $motion['profile'] = $order[$motion['profile']];
         }
+        // Owner request 2026-10-07 (Module 18 §13 "button elevation"): Premium buttons rise a little on hover.
+        // Decided by the package, never stored in the store's configuration.
+        $motion['button_hover'] = $this->entitlements->allows('animation.premium');
         if ($motion['intensity'] === 'high' && ! $this->entitlements->allows('animation.premium')) {
             $motion['intensity'] = 'medium';
         }

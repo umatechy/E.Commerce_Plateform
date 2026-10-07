@@ -81,6 +81,11 @@ export default function Index() {
         label: 'Lift featured products in search',
         description: 'Among products that match a search equally well, featured and higher-priority products come first. A better match always comes before a featured one.',
       },
+      // Owner decision 15: reviews and units sold (Business and Premium packages).
+      'reviews.enabled': { label: 'Product reviews', description: 'Customers who bought a product can rate and review it; your store shows the rating and the reviews you publish. Business and Premium.' },
+      'reviews.auto_approve': { label: 'Publish reviews without checking', description: 'Off: you publish each review on the Reviews page first. On: reviews show at once; you can still reject or delete them.' },
+      'storefront.show_units_sold': { label: 'Show how many were sold', description: 'Shows “120 sold” on product pages, counted from your orders (cancelled ones excluded). Business and Premium.' },
+      'storefront.units_sold_minimum': { label: 'Show the number sold from', description: 'Products that sold fewer units than this do not show the number.' },
       'badges.new': { label: 'Badge: New', description: 'On products published within the number of days below.' },
       'badges.new_days': { label: 'New for (days)', description: 'How long a product shows the “New” badge after it is published.' },
       'badges.sale': { label: 'Badge: Sale', description: 'On products with a sale price.' },

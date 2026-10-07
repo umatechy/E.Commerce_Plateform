@@ -125,6 +125,11 @@ final class SettingRegistry
             'badges.featured' => new SettingDefinition(key: 'badges.featured', scope: SettingScope::Store, type: SettingType::Boolean, default: true),
             'badges.out_of_stock' => new SettingDefinition(key: 'badges.out_of_stock', scope: SettingScope::Store, type: SettingType::Boolean, default: true),
             'badges.max_per_product' => new SettingDefinition(key: 'badges.max_per_product', scope: SettingScope::Store, type: SettingType::Integer, default: 2),
+            // Owner decision 15 (2026-10-07; Module 05 §27): reviews and units sold on Business/Premium storefronts.
+            'reviews.enabled' => new SettingDefinition(key: 'reviews.enabled', scope: SettingScope::Store, type: SettingType::Boolean, default: true),
+            'reviews.auto_approve' => new SettingDefinition(key: 'reviews.auto_approve', scope: SettingScope::Store, type: SettingType::Boolean, default: false),
+            'storefront.show_units_sold' => new SettingDefinition(key: 'storefront.show_units_sold', scope: SettingScope::Store, type: SettingType::Boolean, default: true),
+            'storefront.units_sold_minimum' => new SettingDefinition(key: 'storefront.units_sold_minimum', scope: SettingScope::Store, type: SettingType::Integer, default: 1),
             // Phase B46 (gap G3, owner decision 1; Module 33 §29, Module 14 §36, Module 13 §62, Module 29 §95–96):
             // how the store charges tax. Off until the store sets it up; no rate is built in.
             'tax.enabled' => new SettingDefinition(key: 'tax.enabled', scope: SettingScope::Store, type: SettingType::Boolean, default: false),

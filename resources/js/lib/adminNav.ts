@@ -39,6 +39,7 @@ export const storeNav: NavGroup[] = [
       { href: '/products', label: 'Products', description: 'Products, prices, variants and images.', permissions: ['products.view'] },
       { href: '/collections', label: 'Collections', description: 'Hand-picked or rule-based groups of products.', permissions: ['collections.manage', 'products.view'] },
       { href: '/badges', label: 'Badges', description: 'Labels on product cards: automatic and your own.', permissions: ['collections.manage', 'products.view'] },
+      { href: '/reviews', label: 'Reviews', description: 'Ratings and reviews from customers who bought.', permissions: ['reviews.manage'], feature: 'reviews.product' },
       { href: '/categories', label: 'Categories', description: 'The category tree of your store.', permissions: ['categories.manage', 'products.view'] },
       { href: '/brands', label: 'Brands', description: 'The brands you sell.', permissions: ['brands.manage', 'products.view'] },
       { href: '/attributes', label: 'Attributes', description: 'Options such as size and colour.', permissions: ['attributes.manage', 'products.view'] },

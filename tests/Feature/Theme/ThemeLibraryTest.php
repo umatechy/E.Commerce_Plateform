@@ -65,7 +65,7 @@ final class ThemeLibraryTest extends TestCase
             $this->assertSame($included, $themes->where('included', true)->pluck('key')->values()->all(), $label);
             $this->assertSame('Classic', $themes->firstWhere('key', 'default')['name']);
             $this->assertTrue($themes->firstWhere('key', 'default')['published']);
-            $this->assertSame('Playfair Display', $themes->firstWhere('key', 'boutique')['tokens']['heading_font']);
+            $this->assertSame('Poppins', $themes->firstWhere('key', 'boutique')['tokens']['heading_font']);
         }
     }
 
@@ -96,7 +96,7 @@ final class ThemeLibraryTest extends TestCase
         $this->assertSame('boutique', $this->storeTheme($store)->fresh()->theme->key);
         $this->storefront($store, fn (AssertableInertia $page) => $page
             ->where('storefront.theme.key', 'boutique')
-            ->where('storefront.theme.tokens.heading_font', 'Playfair Display')
+            ->where('storefront.theme.tokens.heading_font', 'Poppins')
             ->where('storefront.theme.layout.header_style', 'centered')
             ->where('storefront.theme.motion.profile', 'premium'));
 
@@ -119,8 +119,10 @@ final class ThemeLibraryTest extends TestCase
         $put(['sections' => [['type' => 'testimonials', 'config' => ['items' => [['quote' => 'Good', 'name' => 'A']]]]]])
             ->assertForbidden()->assertJsonFragment(['violations' => ['The home page section "testimonials" is not included in your package.']]);
 
+        // Owner decision 14: serif fonts are no longer offered.
+        $put(['tokens' => ['heading_font' => 'Playfair Display']])->assertStatus(422);
         // What Basic includes is accepted.
-        $put(['theme' => 'minimal', 'layout' => ['header_style' => 'minimal', 'grid_columns' => 3, 'sticky_header' => true], 'motion' => ['profile' => 'none', 'hover_effects' => false], 'tokens' => ['radius' => 'none', 'heading_font' => 'Lora', 'shadow' => 'strong', 'density' => 'compact']])
+        $put(['theme' => 'minimal', 'layout' => ['header_style' => 'minimal', 'grid_columns' => 3, 'sticky_header' => true], 'motion' => ['profile' => 'none', 'hover_effects' => false], 'tokens' => ['radius' => 'none', 'heading_font' => 'Montserrat', 'shadow' => 'strong', 'density' => 'compact']])
             ->assertOk()->assertJsonPath('data.draft_config.layout.grid_columns', 3);
 
         [, $business] = $this->store(self::BUSINESS);

@@ -4,6 +4,8 @@ import StoreLayout from '@/Components/Storefront/StoreLayout';
 import ProductGrid from '@/Components/Storefront/ProductGrid';
 import Price from '@/Components/Storefront/Price';
 import ProductBadges from '@/Components/Storefront/ProductBadges';
+import Stars from '@/Components/Storefront/Stars';
+import ProductReviews, { type ReviewSummary } from '@/Components/Storefront/ProductReviews';
 import { errorMessage, StorefrontApiError, storefrontFetch } from '@/Storefront/api';
 import { loginHref } from '@/Storefront/account';
 import { findVariant, initialSelection, isSelectable, type Selection } from '@/Storefront/variants';
@@ -19,7 +21,9 @@ export default function Product({
   related,
   cross_sell = [],
   up_sell = [],
-}: StorefrontPageProps & { product: ProductDetail; related: ProductCard[]; cross_sell?: ProductCard[]; up_sell?: ProductCard[] }) {
+  units_sold = null,
+  reviews = null,
+}: StorefrontPageProps & { product: ProductDetail; related: ProductCard[]; cross_sell?: ProductCard[]; up_sell?: ProductCard[]; units_sold?: number | null; reviews?: { summary: ReviewSummary | null } | null }) {
   const base = storefront.base_path;
   const t = useT();
   const availabilityLabel: Record<Availability, string> = { in_stock: t('In stock'), low_stock: t('Only a few left'), backorder: t('Available on backorder'), out_of_stock: t('Sold out') };
@@ -119,6 +123,18 @@ export default function Product({
           <h1 className="mt-1 text-3xl font-bold">{product.name}</h1>
           {/* Phase B43 (Module 06 §36). */}
           <ProductBadges badges={product.badges ?? []} className="mt-2" />
+          {/* Owner decision 15 (Business, Premium): the rating of verified buyers and how many were sold. */}
+          {(product.rating || units_sold !== null) && (
+            <p className="mt-2 flex flex-wrap items-center gap-3 text-sm text-sf-muted">
+              {product.rating && (
+                <a href="#reviews-heading" className="inline-flex items-center gap-1 hover:text-sf-accent">
+                  <Stars average={product.rating.average} showCount={false} />
+                  <span>{product.rating.average.toFixed(1)} · {product.rating.count === 1 ? t('1 review') : t('{count} reviews', { count: String(product.rating.count) })}</span>
+                </a>
+              )}
+              {units_sold !== null && <span>{t('{count} sold', { count: units_sold.toLocaleString() })}</span>}
+            </p>
+          )}
           <Price price={price} className="mt-3 text-xl" />
           {product.summary && <p className="mt-4 text-sf-muted">{product.summary}</p>}
 
@@ -166,7 +182,7 @@ export default function Product({
               type="button"
               onClick={addToCart}
               disabled={!purchasable || status.type === 'busy'}
-              className="flex-1 rounded-sf bg-sf-primary px-5 py-3 font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50"
+              className="sf-btn flex-1 rounded-sf bg-sf-primary px-5 py-3 font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50"
             >
               {status.type === 'busy' ? t('Adding…') : purchasable ? t('Add to cart') : t('Unavailable')}
             </button>
@@ -213,6 +229,8 @@ export default function Product({
           </dl>
         </section>
       )}
+
+      {reviews !== null && <ProductReviews shell={storefront} slug={product.slug} summary={reviews.summary} />}
 
       {/* Phase B39 (Module 06 §38): the products the store chose to show with this one. */}
       {cross_sell.length > 0 && (

@@ -86,6 +86,10 @@ final class CustomerDataService
                     'type' => $entry->type->value, 'amount_minor' => $entry->amount_minor, 'balance_after_minor' => $entry->balance_after_minor,
                     'currency' => $entry->currency, 'at' => $entry->created_at->toIso8601String(),
                 ])->all(),
+            // Owner decision 15: the product reviews they wrote.
+            'reviews' => \App\Domain\Catalog\Models\ProductReview::query()->where('customer_id', $customer->id)->with('product:id,name')->get()
+                ->map(fn (\App\Domain\Catalog\Models\ProductReview $r) => ['product' => $r->product?->name, 'rating' => $r->rating, 'title' => $r->title, 'body' => $r->body, 'status' => $r->status, 'written_at' => $r->created_at->toIso8601String()])
+                ->values()->all(),
             'wishlist' => WishlistItem::query()->where('customer_id', $customer->id)->with('product')->get()
                 ->map(fn (WishlistItem $item) => ['product' => $item->product?->name, 'added_at' => $item->created_at->toIso8601String()])
                 ->all(),
@@ -177,6 +181,12 @@ final class CustomerDataService
                 \App\Domain\Returns\Models\ReturnRequest::query()->where('customer_id', $customer->id)->pluck('id'),
             );
             \Illuminate\Support\Facades\DB::table('customer_email_verifications')->where('customer_id', $customer->id)->delete();
+            // Owner decision 15: their reviews are their words: they go, and the products' ratings are counted again.
+            $reviewed = \App\Domain\Catalog\Models\ProductReview::query()->where('customer_id', $customer->id)->pluck('product_id')->unique();
+            $reviews = \App\Domain\Catalog\Models\ProductReview::query()->where('customer_id', $customer->id)->delete();
+            foreach (\App\Domain\Catalog\Models\Product::query()->whereIn('id', $reviewed)->get() as $product) {
+                app(\App\Domain\Catalog\Services\ReviewService::class)->refresh($product);
+            }
 
             // No password: the account can never be signed into again. The
             // email is replaced by a unique, undeliverable placeholder.
@@ -200,6 +210,7 @@ final class CustomerDataService
                 'notes_removed' => $notes,
                 'addresses_removed' => $addresses,
                 'returns_anonymized' => $returns,
+                'reviews_removed' => $reviews,
             ];
         });
     }

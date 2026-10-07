@@ -46,7 +46,7 @@ export default function Login({ storefront, seo, redirect }: StorefrontPageProps
             <span className="mb-1 block text-sf-muted">{t('Password')}</span>
             <input type="password" required autoComplete="current-password" value={password} onChange={(e) => setPassword(e.target.value)} className="w-full rounded-sf border border-sf-border px-3 py-2" />
           </label>
-          <button type="submit" disabled={busy} className="w-full rounded-sf bg-sf-primary px-4 py-3 font-semibold text-white disabled:opacity-50">
+          <button type="submit" disabled={busy} className="sf-btn w-full rounded-sf bg-sf-primary px-4 py-3 font-semibold text-white disabled:opacity-50">
             {busy ? t('Signing in…') : t('Sign in')}
           </button>
         </form>

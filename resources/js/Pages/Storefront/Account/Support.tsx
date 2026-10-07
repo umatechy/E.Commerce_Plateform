@@ -44,7 +44,7 @@ export default function Support({ storefront, seo }: StorefrontPageProps) {
             </button>
           ))}
         </div>
-        <Link href={`${base}/account/support/new`} className="rounded-sf bg-sf-primary px-4 py-2 text-sm font-medium text-white">
+        <Link href={`${base}/account/support/new`} className="sf-btn rounded-sf bg-sf-primary px-4 py-2 text-sm font-medium text-white">
           {t('New request')}
         </Link>
       </div>

@@ -129,6 +129,7 @@ final class AppServiceProvider extends ServiceProvider
         Gate::policy(Brand::class, BrandPolicy::class);
         Gate::policy(\App\Domain\Catalog\Models\Badge::class, \App\Domain\Catalog\Policies\BadgePolicy::class); // Phase B43
         Gate::policy(\App\Domain\Tax\Models\TaxClass::class, \App\Domain\Tax\Policies\TaxPolicy::class); // Phase B46
+        Gate::policy(\App\Domain\Catalog\Models\ProductReview::class, \App\Domain\Catalog\Policies\ProductReviewPolicy::class); // owner decision 15
         Gate::policy(Attribute::class, AttributePolicy::class);
         Gate::policy(Inventory::class, InventoryPolicy::class);
         Gate::policy(Warehouse::class, WarehousePolicy::class);

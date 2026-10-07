@@ -52,7 +52,7 @@ export default function Register({ storefront, seo }: StorefrontPageProps) {
           {field('phone', t('Phone (optional)'), { autoComplete: 'tel' })}
           {field('password', t('Password (at least 10 characters)'), { type: 'password', required: true, autoComplete: 'new-password' })}
           {field('password_confirmation', t('Confirm password'), { type: 'password', required: true, autoComplete: 'new-password' })}
-          <button type="submit" disabled={busy} className="w-full rounded-sf bg-sf-primary px-4 py-3 font-semibold text-white disabled:opacity-50">
+          <button type="submit" disabled={busy} className="sf-btn w-full rounded-sf bg-sf-primary px-4 py-3 font-semibold text-white disabled:opacity-50">
             {busy ? t('Creating your account…') : t('Create account')}
           </button>
         </form>

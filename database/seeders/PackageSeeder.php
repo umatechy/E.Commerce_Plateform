@@ -85,6 +85,9 @@ final class PackageSeeder extends Seeder
             'homepage.reorder' => false,
             'animation.advanced' => false,
             'animation.premium' => false,
+            // Owner decision 15 (2026-10-07): ratings/reviews and units sold on product pages are Business and Premium.
+            'reviews.product' => false,
+            'products.units_sold' => false,
         ],
         'business' => [
             // Module 06 — the catalog itself. ProductController requires this key
@@ -127,6 +130,9 @@ final class PackageSeeder extends Seeder
             'homepage.reorder' => false,
             'animation.advanced' => true,
             'animation.premium' => false,
+            // Owner decision 15 (2026-10-07): ratings/reviews and units sold on product pages are Business and Premium.
+            'reviews.product' => true,
+            'products.units_sold' => true,
         ],
         'premium' => [
             // Module 06 — the catalog itself. ProductController requires this key
@@ -169,6 +175,9 @@ final class PackageSeeder extends Seeder
             'homepage.reorder' => true,
             'animation.advanced' => true,
             'animation.premium' => true,
+            // Owner decision 15 (2026-10-07): ratings/reviews and units sold on product pages are Business and Premium.
+            'reviews.product' => true,
+            'products.units_sold' => true,
         ],
     ];
 

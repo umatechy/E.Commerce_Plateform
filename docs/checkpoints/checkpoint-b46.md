@@ -69,4 +69,41 @@ shown with a different tax display than entered.
 
 CI: run on ef8b515 — success, verified 2026-10-07.
 
+
+------------------------------------------------------------
+FOLLOW-UP (2026-10-07) — owner requests 14 and 15
+------------------------------------------------------------
+
+Owner request (2026-10-07, while testing): sans-serif fonts only; Business
+and Premium product details with ratings and the number sold; Premium
+buttons move slightly on hover.
+
+Built (b46-followup-fonts-reviews-motion.md):
+1. Fonts: serif fonts removed (list, packages, Boutique → DM Sans/Poppins),
+   stored theme configurations migrated, old ones render sans.
+2. Reviews: verified-buyer reviews (product_reviews), store moderation
+   (Catalog → Reviews: publish, reject, reply, delete), rating summary and
+   stars on product pages and cards, AggregateRating, privacy export and
+   erasure. Features reviews.product and products.units_sold (Business,
+   Premium); permission reviews.manage.
+3. Units sold on product pages (orders that count, outside the page cache;
+   on/off and a minimum).
+4. Premium buttons rise 2 px on hover (mouse only, reduced motion off).
+
+Audit: no review system existed — ratings without one would be invented.
+StorefrontCatalog's units-sold query reused; its copy in bestSellers()
+removed.
+
+Tests (2026-10-07): PHP 1171 passed (ReviewsAndUnitsSoldTest 4; theme and
+privacy tests updated); PHPStan no errors; Vitest 211 passed
+(reviews.test.tsx 4); ESLint, TypeScript clean; build passes.
+
+Browser verification — EXECUTED: 7 of 7, no console errors besides the B25
+session probe: headings Poppins / text DM Sans; Premium "Add to cart" moves
+-2 px on hover; customer buys → "2 sold" becomes "3 sold"; review waits;
+owner publishes it on Reviews; product page 5.0 with the review and
+"Verified purchase"; stars on the listing card; 375 px fits.
+
+CI: not yet run.
+
 Next (on the owner's word): B47 — billing completion.

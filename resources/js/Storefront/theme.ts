@@ -24,6 +24,8 @@ export type ThemeMotion = {
   intensity: 'low' | 'medium' | 'high';
   reveal_on_scroll: boolean;
   hover_effects: boolean;
+  /** Premium (from the package, not the store's settings): buttons rise a little on hover. */
+  button_hover?: boolean;
 };
 
 export const DEFAULT_LAYOUT: ThemeLayout = { header_style: 'classic', container: 'standard', product_card: 'standard', grid_columns: 4, hero_style: 'simple', sticky_header: false, footer_style: 'simple' };
@@ -115,6 +117,7 @@ export function themeStyle(shell: Shell): { style: CSSProperties; attributes: Re
       'data-theme': shell.theme.key ?? 'default',
       'data-motion': motion.profile,
       'data-hover': motion.hover_effects && motion.profile !== 'none' ? 'on' : 'off',
+      'data-button-motion': motion.button_hover && motion.hover_effects && motion.profile !== 'none' ? 'on' : 'off',
       'data-page-motion': m.page ? 'on' : 'off',
     },
   };

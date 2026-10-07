@@ -75,6 +75,18 @@
   }
 }
 
+/*
+ * Premium (owner request 2026-10-07; Module 18 §13 "button elevation"): buttons
+ * rise slightly with a soft shadow on hover — mouse pointers only, never needed
+ * to use the button, and off for reduced motion (below).
+ */
+@media (hover: hover) and (pointer: fine) {
+  .sf-root[data-hover='on'][data-button-motion='on'] .sf-btn:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 18px -10px rgb(0 0 0 / 0.45);
+  }
+}
+
 /* Press feedback (Module 18 §14): brief, never blocks the action. */
 .sf-root[data-hover='on'] .sf-btn:active:not(:disabled) {
   transform: scale(0.97);
@@ -140,7 +152,8 @@
     transform: none;
   }
   .sf-root .sf-card:hover,
-  .sf-root .sf-card:hover .sf-card-img {
+  .sf-root .sf-card:hover .sf-card-img,
+  .sf-root .sf-btn:hover {
     transform: none !important;
   }
 }

@@ -68,7 +68,7 @@ export default function Contact({ storefront, seo, categories }: StorefrontPageP
               {t('We have emailed you a private link to follow the conversation. Keep it to yourself: anyone with the link can read and reply to this request.')}
             </p>
             {/* A plain link: the token stays in the #fragment, which is never sent to the server. */}
-            <a href={`${base}/support/tickets/${created.id}#token=${encodeURIComponent(created.access_token ?? '')}`} className="inline-block rounded-sf bg-sf-primary px-4 py-2 font-medium text-white">
+            <a href={`${base}/support/tickets/${created.id}#token=${encodeURIComponent(created.access_token ?? '')}`} className="sf-btn inline-block rounded-sf bg-sf-primary px-4 py-2 font-medium text-white">
               {t('View your request')}
             </a>
           </div>
@@ -140,7 +140,7 @@ export default function Contact({ storefront, seo, categories }: StorefrontPageP
                   {error}
                 </p>
               )}
-              <button type="submit" disabled={busy} className="rounded-sf bg-sf-primary px-4 py-2 font-medium text-white disabled:opacity-50">
+              <button type="submit" disabled={busy} className="sf-btn rounded-sf bg-sf-primary px-4 py-2 font-medium text-white disabled:opacity-50">
                 {busy ? t('Sending…') : t('Send message')}
               </button>
             </form>

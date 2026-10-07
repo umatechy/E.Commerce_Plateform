@@ -77,7 +77,7 @@ export default function Wishlist({ storefront, seo }: StorefrontPageProps) {
             </div>
             <div className="flex flex-col items-end gap-2 text-sm">
               {item.availability === 'available' && (
-                <button type="button" onClick={() => act(`/wishlist/${item.id}/move-to-cart`, 'POST', t('Moved to your cart.'))} className="rounded-sf bg-sf-primary px-3 py-1 text-white">
+                <button type="button" onClick={() => act(`/wishlist/${item.id}/move-to-cart`, 'POST', t('Moved to your cart.'))} className="sf-btn rounded-sf bg-sf-primary px-3 py-1 text-white">
                   {t('Move to cart')}
                 </button>
               )}

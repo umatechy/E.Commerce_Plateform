@@ -9,7 +9,7 @@ type Tone = 'storefront' | 'admin';
 const STYLES: Record<Tone, { input: string; primary: string; secondary: string; muted: string; error: string; card: string; badge: string }> = {
   storefront: {
     input: 'w-full rounded-sf border border-sf-border bg-sf-bg px-3 py-2',
-    primary: 'rounded-sf bg-sf-primary px-4 py-2 font-medium text-white disabled:opacity-50',
+    primary: 'sf-btn rounded-sf bg-sf-primary px-4 py-2 font-medium text-white disabled:opacity-50',
     secondary: 'rounded-sf border border-sf-border px-4 py-2 text-sm font-medium disabled:opacity-50',
     muted: 'text-sf-muted',
     error: 'text-sf-error',

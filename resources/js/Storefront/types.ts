@@ -24,6 +24,8 @@ export type ProductCard = {
   in_stock: boolean;
   /** Phase B43: in the server's order; absent in older fixtures (then the card falls back to sale / sold out). */
   badges?: ProductBadge[];
+  /** Owner decision 15: from approved reviews; null without them or on Basic. */
+  rating?: { average: number; count: number } | null;
 };
 
 /** Phase B43 (Module 06 §36). */

@@ -87,7 +87,7 @@ final class StorefrontWebController
     {
         $data = $this->experience->product($this->store($request), $productSlug) ?? throw new NotFoundHttpException();
 
-        return $this->render($request, 'Storefront/Product', ['product' => $data['product'], 'related' => $data['related'], 'cross_sell' => $data['cross_sell'] ?? [], 'up_sell' => $data['up_sell'] ?? []], $data['seo']);
+        return $this->render($request, 'Storefront/Product', ['product' => $data['product'], 'related' => $data['related'], 'cross_sell' => $data['cross_sell'] ?? [], 'up_sell' => $data['up_sell'] ?? [], 'units_sold' => $data['units_sold'] ?? null, 'reviews' => $data['reviews'] ?? null], $data['seo']);
     }
 
     public function page(Request $request, string $pageSlug): Response

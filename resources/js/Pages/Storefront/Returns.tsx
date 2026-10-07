@@ -105,7 +105,7 @@ export default function Returns({ storefront, seo, token: fromLink }: Storefront
                     <input tabIndex={-1} autoComplete="off" value={website} onChange={(e) => setWebsite(e.target.value)} />
                   </label>
                 </div>
-                <button type="submit" disabled={state === 'sending'} className="rounded-sf bg-sf-primary px-4 py-3 font-semibold text-white disabled:opacity-60">
+                <button type="submit" disabled={state === 'sending'} className="sf-btn rounded-sf bg-sf-primary px-4 py-3 font-semibold text-white disabled:opacity-60">
                   {state === 'sending' ? t('Sending…') : t('Email me the link')}
                 </button>
               </form>

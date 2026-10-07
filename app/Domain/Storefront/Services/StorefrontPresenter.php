@@ -155,7 +155,19 @@ final class StorefrontPresenter
             'in_stock' => (bool) $product->getAttribute('in_stock'),
             // Phase B43 (Module 06 §36): {type, label (own badges only), tone, percent?}, in order.
             'badges' => $badges,
+            // Owner decision 15 (Module 05 §14): approved reviews only; null without them or on Basic.
+            'rating' => $this->ratingOf($product),
         ];
+    }
+
+    private ?bool $reviewsOn = null;
+
+    /** @return array{average: float, count: int}|null */
+    private function ratingOf(Product $product): ?array
+    {
+        $this->reviewsOn ??= app(\App\Domain\Catalog\Services\ReviewService::class)->enabled();
+
+        return $this->reviewsOn ? \App\Domain\Catalog\Services\ReviewService::rating((int) $product->review_count, (int) $product->rating_total) : null;
     }
 
     /** @return array<string, mixed> */
@@ -198,6 +210,7 @@ final class StorefrontPresenter
                 ? $purchasableVisibility && $ownPrice !== null && $ownAvailability !== 'out_of_stock'
                 : collect($presentedVariants)->contains('purchasable', true),
             'breadcrumbs' => $this->breadcrumbs($product->primaryCategory),
+            'rating' => $this->ratingOf($product), // owner decision 15
         ];
     }
 
@@ -298,6 +311,8 @@ final class StorefrontPresenter
             'url' => $seo->canonicalUrl,
             'image' => array_column($detail['images'], 'url') ?: null,
             'brand' => $detail['brand'] !== null ? ['@type' => 'Brand', 'name' => $detail['brand']['name']] : null,
+            // Module 05 §55 "Aggregate Rating": only from approved reviews of verified buyers.
+            'aggregateRating' => ($detail['rating'] ?? null) === null ? null : ['@type' => 'AggregateRating', 'ratingValue' => $detail['rating']['average'], 'reviewCount' => $detail['rating']['count'], 'bestRating' => 5, 'worstRating' => 1],
             'offers' => $detail['price']['amount_minor'] === null ? null : ($detail['price']['max_amount_minor'] !== null ? [
                 '@type' => 'AggregateOffer',
                 'priceCurrency' => $currency,

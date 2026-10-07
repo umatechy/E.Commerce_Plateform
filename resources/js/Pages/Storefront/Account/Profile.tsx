@@ -73,7 +73,7 @@ function DetailsForm({ storefront, customer, onSaved }: Shared & { customer: Cus
         <input type="checkbox" checked={form.marketing_email_opt_in} onChange={(e) => setForm({ ...form, marketing_email_opt_in: e.target.checked })} />
         {t('Email me news and offers')}
       </label>
-      <button type="submit" className="rounded-sf bg-sf-primary px-4 py-2 font-medium text-white">
+      <button type="submit" className="sf-btn rounded-sf bg-sf-primary px-4 py-2 font-medium text-white">
         {t('Save details')}
       </button>
       <Message notice={notice} />

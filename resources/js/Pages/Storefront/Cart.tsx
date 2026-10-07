@@ -159,7 +159,7 @@ export default function Cart({ storefront, seo }: StorefrontPageProps) {
             {cart.has_issues ? (
               <p className="text-sm text-sf-error">{t('Resolve the items marked above before checking out.')}</p>
             ) : (
-              <Link href={`${base}/checkout`} className="block rounded-sf bg-sf-primary px-4 py-3 text-center font-semibold text-white">
+              <Link href={`${base}/checkout`} className="sf-btn block rounded-sf bg-sf-primary px-4 py-3 text-center font-semibold text-white">
                 {t('Checkout')}
               </Link>
             )}

@@ -52,7 +52,7 @@ function ConfirmEmail({ storefront, email }: { storefront: StorefrontPageProps['
               {error}
             </p>
           )}
-          <button type="button" onClick={send} disabled={state === 'sending'} className="mt-3 rounded-sf bg-sf-primary px-4 py-2 font-semibold text-white disabled:opacity-60">
+          <button type="button" onClick={send} disabled={state === 'sending'} className="sf-btn mt-3 rounded-sf bg-sf-primary px-4 py-2 font-semibold text-white disabled:opacity-60">
             {state === 'sending' ? t('Sending…') : t('Send me the link')}
           </button>
         </>

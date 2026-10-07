@@ -117,6 +117,9 @@ Route::middleware(['customer.optional', 'storefront.store:api', 'throttle:120,1'
         Route::get('/', [$controller, 'show']);
         Route::get('/products', [$controller, 'products']);
         Route::get('/products/{slug}', [$controller, 'product']);
+        // Owner decision 15 (Module 05 §27): approved reviews; a customer who bought the product writes one.
+        Route::get('/products/{slug}/reviews', [\App\Domain\Catalog\Http\Controllers\StorefrontReviewController::class, 'index']);
+        Route::post('/products/{slug}/reviews', [\App\Domain\Catalog\Http\Controllers\StorefrontReviewController::class, 'store'])->middleware(['auth:customer', 'customer.principal', 'throttle:10,10,product-review']);
         Route::get('/categories', [$controller, 'categories']);
         Route::get('/categories/{slug}', [$controller, 'category']);
         Route::get('/brands', [$controller, 'brands']);

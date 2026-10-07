@@ -163,6 +163,12 @@ Route::middleware(['auth:sanctum', 'staff.principal', 'required.mfa'])->group(fu
     Route::put('/categories/{category}/attributes', [$taxonomy, 'saveCategoryAttributes']);
     Route::get('/products/{product}/specifications', [$taxonomy, 'specifications']);
     Route::put('/products/{product}/specifications', [$taxonomy, 'saveSpecifications']);
+    // Owner decision 15 (Module 05 §27): moderating product reviews (Business, Premium).
+    $reviews = \App\Domain\Catalog\Http\Controllers\ReviewController::class;
+    Route::get('/reviews', [$reviews, 'index']);
+    Route::put('/reviews/{review}/status', [$reviews, 'status']);
+    Route::put('/reviews/{review}/reply', [$reviews, 'reply']);
+    Route::delete('/reviews/{review}', [$reviews, 'destroy']);
     // Phase B46 (gap G3, owner decision 1; Module 33 §29): the store's tax set-up — no rate is built in.
     $tax = \App\Domain\Tax\Http\Controllers\TaxController::class;
     Route::get('/tax', [$tax, 'show']);

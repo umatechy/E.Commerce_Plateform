@@ -22,8 +22,19 @@ final class ThemeOptions
 {
     public const COLOR_TOKENS = ['primary', 'secondary', 'accent', 'background', 'surface', 'text', 'muted', 'border', 'success', 'warning', 'error'];
 
-    /** Self-hosted fonts (no third-party font requests — Module 17 §8 "privacy-aware"); system-ui and Georgia need no file. */
-    public const FONTS = ['system-ui', 'Inter', 'Roboto', 'Poppins', 'Montserrat', 'DM Sans', 'Georgia', 'Playfair Display', 'Merriweather', 'Lora'];
+    /**
+     * Self-hosted fonts (no third-party font requests — Module 17 §8 "privacy-aware"); system-ui needs no file.
+     * Owner decision 14 (2026-10-07): sans-serif fonts only.
+     */
+    public const FONTS = ['system-ui', 'Inter', 'Roboto', 'Poppins', 'Montserrat', 'DM Sans'];
+
+    /**
+     * The serif fonts offered until owner decision 14 and the sans-serif font
+     * that takes their place — used by the data migration and, for any
+     * configuration still holding one (e.g. an old publication rolled back
+     * to), by ThemeResolver when it renders.
+     */
+    public const RETIRED_FONTS = ['Georgia' => 'Inter', 'Playfair Display' => 'Poppins', 'Merriweather' => 'Inter', 'Lora' => 'DM Sans'];
 
     public const RADIUS = ['none', 'sm', 'md', 'lg'];
     public const SHADOW = ['none', 'subtle', 'medium', 'strong'];

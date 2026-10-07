@@ -98,7 +98,7 @@ export default function SupportNew({ storefront, seo }: StorefrontPageProps) {
             {error}
           </p>
         )}
-        <button type="submit" disabled={busy} className="rounded-sf bg-sf-primary px-4 py-2 font-medium text-white disabled:opacity-50">
+        <button type="submit" disabled={busy} className="sf-btn rounded-sf bg-sf-primary px-4 py-2 font-medium text-white disabled:opacity-50">
           {busy ? t('Sending…') : t('Send request')}
         </button>
       </form>

@@ -477,6 +477,12 @@ final class StorefrontCatalog
             ->selectRaw('order_items.product_id, SUM(order_items.quantity) AS units');
     }
 
+    /** Owner decision 15: all units of one product sold on orders that count (the same rule as best sellers). */
+    public function unitsSoldOf(int $productId): int
+    {
+        return (int) $this->unitsSold()->where('order_items.product_id', $productId)->value('units');
+    }
+
     /** A product page: any searchable or browsable active product. */
     public function product(string $slug): ?Product
     {
@@ -508,15 +514,8 @@ final class StorefrontCatalog
      */
     public function bestSellers(int $limit): Collection
     {
-        $sold = \App\Domain\Orders\Models\OrderItem::query()
-            ->join('orders', 'orders.id', '=', 'order_items.order_id')
-            ->whereNotIn('orders.status', ['draft', 'cancelled', 'failed'])
-            ->whereNotNull('order_items.product_id')
-            ->groupBy('order_items.product_id')
-            ->selectRaw('order_items.product_id, SUM(order_items.quantity) AS units');
-
         return $this->withPricing($this->visible(self::BROWSE_VISIBILITY))
-            ->joinSub($sold, 'sold', 'sold.product_id', '=', 'products.id')
+            ->joinSub($this->unitsSold(), 'sold', 'sold.product_id', '=', 'products.id')
             ->with(['brand', 'images'])
             ->orderByDesc('sold.units')->orderByDesc('products.id')
             ->limit($limit)

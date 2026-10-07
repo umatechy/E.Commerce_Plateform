@@ -45,6 +45,7 @@ final class SystemRoles
         'support.view', 'support.reply', 'support.manage', // Module 34 (Phase B26)
         'customers.view', 'customers.manage', // Module 10 (Phase B32)
         'returns.view', 'returns.manage', 'returns.approve', // Module 09 §65 (Phase B33); refunds stay with payments.refund
+        'reviews.manage', // product reviews (owner decision 15)
     ];
 
     /** @return array<string, array{name: string, permissions: list<string>}> slug => definition, Owner first */
@@ -80,7 +81,7 @@ final class SystemRoles
                 'categories.manage', 'brands.manage', 'attributes.manage', 'collections.manage',
                 'promotions.view', 'promotions.manage', 'marketing.view', 'marketing.manage',
                 'seo.view', 'seo.manage', 'theme.view', 'theme.manage', 'analytics.view',
-                'customers.view',
+                'customers.view', 'reviews.manage',
             ]],
         ];
     }

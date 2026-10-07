@@ -136,6 +136,7 @@ final class CustomerPrivacyTest extends TestCase
             'notes_removed' => 0,
             'addresses_removed' => 0,
             'returns_anonymized' => 0,
+            'reviews_removed' => 0, // owner decision 15
         ]);
 
         $customer->refresh();

@@ -357,7 +357,7 @@ final class StorefrontExperience
     /** @return ?array<string, mixed> */
     public function product(Store $store, string $slug): ?array
     {
-        return $this->cache->remember($store->id, 'product:'.$slug, function () use ($slug) {
+        $page = $this->cache->remember($store->id, 'product:'.$slug, function () use ($slug) {
             $product = $this->catalog()->product($slug);
 
             if ($product === null) {
@@ -382,8 +382,13 @@ final class StorefrontExperience
                     ->reject(fn (Product $p) => in_array($p->id, $shown, true))->take(4)->values();
             }
 
+            $reviews = app(\App\Domain\Catalog\Services\ReviewService::class);
+
             return [
+                '_product_id' => $product->id,
                 'product' => [...$detail, 'specifications' => $this->specifications($product)],
+                // Owner decision 15 (Module 05 §27): the rating summary; the reviews themselves are loaded by the page.
+                'reviews' => $reviews->enabled() ? ['summary' => $reviews->summary($product)] : null,
                 'related' => $this->presenter->cards($related),
                 'cross_sell' => $this->presenter->cards($crossSell),
                 'up_sell' => $this->presenter->cards($upSell),
@@ -393,6 +398,14 @@ final class StorefrontExperience
                 ]))),
             ];
         });
+        if ($page === null) {
+            return null;
+        }
+        // Units sold change with every order, so they are counted outside the page cache (one small query).
+        $page['units_sold'] = app(\App\Domain\Catalog\Services\ReviewService::class)->unitsSoldShown((int) $page['_product_id']);
+        unset($page['_product_id']);
+
+        return $page;
     }
 
     /** @return ?array<string, mixed> */

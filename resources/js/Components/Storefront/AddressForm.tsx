@@ -59,7 +59,7 @@ export default function AddressForm({
         {t('Use as my default address')}
       </label>
       <div className="flex gap-3 sm:col-span-2">
-        <button type="submit" disabled={busy} className="rounded-sf bg-sf-primary px-5 py-2 font-medium text-white disabled:opacity-50">
+        <button type="submit" disabled={busy} className="sf-btn rounded-sf bg-sf-primary px-5 py-2 font-medium text-white disabled:opacity-50">
           {busy ? t('Saving…') : t('Save address')}
         </button>
         {onCancel && (
