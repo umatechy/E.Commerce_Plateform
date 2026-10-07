@@ -120,15 +120,72 @@ A template never does more than the person could do by hand. At store
 creation the actor is the new owner (self-service) or the platform staff
 member (assisted), as for every other creation step.
 
-## 6. Not built here
+## 6. Follow-up (2026-10-06): Urdu, platform-managed templates, store to template
 
-- Urdu names for template categories: the owner translates them in the admin
-  (Translate on each category, B38).
-- Templates edited by Umar Techy staff in the Super Admin (a "template
-  marketplace", §101): templates are code today; changing one is a reviewed
-  change with a version bump.
-- Store cloning (Module 03 §52): copying an existing store's configuration is
-  a separate, controlled workflow and not started.
-- "Connect external catalogue" (§105 option 4): needs provider integrations.
-- AI suggestions for categories and attributes (§102): later, behind the AI
-  abstraction (owner decision).
+Built after the first B45 delivery, on the owner's request to finish what
+was left.
+
+### 6.1 Urdu text (Module 07 §38, Module 31)
+
+`StarterTemplateUrdu::TEXT` is one glossary keyed by the English text (about
+380 entries): every category name and description, attribute name and worded
+value of the built-in templates. One entry serves every template that uses
+the word, so nothing is translated twice. Plain sizes and numbers (XS, 128 GB,
+UK 7) read the same and are not listed. A test fails if a built-in template
+gains text without Urdu.
+
+When a template **creates** a category, attribute or value, its Urdu goes into
+`content_translations` (`ur`) through `TranslationService` — the same place
+the owner's own translations live, so a store offering Urdu shows it at once
+and the owner can change it under Translate. Items the store already had are
+never touched.
+
+### 6.2 Templates managed by Umar Techy (Module 07 §101)
+
+`StarterTemplateRegistry` gives one list: the built-in templates (code) and
+the templates saved from stores (`platform_starter_templates`, platform data,
+no store scope). Per template staff decide:
+
+| Switch | Effect |
+|---|---|
+| On / Off | Off: nobody can start from it (sign-up, staff, owners); stores that used it keep what it added |
+| Offered to store owners | Off: only staff use it when creating stores |
+
+Built-in content stays in code (a reviewed change with a version bump);
+templates saved from a store can also be renamed, given a summary and a
+business category, or deleted. Super Admin → **Starter templates** lists all
+of them with source, contents, status and how many stores used each.
+
+### 6.3 Store to template — the controlled form of cloning (Module 03 §52)
+
+Super Admin → a store → **Save as a starter template** copies the store's
+**structure**: categories (two levels; deeper ones are counted and reported),
+descriptions, active attributes and active values (colours with their codes,
+or none if the store had none), the top-level categories' filters and required
+fields, brand names, the published theme's key, the default order, and the
+Urdu text of all of these.
+
+Never copied (§52): products, prices, stock, orders, customers, reviews, team,
+pictures and logos, pages and policies, domains, payment and shipping
+settings, credentials or other settings. A new store made from the template
+goes through the normal creation path, so its ids, package, subscription and
+domains are its own.
+
+A saved template starts **staff only** (it may carry the source store's
+names); staff choose it in "Create store for a customer" (Template), or offer
+it to owners.
+
+| Who | Can |
+|---|---|
+| Platform staff (step-up) | save from a store, switch on/off, offer, rename, delete |
+| Store staff | see and apply only templates that are on and offered |
+
+## 7. Still not built
+
+- "Connect external catalogue" (§105 option 4): needs a provider and its
+  credentials — an owner input, kept for the end of the list.
+- AI suggestions for categories and attributes (§102): Module 26 must first
+  define features, provider/model, privacy, entitlements, limits, costs and
+  audit (owner decision 7), and needs the OpenAI key — kept for the end.
+- Editing the content of a template (categories, attributes) in the Super
+  Admin: change the source store and save it again, or change the code.

@@ -76,7 +76,7 @@ final class StoreProvisioningService
     /**
      * Umar Techy staff create a store for a customer (Module 03 §5A, §38).
      *
-     * @param array{store_name: string, business_category: string, package_code: string, trial_days?: ?int, owner_email: string, idempotency_key?: ?string, starter_template?: bool} $data
+     * @param array{store_name: string, business_category: string, package_code: string, trial_days?: ?int, owner_email: string, idempotency_key?: ?string, starter_template?: bool, starter_template_key?: ?string} $data
      */
     public function forCustomer(User $staff, array $data): Store
     {
@@ -88,13 +88,18 @@ final class StoreProvisioningService
         $package = Package::query()->where('code', $data['package_code'])->where('is_active', true)->first()
             ?? throw ValidationException::withMessages(['package_code' => 'Choose an active package.']);
         $email = Str::lower(trim($data['owner_email']));
+        // Phase B45: staff may start the store from any active template, e.g. one saved from another store.
+        $templateKey = $data['starter_template_key'] ?? null;
+        if (($data['starter_template'] ?? false) && $templateKey !== null && app(\App\Domain\Catalog\Services\StarterTemplateRegistry::class)->usable($templateKey, false) === null) {
+            throw ValidationException::withMessages(['starter_template_key' => 'Choose an active starter template.']);
+        }
 
-        $store = DB::transaction(function () use ($staff, $data, $package, $email) {
+        $store = DB::transaction(function () use ($staff, $data, $package, $email, $templateKey) {
             $store = $this->createStore($data['store_name'], $data['business_category'], self::VIA_PLATFORM, $staff->id);
             $this->subscriptions->startTrial($store, $package, $data['trial_days'] ?? null);
             // The invitation and its email belong to the new store.
             $this->tenant->asStore($store->id, fn () => app(StoreTeamService::class)->inviteOwner($store, $email, $staff));
-            $template = ($data['starter_template'] ?? false) ? $this->applyStarterTemplate($store, $staff) : null;
+            $template = ($data['starter_template'] ?? false) ? $this->applyStarterTemplate($store, $staff, $templateKey, byStoreStaff: false) : null;
             $this->record($store, $staff, ['via' => self::VIA_PLATFORM, 'package' => $package->code, 'owner_email' => $email, 'starter_template' => $template]);
 
             return $store;
@@ -128,21 +133,24 @@ final class StoreProvisioningService
     }
 
     /**
-     * Phase B45 (Module 03 §58, Module 07 §105): the starter template of the
-     * store's business category — categories, attributes, filters, the
-     * suggested theme the package includes and the default order. Inside
-     * the provisioning transaction: a store is never left half dressed.
-     * Brands are left to the owner (they choose them in the catalogue).
+     * Phase B45 (Module 03 §58, Module 07 §105): a starter template — the
+     * one chosen by staff, or the one for the store's business category —
+     * with its categories, attributes, filters, the suggested theme the
+     * package includes and the default order. Inside the provisioning
+     * transaction: a store is never left half dressed. Brands are left to
+     * the owner (they choose them in the catalogue).
      */
-    private function applyStarterTemplate(Store $store, User $actor): ?string
+    private function applyStarterTemplate(Store $store, User $actor, ?string $key = null, bool $byStoreStaff = true): ?string
     {
-        $key = \App\Domain\Catalog\Support\StarterTemplates::forBusinessCategory($store->business_category);
-        if ($key !== null) {
+        $registry = app(\App\Domain\Catalog\Services\StarterTemplateRegistry::class);
+        $key ??= $registry->forBusinessCategory($store->business_category);
+        $entry = $key === null ? null : $registry->usable($key, $byStoreStaff);
+        if ($entry !== null) {
             $this->tenant->asStore($store->id, fn () => app(\App\Domain\Catalog\Services\StarterTemplateService::class)
-                ->apply($store, $key, $actor, ['theme' => true, 'default_sort' => true]));
+                ->apply($store, $entry, $actor, ['theme' => true, 'default_sort' => true]));
         }
 
-        return $key;
+        return $entry['key'] ?? null;
     }
 
     private function attachOwner(Store $store, User $owner): void

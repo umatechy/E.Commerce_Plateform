@@ -104,6 +104,8 @@ final class StepUpTest extends TestCase
         // Module 30 §6: impersonate, restore backup, change billing, change
         // platform pricing, change configuration, suspend.
         $this->assertSame([
+            // Phase B45 follow-up: deleting a starter template saved from a store.
+            'DELETE api/v1/super-admin/starter-templates/{key}',
             'GET api/v1/super-admin/stores/{store}/impersonate',
             'PATCH api/v1/super-admin/billing/prices/{price}',
             'POST api/v1/backups/{backup}/restore-request',
@@ -123,11 +125,13 @@ final class StepUpTest extends TestCase
             // Phase B44: creating a store for a customer, and inviting its owner.
             'POST api/v1/super-admin/stores',
             'POST api/v1/super-admin/stores/{store}/owner-invitation',
+            'POST api/v1/super-admin/stores/{store}/starter-template', // Phase B45: save a store's structure as a template
             'POST api/v1/super-admin/users/{user}/deactivate',
             'POST api/v1/super-admin/users/{user}/reactivate',
             'PUT api/v1/super-admin/packages/{package}',
             'PUT api/v1/super-admin/packages/{package}/entitlements',
             'PUT api/v1/super-admin/settings/{key}',
+            'PUT api/v1/super-admin/starter-templates/{key}',
         ], $guarded);
     }
 }

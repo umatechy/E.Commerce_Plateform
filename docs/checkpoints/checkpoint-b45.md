@@ -73,4 +73,44 @@ catalogue; AI suggestions.
 
 CI: run on cdbd1d7 — success, verified 2026-10-05.
 
+
+------------------------------------------------------------
+FOLLOW-UP (2026-10-06) — what B45 had left
+------------------------------------------------------------
+
+Owner request (2026-10-06): before B46, finish what was not built, after
+auditing the existing code.
+
+Built:
+1. Urdu text for every built-in template (StarterTemplateUrdu, one glossary
+   of ~380 entries); written as `ur` translations of the items a template
+   creates; a test guards coverage.
+2. StarterTemplateRegistry + platform_starter_templates: built-in templates
+   can be switched off or kept for staff only; Super Admin → Starter
+   templates (list, view, edit, delete saved ones).
+3. Store to template (Module 03 §52, controlled cloning): Super Admin → a
+   store → "Save as a starter template" copies structure only; staff create
+   stores from it ("Template" in Create store for a customer); offering it to
+   owners is a separate step.
+
+Audit: reused TranslationService (no second translation store), the B45
+apply service (one apply path for built-in and saved templates), the B44
+provisioning service, and the template rules (StarterTemplates::problems(),
+now shared by the test and the capture). The static
+StarterTemplates::forBusinessCategory() was replaced by the registry, so
+there is one answer to "which template fits this store".
+
+Still waiting on owner inputs (end of the list): connect external catalogue
+(provider), AI taxonomy suggestions (Module 26, OpenAI key).
+
+Tests: PHP 1156 passed (StarterTemplatesTest 5, PlatformStarterTemplatesTest
+3, StepUpTest list updated); PHPStan no errors; Vitest 204 passed
+(platformTemplates.test.tsx 3); ESLint, TypeScript clean; build passes.
+
+Browser verification — EXECUTED: 7 of 7, no console errors (Starter
+templates page with 14 built-in; view; save store 65 as a template; staff
+only → offered; create a store from it; source and use counted; 375 px).
+
+CI: not yet run.
+
 Next (on the owner's word): B46 — tax engine (G3).

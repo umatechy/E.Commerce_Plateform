@@ -103,6 +103,7 @@ export const platformNav: NavGroup = {
     { href: '/super-admin/monitoring', label: 'Monitoring', description: 'Infrastructure, store health and queues.' },
     { href: '/super-admin/audit-log', label: 'Platform audit log', description: 'The audit trail of every store and the platform.' },
     { href: '/super-admin/catalog', label: 'Themes & domains', description: 'Themes, domains and developer applications.' },
+    { href: '/super-admin/starter-templates', label: 'Starter templates', description: 'Ready-made store structures new stores start from.' },
     { href: '/super-admin/settings', label: 'Platform settings', description: 'Platform-wide configuration.' },
     { href: '/super-admin/backups', label: 'Platform backups', description: 'Backups, restore rehearsals and restore requests.' },
     { href: '/super-admin/support', label: 'Platform support', description: 'Requests from every store to the platform.' },

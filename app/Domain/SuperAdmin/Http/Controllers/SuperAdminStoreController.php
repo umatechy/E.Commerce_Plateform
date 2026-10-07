@@ -94,6 +94,7 @@ final class SuperAdminStoreController
             'trial_days' => ['nullable', 'integer', 'min:0', 'max:90'],
             'owner_email' => ['required', 'email', 'max:191'],
             'starter_template' => ['sometimes', 'boolean'], // Phase B45
+            'starter_template_key' => ['nullable', 'string', 'max:40'], // any active template, e.g. one saved from another store
         ]);
         $data['idempotency_key'] = (string) $request->header('Idempotency-Key', '');
 
@@ -135,7 +136,7 @@ final class SuperAdminStoreController
             // Phase B45: starter templates applied to the store, newest first.
             'starter_templates' => \App\Domain\Catalog\Models\StarterTemplateApplication::query()->withoutTenantScope()
                 ->where('store_id', $store->id)->latest('id')->limit(5)->get()
-                ->map(fn (\App\Domain\Catalog\Models\StarterTemplateApplication $a) => ['key' => $a->template_key, 'version' => $a->template_version, 'applied_at' => $a->created_at->toIso8601String()])
+                ->map(fn (\App\Domain\Catalog\Models\StarterTemplateApplication $a) => ['key' => $a->template_key, 'name' => $a->summary['template_name'] ?? null, 'version' => $a->template_version, 'applied_at' => $a->created_at->toIso8601String()])
                 ->values(),
         ]]);
     }

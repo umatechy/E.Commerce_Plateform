@@ -12,6 +12,7 @@ use App\Domain\Catalog\Models\CategoryAttribute;
 use App\Domain\Catalog\Services\AttributeManager;
 use App\Domain\Catalog\Services\CategoryAttributes;
 use App\Domain\Catalog\Support\StarterTemplates;
+use App\Domain\Catalog\Support\StarterTemplateUrdu;
 use App\Domain\Identity\Models\Permission;
 use App\Domain\Identity\Models\Role;
 use App\Domain\Identity\Models\User;
@@ -85,41 +86,38 @@ final class StarterTemplatesTest extends TestCase
         return Category::query()->where('name', $name)->where('parent_id', $parent?->id)->first();
     }
 
-    public function test_every_business_category_has_a_well_formed_template(): void
+    public function test_every_business_category_has_a_well_formed_template_with_urdu_text(): void
     {
         $types = [];
-        foreach (BusinessCategories::keys() as $business) {
-            $key = StarterTemplates::forBusinessCategory($business);
-            $this->assertNotNull($key, "{$business} has a template");
+        $missingUrdu = [];
+        $urdu = function (string $text) use (&$missingUrdu): void {
+            // Plain sizes and numbers read the same in Urdu.
+            if (preg_match('/^[0-9]/', $text) !== 1 && ! in_array($text, ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'PU', 'EVA'], true) && StarterTemplateUrdu::for($text) === null) {
+                $missingUrdu[] = $text;
+            }
+        };
+        foreach (BusinessCategories::keys() as $key) {
+            $this->assertTrue(StarterTemplates::has($key), "{$key} has a template");
             $t = StarterTemplates::get($key);
-            $keys = array_column($t['attributes'], 'key');
-            $this->assertSame($keys, array_unique($keys), "{$key}: attribute keys are unique");
+            $this->assertSame([], StarterTemplates::problems($t), "{$key} keeps the template rules");
             foreach ($t['attributes'] as $a) {
                 // One key means one thing in every template, so two templates in one store never mix values.
                 $this->assertSame($types[$a['key']] ??= $a['type'], $a['type'], "{$a['key']} has one type across templates");
-                $this->assertLessThanOrEqual(AttributeManager::MAX_VALUES, count($a['values'] ?? []));
+                $urdu($a['name']);
                 foreach ($a['values'] ?? [] as $v) {
-                    $this->assertSame($a['type'] === 'color', is_array($v), "{$key}.{$a['key']}: colour values carry a code, others do not");
-                    if (is_array($v)) {
-                        $this->assertMatchesRegularExpression('/^#[0-9A-F]{6}$/', $v[1]);
-                    }
+                    $urdu(is_array($v) ? $v[0] : $v);
                 }
             }
-            $names = array_map(fn ($c) => mb_strtolower($c['name']), $t['categories']);
-            $this->assertSame($names, array_unique($names), "{$key}: category names are unique");
             foreach ($t['categories'] as $c) {
                 $this->assertNotEmpty($c['description'] ?? '', "{$key}: {$c['name']} has an SEO description");
-                $this->assertLessThanOrEqual(CategoryAttributes::MAX_PER_CATEGORY, count($c['attributes'] ?? []));
-                foreach ($c['attributes'] ?? [] as $attr => $spec) {
-                    $this->assertContains($attr, $keys, "{$key}: {$c['name']} uses a defined attribute");
-                    $this->assertEmpty(array_diff(StarterTemplates::flags($spec), ['filter', 'required']));
-                }
+                $urdu($c['name']);
+                $urdu($c['description']);
+                array_map($urdu, $c['children'] ?? []);
             }
-            foreach ($t['themes'] as $theme) {
-                $this->assertTrue(ThemeCatalog::has($theme), "{$key}: theme {$theme} exists");
-            }
-            $this->assertContains($t['default_sort'], StorefrontCatalog::SORTS);
         }
+        $this->assertSame([], array_values(array_unique($missingUrdu)), 'every worded text of the built-in templates has Urdu');
+        // The rules catch a broken template (used for templates saved from a store).
+        $this->assertNotSame([], StarterTemplates::problems(['attributes' => [['key' => 'x', 'name' => 'X', 'type' => 'color', 'values' => ['Red']]], 'categories' => [['name' => 'A', 'attributes' => ['y' => 'filter']]], 'themes' => ['nope'], 'default_sort' => 'random']));
     }
 
     public function test_the_owner_previews_and_applies_a_template_into_the_stores_own_catalogue(): void

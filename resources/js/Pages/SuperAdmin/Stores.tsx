@@ -91,18 +91,20 @@ export default function Stores() {
   );
 }
 
-type Values = { store_name: string; business_category: string; package_code: string; trial_days: string; owner_email: string; starter_template: boolean };
+type Values = { store_name: string; business_category: string; package_code: string; trial_days: string; owner_email: string; starter_template: boolean; starter_template_key: string };
 
 function CreateStoreDialog({ categories, onClose }: { categories: Option[]; onClose: () => void }) {
   const packages = useApi<{ data: { code: string; name: string; is_active?: boolean }[] }>('/super-admin/packages');
-  const form = useForm<Values>({ store_name: '', business_category: '', package_code: '', trial_days: '', owner_email: '', starter_template: true });
+  const form = useForm<Values>({ store_name: '', business_category: '', package_code: '', trial_days: '', owner_email: '', starter_template: true, starter_template_key: '' });
+  // Phase B45 follow-up: any active template, including ones saved from a store.
+  const templates = useApi<{ data: { key: string; name: string; source: string; is_active: boolean; offered_to_stores: boolean }[] }>('/super-admin/starter-templates');
   // One key per dialog: a double click or a retry never makes two stores.
   const [key] = useState(() => idempotencyKey());
   const { values: v, set } = form;
 
   async function save(event: FormEvent) {
     event.preventDefault();
-    const body = { store_name: v.store_name, business_category: v.business_category, package_code: v.package_code, owner_email: v.owner_email, trial_days: v.trial_days === '' ? null : Number(v.trial_days), starter_template: v.starter_template };
+    const body = { store_name: v.store_name, business_category: v.business_category, package_code: v.package_code, owner_email: v.owner_email, trial_days: v.trial_days === '' ? null : Number(v.trial_days), starter_template: v.starter_template, ...(v.starter_template && v.starter_template_key !== '' ? { starter_template_key: v.starter_template_key } : {}) };
     const created = await form.submit(
       () => adminFetch<{ data: { id: number } }>('/super-admin/stores', { method: 'POST', body, headers: { 'Idempotency-Key': key } }),
       'Store created. The owner invitation is on its way.',
@@ -132,6 +134,17 @@ function CreateStoreDialog({ categories, onClose }: { categories: Option[]; onCl
           onChange={(x) => set('starter_template', x)}
           hint="Categories, attributes and filters for what it sells, and the suggested theme the package includes. No products are added."
         />
+        {v.starter_template && (
+          <SelectField
+            label="Template"
+            optional
+            value={v.starter_template_key}
+            onChange={(x) => set('starter_template_key', x)}
+            error={form.errors.starter_template_key}
+            placeholder="The one for what it sells"
+            options={(templates.data?.data ?? []).filter((t) => t.is_active).map((t) => ({ value: t.key, label: `${t.name}${t.source === 'store' ? ' (saved from a store)' : ''}${t.offered_to_stores ? '' : ' — staff only'}` }))}
+          />
+        )}
         <TextField label="Owner’s email" type="email" value={v.owner_email} onChange={(x) => set('owner_email', x)} error={form.errors.owner_email} required hint="They get an email to set a password, turn on two-step sign-in and take over the store." />
         <div className="flex justify-end gap-2">
           <Button onClick={onClose} disabled={form.busy}>Cancel</Button>

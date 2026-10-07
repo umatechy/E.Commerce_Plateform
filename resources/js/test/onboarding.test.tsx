@@ -42,6 +42,7 @@ describe('Super Admin stores', () => {
       ], meta: { current_page: 1, last_page: 1, total: 1, per_page: 25 } }),
       '/super-admin/business-categories': () => json(200, { data: [{ value: 'electronics', label: 'Mobiles & electronics' }, { value: 'food', label: 'Food, bakery & sweets' }] }),
       '/super-admin/packages': () => json(200, { data: [{ code: 'basic', name: 'Basic', is_active: true }, { code: 'premium', name: 'Premium', is_active: true }] }),
+      '/super-admin/starter-templates': () => json(200, { data: [] }),
       'POST /super-admin/stores': (_url, init) => {
         calls++;
         sent = { body: JSON.parse(String(init.body)), key: new Headers(init.headers).get('Idempotency-Key') };

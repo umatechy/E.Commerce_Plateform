@@ -3,7 +3,7 @@ import AdminPage from '@/Components/AdminPage';
 import Button, { ButtonLink } from '@/Components/ui/Button';
 import DataTable, { type Column } from '@/Components/ui/DataTable';
 import Dialog from '@/Components/ui/Dialog';
-import { FormError, SelectField, TextField } from '@/Components/ui/Form';
+import { FormError, SelectField, TextAreaField, TextField } from '@/Components/ui/Form';
 import Badge, { StatusBadge } from '@/Components/ui/Badge';
 import { Card, Details, QueryState } from '@/Components/ui/Page';
 import HealthCheckList, { type HealthCheck, type HealthStatus } from '@/Components/HealthCheckList';
@@ -57,11 +57,61 @@ type StoreDetail = {
   activated_at?: string | null;
   owner_invitation?: { email: string; expires_at: string } | null;
   setup?: { progress: { done: number; total: number; percent: number }; blocking: string[]; launched: boolean };
-  starter_templates?: { key: string; version: number; applied_at: string }[];
+  starter_templates?: { key: string; name?: string | null; version: number; applied_at: string }[];
 };
 type Health = { status: HealthStatus; checks: HealthCheck[] };
 type Domain = { id: string; hostname: string; domain_type: string; status: string; is_primary: boolean; ssl_status: string };
 type Package = { code: string; name: string; is_active: boolean };
+
+/**
+ * Phase B45 follow-up (Module 03 §52): save this store's structure as a
+ * starter template. Only categories, attributes, filters, brand names, the
+ * theme choice, the default order and their Urdu are copied — never
+ * products, customers, orders, pictures, domains or settings.
+ */
+function SaveTemplateDialog({ storeId, storeName, category, categories, onClose }: { storeId: string; storeName: string; category: string; categories: { value: string; label: string }[]; onClose: () => void }) {
+  const form = useForm({ name: `${storeName} structure`, summary: '', business_category: category });
+  const v = form.values;
+  const [saved, setSaved] = useState<{ name: string; skipped_deeper_categories: number } | null>(null);
+
+  async function save(event: FormEvent) {
+    event.preventDefault();
+    const body = { name: v.name, summary: v.summary === '' ? null : v.summary, business_category: v.business_category === '' ? null : v.business_category };
+    const done = await form.submit(() => adminFetch<{ data: { name: string; skipped_deeper_categories: number } }>(`/super-admin/stores/${storeId}/starter-template`, { method: 'POST', body }), 'Starter template saved.');
+    if (done) setSaved(done.data);
+  }
+
+  return (
+    <Dialog open title="Save as a starter template" description="You will be asked for your password." onClose={onClose} busy={form.busy}>
+      {saved ? (
+        <div className="space-y-3 text-sm">
+          <p role="status">
+            <strong>{saved.name}</strong> is saved for the Umar Techy team. Choose it when you create a store for a customer, or offer it to store owners under Starter templates.
+          </p>
+          {saved.skipped_deeper_categories > 0 && <p className="text-amber-800">{saved.skipped_deeper_categories} categories below the second level were not copied: a template has two levels.</p>}
+          <div className="flex justify-end gap-2">
+            <a href="/super-admin/starter-templates" className="text-sm font-medium text-indigo-700 underline">Open starter templates</a>
+            <Button onClick={onClose}>Close</Button>
+          </div>
+        </div>
+      ) : (
+        <form onSubmit={save} className="space-y-4" noValidate>
+          <FormError message={form.formError} />
+          <p className="text-sm text-slate-700">
+            Copies the store’s <strong>structure</strong>: categories (two levels), attributes and their values, filters, brand names, the theme choice, the default order and their Urdu text. <strong>Never</strong> products, prices, stock, customers, orders, pictures, pages, domains or settings.
+          </p>
+          <TextField label="Template name" value={v.name} onChange={(x) => form.set('name', x)} error={form.errors.name} required maxLength={120} data-autofocus />
+          <TextAreaField label="Summary" optional rows={2} value={v.summary} onChange={(x) => form.set('summary', x)} error={form.errors.summary} />
+          <SelectField label="For stores that sell" optional value={v.business_category} onChange={(x) => form.set('business_category', x)} placeholder="Any" options={categories} error={form.errors.business_category} />
+          <div className="flex justify-end gap-2">
+            <Button onClick={onClose} disabled={form.busy}>Cancel</Button>
+            <Button type="submit" variant="primary" busy={form.busy} busyLabel="Saving…">Save template</Button>
+          </div>
+        </form>
+      )}
+    </Dialog>
+  );
+}
 
 function SubscriptionDialog({ storeId, action, packages, current, onClose, onDone }: { storeId: string; action: 'change-package' | 'suspend' | 'reactivate'; packages: Package[]; current: string | null; onClose: () => void; onDone: () => void }) {
   const form = useForm({ package_code: current ?? '', reason: '' });
@@ -110,6 +160,7 @@ export default function Store({ storeId }: { storeId: string }) {
   const packages = useApi<{ data: Package[] }>('/super-admin/packages');
   const [dialog, setDialog] = useState<'change-package' | 'suspend' | 'reactivate' | null>(null);
   const [inviting, setInviting] = useState(false);
+  const [savingTemplate, setSavingTemplate] = useState(false);
   const categories = useApi<{ data: { value: string; label: string }[] }>('/super-admin/business-categories');
   const { busy, run } = useAction();
   const store = detail.data?.data;
@@ -198,9 +249,10 @@ export default function Store({ storeId }: { storeId: string }) {
               <p className="mt-2 text-sm text-slate-700">
                 Starter template:{' '}
                 {data.starter_templates && data.starter_templates.length > 0
-                  ? data.starter_templates.map((t) => `${(categories.data?.data ?? []).find((c) => c.value === t.key)?.label ?? t.key} (${formatDate(t.applied_at, 'UTC')})`).join(', ')
+                  ? data.starter_templates.map((t) => `${t.name ?? (categories.data?.data ?? []).find((c) => c.value === t.key)?.label ?? t.key} (${formatDate(t.applied_at, 'UTC')})`).join(', ')
                   : 'none — started empty'}
               </p>
+              <Button size="sm" className="mt-2" onClick={() => setSavingTemplate(true)}>Save as a starter template</Button>
             </Card>
           )}
         </QueryState>
@@ -214,6 +266,15 @@ export default function Store({ storeId }: { storeId: string }) {
         </Card>
       </div>
 
+      {savingTemplate && (
+        <SaveTemplateDialog
+          storeId={storeId}
+          storeName={store?.store.name ?? 'Store'}
+          category={store?.business_category ?? ''}
+          categories={categories.data?.data ?? []}
+          onClose={() => setSavingTemplate(false)}
+        />
+      )}
       {inviting && (
         <OwnerInvitationDialog
           storeId={storeId}

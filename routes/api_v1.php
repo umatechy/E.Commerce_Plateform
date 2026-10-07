@@ -166,8 +166,8 @@ Route::middleware(['auth:sanctum', 'staff.principal', 'required.mfa'])->group(fu
     // Phase B45 (Module 07 §20, §105–106): starter templates for the store's business category.
     $starter = \App\Domain\Catalog\Http\Controllers\StarterTemplateController::class;
     Route::get('/starter-templates', [$starter, 'index']);
-    Route::get('/starter-templates/{key}', [$starter, 'show'])->where('key', '[a-z_]{1,32}');
-    Route::post('/starter-templates/{key}/apply', [$starter, 'apply'])->where('key', '[a-z_]{1,32}')->middleware('throttle:10,1,starter-template');
+    Route::get('/starter-templates/{key}', [$starter, 'show'])->where('key', '[a-z0-9_]{1,40}');
+    Route::post('/starter-templates/{key}/apply', [$starter, 'apply'])->where('key', '[a-z0-9_]{1,40}')->middleware('throttle:10,1,starter-template');
     // Phase B39 (gap G15): collections, tags, relations, duplicate and bulk changes.
     Route::apiResource('collections', \App\Domain\Catalog\Http\Controllers\CollectionController::class);
     Route::put('/collections/{collection}/products', [\App\Domain\Catalog\Http\Controllers\CollectionController::class, 'products']);
@@ -407,6 +407,13 @@ Route::middleware(['auth:sanctum', 'staff.principal', 'required.mfa'])->group(fu
             // Phase B44 (owner decision 13): Umar Techy creates a store for a customer.
             Route::post('/stores', [SuperAdminStoreController::class, 'store'])->middleware(['step_up', 'throttle:30,10,super-admin-store-create']);
             Route::get('/business-categories', [SuperAdminStoreController::class, 'businessCategories']);
+            // Phase B45 follow-up (Module 07 §101, Module 03 §52): platform-managed starter templates.
+            $templates = \App\Domain\SuperAdmin\Http\Controllers\SuperAdminStarterTemplateController::class;
+            Route::get('/starter-templates', [$templates, 'index']);
+            Route::get('/starter-templates/{key}', [$templates, 'show'])->where('key', '[a-z0-9_]{1,40}');
+            Route::put('/starter-templates/{key}', [$templates, 'update'])->where('key', '[a-z0-9_]{1,40}')->middleware('step_up');
+            Route::delete('/starter-templates/{key}', [$templates, 'destroy'])->where('key', '[a-z0-9_]{1,40}')->middleware('step_up');
+            Route::post('/stores/{store}/starter-template', [$templates, 'saveFromStore'])->middleware(['step_up', 'throttle:20,10,starter-template-save']);
             Route::get('/users', [SuperAdminUserController::class, 'index']);
             Route::get('/users/{user}', [SuperAdminUserController::class, 'show']);
             Route::post('/users/{user}/deactivate', [SuperAdminUserController::class, 'deactivate'])->middleware('step_up');

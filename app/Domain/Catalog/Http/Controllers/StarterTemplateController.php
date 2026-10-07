@@ -7,9 +7,10 @@ namespace App\Domain\Catalog\Http\Controllers;
 use App\Domain\Catalog\Models\Attribute;
 use App\Domain\Catalog\Models\Brand;
 use App\Domain\Catalog\Models\Category;
+use App\Domain\Catalog\Services\StarterTemplateRegistry;
 use App\Domain\Catalog\Services\StarterTemplateService;
-use App\Domain\Catalog\Support\StarterTemplates;
 use App\Domain\Tenancy\Models\Store;
+use App\Domain\Tenancy\Models\StoreStatus;
 use App\Domain\Tenancy\Support\TenantContext;
 use App\Domain\Theme\Policies\ThemePolicy;
 use Illuminate\Http\JsonResponse;
@@ -18,49 +19,46 @@ use Illuminate\Support\Facades\Gate;
 
 /**
  * Phase B45 — Module 07 §105 "Store setup experience": the store's staff
- * look at the starter templates and apply one (Start empty, Import existing
- * catalogue and the template are the three choices; the CSV import is the
- * existing product import).
+ * look at the starter templates offered to stores and apply one (Start
+ * empty, Import existing catalogue and the template are the three choices;
+ * the CSV import is the existing product import).
  *
  * Looking needs category or attribute access; applying needs both (it
  * writes categories and attributes), plus brands access for brands and
  * theme publishing for the theme — a template never does more than the
- * person could do by hand.
+ * person could do by hand. Templates Umar Techy has switched off, or keeps
+ * for its own staff, answer 404 here.
  */
 final class StarterTemplateController
 {
-    public function index(Request $request, TenantContext $context, StarterTemplateService $service): JsonResponse
+    public function index(Request $request, TenantContext $context, StarterTemplateService $service, StarterTemplateRegistry $registry): JsonResponse
     {
         $this->authorizeView($request);
         $store = Store::query()->findOrFail($context->storeId());
 
         return response()->json([
-            'data' => array_map(function (string $key) {
-                $t = StarterTemplates::get($key);
-
-                return [
-                    'key' => $key, 'name' => $t['name'], 'version' => $t['version'], 'summary' => $t['summary'],
-                    'categories' => count($t['categories']), 'attributes' => count($t['attributes']), 'brands' => count($t['brands'] ?? []),
-                ];
-            }, StarterTemplates::keys()),
-            'recommended' => StarterTemplates::forBusinessCategory($store->business_category),
+            'data' => array_values(array_map(fn (array $e) => [
+                'key' => $e['key'], 'name' => $e['name'], 'version' => $e['version'], 'summary' => $e['summary'], 'source' => $e['source'],
+                'categories' => count($e['definition']['categories'] ?? []), 'attributes' => count($e['definition']['attributes'] ?? []), 'brands' => count($e['definition']['brands'] ?? []),
+            ], $registry->offered())),
+            'recommended' => $registry->forBusinessCategory($store->business_category),
             'history' => $service->history(),
         ]);
     }
 
-    public function show(Request $request, string $key, TenantContext $context, StarterTemplateService $service): JsonResponse
+    public function show(Request $request, string $key, TenantContext $context, StarterTemplateService $service, StarterTemplateRegistry $registry): JsonResponse
     {
         $this->authorizeView($request);
-        abort_unless(StarterTemplates::has($key), 404);
+        $entry = $registry->usable($key, byStoreStaff: true) ?? abort(404);
         $store = Store::query()->findOrFail($context->storeId());
 
         // store_live: a live store gets the theme in its draft, not published (the page says so).
-        return response()->json(['data' => [...$service->preview($key), 'store_live' => $store->status === \App\Domain\Tenancy\Models\StoreStatus::Active]]);
+        return response()->json(['data' => [...$service->preview($entry), 'store_live' => $store->status === StoreStatus::Active]]);
     }
 
-    public function apply(Request $request, string $key, TenantContext $context, StarterTemplateService $service): JsonResponse
+    public function apply(Request $request, string $key, TenantContext $context, StarterTemplateService $service, StarterTemplateRegistry $registry): JsonResponse
     {
-        abort_unless(StarterTemplates::has($key), 404);
+        $entry = $registry->usable($key, byStoreStaff: true) ?? abort(404);
         $user = $request->user();
         $options = $request->validate(['brands' => ['sometimes', 'boolean'], 'theme' => ['sometimes', 'boolean'], 'default_sort' => ['sometimes', 'boolean']]);
         Gate::forUser($user)->authorize('manage', Category::class);
@@ -72,7 +70,7 @@ final class StarterTemplateController
             abort_unless(app(ThemePolicy::class)->publish($user), 403);
         }
 
-        $summary = $service->apply(Store::query()->findOrFail($context->storeId()), $key, $user, $options);
+        $summary = $service->apply(Store::query()->findOrFail($context->storeId()), $entry, $user, $options);
 
         return response()->json(['data' => $summary]);
     }

@@ -124,6 +124,7 @@ Route::middleware(['auth', 'required.mfa'])->group(function () {
             '/' => 'SuperAdmin/Dashboard', '/stores' => 'SuperAdmin/Stores', '/users' => 'SuperAdmin/Users',
             '/packages' => 'SuperAdmin/Packages', '/billing' => 'SuperAdmin/Billing', '/settings' => 'SuperAdmin/Settings',
             '/monitoring' => 'SuperAdmin/Monitoring', '/audit-log' => 'SuperAdmin/AuditLog', '/catalog' => 'SuperAdmin/Platform',
+            '/starter-templates' => 'SuperAdmin/StarterTemplates', // Phase B45 follow-up
         ] as $uri => $page) {
             Route::get($uri, fn () => Inertia::render($page));
         }

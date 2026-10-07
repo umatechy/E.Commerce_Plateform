@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace App\Domain\Catalog\Support;
 
-use App\Domain\Tenancy\Support\BusinessCategories;
-
 /**
  * Phase B45 — Module 07 §20, §101, §105–106; Module 03 §58; gap G23: the
  * platform's ready-made starting structures, one per business category
@@ -353,15 +351,87 @@ final class StarterTemplates
         return self::all()[$key] ?? throw new \InvalidArgumentException("Unknown starter template {$key}.");
     }
 
-    /** The template for a store's business category, if there is one. */
-    public static function forBusinessCategory(?string $category): ?string
-    {
-        return $category !== null && in_array($category, BusinessCategories::keys(), true) && self::has($category) ? $category : null;
-    }
 
     /** @return list<string> the flags of a category's attribute entry */
     public static function flags(string $spec): array
     {
         return array_values(array_filter(array_map('trim', explode(',', $spec))));
+    }
+
+    /** Limits a template must keep (a template saved from a large store is refused, not cut silently). */
+    public const MAX_CATEGORIES = 60;
+
+    public const MAX_CHILDREN = 40;
+
+    public const MAX_ATTRIBUTES = 60;
+
+    public const MAX_BRANDS = 100;
+
+    /**
+     * What is wrong with a template definition — the same rules for the
+     * built-in templates (a test runs them) and for templates saved from a
+     * store. A colour value may carry no code only in a saved template (the
+     * store had none); built-in colours always have one.
+     *
+     * @param array<string, mixed> $t
+     * @return list<string>
+     */
+    public static function problems(array $t, bool $builtIn = true): array
+    {
+        $problems = [];
+        $attributes = is_array($t['attributes'] ?? null) ? $t['attributes'] : [];
+        $categories = is_array($t['categories'] ?? null) ? $t['categories'] : [];
+        $keys = array_column($attributes, 'key');
+        if ($keys !== array_unique($keys)) {
+            $problems[] = 'An attribute key is listed twice.';
+        }
+        if (count($attributes) > self::MAX_ATTRIBUTES || count($categories) > self::MAX_CATEGORIES || count($t['brands'] ?? []) > self::MAX_BRANDS) {
+            $problems[] = 'Too large: at most '.self::MAX_CATEGORIES.' top-level categories, '.self::MAX_ATTRIBUTES.' attributes and '.self::MAX_BRANDS.' brands.';
+        }
+        foreach ($attributes as $a) {
+            $type = \App\Domain\Catalog\Models\AttributeType::tryFrom((string) ($a['type'] ?? ''));
+            if ($type === null || ! preg_match('/^[a-z0-9_-]{1,64}$/', (string) ($a['key'] ?? ''))) {
+                $problems[] = 'Attribute '.($a['key'] ?? '?').' has an unknown type or key.';
+
+                continue;
+            }
+            if (count($a['values'] ?? []) > \App\Domain\Catalog\Services\AttributeManager::MAX_VALUES) {
+                $problems[] = "Attribute {$a['key']} has too many values.";
+            }
+            foreach ($a['values'] ?? [] as $v) {
+                $isPair = is_array($v);
+                $code = $isPair ? ($v[1] ?? null) : null;
+                $badCode = $isPair && (($code === null && $builtIn) || ($code !== null && preg_match('/^#[0-9A-F]{6}$/i', (string) $code) !== 1));
+                if ($isPair !== ($type === \App\Domain\Catalog\Models\AttributeType::Color) || $badCode) {
+                    $problems[] = "Attribute {$a['key']}: a value does not fit its type.";
+
+                    break;
+                }
+            }
+        }
+        $names = array_map(fn ($c) => mb_strtolower((string) ($c['name'] ?? '')), $categories);
+        if ($names !== array_unique($names)) {
+            $problems[] = 'A category name is listed twice.';
+        }
+        foreach ($categories as $c) {
+            if (count($c['children'] ?? []) > self::MAX_CHILDREN || count($c['attributes'] ?? []) > \App\Domain\Catalog\Services\CategoryAttributes::MAX_PER_CATEGORY) {
+                $problems[] = "Category {$c['name']} is too large.";
+            }
+            foreach ($c['attributes'] ?? [] as $key => $spec) {
+                if (! in_array($key, $keys, true) || array_diff(self::flags((string) $spec), ['filter', 'required']) !== []) {
+                    $problems[] = "Category {$c['name']} uses an undefined attribute or flag ({$key}).";
+                }
+            }
+        }
+        foreach ($t['themes'] ?? [] as $theme) {
+            if (! \App\Domain\Theme\Support\ThemeCatalog::has((string) $theme)) {
+                $problems[] = "Unknown theme {$theme}.";
+            }
+        }
+        if (! in_array($t['default_sort'] ?? null, \App\Domain\Storefront\Services\StorefrontCatalog::SORTS, true)) {
+            $problems[] = 'Unknown default order.';
+        }
+
+        return $problems;
     }
 }

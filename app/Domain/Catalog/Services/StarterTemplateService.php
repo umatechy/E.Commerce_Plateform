@@ -13,6 +13,8 @@ use App\Domain\Catalog\Models\Category;
 use App\Domain\Catalog\Models\CategoryAttribute;
 use App\Domain\Catalog\Models\StarterTemplateApplication;
 use App\Domain\Catalog\Support\StarterTemplates;
+use App\Domain\Catalog\Support\StarterTemplateUrdu;
+use App\Domain\Settings\Services\TranslationService;
 use App\Domain\Compliance\Services\AuditLogger;
 use App\Domain\Events\Support\RecordsOutboxEvents;
 use App\Domain\Identity\Models\User;
@@ -65,16 +67,22 @@ final class StarterTemplateService
         private readonly ConfigService $config,
         private readonly AuditLogger $audit,
         private readonly RecordsOutboxEvents $outbox,
+        private readonly TranslationService $translations,
     ) {}
+
+    /** The applying template's own Urdu glossary (saved templates carry the source store's translations). @var array<string, string> */
+    private array $glossary = [];
 
     /**
      * What the template would add, marked against what the store has.
      *
+     * @param array<string, mixed> $entry a StarterTemplateRegistry entry
      * @return array<string, mixed>
      */
-    public function preview(string $key): array
+    public function preview(array $entry): array
     {
-        $template = StarterTemplates::get($key);
+        $template = $this->template($entry);
+        $key = $entry['key'];
         $existing = Attribute::query()->get()->keyBy('key');
         $brands = Brand::query()->pluck('name')->map(fn (string $n) => Str::lower($n))->all();
         $theme = $this->themeFor($template);
@@ -110,28 +118,34 @@ final class StarterTemplateService
                 ];
             }, $template['attributes']),
             'brands' => array_map(fn (string $name) => ['name' => $name, 'exists' => in_array(Str::lower($name), $brands, true)], $template['brands'] ?? []),
-            'theme' => ['key' => $theme, 'name' => ThemeCatalog::get($theme)['name'], 'preferred' => $theme === $template['themes'][0]],
+            'theme' => ['key' => $theme, 'name' => ThemeCatalog::get($theme)['name'], 'preferred' => $theme === ($template['themes'][0] ?? null)],
+            'source' => $entry['source'],
             'default_sort' => $template['default_sort'],
             'default_sort_is_set' => $this->storeChoseSort(),
         ];
     }
 
     /**
+     * @param array<string, mixed> $entry a StarterTemplateRegistry entry the caller may use
      * @param array{brands?: bool, theme?: bool, default_sort?: bool} $options
      * @return array<string, mixed> what was added
      */
-    public function apply(Store $store, string $key, User $actor, array $options = []): array
+    public function apply(Store $store, array $entry, User $actor, array $options = []): array
     {
-        $template = StarterTemplates::get($key);
+        $template = $this->template($entry);
+        $key = $entry['key'];
+        $this->glossary = is_array($template['ur'] ?? null) ? $template['ur'] : [];
 
         return DB::transaction(function () use ($store, $key, $template, $actor, $options) {
             Store::query()->whereKey($store->id)->lockForUpdate()->first();
             $summary = [
+                'template_name' => $template['name'],
                 'categories_added' => 0, 'categories_kept' => 0, 'attributes_added' => 0, 'values_added' => 0,
-                'attributes_kept' => [], 'category_attributes_added' => 0, 'brands_added' => 0, 'theme' => null, 'default_sort' => null,
+                'attributes_kept' => [], 'category_attributes_added' => 0, 'brands_added' => 0, 'translations_added' => 0, 'theme' => null, 'default_sort' => null,
             ];
+            $this->translated = 0;
 
-            $byKey = $this->ensureAttributes($template, $summary);
+            $byKey = $this->ensureAttributes($template, $summary, $actor);
             $this->ensureSet($template['name'], $byKey, $actor);
             $this->ensureCategories($template, $byKey, $actor, $summary);
             if ($options['brands'] ?? false) {
@@ -145,6 +159,7 @@ final class StarterTemplateService
                 $summary['default_sort'] = $template['default_sort'];
             }
 
+            $summary['translations_added'] = $this->translated;
             $application = StarterTemplateApplication::query()->create([
                 'store_id' => $store->id, 'template_key' => $key, 'template_version' => $template['version'],
                 'applied_by_user_id' => $actor->id, 'summary' => $summary,
@@ -156,12 +171,45 @@ final class StarterTemplateService
         });
     }
 
-    /** @return list<array{key: string, version: int, applied_at: string, applied_by_user_id: int|null}> newest first */
+    /** @return list<array{key: string, name: ?string, version: int, applied_at: string, applied_by_user_id: int|null}> newest first */
     public function history(): array
     {
         return StarterTemplateApplication::query()->latest('id')->limit(20)->get()
-            ->map(fn (StarterTemplateApplication $a) => ['key' => $a->template_key, 'version' => $a->template_version, 'applied_at' => $a->created_at->toIso8601String(), 'applied_by_user_id' => $a->applied_by_user_id])
+            ->map(fn (StarterTemplateApplication $a) => ['key' => $a->template_key, 'name' => $a->summary['template_name'] ?? null, 'version' => $a->template_version, 'applied_at' => $a->created_at->toIso8601String(), 'applied_by_user_id' => $a->applied_by_user_id])
             ->values()->all();
+    }
+
+    /** Items given Urdu text during the running apply(). */
+    private int $translated = 0;
+
+    /**
+     * @param array<string, mixed> $entry
+     * @return array<string, mixed> the definition with the entry's name and version
+     */
+    private function template(array $entry): array
+    {
+        return [...$entry['definition'], 'name' => $entry['name'], 'version' => $entry['version']];
+    }
+
+    /**
+     * The Urdu text of a NEW item (Module 07 §38): the template's own
+     * glossary, then the built-in one. Saved as the item's `ur` translation.
+     *
+     * @param array<string, string|null> $fields field => English text
+     */
+    private function translate(string $type, int $id, array $fields, User $actor): void
+    {
+        $urdu = [];
+        foreach ($fields as $field => $english) {
+            $text = $english === null ? null : StarterTemplateUrdu::for($english, $this->glossary);
+            if ($text !== null) {
+                $urdu[$field] = mb_substr($text, 0, TranslationService::FIELDS[$type][$field]);
+            }
+        }
+        if ($urdu !== []) {
+            $this->translations->save($type, $id, 'ur', $urdu, $actor->id);
+            $this->translated++;
+        }
     }
 
     /**
@@ -169,7 +217,7 @@ final class StarterTemplateService
      * @param array<string, mixed> $summary
      * @return array<string, Attribute> the template's attributes in the store, by key
      */
-    private function ensureAttributes(array $template, array &$summary): array
+    private function ensureAttributes(array $template, array &$summary, User $actor): array
     {
         $byKey = [];
         $order = (int) Attribute::query()->max('sort_order');
@@ -180,12 +228,16 @@ final class StarterTemplateService
                     'name' => $def['name'], 'key' => $def['key'], 'type' => $def['type'],
                     'group' => $def['group'] ?? null, 'unit' => $def['unit'] ?? null, 'sort_order' => ++$order,
                 ]);
-                $this->attributes->syncValues($own, array_map(fn ($v) => is_array($v) ? ['value' => $v[0], 'color_code' => $v[1]] : $v, $def['values'] ?? []));
+                $this->attributes->syncValues($own, array_map(fn ($v) => is_array($v) ? ['value' => $v[0], 'color_code' => $v[1] ?? null] : $v, $def['values'] ?? []));
+                $this->translate('attribute', $own->id, ['name' => $def['name']], $actor);
+                foreach ($own->values()->get() as $value) {
+                    $this->translate('attribute_value', $value->id, ['value' => $value->value], $actor);
+                }
                 $summary['attributes_added']++;
             } elseif ($own->type->value !== $def['type']) {
                 $summary['attributes_kept'][] = $def['key']; // the store's own attribute of another type: left alone
             } elseif ($own->type->hasValues() && ($def['values'] ?? []) !== []) {
-                $summary['values_added'] += $this->addMissingValues($own, $def['values']);
+                $summary['values_added'] += $this->addMissingValues($own, $def['values'], $actor);
             }
             $byKey[$def['key']] = $own;
         }
@@ -193,8 +245,8 @@ final class StarterTemplateService
         return $byKey;
     }
 
-    /** @param list<string|array{0: string, 1: string}> $values */
-    private function addMissingValues(Attribute $attribute, array $values): int
+    /** @param list<string|array{0: string, 1: ?string}> $values */
+    private function addMissingValues(Attribute $attribute, array $values, User $actor): int
     {
         $current = $attribute->values()->get();
         $have = $current->map(fn (AttributeValue $v) => $v->normalized_value)->all();
@@ -204,9 +256,13 @@ final class StarterTemplateService
         }
         $list = $current->map(fn (AttributeValue $v) => ['id' => $v->id, 'value' => $v->value, 'color_code' => $v->color_code, 'is_active' => $v->is_active])->all();
         foreach ($missing as $v) {
-            $list[] = is_array($v) ? ['value' => $v[0], 'color_code' => $attribute->type === AttributeType::Color ? $v[1] : null] : ['value' => $v];
+            $list[] = is_array($v) ? ['value' => $v[0], 'color_code' => $attribute->type === AttributeType::Color ? ($v[1] ?? null) : null] : ['value' => $v];
         }
         $this->attributes->syncValues($attribute, $list);
+        $added = array_map(fn ($v) => Str::lower(trim(is_array($v) ? $v[0] : $v)), $missing);
+        foreach ($attribute->values()->whereIn('normalized_value', $added)->get() as $value) {
+            $this->translate('attribute_value', $value->id, ['value' => $value->value], $actor); // only the values added now
+        }
         $attribute->touch(); // values carry no store id: the attribute carries the storefront cache bump
 
         return count($missing);
@@ -234,14 +290,14 @@ final class StarterTemplateService
         foreach ($template['categories'] as $def) {
             $category = $this->findCategory($def['name'], null);
             if ($category === null) {
-                $category = $this->createCategory($def['name'], $def['description'] ?? null, null, ++$order);
+                $category = $this->createCategory($def['name'], $def['description'] ?? null, null, ++$order, $actor);
                 $summary['categories_added']++;
             } else {
                 $summary['categories_kept']++;
             }
             foreach ($def['children'] ?? [] as $i => $child) {
                 if ($this->findCategory($child, $category->id) === null) {
-                    $this->createCategory($child, null, $category->id, $i);
+                    $this->createCategory($child, null, $category->id, $i, $actor);
                     $summary['categories_added']++;
                 } else {
                     $summary['categories_kept']++;
@@ -362,9 +418,9 @@ final class StarterTemplateService
             ->first();
     }
 
-    private function createCategory(string $name, ?string $description, ?int $parentId, int $order): Category
+    private function createCategory(string $name, ?string $description, ?int $parentId, int $order, User $actor): Category
     {
-        return Category::query()->create([
+        $category = Category::query()->create([
             'name' => $name,
             'slug' => (Str::slug($name) ?: 'category').'-'.Str::lower(Str::random(6)),
             'description' => $description,
@@ -373,6 +429,9 @@ final class StarterTemplateService
             'visibility' => 'public',
             'sort_order' => $order,
         ]);
+        $this->translate('category', $category->id, ['name' => $name, 'description' => $description], $actor);
+
+        return $category;
     }
 
     /** Whether the store has chosen its own default order (a template never overrides it). */
