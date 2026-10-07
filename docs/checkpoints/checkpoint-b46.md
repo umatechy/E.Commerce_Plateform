@@ -104,6 +104,6 @@ session probe: headings Poppins / text DM Sans; Premium "Add to cart" moves
 owner publishes it on Reviews; product page 5.0 with the review and
 "Verified purchase"; stars on the listing card; 375 px fits.
 
-CI: not yet run.
+CI: run on ec71808 — success, verified 2026-10-07.
 
 Next (on the owner's word): B47 — billing completion.
