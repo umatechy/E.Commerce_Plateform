@@ -41,6 +41,7 @@ final class ProductResource extends JsonResource
             'visibility' => $this->visibility->value,
             'brand' => $this->whenLoaded('brand', fn () => ['id' => $this->brand->public_id, 'name' => $this->brand->name]),
             'brand_id' => $this->brand_id,
+            'tax_class_id' => $this->tax_class_id, // Phase B46
             'primary_category_id' => $this->primary_category_id,
             'category_ids' => $this->whenLoaded('categories', fn () => $this->categories->pluck('id')->values()),
             // Phase B39 (Module 06 §35–37).

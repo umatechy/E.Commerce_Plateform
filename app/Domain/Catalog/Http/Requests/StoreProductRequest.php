@@ -43,6 +43,7 @@ final class StoreProductRequest extends FormRequest
             'status' => ['nullable', 'in:draft,active,scheduled,hidden,archived'],
             'visibility' => ['nullable', 'in:public,catalog_only,search_only,hidden,private,scheduled'],
             'brand_id' => ['nullable', 'integer', 'exists:brands,id'],
+            'tax_class_id' => ['nullable', 'integer'], // Phase B46; checked against the store's classes in ProductController
             'primary_category_id' => ['nullable', 'integer', 'exists:categories,id'],
             'price_minor' => ['nullable', 'integer', 'min:0'],
             'sale_price_minor' => ['nullable', 'integer', 'min:0', 'lt:price_minor'],

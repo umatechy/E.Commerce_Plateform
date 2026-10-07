@@ -163,6 +163,17 @@ Route::middleware(['auth:sanctum', 'staff.principal', 'required.mfa'])->group(fu
     Route::put('/categories/{category}/attributes', [$taxonomy, 'saveCategoryAttributes']);
     Route::get('/products/{product}/specifications', [$taxonomy, 'specifications']);
     Route::put('/products/{product}/specifications', [$taxonomy, 'saveSpecifications']);
+    // Phase B46 (gap G3, owner decision 1; Module 33 §29): the store's tax set-up — no rate is built in.
+    $tax = \App\Domain\Tax\Http\Controllers\TaxController::class;
+    Route::get('/tax', [$tax, 'show']);
+    Route::put('/tax/settings', [$tax, 'updateSettings']);
+    Route::post('/tax/classes', [$tax, 'storeClass']);
+    Route::put('/tax/classes/{class}', [$tax, 'updateClass']);
+    Route::delete('/tax/classes/{class}', [$tax, 'destroyClass']);
+    Route::post('/tax/rates', [$tax, 'storeRate']);
+    Route::put('/tax/rates/{rate}', [$tax, 'updateRate']);
+    Route::delete('/tax/rates/{rate}', [$tax, 'destroyRate']);
+    Route::post('/tax/preview', [$tax, 'preview'])->middleware('throttle:60,1,tax-preview');
     // Phase B45 (Module 07 §20, §105–106): starter templates for the store's business category.
     $starter = \App\Domain\Catalog\Http\Controllers\StarterTemplateController::class;
     Route::get('/starter-templates', [$starter, 'index']);
@@ -327,6 +338,7 @@ Route::middleware(['auth:sanctum', 'staff.principal', 'required.mfa'])->group(fu
     Route::patch('/customers/{customer}', [\App\Domain\Customers\Http\Controllers\CustomerController::class, 'update']);
     Route::put('/customers/{customer}/tags', [\App\Domain\Customers\Http\Controllers\CustomerController::class, 'tags']);
     Route::post('/customers/{customer}/block', [\App\Domain\Customers\Http\Controllers\CustomerController::class, 'block']);
+    Route::put('/customers/{customer}/tax-exemption', [\App\Domain\Tax\Http\Controllers\TaxController::class, 'updateExemption']); // Phase B46
     Route::post('/customers/{customer}/archive', [\App\Domain\Customers\Http\Controllers\CustomerController::class, 'archive']);
     Route::post('/customers/{customer}/reactivate', [\App\Domain\Customers\Http\Controllers\CustomerController::class, 'reactivate']);
     // Module 10 §56: explicit, audited, the password asked again.

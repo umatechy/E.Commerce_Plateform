@@ -47,6 +47,21 @@ export type OrderItem = {
   fulfillment_status: string;
 };
 
+/** Phase B46: the tax kept on an order (Module 29 §58). */
+export type OrderTax = {
+  label: string;
+  prices_include_tax: boolean;
+  exempt: boolean;
+  exemption_reference: string | null;
+  shipping_tax_minor: number;
+  breakdown: { name: string; rate_bps: number; base_minor: number; tax_minor: number }[];
+};
+
+/** "17", "16.5" — a rate in basis points as a percentage. */
+export function ratePercent(bps: number): string {
+  return (bps / 100).toFixed(2).replace(/\.?0+$/, '');
+}
+
 export type Order = {
   id: string;
   order_number: string;
@@ -58,6 +73,8 @@ export type Order = {
   subtotal_minor: number;
   discount_total_minor: number;
   tax_total_minor: number;
+  /** Phase B46: the tax as charged (null: the store did not charge tax). */
+  tax?: OrderTax | null;
   shipping_total_minor: number;
   grand_total_minor: number;
   /** Phase B34 (Module 12 §13): paid with store credit, and what was left for the payment. */

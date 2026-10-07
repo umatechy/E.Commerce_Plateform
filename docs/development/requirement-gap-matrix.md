@@ -66,8 +66,10 @@ Architecture v1.0 arrived after this review was written and are now in
    assign roles or remove members (Module 02 §18, §29; SRS STORE-007). Stores
    get three seeded roles (owner, manager, staff). The blueprint lists seven.
    Custom roles (§17) are not built.
-5. **There is no tax calculation.** `tax_total` is always 0 (SRS CHK-007). This
-   needs a business decision about tax policy before it can be built.
+5. ~~There is no tax calculation.~~ **Built in B46** (owner decision 1): a
+   configurable tax engine with no built-in rate (classes, rates by country and
+   region, inclusive/exclusive prices, exemptions, snapshots on orders). The
+   store enters its own rates.
 6. **No real payment or courier provider is integrated.** Only COD, bank
    transfer and mock gateways exist (SRS PAY-002, PAY-005; SHIP-007).
    JazzCash, Easypaisa and a Pakistani courier need live credentials and a
@@ -105,7 +107,7 @@ Architecture v1.0 arrived after this review was written and are now in
 | 08 | Inventory & Stock | B4 (+B8) | 🟡 | Warehouses, on-hand/reserved/available, reservations with expiry, movements ledger, fulfilment commit; returns into stock and a separate damaged balance (B33/B34, §46–47) | Transfers (§37–40), stock counts (§35–36), purchase receiving (§41), costing (open decision, §43), adjustment approval (§34), import/export, backorder/preorder |
 | 09 | Order Management | B5 | 🟡 | Order engine, 17-state machine, snapshots, idempotency, timeline, cancellation | Returns workflow (§45–48), exchanges/replacements (§53–54), order edits/adjustments (§38–40), notes/tags/priority (§31–33), export (§66), outbound order webhooks exist via B18 |
 | 10 | Customer Management | B5/B6/B25 | 🟡 | Store-scoped customers, registration/login, profile, address book, order history, password reset, erasure/export (B22) | Groups, tags, segments at Module 10 (§24–27), notes (§32), activity timeline (§33), blocking (§30–31), merge and duplicate detection (§56–57), import (§47–49), guest-to-account conversion (§9), email verification, email/phone change verification (§67) |
-| 11 | Cart, Wishlist & Checkout | B6 | 🟡 | Cart, wishlist, one-shot checkout, server repricing, reservation, idempotency | Multi-step checkout session state machine (§42–45), tax (§28), multiple wishlists (§65), cart merge rules for guest login (§22) to confirm |
+| 11 | Cart, Wishlist & Checkout | B6 | 🟡 | Cart, wishlist, one-shot checkout, server repricing, reservation, idempotency | Multi-step checkout session state machine (§42–45), multiple wishlists (tax §28: B46) (§65), cart merge rules for guest login (§22) to confirm |
 | 12 | Payment Management & Gateways | B7 | 🟡 | Provider abstraction, COD, bank transfer, mock redirect, webhooks (HMAC + event dedupe), refunds | Real JazzCash/Easypaisa/card adapters (§20–22), reconciliation jobs (§53–55), partial payments across methods (§40), fees/limits (§37–38), timestamp replay window (§29) |
 | 13 | Shipping & Delivery | B8 | 🟡 | Zones, methods, rates, pickup locations, shipments, tracking, mock courier webhooks | Real courier adapter, labels (§55), shipping classes (§23), split-shipment allocation (§66), return shipping (§70), cutoff/holiday calendars (§36–37), configuration versioning (§80), reconciliation |
 | 14 | Discounts, Coupons & Promotions | B9 | 🟡 | Percentage/fixed/free-shipping promotions, coupons, targets, usage limits, order snapshots | Buy X Get Y (§13–14), tiered quantity (§12), customer group/segment/first-order (§17–20), payment-method discounts (§16), bulk codes (§49–51), preview/versioning (§59, §65–67) |
@@ -258,7 +260,7 @@ Architecture v1.0 arrived after this review was written and are now in
 | ID | Status | Evidence / gap | Pri |
 |---|---|---|---|
 | CHK-001–006 | ✅ | Server validation, repricing, promotions, shipping | P0 |
-| CHK-007 | ❌ | **No tax engine; `tax_total = 0`** (needs a tax policy decision) | P0 |
+| CHK-007 | ✅ | B46: TaxService/TaxCalculator on every order (storefront, staff, replacement) and the checkout summary; rates and settings are the store’s own, none seeded | — |
 | CHK-008–012 | ✅ | Server totals, webhook-verified payment, idempotency | P0 |
 
 ### 3.11 Payments (PAY), shipping (SHIP), promotions (PROMO), marketing (MKT)
@@ -404,7 +406,7 @@ existing pattern: feature tests plus tenant-isolation tests for every endpoint.
 |---|---|---|---|---|---|---|
 | G1 | ✅ **Closed in B27** (checkpoint-b27). Store staff management (invite, roles, remove, 7 predefined roles, custom roles) | STORE-007, RBAC-002, M02 §6, §17–19, §29 | A store cannot add its team | Build invitations, membership API + UI, role catalog | P0 | — |
 | G2 | ✅ **Closed in B29** (checkpoint-b29; open findings in docs/security/b29-security-baseline.md). Security baseline: MFA, Super Admin step-up, request IDs, dependency scanning in CI, incident runbook | AUTH-006/007/012, SA-004, API-011, SEC-013/014/015, M32 §8, M30 §6 | Account takeover of privileged users; blind operations | MFA (TOTP) + recovery codes, re-auth for sensitive actions, correlation-ID middleware, `composer audit`/`npm audit` CI step, runbook | P0 | — |
-| G3 | Tax calculation | CHK-007, M11 §28 | Incorrect totals if tax applies | **Business decision first**: tax rules (inclusive/exclusive, rates, regions) | P0 | Owner decision |
+| G3 | ✅ **Done in B46** (checkpoint-b46; docs/architecture/b46-tax-engine.md). Tax calculation | CHK-007, M11 §28 | Incorrect totals if tax applies | Configurable engine, no seeded rates (owner decision 1). Left: tax on platform subscription invoices (B47), tax reports | P0 | — |
 | G4 | ✅ **Closed in B30** (checkpoint-b30; limitations listed there). Scheduled backups + restore rehearsal + alerting | BKP-001/007, HEALTH-005, TEST-011 | Data loss; failures go unnoticed | Schedule backups, rehearsal command, alert channel for critical health | P0 | Alert channel choice |
 | G5 | ✅ **Closed in B28** (checkpoint-b28). Store timezone consumption | DATA-010, LOC-004, M33 §50 | Wrong dates for scheduled promos/campaigns/SLA | Wire `store.timezone` into B10/B12/B13/B26 date logic | P0 | — |
 | G6 | ✅ **Closed in B31** (checkpoint-b31; matrix in docs/architecture/b31-admin-ui.md §6; open items in docs/development/b31-inspection-findings.md). Admin UI for API-only modules | Admin Capabilities in M06–M17, M19, M21–M23, M29–M31, M33 | Owners cannot operate the store | UI phases, highest value first: catalog, customers, shipping/payments settings, promotions, SEO/content, theme, domains, settings | P1 | G1 |

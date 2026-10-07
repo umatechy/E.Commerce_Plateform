@@ -33,6 +33,35 @@ use Illuminate\Validation\ValidationException;
  */
 final class CheckoutController
 {
+    /**
+     * Phase B46 (Module 11 §12/§28, Module 05 §43): the order's total before
+     * it is placed — discount, shipping and tax from the server, the same
+     * way checkout prices it. Guest-accessible like the cart; read-only.
+     */
+    public function summary(\Illuminate\Http\Request $request, CartService $carts, CheckoutService $checkout): JsonResponse
+    {
+        $data = $request->validate([
+            'shipping_method_id' => ['nullable', 'integer'],
+            'shipping_address' => ['nullable', 'array'],
+            'shipping_address.country' => ['nullable', 'string', 'size:2'],
+            'shipping_address.province' => ['nullable', 'string', 'max:80'],
+            'shipping_address.city' => ['nullable', 'string', 'max:120'],
+            'shipping_address.postal_code' => ['nullable', 'string', 'max:20'],
+            'billing_address' => ['nullable', 'array'],
+            'billing_address.country' => ['nullable', 'string', 'size:2'],
+            'billing_address.province' => ['nullable', 'string', 'max:80'],
+        ]);
+        [$cart] = $carts->resolveForRequest($request, 'X-Guest-Cart-Token', $carts->storeCurrency());
+
+        try {
+            return response()->json(['data' => $checkout->summary($cart, $data)]);
+        } catch (CartCheckoutNotAllowedException $e) {
+            return response()->json(['message' => $e->getMessage(), 'code' => 'checkout_not_allowed'], 422);
+        } catch (DestinationNotServiceableException $e) {
+            return response()->json(['message' => $e->getMessage(), 'code' => 'destination_not_serviceable'], 422);
+        }
+    }
+
     public function store(CheckoutRequest $request, CartService $carts, CheckoutService $checkout): JsonResponse
     {
         [$cart] = $carts->resolveForRequest($request, 'X-Guest-Cart-Token', $carts->storeCurrency());

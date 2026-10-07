@@ -43,6 +43,7 @@ final class Product extends Model
         'published_at', 'archived_at',
         'is_featured', // Phase B39 (Module 06 §37)
         'sort_priority', // Phase B43 (Module 06 §93)
+        'tax_class_id', // Phase B46: null = the store's default tax class
     ];
 
     protected function casts(): array

@@ -18,7 +18,7 @@ import { adminFetch } from '@/lib/adminApi';
 import { money } from '@/lib/money';
 import { formatDateTime } from '@/lib/datetime';
 import { options } from '@/lib/labels';
-import { addressLines, CANCELLATION_REASONS, CARRIER_LABELS, orderCustomer, PAYMENT_METHOD_LABELS, type Order, type OrderItem, type Payment, type Shipment, type TimelineEvent } from '@/lib/orders';
+import { addressLines, CANCELLATION_REASONS, CARRIER_LABELS, orderCustomer, PAYMENT_METHOD_LABELS, ratePercent, type Order, type OrderItem, type Payment, type Shipment, type TimelineEvent } from '@/lib/orders';
 
 /**
  * Module 09 §37 "Admin Order View": one order with its items, totals,
@@ -234,7 +234,15 @@ export default function Show({ orderId }: { orderId: string }) {
               <dl className="ml-auto mt-4 max-w-xs space-y-1 text-sm">
                 <div className="flex justify-between"><dt className="text-slate-600">Subtotal</dt><dd>{money(order.subtotal_minor, order.currency)}</dd></div>
                 <div className="flex justify-between"><dt className="text-slate-600">Discounts</dt><dd>− {money(order.discount_total_minor, order.currency)}</dd></div>
-                <div className="flex justify-between"><dt className="text-slate-600">Tax</dt><dd>{money(order.tax_total_minor, order.currency)}</dd></div>
+                {/* Phase B46: the tax as it was charged, rate by rate. */}
+                {order.tax?.exempt ? (
+                  <div className="flex justify-between"><dt className="text-slate-600">{order.tax.label}</dt><dd>Exempt ({order.tax.exemption_reference})</dd></div>
+                ) : (
+                  <div className="flex justify-between"><dt className="text-slate-600">{order.tax ? `${order.tax.label}${order.tax.prices_include_tax ? ' (included in prices)' : ''}` : 'Tax'}</dt><dd>{money(order.tax_total_minor, order.currency)}</dd></div>
+                )}
+                {(order.tax?.breakdown ?? []).map((b) => (
+                  <div key={b.name} className="flex justify-between ps-3 text-xs text-slate-600"><dt>{b.name} {ratePercent(b.rate_bps)} % on {money(b.base_minor, order.currency)}</dt><dd>{money(b.tax_minor, order.currency)}</dd></div>
+                ))}
                 <div className="flex justify-between"><dt className="text-slate-600">Shipping</dt><dd>{money(order.shipping_total_minor, order.currency)}</dd></div>
                 <div className="flex justify-between border-t border-slate-200 pt-1 font-semibold"><dt>Total</dt><dd>{money(order.grand_total_minor, order.currency)}</dd></div>
                 {(order.store_credit_minor ?? 0) > 0 && (

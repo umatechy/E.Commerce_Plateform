@@ -41,6 +41,7 @@ export type Product = {
   visibility: string;
   brand?: { id: string; name: string } | null;
   brand_id: number | null;
+  tax_class_id?: number | null; // Phase B46
   primary_category_id: number | null;
   category_ids?: number[];
   price_minor: number | null;

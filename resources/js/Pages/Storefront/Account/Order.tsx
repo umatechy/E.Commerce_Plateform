@@ -71,8 +71,11 @@ export default function Order({ storefront, seo, order_id }: StorefrontPageProps
             <div className="flex justify-between"><dt>{t('Subtotal')}</dt><dd>{money(order.subtotal_minor)}</dd></div>
             {order.discount_total_minor > 0 && <div className="flex justify-between text-sf-success"><dt>{t('Discount')}</dt><dd>−{money(order.discount_total_minor)}</dd></div>}
             <div className="flex justify-between"><dt>{t('Shipping')}</dt><dd>{money(order.shipping_total_minor)}</dd></div>
-            {order.tax_total_minor > 0 && <div className="flex justify-between"><dt>{t('Tax')}</dt><dd>{money(order.tax_total_minor)}</dd></div>}
+            {order.tax_total_minor > 0 && !order.tax?.prices_include_tax && <div className="flex justify-between"><dt>{order.tax?.label ?? t('Tax')}</dt><dd>{money(order.tax_total_minor)}</dd></div>}
+            {order.tax?.exempt && <div className="flex justify-between"><dt>{order.tax.label}</dt><dd>{t('Exempt')}</dd></div>}
             <div className="flex justify-between border-t border-sf-border pt-2 font-semibold"><dt>{t('Total')}</dt><dd>{money(order.grand_total_minor)}</dd></div>
+            {/* Phase B46: with tax-inclusive prices the tax is inside the total. */}
+            {order.tax_total_minor > 0 && order.tax?.prices_include_tax && <div className="flex justify-between text-sf-muted"><dt>{t('Includes {label}', { label: order.tax.label })}</dt><dd>{money(order.tax_total_minor)}</dd></div>}
             {(order.store_credit_minor ?? 0) > 0 && <div className="flex justify-between"><dt>{t('Paid with store credit')}</dt><dd>−{money(order.store_credit_minor ?? 0)}</dd></div>}
           </dl>
 

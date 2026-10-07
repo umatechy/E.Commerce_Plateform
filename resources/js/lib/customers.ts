@@ -36,6 +36,8 @@ export type CustomerRow = {
   registered: boolean;
   email_verified: boolean;
   marketing_email_opt_in: boolean;
+  tax_exempt?: boolean; // Phase B46
+  tax_exemption_reference?: string | null;
   erased: boolean;
   /** Module 10 §56: this record was merged into another. */
   merged?: boolean;

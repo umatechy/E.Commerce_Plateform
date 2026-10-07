@@ -111,6 +111,6 @@ Browser verification — EXECUTED: 7 of 7, no console errors (Starter
 templates page with 14 built-in; view; save store 65 as a template; staff
 only → offered; create a store from it; source and use counted; 375 px).
 
-CI: not yet run.
+CI: run on 978023a — success, verified 2026-10-06.
 
 Next (on the owner's word): B46 — tax engine (G3).

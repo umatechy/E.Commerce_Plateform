@@ -69,7 +69,7 @@ final class SettingValidator
         }
 
         // Phase B44: business information and the trial package.
-        $max = ['store.legal_name' => 200, 'store.contact_email' => 191, 'store.contact_phone' => 32][$definition->key] ?? null;
+        $max = ['store.legal_name' => 200, 'store.contact_email' => 191, 'store.contact_phone' => 32, 'tax.label' => 40][$definition->key] ?? null; // tax.label: Phase B46
         if ($max !== null && mb_strlen($normalized) > $max) {
             throw new InvalidSettingValueException("At most {$max} characters.");
         }

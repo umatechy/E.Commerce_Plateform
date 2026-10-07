@@ -6,6 +6,7 @@ namespace App\Domain\Returns\Services;
 
 use App\Domain\Orders\Models\Order;
 use App\Domain\Orders\Models\OrderItem;
+use App\Support\MoneyAllocation;
 
 /**
  * Module 09 §50 "Refund Calculation": what the returned units are worth,
@@ -13,7 +14,8 @@ use App\Domain\Orders\Models\OrderItem;
  *
  *   line paid   = line total (unit price × quantity − line discount)
  *                 − this line's share of the order-level discount
- *                 + this line's tax
+ *                 + this line's tax (unless prices include tax: then it is
+ *                   already in the line total — Phase B46)
  *   unit value  = line paid ÷ ordered quantity
  *   line refund = unit value × accepted quantity, rounded DOWN to the
  *                 minor unit — except that returning the whole line
@@ -41,19 +43,13 @@ final class RefundCalculator
         // `discount_total_minor` is every discount of the order; what is not on a line is order-level.
         $orderLevelDiscount = max(0, (int) $order->discount_total_minor - $lineDiscounts);
 
-        // The order-level discount is spread over the lines by their totals;
-        // the last line takes the remainder, so the shares add up exactly.
-        $shares = [];
-        $spread = 0;
-        $lastId = $items->keys()->last();
-        foreach ($items as $id => $item) {
-            /** @var OrderItem $item */
-            $share = $id === $lastId
-                ? $orderLevelDiscount - $spread
-                : ($lineTotals > 0 ? intdiv($orderLevelDiscount * (int) $item->line_total_minor, $lineTotals) : 0);
-            $shares[$id] = $share;
-            $spread += $share;
-        }
+        // The order-level discount is spread over the lines by their totals,
+        // so the shares add up exactly (the same split the tax used, B46).
+        $shares = $lineTotals > 0
+            ? MoneyAllocation::spread($orderLevelDiscount, $items->map(fn (OrderItem $item) => (int) $item->line_total_minor)->all())
+            : $items->map(fn () => 0)->all();
+        // Phase B46: with tax-inclusive prices the tax is already inside the line total.
+        $addTax = ! $order->prices_include_tax;
 
         $refunds = [];
         foreach ($acceptedByOrderItem as $id => $quantity) {
@@ -62,7 +58,7 @@ final class RefundCalculator
                 continue;
             }
             $quantity = min($quantity, (int) $item->quantity);
-            $paid = max(0, (int) $item->line_total_minor - $shares[$id] + (int) $item->tax_minor);
+            $paid = max(0, (int) $item->line_total_minor - $shares[$id] + ($addTax ? (int) $item->tax_minor : 0));
             $refunds[$id] = $quantity === (int) $item->quantity ? $paid : intdiv($paid * $quantity, (int) $item->quantity);
         }
 

@@ -234,6 +234,10 @@ final class ProductController
             throw ValidationException::withMessages(['brand_id' => 'The selected brand does not exist in this store.']);
         }
 
+        if ($request->filled('tax_class_id') && \App\Domain\Tax\Models\TaxClass::query()->find($request->input('tax_class_id')) === null) {
+            throw ValidationException::withMessages(['tax_class_id' => 'The selected tax class does not exist in this store.']);
+        }
+
         if ($request->filled('primary_category_id') && Category::query()->find($request->input('primary_category_id')) === null) {
             throw ValidationException::withMessages(['primary_category_id' => 'The selected category does not exist in this store.']);
         }

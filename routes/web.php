@@ -96,7 +96,7 @@ Route::middleware(['auth', 'required.mfa'])->group(function () {
         '/notifications' => 'Communication/Index',
         '/team/roles' => 'Team/Roles',
         '/backups' => 'Backups/Index',
-        '/settings' => 'Settings/Index', '/settings/audit-log' => 'Settings/AuditLog', '/settings/developer' => 'Settings/Developer',
+        '/settings' => 'Settings/Index', '/settings/audit-log' => 'Settings/AuditLog', '/settings/developer' => 'Settings/Developer', '/settings/tax' => 'Settings/Tax', // tax: Phase B46
     ] as $uri => $page) {
         Route::get($uri, fn () => Inertia::render($page));
     }

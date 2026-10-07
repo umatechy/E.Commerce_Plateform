@@ -31,12 +31,29 @@ use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
  */
 final class StoreSettingController
 {
+    /**
+     * Phase B46: tax settings are changed only on the Tax page (TaxController,
+     * tax.manage, "a rate before tax is on"); this generic endpoint neither
+     * lists nor changes them, so neither check can be gone round.
+     */
+    private const OWN_PAGE_PREFIXES = ['tax.'];
+
+    private function hasOwnPage(string $key): bool
+    {
+        return \Illuminate\Support\Str::startsWith($key, self::OWN_PAGE_PREFIXES);
+    }
+
+    private function ownPageResponse(): JsonResponse
+    {
+        return response()->json(['message' => 'Tax settings are changed on the Tax page.', 'code' => 'managed_on_tax_page'], 403);
+    }
+
     public function index(Request $request, ConfigService $config): JsonResponse
     {
         abort_unless(app(SettingPolicy::class)->viewStore($request->user()), 403);
 
         $resources = collect(SettingRegistry::all())
-            ->filter(fn ($definition) => $definition->scope === SettingScope::Store)
+            ->filter(fn ($definition) => $definition->scope === SettingScope::Store && ! $this->hasOwnPage($definition->key))
             ->map(fn ($definition) => new SettingResource($definition, $config->get($definition->key)))
             ->values();
 
@@ -62,6 +79,9 @@ final class StoreSettingController
     public function update(UpdateSettingRequest $request, string $key, ConfigService $config): JsonResponse
     {
         abort_unless(app(SettingPolicy::class)->manageStore($request->user()), 403);
+        if ($this->hasOwnPage($key)) {
+            return $this->ownPageResponse();
+        }
 
         try {
             $config->set($key, $request->input('value'), SettingScope::Store, $request->user()->id, $request->input('reason'));
@@ -100,6 +120,10 @@ final class StoreSettingController
     public function rollback(Request $request, int $revisionId, ConfigService $config): JsonResponse
     {
         abort_unless(app(SettingPolicy::class)->manageStore($request->user()), 403);
+        $revisionKey = \App\Domain\Settings\Models\SettingRevision::query()->whereKey($revisionId)->value('key');
+        if (is_string($revisionKey) && $this->hasOwnPage($revisionKey)) {
+            return $this->ownPageResponse();
+        }
 
         try {
             $config->rollbackTo($revisionId, $request->user()->id, SettingScope::Store);

@@ -125,6 +125,15 @@ final class SettingRegistry
             'badges.featured' => new SettingDefinition(key: 'badges.featured', scope: SettingScope::Store, type: SettingType::Boolean, default: true),
             'badges.out_of_stock' => new SettingDefinition(key: 'badges.out_of_stock', scope: SettingScope::Store, type: SettingType::Boolean, default: true),
             'badges.max_per_product' => new SettingDefinition(key: 'badges.max_per_product', scope: SettingScope::Store, type: SettingType::Integer, default: 2),
+            // Phase B46 (gap G3, owner decision 1; Module 33 §29, Module 14 §36, Module 13 §62, Module 29 §95–96):
+            // how the store charges tax. Off until the store sets it up; no rate is built in.
+            'tax.enabled' => new SettingDefinition(key: 'tax.enabled', scope: SettingScope::Store, type: SettingType::Boolean, default: false),
+            'tax.prices_include_tax' => new SettingDefinition(key: 'tax.prices_include_tax', scope: SettingScope::Store, type: SettingType::Boolean, default: false),
+            'tax.based_on' => new SettingDefinition(key: 'tax.based_on', scope: SettingScope::Store, type: SettingType::String, default: 'shipping', allowedValues: ['shipping', 'billing', 'store']),
+            'tax.shipping_taxable' => new SettingDefinition(key: 'tax.shipping_taxable', scope: SettingScope::Store, type: SettingType::Boolean, default: false),
+            'tax.discount_basis' => new SettingDefinition(key: 'tax.discount_basis', scope: SettingScope::Store, type: SettingType::String, default: 'before_tax', allowedValues: ['before_tax', 'after_tax']),
+            'tax.rounding' => new SettingDefinition(key: 'tax.rounding', scope: SettingScope::Store, type: SettingType::String, default: 'line', allowedValues: ['line', 'order']),
+            'tax.label' => new SettingDefinition(key: 'tax.label', scope: SettingScope::Store, type: SettingType::String, default: 'Tax'),
             'api.default_rate_limit_per_minute' => new SettingDefinition(
                 key: 'api.default_rate_limit_per_minute', scope: SettingScope::Platform, type: SettingType::Integer,
                 default: 60, // Module 31 §17/§43 "Rate Limiting / Configuration" — Phase B18's own integration point

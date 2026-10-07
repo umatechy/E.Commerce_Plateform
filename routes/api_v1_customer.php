@@ -98,6 +98,8 @@ Route::middleware(['customer.optional'])->group(function () {
     Route::delete('/cart/coupon', [CartController::class, 'removeCoupon']);
 
     Route::post('/checkout', [CheckoutController::class, 'store'])->middleware('throttle:10,1');
+    // Phase B46: the total with discount, shipping and tax before placing the order (read-only).
+    Route::post('/checkout/summary', [CheckoutController::class, 'summary'])->middleware('throttle:60,1,checkout-summary');
 
     // --- Shipping quote (Module 13 §81-82 — guest AND authenticated
     // customer both allowed, same as Cart/Checkout) ---

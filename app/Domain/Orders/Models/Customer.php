@@ -32,6 +32,9 @@ use Laravel\Sanctum\HasApiTokens;
  * guest checkout) has no password and can never authenticate; only a
  * Customer that completed registration (Phase B6's
  * CustomerAuthController::register()) has one and can log in.
+ *
+ * @property bool $tax_exempt Phase B46
+ * @property ?string $tax_exemption_reference Phase B46
  */
 final class Customer extends Model implements AuthenticatableContract
 {
@@ -47,6 +50,7 @@ final class Customer extends Model implements AuthenticatableContract
     {
         return [
             'marketing_email_opt_in' => 'boolean',
+            'tax_exempt' => 'boolean', // Phase B46: set by staff only (not fillable — a customer cannot exempt themselves)
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'erased_at' => 'datetime', // Module 32 — personal data erased on request

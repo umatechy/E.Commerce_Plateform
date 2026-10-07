@@ -50,6 +50,7 @@ final class Order extends Model
         'completed_at', 'cancelled_at',
         'return_status', 'replacement_for_order_id', // Phase B33; written only by OrderService
         'store_credit_minor', // Phase B34; written only by OrderService::applyStoreCredit()
+        'prices_include_tax', 'tax_snapshot', // Phase B46: the tax result used, kept as it was (Module 29 §58)
     ];
 
     protected function casts(): array
@@ -65,6 +66,31 @@ final class Order extends Model
             'shipping_address_snapshot' => 'array',
             'completed_at' => 'datetime',
             'cancelled_at' => 'datetime',
+            'prices_include_tax' => 'boolean',
+            'tax_snapshot' => 'array',
+        ];
+    }
+
+    /**
+     * Phase B46: the tax as it was charged on this order, for every screen
+     * and document that shows it (null: tax was off for the store).
+     *
+     * @return array{label: string, prices_include_tax: bool, exempt: bool, exemption_reference: ?string, shipping_tax_minor: int, breakdown: list<array<string, mixed>>}|null
+     */
+    public function taxSummary(): ?array
+    {
+        $s = $this->tax_snapshot;
+        if (! is_array($s)) {
+            return null;
+        }
+
+        return [
+            'label' => (string) ($s['label'] ?? 'Tax'),
+            'prices_include_tax' => (bool) $this->prices_include_tax,
+            'exempt' => (bool) ($s['exempt'] ?? false),
+            'exemption_reference' => $s['exemption_reference'] ?? null,
+            'shipping_tax_minor' => (int) ($s['shipping_tax_minor'] ?? 0),
+            'breakdown' => array_map(fn (array $b) => ['name' => $b['name'], 'rate_bps' => $b['rate_bps'], 'base_minor' => $b['base_minor'], 'tax_minor' => $b['tax_minor']], $s['breakdown'] ?? []),
         ];
     }
 

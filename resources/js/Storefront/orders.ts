@@ -17,6 +17,8 @@ export type OrderDetail = OrderSummary & {
   discount_total_minor: number;
   shipping_total_minor: number;
   tax_total_minor: number;
+  /** Phase B46: how the tax was charged (null: no tax). */
+  tax?: { label: string; prices_include_tax: boolean; exempt: boolean } | null;
   cancellation_reason: string | null;
   shipping_address: Record<string, string | null> | null;
   billing_address: Record<string, string | null> | null;

@@ -113,6 +113,8 @@ final class OrderService
             ]);
 
             $subtotal = 0;
+            $createdItems = [];
+            $taxLines = [];
 
             foreach ($resolvedItems as $index => $resolved) {
                 // Module 08 §20-23: reserve BEFORE committing the order
@@ -141,7 +143,8 @@ final class OrderService
                 // compatible — defaults to 0).
                 $lineDiscount = (int) ($orderData['line_discounts'][$index] ?? 0);
 
-                $order->items()->create([
+                $taxLines[] = ['key' => 'line'.$index, 'gross_minor' => $lineTotal, 'discount_minor' => $lineDiscount, 'tax_class_id' => $resolved['product']?->tax_class_id];
+                $createdItems[$index] = $order->items()->create([
                     'product_id' => $resolved['product']?->id,
                     'product_variant_id' => $resolved['variant']?->id,
                     'product_name_snapshot' => $resolved['name_snapshot'],
@@ -155,7 +158,7 @@ final class OrderService
             }
 
             // Module 09 §12: Subtotal - Discounts + Tax + Shipping = Grand
-            // Total. Tax is still 0 (no owning module yet — see
+            // Total. Tax: Phase B46 (below; it was 0 until then — see
             // docs/development/b5-inspection-findings.md). Shipping
             // is now server-computed by CheckoutService/
             // ShippingRateService (Phase B8) and passed in via
@@ -165,11 +168,37 @@ final class OrderService
             // (grand_total == subtotal) unchanged.
             $shippingTotal = (int) ($orderData['shipping_total_minor'] ?? 0);
             $discountTotal = (int) ($orderData['discount_total_minor'] ?? 0);
+
+            // Phase B46 (gap G3): the tax, computed here for every kind of order
+            // (storefront, staff, replacement) from the store's own rules —
+            // never taken from the caller. Exclusive prices: added to the
+            // total. Inclusive prices: already in it, recorded as such.
+            $lineDiscounts = array_sum(array_column($taxLines, 'discount_minor'));
+            $tax = app(\App\Domain\Tax\Services\TaxService::class)->quote(
+                $taxLines,
+                max(0, $discountTotal - $lineDiscounts),
+                $shippingTotal,
+                $orderData['shipping_address'] ?? null,
+                $orderData['billing_address'] ?? null,
+                isset($orderData['customer_id']) ? \App\Domain\Orders\Models\Customer::query()->find($orderData['customer_id']) : null,
+            );
+            foreach ($createdItems as $index => $item) {
+                $lineTax = $tax['lines']['line'.$index] ?? 0;
+                if ($lineTax !== 0) {
+                    $item->update(['tax_minor' => $lineTax]);
+                }
+            }
+            $taxTotal = $tax['total_minor'];
+            $grandTotal = $subtotal - $discountTotal + $shippingTotal + ($tax['prices_include_tax'] ? 0 : $taxTotal);
+
             $order->update([
                 'subtotal_minor' => $subtotal,
                 'discount_total_minor' => $discountTotal,
                 'shipping_total_minor' => $shippingTotal,
-                'grand_total_minor' => $subtotal - $discountTotal + $shippingTotal,
+                'tax_total_minor' => $taxTotal,
+                'prices_include_tax' => $tax['prices_include_tax'],
+                'tax_snapshot' => $tax['snapshot'],
+                'grand_total_minor' => $grandTotal,
             ]);
 
             $this->recordTimelineEvent($order, 'created', null, $order->status, null, null);
@@ -182,7 +211,7 @@ final class OrderService
 
             $this->outbox->recordEvent(
                 eventType: 'order.created',
-                payload: ['order_id' => $order->id, 'order_number' => $order->order_number, 'grand_total_minor' => $subtotal - $discountTotal + $shippingTotal],
+                payload: ['order_id' => $order->id, 'order_number' => $order->order_number, 'grand_total_minor' => $grandTotal],
                 idempotencyKey: "order:{$order->id}:created",
             );
 

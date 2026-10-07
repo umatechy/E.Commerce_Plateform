@@ -125,76 +125,11 @@ final class CheckoutService
         $this->entitlements->assertFeatureEntitled('shipping.basic');
         $this->entitlements->assertFeatureEntitled(self::FEATURE_KEY_BY_METHOD[$paymentMethod->value]);
 
-        $totals = $this->carts->totals($cart);
-
-        if ($totals['items'] === []) {
-            throw new CartCheckoutNotAllowedException('Your cart is empty.');
-        }
-
-        if ($totals['has_issues']) {
-            throw new CartCheckoutNotAllowedException('One or more items in your cart need attention before checkout can continue.');
-        }
-
-        $cartItems = $cart->items->load(['product.categories', 'variant']);
-
-        // Module 13 Final Rule #8: "Digital-only carts must not require
-        // physical shipping." Reuses Phase B3's existing ProductType —
-        // no new "requires_shipping" column was added.
-        $isDigitalOnly = $cartItems->every(
-            fn ($item) => $item->product !== null && in_array($item->product->type, [ProductType::Digital, ProductType::Service], true)
-        );
-
-        $shippingTotalMinor = 0;
-
-        if (! $isDigitalOnly) {
-            if (empty($checkoutData['shipping_method_id'])) {
-                throw ValidationException::withMessages(['shipping_method_id' => 'A shipping method is required for this order.']);
-            }
-            if (empty($checkoutData['shipping_address']['country'] ?? null)) {
-                throw ValidationException::withMessages(['shipping_address' => 'A shipping destination (at least a country) is required.']);
-            }
-
-            $weightedItems = $cartItems->map(fn ($item) => [
-                'weight' => (float) ($item->variant->weight ?? 0) * $item->quantity,
-            ])->all();
-
-            // Module 13 §39 "Server-Authoritative Rate" — the client
-            // may REQUEST a method (shipping_method_id), never a price;
-            // this call is the sole source of the actual cost.
-            $quote = $this->shippingRates->quote(
-                (int) $checkoutData['shipping_method_id'],
-                $checkoutData['shipping_address'],
-                $totals['subtotal_minor'],
-                $weightedItems,
-                $totals['currency'] ?? $this->carts->storeCurrency(),
-            );
-
-            $shippingTotalMinor = $quote['cost_minor'];
-        }
-
-        // Module 14 §56 "Promotion Eligibility Engine" — evaluated with
-        // the ACTUAL shipping cost so a free_shipping promotion's
-        // benefit is compared on equal footing with a cash discount
-        // (see PromotionEligibilityEngine::shippingBenefitValue()).
-        $promotionItemContexts = $cartItems->map(fn ($item) => [
-            'product_id' => $item->product_id,
-            'category_ids' => $item->product?->categories->pluck('id')->all() ?? [],
-            'brand_id' => $item->product?->brand_id,
-            'collection_ids' => $item->product_id !== null ? app(\App\Domain\Catalog\Services\CollectionService::class)->promotionCollectionIdsFor($item->product_id) : [],
-            'line_total_minor' => $totals['items'][array_search($item->id, array_column($totals['items'], 'cart_item_id'), true)]['line_total_minor'] ?? 0,
-        ])->values()->all();
-
-        $promotionResult = $this->promotionEngine->evaluate(
-            $promotionItemContexts, $totals['subtotal_minor'], $totals['currency'] ?? $this->carts->storeCurrency(),
-            $cart->customer, $cart->coupon_code, $shippingTotalMinor,
-        );
-
-        $discountTotalMinor = $promotionResult->freeShipping ? 0 : $promotionResult->discountAmountMinor;
-
-        if ($promotionResult->freeShipping) {
-            $shippingTotalMinor = 0;
-        }
-
+        [
+            'shipping_minor' => $shippingTotalMinor,
+            'discount_minor' => $discountTotalMinor,
+            'promotion' => $promotionResult,
+        ] = $this->price($cart, $checkoutData, requireShipping: true);
         $items = $cart->items->map(fn ($item) => [
             'product_id' => $item->product_variant_id === null ? $item->product_id : null,
             'product_variant_id' => $item->product_variant_id,
@@ -263,5 +198,139 @@ final class CheckoutService
                 'redirect_url' => $this->payments->redirectUrlFor($payment),
             ];
         });
+    }
+
+    /**
+     * Phase B46 (Module 11 §12/§28, Module 05 §43): what the order would
+     * cost, before it is placed — subtotal, discount, shipping, tax and
+     * total — from the same pricing and the same tax rules as checkout()
+     * and OrderService. Nothing is reserved, recorded or created.
+     *
+     * @param array<string, mixed> $checkoutData shipping_address, billing_address, shipping_method_id
+     * @return array<string, mixed>
+     */
+    public function summary(Cart $cart, array $checkoutData): array
+    {
+        $priced = $this->price($cart, $checkoutData, requireShipping: false);
+        $lines = [];
+        foreach ($priced['cart_items']->values() as $index => $item) {
+            $line = collect($priced['totals']['items'])->firstWhere('cart_item_id', $item->id);
+            $lines[] = [
+                'key' => 'line'.$index,
+                'gross_minor' => (int) ($line['line_total_minor'] ?? 0),
+                'discount_minor' => (int) ($priced['promotion']->lineDiscounts[$index] ?? 0),
+                'tax_class_id' => $item->product?->tax_class_id,
+            ];
+        }
+        $orderDiscount = max(0, $priced['discount_minor'] - array_sum(array_column($lines, 'discount_minor')));
+        $tax = app(\App\Domain\Tax\Services\TaxService::class)->quote(
+            $lines, $orderDiscount, $priced['shipping_minor'],
+            $checkoutData['shipping_address'] ?? null, $checkoutData['billing_address'] ?? null, $cart->customer,
+        );
+        $subtotal = (int) $priced['totals']['subtotal_minor'];
+
+        return [
+            'currency' => $priced['totals']['currency'] ?? $this->carts->storeCurrency(),
+            'subtotal_minor' => $subtotal,
+            'discount_minor' => $priced['discount_minor'],
+            'shipping_minor' => $priced['needs_shipping_method'] ? null : $priced['shipping_minor'],
+            'needs_shipping_method' => $priced['needs_shipping_method'],
+            'tax' => [
+                'enabled' => $tax['enabled'], 'label' => $tax['label'], 'prices_include_tax' => $tax['prices_include_tax'],
+                'total_minor' => $tax['total_minor'], 'shipping_minor' => $tax['shipping_minor'], 'breakdown' => $tax['breakdown'],
+                'exempt' => (bool) ($tax['snapshot']['exempt'] ?? false),
+            ],
+            'grand_total_minor' => $subtotal - $priced['discount_minor'] + $priced['shipping_minor'] + ($tax['prices_include_tax'] ? 0 : $tax['total_minor']),
+        ];
+    }
+
+    /**
+     * Shipping and promotions for a cart, server-side (Module 13 §39, Module
+     * 14 §56) — shared by checkout() and summary() so both price an order the
+     * same way. checkout() needs a shipping method for physical goods; the
+     * summary may come before one is chosen.
+     *
+     * @param array<string, mixed> $checkoutData
+     * @return array{totals: array<string, mixed>, cart_items: \Illuminate\Support\Collection<int, \App\Domain\Cart\Models\CartItem>, shipping_minor: int, discount_minor: int, promotion: \App\Domain\Promotions\Services\PromotionEvaluationResult, needs_shipping_method: bool}
+     */
+    private function price(Cart $cart, array $checkoutData, bool $requireShipping): array
+    {
+        $needsMethod = false;
+        $totals = $this->carts->totals($cart);
+
+        if ($totals['items'] === []) {
+            throw new CartCheckoutNotAllowedException('Your cart is empty.');
+        }
+
+        if ($totals['has_issues']) {
+            throw new CartCheckoutNotAllowedException('One or more items in your cart need attention before checkout can continue.');
+        }
+
+        $cartItems = $cart->items->load(['product.categories', 'variant']);
+
+        // Module 13 Final Rule #8: "Digital-only carts must not require
+        // physical shipping." Reuses Phase B3's existing ProductType —
+        // no new "requires_shipping" column was added.
+        $isDigitalOnly = $cartItems->every(
+            fn ($item) => $item->product !== null && in_array($item->product->type, [ProductType::Digital, ProductType::Service], true)
+        );
+
+        $shippingTotalMinor = 0;
+
+        if (! $isDigitalOnly && ! $requireShipping && empty($checkoutData['shipping_method_id'])) {
+            $needsMethod = true; // the summary before a method is chosen: no shipping yet
+        } elseif (! $isDigitalOnly) {
+            if (empty($checkoutData['shipping_method_id'])) {
+                throw ValidationException::withMessages(['shipping_method_id' => 'A shipping method is required for this order.']);
+            }
+            if (empty($checkoutData['shipping_address']['country'] ?? null)) {
+                throw ValidationException::withMessages(['shipping_address' => 'A shipping destination (at least a country) is required.']);
+            }
+
+            $weightedItems = $cartItems->map(fn ($item) => [
+                'weight' => (float) ($item->variant->weight ?? 0) * $item->quantity,
+            ])->all();
+
+            // Module 13 §39 "Server-Authoritative Rate" — the client
+            // may REQUEST a method (shipping_method_id), never a price;
+            // this call is the sole source of the actual cost.
+            $quote = $this->shippingRates->quote(
+                (int) $checkoutData['shipping_method_id'],
+                $checkoutData['shipping_address'],
+                $totals['subtotal_minor'],
+                $weightedItems,
+                $totals['currency'] ?? $this->carts->storeCurrency(),
+            );
+
+            $shippingTotalMinor = $quote['cost_minor'];
+        }
+
+        // Module 14 §56 "Promotion Eligibility Engine" — evaluated with
+        // the ACTUAL shipping cost so a free_shipping promotion's
+        // benefit is compared on equal footing with a cash discount
+        // (see PromotionEligibilityEngine::shippingBenefitValue()).
+        $promotionItemContexts = $cartItems->map(fn ($item) => [
+            'product_id' => $item->product_id,
+            'category_ids' => $item->product?->categories->pluck('id')->all() ?? [],
+            'brand_id' => $item->product?->brand_id,
+            'collection_ids' => $item->product_id !== null ? app(\App\Domain\Catalog\Services\CollectionService::class)->promotionCollectionIdsFor($item->product_id) : [],
+            'line_total_minor' => $totals['items'][array_search($item->id, array_column($totals['items'], 'cart_item_id'), true)]['line_total_minor'] ?? 0,
+        ])->values()->all();
+
+        $promotionResult = $this->promotionEngine->evaluate(
+            $promotionItemContexts, $totals['subtotal_minor'], $totals['currency'] ?? $this->carts->storeCurrency(),
+            $cart->customer, $cart->coupon_code, $shippingTotalMinor,
+        );
+
+        $discountTotalMinor = $promotionResult->freeShipping ? 0 : $promotionResult->discountAmountMinor;
+
+        if ($promotionResult->freeShipping) {
+            $shippingTotalMinor = 0;
+        }
+
+        return [
+            'totals' => $totals, 'cart_items' => $cartItems, 'shipping_minor' => $shippingTotalMinor, 'discount_minor' => $discountTotalMinor,
+            'promotion' => $promotionResult, 'needs_shipping_method' => $needsMethod,
+        ];
     }
 }

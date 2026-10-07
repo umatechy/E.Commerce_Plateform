@@ -52,6 +52,7 @@ type FormValues = {
   status: string;
   visibility: string;
   brand_id: string;
+  tax_class_id: string;
   primary_category_id: string;
   category_ids: number[];
   price: string;
@@ -70,7 +71,7 @@ type FormValues = {
 function blank(currency: string): FormValues {
   return {
     type: 'simple', name: '', sku: '', short_description: '', description: '', status: 'draft', visibility: 'public',
-    brand_id: '', primary_category_id: '', category_ids: [], price: '', sale_price: '', cost_price: '', currency,
+    brand_id: '', tax_class_id: '', primary_category_id: '', category_ids: [], price: '', sale_price: '', cost_price: '', currency,
     is_featured: false, tags: '', collection_ids: [], sort_priority: '0', badge_ids: [],
   };
 }
@@ -87,6 +88,7 @@ function fromProduct(product: Product, fallbackCurrency: string): FormValues {
     status: product.status,
     visibility: product.visibility,
     brand_id: product.brand_id === null ? '' : String(product.brand_id),
+    tax_class_id: product.tax_class_id == null ? '' : String(product.tax_class_id),
     primary_category_id: product.primary_category_id === null ? '' : String(product.primary_category_id),
     category_ids: product.category_ids ?? [],
     price: fromMinor(product.price_minor, currency),
@@ -115,6 +117,9 @@ function ProductForm({ product, onSaved }: { product: Product | null; onSaved: (
   const canSave = product === null ? access.can('products.create') : access.can('products.update');
   const form = useForm<FormValues>(product ? fromProduct(product, access.currency) : blank(access.currency));
   const brands = useApi<{ data: Brand[] }>('/brands');
+  // Phase B46: the store's tax classes (none until the store sets up tax).
+  const tax = useApi<{ data: { classes: { id: number; name: string; is_default: boolean }[] } }>('/tax');
+  const taxClasses = tax.data?.data.classes ?? [];
   const categories = useApi<{ data: Category[] }>('/categories');
   // Phase B39: only hand-picked collections take a product directly; rule-based ones choose by themselves.
   const canCollections = access.can('collections.manage');
@@ -164,6 +169,8 @@ function ProductForm({ product, onSaved }: { product: Product | null; onSaved: (
       status: values.status,
       visibility: values.visibility,
       brand_id: values.brand_id === '' ? null : Number(values.brand_id),
+      // Phase B46: only sent when the store has tax classes (the field is shown then).
+      ...(taxClasses.length > 0 ? { tax_class_id: values.tax_class_id === '' ? null : Number(values.tax_class_id) } : {}),
       primary_category_id: values.primary_category_id === '' ? null : Number(values.primary_category_id),
       category_ids: values.category_ids,
       price_minor: price.minor,
@@ -304,6 +311,18 @@ function ProductForm({ product, onSaved }: { product: Product | null; onSaved: (
               placeholder="No brand"
               options={(brands.data?.data ?? []).map((brand) => ({ value: String(brand.id), label: brand.name }))}
             />
+            {taxClasses.length > 0 && (
+              <SelectField
+                label="Tax class"
+                optional
+                value={values.tax_class_id}
+                onChange={(v) => set('tax_class_id', v)}
+                error={errors.tax_class_id}
+                placeholder={`Default (${taxClasses.find((c) => c.is_default)?.name ?? 'none'})`}
+                options={taxClasses.map((c) => ({ value: String(c.id), label: c.name }))}
+                hint="Which of your tax rates apply to this product."
+              />
+            )}
             <SelectField
               label="Main category"
               optional

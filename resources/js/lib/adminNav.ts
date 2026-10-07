@@ -80,6 +80,7 @@ export const storeNav: NavGroup[] = [
       { href: '/team/roles', label: 'Roles', description: 'What each role may do.', permissions: ['roles.view'] },
       { href: '/billing', label: 'Billing', description: 'Your package, subscription and invoices.', permissions: ['billing.view'] },
       { href: '/settings', label: 'Settings', description: 'Currency, timezone and language.', permissions: ['settings.view'] },
+      { href: '/settings/tax', label: 'Tax', description: 'Tax classes, rates and how tax is charged.', permissions: ['tax.manage', 'settings.view'] },
       { href: '/settings/audit-log', label: 'Audit log', description: 'Who did what in your store.', permissions: ['audit.view'] },
       { href: '/settings/developer', label: 'Developer', description: 'API keys and webhooks.', permissions: ['developer_platform.view'] },
       { href: '/backups', label: 'Backups', description: 'Backups of your store data.', permissions: ['backups.view'] },

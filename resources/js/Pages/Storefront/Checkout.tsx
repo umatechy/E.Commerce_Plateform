@@ -11,6 +11,16 @@ import type { CartData } from './Cart';
 import { useT } from '@/Storefront/i18n';
 
 type ShippingOption = { id: number; name: string; type: string; cost_minor: number };
+/** Phase B46: the server's price of the order before it is placed (POST /checkout/summary). */
+type Summary = {
+  currency: string;
+  subtotal_minor: number;
+  discount_minor: number;
+  shipping_minor: number | null;
+  needs_shipping_method: boolean;
+  tax: { enabled: boolean; label: string; prices_include_tax: boolean; total_minor: number; exempt: boolean; breakdown: { name: string; rate_bps: number; tax_minor: number }[] };
+  grand_total_minor: number;
+};
 type PlacedOrder = { order_number: string; grand_total_minor: number; currency: string; store_credit_minor?: number; payable_minor?: number };
 
 const PAYMENT_METHODS = [
@@ -26,6 +36,7 @@ function addressFields(address: Address, phone: string) {
     phone: address.phone ?? phone,
     line1: [address.line1, address.line2].filter(Boolean).join(', '),
     city: address.city,
+    province: address.province ?? '',
     postal_code: address.postal_code ?? '',
     country: address.country,
   };
@@ -46,7 +57,7 @@ export default function Checkout({ storefront, seo, payment_methods }: Storefron
   // Only methods the store's package includes (the server enforces the same rule at checkout).
   const methods = PAYMENT_METHODS.filter((method) => payment_methods.includes(method.value));
   const [cart, setCart] = useState<CartData | null>(null);
-  const [form, setForm] = useState({ name: '', email: '', phone: '', line1: '', city: '', postal_code: '', country: '', notes: '' });
+  const [form, setForm] = useState({ name: '', email: '', phone: '', line1: '', city: '', province: '', postal_code: '', country: '', notes: '' });
   const [shipping, setShipping] = useState<ShippingOption[] | null>(null);
   const [shippingId, setShippingId] = useState<number | null>(null);
   const [payment, setPayment] = useState<string>(() => methods[0]?.value ?? '');
@@ -87,7 +98,7 @@ export default function Checkout({ storefront, seo, payment_methods }: Storefron
   useEffect(() => {
     if (form.country.trim().length < 2) return;
     const timer = window.setTimeout(() => {
-      storefrontFetch<{ data: ShippingOption[] }>(storefront, '/shipping/quote', { query: { country: form.country.trim(), city: form.city.trim() } })
+      storefrontFetch<{ data: ShippingOption[] }>(storefront, '/shipping/quote', { query: { country: form.country.trim(), province: form.province.trim(), city: form.city.trim() } })
         .then((res) => {
           setShipping(res.data);
           setShippingId((current) => (res.data.some((o) => o.id === current) ? current : (res.data[0]?.id ?? null)));
@@ -96,7 +107,33 @@ export default function Checkout({ storefront, seo, payment_methods }: Storefron
     }, 400);
 
     return () => window.clearTimeout(timer);
-  }, [form.country, form.city, storefront]);
+  }, [form.country, form.province, form.city, storefront]);
+
+  // Phase B46: discount, delivery and tax as the server will charge them, before the order is placed.
+  const [summary, setSummary] = useState<Summary | null>(null);
+  const cartVersion = cart && cart.items.length > 0 ? `${cart.subtotal_minor}:${cart.items.length}` : ''; // an empty cart has nothing to price
+  useEffect(() => {
+    if (!cartVersion) return;
+    // An answer to an older request (e.g. before a delivery option was chosen) must not replace a newer one.
+    let current = true;
+    const timer = window.setTimeout(() => {
+      const country = form.country.trim().toUpperCase();
+      storefrontFetch<{ data: Summary }>(storefront, '/checkout/summary', {
+        method: 'POST',
+        body: {
+          shipping_method_id: shippingId,
+          shipping_address: country.length === 2 ? { country, province: form.province.trim() || null, city: form.city.trim() || null, postal_code: form.postal_code.trim() || null } : null,
+        },
+      })
+        .then((res) => current && setSummary(res.data))
+        .catch(() => current && setSummary(null));
+    }, 400);
+
+    return () => {
+      current = false;
+      window.clearTimeout(timer);
+    };
+  }, [cartVersion, shippingId, form.country, form.province, form.city, form.postal_code, storefront]);
 
   const field = (key: keyof typeof form) => ({
     value: form[key],
@@ -110,7 +147,7 @@ export default function Checkout({ storefront, seo, payment_methods }: Storefron
     event.preventDefault();
     setBusy(true);
     setError(null);
-    const address = { name: form.name, line1: form.line1, city: form.city, postal_code: form.postal_code, country: form.country.trim().toUpperCase() };
+    const address = { name: form.name, line1: form.line1, city: form.city, province: form.province.trim() || null, postal_code: form.postal_code, country: form.country.trim().toUpperCase() };
     try {
       const res = await storefrontFetch<{ data: { order: PlacedOrder } }>(storefront, '/checkout', {
         method: 'POST',
@@ -209,6 +246,7 @@ export default function Checkout({ storefront, seo, payment_methods }: Storefron
               )}
               <input {...field('line1')} required placeholder={t('Street address')} aria-label={t('Street address')} autoComplete="address-line1" className={`${input} sm:col-span-2`} />
               <input {...field('city')} required placeholder={t('City')} aria-label={t('City')} autoComplete="address-level2" className={input} />
+              <input {...field('province')} placeholder={t('Province or region (optional)')} aria-label={t('Province or region')} autoComplete="address-level1" className={input} />
               <input {...field('postal_code')} placeholder={t('Postal code')} aria-label={t('Postal code')} autoComplete="postal-code" className={input} />
               <input {...field('country')} required maxLength={2} placeholder={t('Country code (e.g. PK)')} aria-label={t('Country code')} autoComplete="country" className={input} />
             </fieldset>
@@ -252,10 +290,31 @@ export default function Checkout({ storefront, seo, payment_methods }: Storefron
               <span>{t('Subtotal')}</span>
               <span>{formatMoney(cart.subtotal_minor, currency)}</span>
             </p>
+            {summary !== null && summary.discount_minor > 0 && (
+              <p className="flex justify-between">
+                <span>{t('Discount')}</span>
+                <span>− {formatMoney(summary.discount_minor, currency)}</span>
+              </p>
+            )}
             <p className="flex justify-between">
               <span>{t('Shipping')}</span>
-              <span>{shippingId ? formatMoney(shippingCost, currency) : '—'}</span>
+              <span>{summary !== null && summary.shipping_minor !== null ? formatMoney(summary.shipping_minor, currency) : shippingId ? formatMoney(shippingCost, currency) : '—'}</span>
             </p>
+            {summary !== null && summary.tax.enabled && (
+              summary.tax.exempt ? (
+                <p className="flex justify-between"><span>{summary.tax.label}</span><span>{t('Exempt')}</span></p>
+              ) : summary.tax.prices_include_tax ? (
+                <p className="flex justify-between text-sf-muted"><span>{t('Includes {label}', { label: summary.tax.label })}</span><span>{formatMoney(summary.tax.total_minor, currency)}</span></p>
+              ) : (
+                <p className="flex justify-between"><span>{summary.tax.label}</span><span>{formatMoney(summary.tax.total_minor, currency)}</span></p>
+              )
+            )}
+            {summary !== null && (
+              <p className="flex justify-between border-t border-sf-border pt-3 font-semibold">
+                <span>{summary.needs_shipping_method ? t('Total before delivery') : t('Total')}</span>
+                <span>{formatMoney(summary.grand_total_minor, currency)}</span>
+              </p>
+            )}
             {hasCredit && credit && (
               <label className="flex items-start gap-2 rounded-sf border border-sf-border p-3">
                 <input type="checkbox" checked={useCredit} onChange={(e) => setUseCredit(e.target.checked)} className="mt-1" />

@@ -5,7 +5,7 @@ import StoreCreditCard from '@/Components/Customers/StoreCreditCard';
 import Button, { ButtonLink, FOCUS_RING } from '@/Components/ui/Button';
 import DataTable, { Pagination, type Column } from '@/Components/ui/DataTable';
 import Dialog, { ConfirmDialog } from '@/Components/ui/Dialog';
-import { FormError, SelectField, TextAreaField, TextField } from '@/Components/ui/Form';
+import { CheckboxField, FormError, SelectField, TextAreaField, TextField } from '@/Components/ui/Form';
 import Badge, { StatusBadge, humanize } from '@/Components/ui/Badge';
 import { AccessNotice, Card, Details, EmptyPanel, ErrorPanel, Skeleton, StatCard } from '@/Components/ui/Page';
 import { toast } from '@/Components/ui/toast';
@@ -299,6 +299,45 @@ function Activity({ customerId, version }: { customerId: string; version: number
   );
 }
 
+/**
+ * Phase B46 (Module 11 §28): a customer the store does not charge tax, with
+ * the certificate or registration number it relies on. Needs tax.manage;
+ * new orders follow it, placed orders keep their tax.
+ */
+function TaxExemption({ customer, canChange, onChanged }: { customer: CustomerDetail; canChange: boolean; onChanged: () => void }) {
+  const [editing, setEditing] = useState(false);
+  const form = useForm({ tax_exempt: customer.tax_exempt === true, tax_exemption_reference: customer.tax_exemption_reference ?? '' });
+
+  async function save(event: FormEvent) {
+    event.preventDefault();
+    const body = { tax_exempt: form.values.tax_exempt, tax_exemption_reference: form.values.tax_exempt ? form.values.tax_exemption_reference : null };
+    if ((await form.submit(() => adminFetch(`/customers/${customer.id}/tax-exemption`, { method: 'PUT', body }), 'Tax exemption saved.')) !== undefined) {
+      setEditing(false);
+      onChanged();
+    }
+  }
+
+  return (
+    <Card title="Tax" actions={canChange && !editing && <Button size="sm" onClick={() => setEditing(true)}>Change</Button>}>
+      {editing ? (
+        <form onSubmit={save} className="space-y-3" noValidate>
+          <FormError message={form.formError} />
+          <CheckboxField label="Exempt from tax" checked={form.values.tax_exempt} onChange={(x) => form.set('tax_exempt', x)} hint="New orders for this customer are charged no tax." />
+          {form.values.tax_exempt && <TextField label="Certificate or registration number" value={form.values.tax_exemption_reference} onChange={(x) => form.set('tax_exemption_reference', x)} error={form.errors.tax_exemption_reference} maxLength={80} required />}
+          <div className="flex justify-end gap-2">
+            <Button onClick={() => setEditing(false)} disabled={form.busy}>Cancel</Button>
+            <Button type="submit" variant="primary" busy={form.busy} busyLabel="Saving…">Save</Button>
+          </div>
+        </form>
+      ) : customer.tax_exempt ? (
+        <p className="text-sm">Exempt from tax <span className="text-slate-600">({customer.tax_exemption_reference})</span></p>
+      ) : (
+        <p className="text-sm text-slate-600">Charged tax as usual.</p>
+      )}
+    </Card>
+  );
+}
+
 function Privacy({ customer, onErased }: { customer: CustomerDetail; onErased: () => void }) {
   const [erasing, setErasing] = useState(false);
   const form = useForm({ reason: '', confirm_email: '' });
@@ -584,6 +623,9 @@ export default function Show({ customerId }: { customerId: string }) {
               )}
             </Card>
             {!merged && <StoreCreditCard customerId={customer.id} version={version} />}
+            {(access.can('tax.manage') || customer.tax_exempt) && (
+              <TaxExemption key={`${customer.tax_exempt}-${customer.tax_exemption_reference}`} customer={customer} canChange={access.can('tax.manage') && access.can('customers.manage') && !merged} onChanged={changed} />
+            )}
             <Activity customerId={customer.id} version={version} />
             {access.can('privacy.manage') && <Privacy customer={customer} onErased={() => changed()} />}
           </div>

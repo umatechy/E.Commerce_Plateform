@@ -31,6 +31,8 @@ final class StaffCustomerResource extends JsonResource
             'email' => $this->email,
             'phone' => $this->phone,
             'status' => $this->standing()->value,
+            'tax_exempt' => (bool) $this->tax_exempt, // Phase B46
+            'tax_exemption_reference' => $this->tax_exemption_reference,
             'status_reason' => $this->status_reason,
             'status_changed_at' => $this->status_changed_at?->toIso8601String(),
             'source' => $this->source?->value,

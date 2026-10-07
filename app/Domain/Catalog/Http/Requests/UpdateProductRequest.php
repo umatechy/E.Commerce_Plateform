@@ -31,6 +31,7 @@ final class UpdateProductRequest extends FormRequest
             'status' => ['sometimes', 'in:draft,active,scheduled,hidden,archived'],
             'visibility' => ['sometimes', 'in:public,catalog_only,search_only,hidden,private,scheduled'],
             'brand_id' => ['sometimes', 'nullable', 'integer', 'exists:brands,id'],
+            'tax_class_id' => ['sometimes', 'nullable', 'integer'], // Phase B46
             'primary_category_id' => ['sometimes', 'nullable', 'integer', 'exists:categories,id'],
             'price_minor' => ['sometimes', 'nullable', 'integer', 'min:0'],
             'sale_price_minor' => ['sometimes', 'nullable', 'integer', 'min:0'],

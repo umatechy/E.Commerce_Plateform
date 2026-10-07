@@ -87,6 +87,7 @@ final class PermissionSeeder extends Seeder
         ['key' => 'customers.import', 'group' => 'customers', 'description' => 'Import customers from a CSV file (Phase B32)'],
         ['key' => 'storefront.manage', 'group' => 'storefront', 'description' => 'Launch the storefront to the public (Module 05 — Phase B24)'],
         ['key' => 'billing.view', 'group' => 'billing', 'description' => 'View the store\'s platform subscription billing and invoices (Module 29 — Phase B23)'],
+        ['key' => 'tax.manage', 'group' => 'settings', 'description' => 'Set up tax: classes, rates, regions and how tax is charged (Phase B46)'],
         ['key' => 'billing.manage', 'group' => 'billing', 'description' => 'Cancel/resume the subscription or change its billing interval (Module 29 — Phase B23)'],
         ['key' => 'store_health.view', 'group' => 'store_health', 'description' => 'View the store\'s health checks and resource usage (Module 24 — Phase B21)'],
         ['key' => 'backups.view', 'group' => 'backups', 'description' => 'View this store\'s own backup history and status (Module 23 — Phase B19)'],

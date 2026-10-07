@@ -460,4 +460,10 @@ export const ur: Record<string, string> = {
   'Changed my mind': 'میرا ارادہ بدل گیا',
   'Arrived too late': 'بہت دیر سے پہنچی',
   Other: 'دیگر',
+  // Phase B46: tax at checkout.
+  Exempt: 'مستثنیٰ',
+  'Includes {label}': '{label} شامل ہے',
+  'Province or region (optional)': 'صوبہ یا علاقہ (اختیاری)',
+  'Province or region': 'صوبہ یا علاقہ',
+  'Total before delivery': 'ڈیلیوری سے پہلے کل',
 };
