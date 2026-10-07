@@ -67,6 +67,6 @@ Not built (b46-tax-engine.md §6): tax on platform invoices (B47), tax
 reports, compound rates, tax providers, postal-code rates, catalogue prices
 shown with a different tax display than entered.
 
-CI: not yet run.
+CI: run on ef8b515 — success, verified 2026-10-07.
 
 Next (on the owner's word): B47 — billing completion.
