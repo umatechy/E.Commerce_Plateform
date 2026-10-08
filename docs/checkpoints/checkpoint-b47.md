@@ -69,6 +69,6 @@ Not built (b47-billing-completion.md §10): gateways (B48), debit
 adjustments, add-ons, usage billing, statements, notice emails, proration
 for the Super Admin override.
 
-CI: not yet run.
+CI: run on e338b0b — success, verified 2026-10-08.
 
 Next (on the owner's word): B48 — payment gateway adapters.
