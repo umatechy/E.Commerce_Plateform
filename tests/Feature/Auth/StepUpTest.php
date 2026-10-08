@@ -114,9 +114,15 @@ final class StepUpTest extends TestCase
             'POST api/v1/customers/{customer}/merge',
             // Phase B34: giving or taking store credit by hand.
             'POST api/v1/customers/{customer}/store-credit/adjust',
+            // Phase B47: credit notes and their approval, payment notices.
+            'POST api/v1/super-admin/billing/credit-notes/{creditNote}/approve',
+            'POST api/v1/super-admin/billing/credit-notes/{creditNote}/reject',
+            'POST api/v1/super-admin/billing/invoices/{invoice}/credit-notes',
             'POST api/v1/super-admin/billing/invoices/{invoice}/extend-due-date',
             'POST api/v1/super-admin/billing/invoices/{invoice}/payments',
             'POST api/v1/super-admin/billing/invoices/{invoice}/void',
+            'POST api/v1/super-admin/billing/payment-notices/{notice}/approve',
+            'POST api/v1/super-admin/billing/payment-notices/{notice}/reject',
             'POST api/v1/super-admin/billing/prices',
             'POST api/v1/super-admin/developer/applications/{application}/suspend',
             'POST api/v1/super-admin/packages',

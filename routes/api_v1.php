@@ -131,6 +131,18 @@ Route::middleware(['auth:sanctum', 'staff.principal', 'required.mfa'])->group(fu
     Route::post('/billing/cancel', [BillingController::class, 'cancel']);
     Route::post('/billing/resume', [BillingController::class, 'resume']);
     Route::put('/billing/interval', [BillingController::class, 'changeInterval']);
+    // Phase B47 (Module 29 §43–49, §73–75): plan changes, account credit, credit notes, PDFs, payment notices.
+    $account = \App\Domain\Billing\Http\Controllers\BillingAccountController::class;
+    Route::get('/billing/plans', [$account, 'plans']);
+    Route::get('/billing/plan-change/preview', [$account, 'preview']);
+    Route::post('/billing/plan-change', [$account, 'change'])->middleware('throttle:10,10,plan-change');
+    Route::delete('/billing/plan-change', [$account, 'cancelChange']);
+    Route::get('/billing/credit', [$account, 'credit']);
+    Route::get('/billing/credit-notes', [$account, 'creditNotes']);
+    Route::get('/billing/credit-notes/{creditNote}/pdf', [$account, 'creditNotePdf'])->middleware('throttle:30,1,billing-pdf');
+    Route::get('/billing/invoices/{invoice}/pdf', [$account, 'invoicePdf'])->middleware('throttle:30,1,billing-pdf');
+    Route::get('/billing/payment-notices', [$account, 'notices']);
+    Route::post('/billing/invoices/{invoice}/payment-notices', [$account, 'submitNotice'])->middleware('throttle:10,10,payment-notice');
 
     // --- Catalog (Modules 06-07, Phase B3) ---
     // Phase B40: before the resource, so "export" is not read as a product id.
@@ -486,6 +498,17 @@ Route::middleware(['auth:sanctum', 'staff.principal', 'required.mfa'])->group(fu
             Route::post('/billing/invoices/{invoice}/payments', [SuperAdminBillingController::class, 'recordPayment'])->middleware('step_up');
             Route::post('/billing/invoices/{invoice}/void', [SuperAdminBillingController::class, 'void'])->middleware('step_up');
             Route::post('/billing/invoices/{invoice}/extend-due-date', [SuperAdminBillingController::class, 'extendDueDate'])->middleware('step_up');
+            // Phase B47 (Module 29 §42–43, §73–75, §79, §92): payment notices, credit notes, approvals, PDFs.
+            $ops = \App\Domain\SuperAdmin\Http\Controllers\SuperAdminBillingOperationsController::class;
+            Route::get('/billing/payment-notices', [$ops, 'notices']);
+            Route::post('/billing/payment-notices/{notice}/approve', [$ops, 'approveNotice'])->middleware('step_up');
+            Route::post('/billing/payment-notices/{notice}/reject', [$ops, 'rejectNotice'])->middleware('step_up');
+            Route::get('/billing/credit-notes', [$ops, 'creditNotes']);
+            Route::post('/billing/invoices/{invoice}/credit-notes', [$ops, 'createCreditNote'])->middleware('step_up');
+            Route::post('/billing/credit-notes/{creditNote}/approve', [$ops, 'approveCreditNote'])->middleware('step_up');
+            Route::post('/billing/credit-notes/{creditNote}/reject', [$ops, 'rejectCreditNote'])->middleware('step_up');
+            Route::get('/billing/invoices/{invoice}/pdf', [$ops, 'invoicePdf']);
+            Route::get('/billing/credit-notes/{creditNote}/pdf', [$ops, 'creditNotePdf']);
             Route::get('/monitoring/api-usage', [SuperAdminMonitoringController::class, 'apiUsage']);
         });
 

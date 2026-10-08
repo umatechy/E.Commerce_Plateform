@@ -24,17 +24,24 @@ final class SettingValidator
     {
         return match ($definition->type) {
             SettingType::Boolean => $this->validateBoolean($value),
-            SettingType::Integer => $this->validateInteger($value),
+            SettingType::Integer => $this->validateInteger($value, $definition),
             SettingType::String => $this->validateString($value, $definition),
             SettingType::StringArray => $this->validateRecipients($definition, $this->validateStringArray($value)),
             SettingType::Secret => $this->validateString($value, $definition),
         };
     }
 
-    private function validateInteger(mixed $value): int
+    /** Phase B47: settings where 0 means "none" (no tax, no approval step). */
+    private const ZERO_ALLOWED = ['billing.tax_rate_bps', 'billing.approval_threshold_minor'];
+
+    private function validateInteger(mixed $value, SettingDefinition $definition): int
     {
-        if (! is_int($value) || $value < 1) {
-            throw new InvalidSettingValueException('Value must be a positive integer.');
+        $min = in_array($definition->key, self::ZERO_ALLOWED, true) ? 0 : 1;
+        if (! is_int($value) || $value < $min) {
+            throw new InvalidSettingValueException($min === 0 ? 'Value must be zero or a positive integer.' : 'Value must be a positive integer.');
+        }
+        if ($definition->key === 'billing.tax_rate_bps' && $value > 10000) {
+            throw new InvalidSettingValueException('A tax rate is at most 10000 basis points (100 %).');
         }
 
         return $value;
@@ -69,7 +76,7 @@ final class SettingValidator
         }
 
         // Phase B44: business information and the trial package.
-        $max = ['store.legal_name' => 200, 'store.contact_email' => 191, 'store.contact_phone' => 32, 'tax.label' => 40][$definition->key] ?? null; // tax.label: Phase B46
+        $max = ['store.legal_name' => 200, 'store.contact_email' => 191, 'store.contact_phone' => 32, 'tax.label' => 40, 'billing.tax_label' => 40, 'billing.issuer_name' => 120, 'billing.issuer_details' => 500][$definition->key] ?? null; // tax.label: Phase B46
         if ($max !== null && mb_strlen($normalized) > $max) {
             throw new InvalidSettingValueException("At most {$max} characters.");
         }

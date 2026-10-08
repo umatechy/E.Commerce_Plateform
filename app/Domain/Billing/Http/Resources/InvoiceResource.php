@@ -24,10 +24,13 @@ final class InvoiceResource extends JsonResource
             'currency' => $this->currency,
             'subtotal_minor' => $this->subtotal_minor,
             'tax_rate_bps' => $this->tax_rate_bps,
-            'tax_label' => config('billing.tax_label'),
+            'tax_label' => app(\App\Domain\Settings\Services\ConfigService::class)->get('billing.tax_label'), // Phase B47: a platform setting
             'tax_minor' => $this->tax_minor,
             'total_minor' => $this->total_minor,
             'amount_paid_minor' => $this->amount_paid_minor,
+            // Phase B47: account credit used, and credit notes against it.
+            'credit_applied_minor' => (int) $this->credit_applied_minor,
+            'amount_credited_minor' => (int) $this->amount_credited_minor,
             'amount_due_minor' => $this->amountDue(),
             'bill_to' => [
                 'store' => $this->bill_to['store'] ?? null,
@@ -41,6 +44,7 @@ final class InvoiceResource extends JsonResource
             'voided_at' => $this->voided_at?->toIso8601String(),
             'void_reason' => $this->void_reason,
             'lines' => $this->whenLoaded('lines', fn () => $this->lines->map(fn (InvoiceLine $line) => [
+                'kind' => $line->kind ?? 'charge', // Phase B47: a credit line is the unused part of the old plan
                 'description' => $line->description,
                 'quantity' => $line->quantity,
                 'unit_amount_minor' => $line->unit_amount_minor,

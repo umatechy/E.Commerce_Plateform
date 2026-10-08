@@ -22,7 +22,8 @@ final class InvoiceLine extends Model
 {
     protected $table = 'invoice_lines';
 
-    protected $fillable = ['invoice_id', 'description', 'quantity', 'unit_amount_minor', 'amount_minor', 'period_start', 'period_end'];
+    /** Phase B47: `charge` or `credit` (the unused part of the old plan on a proration invoice). */
+    protected $fillable = ['invoice_id', 'kind', 'description', 'quantity', 'unit_amount_minor', 'amount_minor', 'period_start', 'period_end'];
 
     protected function casts(): array
     {

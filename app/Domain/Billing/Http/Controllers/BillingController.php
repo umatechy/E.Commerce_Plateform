@@ -45,6 +45,8 @@ final class BillingController
                 'current_period_ends_at' => $subscription->current_period_ends_at?->toIso8601String(),
                 'grace_period_ends_at' => $subscription->grace_period_ends_at?->toIso8601String(),
                 'cancel_at_period_end' => (bool) $subscription->cancel_at_period_end,
+                // Phase B47: a downgrade waiting for the period end.
+                'scheduled_package' => $subscription->scheduled_package_id === null ? null : (fn (?\App\Domain\Packages\Models\Package $p) => $p === null ? null : ['code' => $p->code, 'name' => $p->name])(\App\Domain\Packages\Models\Package::query()->find($subscription->scheduled_package_id)),
             ],
             'upcoming' => $quote === null ? null : [
                 ...$quote,
@@ -55,6 +57,8 @@ final class BillingController
                 'open_invoices' => $open->count(),
                 'overdue_invoices' => $open->filter(fn (Invoice $invoice) => $invoice->isOverdue())->count(),
                 'amount_due_minor' => $open->sum(fn (Invoice $invoice) => $invoice->amountDue()),
+                // Phase B47 (Module 29 §45): account credit, used on the next invoices first.
+                'account_credit_minor' => app(\App\Domain\Billing\Services\AccountCredit::class)->balance($subscription->store_id, $subscription->currency ?? (string) config('billing.currency')),
             ],
         ]]);
     }

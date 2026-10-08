@@ -47,6 +47,14 @@ final class SettingRegistry
                 key: 'platform.trial_package', scope: SettingScope::Platform, type: SettingType::String,
                 default: 'basic', // a package code; checked to exist and be active
             ),
+            // Phase B47 (Module 29 §57, §75, §92, §47): Umar Techy's own billing to stores.
+            // No tax rate is built in: the env value (default 0) is only the starting point.
+            'billing.tax_rate_bps' => new SettingDefinition(key: 'billing.tax_rate_bps', scope: SettingScope::Platform, type: SettingType::Integer, default: max(0, (int) config('billing.tax_rate_bps'))),
+            'billing.tax_label' => new SettingDefinition(key: 'billing.tax_label', scope: SettingScope::Platform, type: SettingType::String, default: (string) config('billing.tax_label', 'Tax')),
+            'billing.approval_threshold_minor' => new SettingDefinition(key: 'billing.approval_threshold_minor', scope: SettingScope::Platform, type: SettingType::Integer, default: 0),
+            'billing.upgrade_timing' => new SettingDefinition(key: 'billing.upgrade_timing', scope: SettingScope::Platform, type: SettingType::String, default: 'immediate_prorated', allowedValues: ['immediate_prorated', 'next_period']),
+            'billing.issuer_name' => new SettingDefinition(key: 'billing.issuer_name', scope: SettingScope::Platform, type: SettingType::String, default: 'Umar Techy'),
+            'billing.issuer_details' => new SettingDefinition(key: 'billing.issuer_details', scope: SettingScope::Platform, type: SettingType::String, default: null),
             'platform.trial_days' => new SettingDefinition(
                 key: 'platform.trial_days', scope: SettingScope::Platform, type: SettingType::Integer,
                 default: 14,

@@ -51,6 +51,7 @@ final class Invoice extends Model
         'number', 'store_id', 'subscription_id', 'package_id', 'status', 'billing_reason',
         'currency', 'subtotal_minor', 'tax_rate_bps', 'tax_minor', 'total_minor', 'amount_paid_minor',
         'bill_to', 'period_start', 'period_end', 'issued_at', 'due_at', 'paid_at', 'voided_at', 'void_reason',
+        'credit_applied_minor', 'amount_credited_minor', 'document_version', // Phase B47
     ];
 
     protected function casts(): array
@@ -63,6 +64,9 @@ final class Invoice extends Model
             'tax_minor' => 'integer',
             'total_minor' => 'integer',
             'amount_paid_minor' => 'integer',
+            'credit_applied_minor' => 'integer',
+            'amount_credited_minor' => 'integer',
+            'document_version' => 'integer',
             'bill_to' => 'array',
             'period_start' => 'datetime',
             'period_end' => 'datetime',
@@ -80,7 +84,8 @@ final class Invoice extends Model
 
     public function amountDue(): int
     {
-        return $this->status === InvoiceStatus::Open ? $this->total_minor - $this->amount_paid_minor : 0;
+        // Phase B47: a credit note that reduces the balance counts like a payment.
+        return $this->status === InvoiceStatus::Open ? max(0, $this->total_minor - $this->amount_paid_minor - (int) $this->amount_credited_minor) : 0;
     }
 
     public function isOverdue(?\DateTimeInterface $at = null): bool

@@ -16,6 +16,7 @@ import { formatUtcDate } from '@/lib/datetime';
 import { options } from '@/lib/labels';
 import CurrencyField from '@/Components/CurrencyField';
 import { DEFAULT_CURRENCY } from '@/lib/money';
+import { CreditNotes, PaymentNotices } from '@/Components/SuperAdmin/BillingDesk';
 
 /**
  * Module 29 platform billing (/api/v1/super-admin/billing/...): what
@@ -28,7 +29,7 @@ import { DEFAULT_CURRENCY } from '@/lib/money';
  * date and changing a price all ask for the password again.
  */
 type Summary = {
-  currencies: { currency: string; mrr_minor: number; outstanding_minor: number; overdue_minor: number; open_invoices: number; collected_this_month_minor: number }[];
+  currencies: { currency: string; mrr_minor: number; outstanding_minor: number; overdue_minor: number; open_invoices: number; collected_this_month_minor: number; refunded_this_month_minor?: number }[];
   subscriptions_by_status: Record<string, number>;
 };
 type Price = { id: string; package?: { code: string; name: string }; billing_interval: string; currency: string; amount_minor: number; is_active: boolean };
@@ -57,7 +58,7 @@ function Overview() {
                 <StatCard label="Monthly recurring" value={money(row.mrr_minor, row.currency)} hint="Yearly prices counted as one twelfth." />
                 <StatCard label="Outstanding" value={money(row.outstanding_minor, row.currency)} hint={`${row.open_invoices} open invoice${row.open_invoices === 1 ? '' : 's'}`} />
                 <StatCard label="Overdue" value={money(row.overdue_minor, row.currency)} />
-                <StatCard label="Collected this month" value={money(row.collected_this_month_minor, row.currency)} />
+                <StatCard label="Collected this month" value={money(row.collected_this_month_minor, row.currency)} hint={(row.refunded_this_month_minor ?? 0) > 0 ? `${money(row.refunded_this_month_minor ?? 0, row.currency)} paid back` : undefined} />
               </div>
             </Card>
           ))}
@@ -144,14 +145,14 @@ function Prices() {
 
 function InvoiceDialog({ invoiceId, onClose, onChanged }: { invoiceId: string; onClose: () => void; onChanged: () => void }) {
   const state = useApi<{ data: Invoice }>(`/super-admin/billing/invoices/${invoiceId}`);
-  const [action, setAction] = useState<'pay' | 'void' | 'extend' | null>(null);
-  const form = useForm({ amount: '', method: 'bank_transfer', reference: '', note: '', received_on: '', reason: '', due_on: '' });
+  const [action, setAction] = useState<'pay' | 'void' | 'extend' | 'credit' | null>(null);
+  const form = useForm({ amount: '', method: 'bank_transfer', reference: '', note: '', received_on: '', reason: '', due_on: '', settlement: 'account_credit' });
   const [key, setKey] = useState(idempotencyKey);
   const [local, setLocal] = useState<string | null>(null);
   const invoice = state.data?.data;
 
-  function start(next: 'pay' | 'void' | 'extend') {
-    form.reset({ amount: invoice ? fromMinor(invoice.amount_due_minor, invoice.currency) : '', method: 'bank_transfer', reference: '', note: '', received_on: '', reason: '', due_on: '' });
+  function start(next: 'pay' | 'void' | 'extend' | 'credit') {
+    form.reset({ amount: invoice ? fromMinor(next === 'credit' ? 0 : invoice.amount_due_minor, invoice.currency) : '', method: 'bank_transfer', reference: '', note: '', received_on: '', reason: '', due_on: '', settlement: invoice?.status === 'open' ? 'reduce_balance' : 'account_credit' });
     setKey(idempotencyKey());
     setLocal(null);
     setAction(next);
@@ -172,6 +173,30 @@ function InvoiceDialog({ invoiceId, onClose, onChanged }: { invoiceId: string; o
       }
       path = 'payments';
       body = { amount_minor: minor, method: v.method, reference: v.reference || null, note: v.note || null, received_at: v.received_on === '' ? null : v.received_on, idempotency_key: key };
+    } else if (action === 'credit') {
+      // Phase B47 (Module 29 §43): a credit note; one Idempotency-Key per form.
+      const minor = toMinor(v.amount, invoice.currency);
+      if (minor === null || minor < 1) {
+        setLocal(`Enter an amount above zero (${invoice.currency}).`);
+
+        return;
+      }
+      setLocal(null);
+      const created = await form.submit(
+        () => adminFetch<{ data: { status: string } }>(`/super-admin/billing/invoices/${invoice.id}/credit-notes`, {
+          method: 'POST',
+          headers: { 'Idempotency-Key': key },
+          body: { amount_minor: minor, settlement: v.settlement, reason: v.reason, refund_method: v.settlement === 'refund' ? v.method : null, refund_reference: v.settlement === 'refund' ? v.reference : null },
+        }),
+        'Credit note saved.',
+      );
+      if (created !== undefined) {
+        setAction(null);
+        state.reload();
+        onChanged();
+      }
+
+      return;
     } else if (action === 'void') {
       path = 'void';
       body = { reason: v.reason };
@@ -214,17 +239,24 @@ function InvoiceDialog({ invoiceId, onClose, onChanged }: { invoiceId: string; o
               </ul>
             )}
 
-            {data.status === 'open' && action === null && (
+            {action === null && (
               <div className="flex flex-wrap gap-2">
-                <Button variant="primary" onClick={() => start('pay')}>Record a payment</Button>
-                <Button onClick={() => start('extend')}>Move the due date</Button>
-                <Button variant="danger" onClick={() => start('void')}>Void invoice</Button>
+                {data.status === 'open' && (
+                  <>
+                    <Button variant="primary" onClick={() => start('pay')}>Record a payment</Button>
+                    <Button onClick={() => start('extend')}>Move the due date</Button>
+                    <Button variant="danger" onClick={() => start('void')}>Void invoice</Button>
+                  </>
+                )}
+                {data.status !== 'void' && <Button onClick={() => start('credit')}>Credit note</Button>}
+                <a href={`/api/v1/super-admin/billing/invoices/${data.id}/pdf`} className="inline-flex items-center rounded-md border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-800 hover:bg-slate-50">Download PDF</a>
               </div>
             )}
 
             {action !== null && (
               <form onSubmit={save} className="space-y-3 rounded-md border border-slate-200 bg-slate-50 p-4" noValidate>
-                <h3 className="text-sm font-semibold text-slate-900">{action === 'pay' ? 'Record a payment received' : action === 'void' ? 'Void this invoice' : 'Move the due date'}</h3>
+                <h3 className="text-sm font-semibold text-slate-900">{action === 'pay' ? 'Record a payment received' : action === 'void' ? 'Void this invoice' : action === 'credit' ? 'Credit note' : 'Move the due date'}</h3>
+                {action === 'credit' && <p className="text-sm text-slate-700">Corrects this invoice without changing it. Amount including tax. Above the approval threshold, another team member approves it before it counts.</p>}
                 {action === 'void' && <p className="text-sm text-slate-700">A voided invoice is no longer owed and cannot be reopened. An invoice with payments cannot be voided.</p>}
                 <FormError message={form.formError} />
                 {action === 'pay' && (
@@ -236,11 +268,29 @@ function InvoiceDialog({ invoiceId, onClose, onChanged }: { invoiceId: string; o
                     <div className="sm:col-span-2"><TextField label="Note" optional value={form.values.note} onChange={(v) => form.set('note', v)} error={form.errors.note} maxLength={500} /></div>
                   </div>
                 )}
+                {action === 'credit' && (
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    <TextField label={`Amount (${data.currency})`} inputMode="decimal" value={form.values.amount} onChange={(v) => form.set('amount', v)} error={local ?? form.errors.amount_minor} required data-autofocus />
+                    <SelectField
+                      label="Settle as"
+                      value={form.values.settlement}
+                      onChange={(v) => form.set('settlement', v)}
+                      error={form.errors.settlement}
+                      options={data.status === 'open' ? [{ value: 'reduce_balance', label: 'Less to pay on this invoice' }] : [{ value: 'account_credit', label: 'Account credit (next invoices)' }, { value: 'refund', label: 'Refund (money paid back)' }]}
+                    />
+                    {form.values.settlement === 'refund' && (
+                      <>
+                        <SelectField label="Paid back by" value={form.values.method} onChange={(v) => form.set('method', v)} error={form.errors.refund_method} options={options(PAYMENT_METHODS)} />
+                        <TextField label="Refund reference" value={form.values.reference} onChange={(v) => form.set('reference', v)} error={form.errors.refund_reference} maxLength={128} required />
+                      </>
+                    )}
+                  </div>
+                )}
                 {action === 'extend' && <TextField label="New due date (UTC)" type="date" value={form.values.due_on} onChange={(v) => form.set('due_on', v)} error={form.errors.due_at} required data-autofocus />}
                 {action !== 'pay' && <TextField label="Reason" value={form.values.reason} onChange={(v) => form.set('reason', v)} error={form.errors.reason} maxLength={255} required />}
                 <div className="flex justify-end gap-2">
                   <Button onClick={() => setAction(null)} disabled={form.busy}>Cancel</Button>
-                  <Button type="submit" variant={action === 'void' ? 'danger' : 'primary'} busy={form.busy} busyLabel="Saving…">{action === 'pay' ? 'Record payment' : action === 'void' ? 'Void invoice' : 'Move due date'}</Button>
+                  <Button type="submit" variant={action === 'void' ? 'danger' : 'primary'} busy={form.busy} busyLabel="Saving…">{action === 'pay' ? 'Record payment' : action === 'void' ? 'Void invoice' : action === 'credit' ? 'Save credit note' : 'Move due date'}</Button>
                 </div>
               </form>
             )}
@@ -289,12 +339,12 @@ function Invoices() {
 
 export default function Billing() {
   const [state, setState] = useUrlState({ tab: 'overview' });
-  const tab = ['overview', 'invoices', 'prices'].includes(state.tab) ? state.tab : 'overview';
+  const tab = ['overview', 'invoices', 'notices', 'credits', 'prices'].includes(state.tab) ? state.tab : 'overview';
 
   return (
     <AdminPage title="Platform billing" description="What stores pay the platform. All dates are UTC.">
-      <Tabs label="Billing sections" tabs={[{ id: 'overview', label: 'Overview' }, { id: 'invoices', label: 'Invoices' }, { id: 'prices', label: 'Prices' }]} active={tab} onChange={(next) => setState({ tab: next })} />
-      <div role="tabpanel">{tab === 'overview' ? <Overview /> : tab === 'invoices' ? <Invoices /> : <Prices />}</div>
+      <Tabs label="Billing sections" tabs={[{ id: 'overview', label: 'Overview' }, { id: 'invoices', label: 'Invoices' }, { id: 'notices', label: 'Payments to confirm' }, { id: 'credits', label: 'Credit notes' }, { id: 'prices', label: 'Prices' }]} active={tab} onChange={(next) => setState({ tab: next })} />
+      <div role="tabpanel">{tab === 'overview' ? <Overview /> : tab === 'invoices' ? <Invoices /> : tab === 'notices' ? <PaymentNotices /> : tab === 'credits' ? <CreditNotes /> : <Prices />}</div>
     </AdminPage>
   );
 }

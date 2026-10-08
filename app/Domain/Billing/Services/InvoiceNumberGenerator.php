@@ -17,14 +17,25 @@ final class InvoiceNumberGenerator
 
     public function next(): string
     {
+        return $this->take(self::SEQUENCE, (string) config('billing.invoice_prefix'));
+    }
+
+    /** Phase B47 (Module 29 §43): credit notes have their own gap-free series, CN-000001. */
+    public function nextCreditNote(): string
+    {
+        return $this->take('credit_note', 'CN-');
+    }
+
+    private function take(string $sequence, string $prefix): string
+    {
         if (DB::transactionLevel() === 0) {
-            throw new \LogicException('Invoice numbers must be taken inside the transaction that issues the invoice.');
+            throw new \LogicException('Document numbers must be taken inside the transaction that issues the document.');
         }
 
-        DB::table('billing_sequences')->insertOrIgnore(['key' => self::SEQUENCE, 'next_value' => 1]);
-        $value = (int) DB::table('billing_sequences')->where('key', self::SEQUENCE)->lockForUpdate()->value('next_value');
-        DB::table('billing_sequences')->where('key', self::SEQUENCE)->update(['next_value' => $value + 1]);
+        DB::table('billing_sequences')->insertOrIgnore(['key' => $sequence, 'next_value' => 1]);
+        $value = (int) DB::table('billing_sequences')->where('key', $sequence)->lockForUpdate()->value('next_value');
+        DB::table('billing_sequences')->where('key', $sequence)->update(['next_value' => $value + 1]);
 
-        return config('billing.invoice_prefix').str_pad((string) $value, 6, '0', STR_PAD_LEFT);
+        return $prefix.str_pad((string) $value, 6, '0', STR_PAD_LEFT);
     }
 }

@@ -125,6 +125,14 @@ final class SubscriptionBillingEngine
                 $subscription->update($period);
             }
 
+            // Phase B47 (Module 29 §49): the period was billed for another package — a
+            // scheduled downgrade — which takes effect now, with the period it was paid for.
+            if ($subscription->scheduled_package_id !== null && $invoice->package_id === $subscription->scheduled_package_id) {
+                $this->lifecycle->changePackage(\App\Domain\Tenancy\Models\Store::query()->withTrashed()->findOrFail($subscription->store_id), \App\Domain\Packages\Models\Package::query()->findOrFail($invoice->package_id), 'billing engine', 'scheduled_change');
+                $subscription->forceFill(['package_id' => $invoice->package_id, 'scheduled_package_id' => null])->save();
+                $actions[] = 'package_changed';
+            }
+
             app(AuditLogger::class)->record('billing.subscription_renewed', [
                 'invoice' => $invoice->number, 'period_start' => $invoice->period_start, 'period_end' => $invoice->period_end,
             ], $subscription, $subscription->store_id);

@@ -179,7 +179,7 @@ final class SuperAdminBillingController
     public function summary(): JsonResponse
     {
         $open = Invoice::query()->where('status', InvoiceStatus::Open->value)
-            ->selectRaw('currency, SUM(total_minor - amount_paid_minor) AS outstanding, SUM(CASE WHEN due_at <= ? THEN total_minor - amount_paid_minor ELSE 0 END) AS overdue, COUNT(*) AS invoices', [now()])
+            ->selectRaw('currency, SUM(total_minor - amount_paid_minor - amount_credited_minor) AS outstanding, SUM(CASE WHEN due_at <= ? THEN total_minor - amount_paid_minor - amount_credited_minor ELSE 0 END) AS overdue, COUNT(*) AS invoices', [now()]) // B47: credit notes lower what is due
             ->groupBy('currency')->get()->keyBy('currency');
 
         $collected = DB::table('invoice_payments')->where('received_at', '>=', now()->startOfMonth())
@@ -197,7 +197,11 @@ final class SuperAdminBillingController
             ->selectRaw("package_prices.currency AS currency, SUM(CASE WHEN package_prices.billing_interval = 'yearly' THEN package_prices.amount_minor / 12 ELSE package_prices.amount_minor END) AS mrr")
             ->groupBy('package_prices.currency')->pluck('mrr', 'currency');
 
-        $currencies = collect([...$open->keys(), ...$collected->keys(), ...$mrr->keys()])->unique()->sort()->values();
+        // Phase B47 (Module 29 §42): money paid back this month by credit notes.
+        $refunded = DB::table('credit_notes')->where('status', 'issued')->where('settlement', 'refund')->where('issued_at', '>=', now()->startOfMonth())
+            ->selectRaw('currency, SUM(total_minor) AS refunded')->groupBy('currency')->pluck('refunded', 'currency');
+
+        $currencies = collect([...$open->keys(), ...$collected->keys(), ...$mrr->keys(), ...$refunded->keys()])->unique()->sort()->values();
 
         return response()->json(['data' => [
             'currencies' => $currencies->map(fn (string $currency) => [
@@ -207,6 +211,7 @@ final class SuperAdminBillingController
                 'overdue_minor' => (int) ($open->get($currency)?->getAttribute('overdue') ?? 0),
                 'open_invoices' => (int) ($open->get($currency)?->getAttribute('invoices') ?? 0),
                 'collected_this_month_minor' => (int) ($collected[$currency] ?? 0),
+                'refunded_this_month_minor' => (int) ($refunded[$currency] ?? 0),
             ])->all(),
             'subscriptions_by_status' => DB::table('subscriptions')->selectRaw('status, COUNT(*) AS total')->groupBy('status')->pluck('total', 'status')->map(fn ($n) => (int) $n),
         ]]);

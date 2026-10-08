@@ -10,4 +10,7 @@ enum BillingReason: string
     case SubscriptionStart = 'subscription_start';
     /** A regular renewal. */
     case SubscriptionCycle = 'subscription_cycle';
+
+    /** Phase B47 (Module 29 §47): the rest of a period after an immediate upgrade. */
+    case Proration = 'proration';
 }

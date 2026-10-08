@@ -39,6 +39,7 @@ final class Subscription extends Model
         'cancel_at_period_end',
         'cancellation_requested_at',
         'billing_suspended_at',
+        'scheduled_package_id', // Phase B47: a downgrade waiting for the period end
     ];
 
     protected function casts(): array
@@ -55,6 +56,12 @@ final class Subscription extends Model
             'cancellation_requested_at' => 'datetime',
             'billing_suspended_at' => 'datetime',
         ];
+    }
+
+    /** @return BelongsTo<Package, $this> Phase B47: the package a scheduled downgrade moves to */
+    public function scheduledPackage(): BelongsTo
+    {
+        return $this->belongsTo(Package::class, 'scheduled_package_id');
     }
 
     /** @return BelongsTo<Package, $this> */

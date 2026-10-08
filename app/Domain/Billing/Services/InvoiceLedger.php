@@ -39,10 +39,11 @@ final class InvoiceLedger
             ->first();
     }
 
-    public function priceFor(Subscription $subscription, ?BillingInterval $interval = null): ?PackagePrice
+    /** @param ?int $packageId Phase B47: another package (a plan change); default the subscription's */
+    public function priceFor(Subscription $subscription, ?BillingInterval $interval = null, ?int $packageId = null): ?PackagePrice
     {
         return PackagePrice::query()
-            ->where('package_id', $subscription->package_id)
+            ->where('package_id', $packageId ?? $subscription->package_id)
             ->where('billing_interval', ($interval ?? $this->intervalOf($subscription))->value)
             ->where('currency', $this->currencyOf($subscription))
             ->where('is_active', true)
@@ -56,16 +57,16 @@ final class InvoiceLedger
      */
     public function quoteNextPeriod(Subscription $subscription): ?array
     {
-        $price = $this->priceFor($subscription);
+        // Phase B47: a downgrade scheduled for the period end is what the next period costs.
+        $price = $this->priceFor($subscription, null, $this->nextPackageId($subscription));
 
         if ($price === null || $subscription->current_period_ends_at === null) {
             return null;
         }
 
         $periodStart = CarbonImmutable::instance($subscription->current_period_ends_at);
-        $taxRate = max(0, (int) config('billing.tax_rate_bps'));
-        // Integer maths on minor units, rounded half up — never floats.
-        $tax = intdiv($price->amount_minor * $taxRate + 5000, 10000);
+        $taxRate = $this->taxRateBps();
+        $tax = $this->taxOn($price->amount_minor, $taxRate);
 
         return [
             'period_start' => $periodStart,
@@ -99,7 +100,7 @@ final class InvoiceLedger
 
         $store = Store::query()->withTrashed()->findOrFail($subscription->store_id);
         $owner = $this->contact->ownerOf($store->id);
-        $package = $subscription->package()->firstOrFail();
+        $package = \App\Domain\Packages\Models\Package::query()->findOrFail($this->nextPackageId($subscription));
         $isFree = $quote['total_minor'] === 0;
         // The previous period was not billed (trial, or a restart after
         // cancellation/expiry), so this invoice starts paid service.
@@ -140,6 +141,7 @@ final class InvoiceLedger
             'period_start' => $quote['period_start'],
             'period_end' => $quote['period_end'],
         ]);
+        $this->applyAccountCredit($invoice);
 
         app(AuditLogger::class)->record('billing.invoice_issued', [
             'number' => $invoice->number,
@@ -191,6 +193,77 @@ final class InvoiceLedger
             'currency' => $invoice->currency,
             'due_at' => $invoice->due_at->toIso8601String(),
         ];
+    }
+
+    /**
+     * Phase B47 (Module 29 §47–48): an immediate upgrade's invoice for the rest
+     * of the current period — the new plan's remaining value, less the unused
+     * part of what was paid for the old plan. Due at once.
+     */
+    public function issueProration(Subscription $subscription, \App\Domain\Packages\Models\Package $from, \App\Domain\Packages\Models\Package $to, int $chargeMinor, int $creditMinor, CarbonImmutable $start, CarbonImmutable $end): Invoice
+    {
+        $store = Store::query()->withTrashed()->findOrFail($subscription->store_id);
+        $owner = $this->contact->ownerOf($store->id);
+        $subtotal = max(0, $chargeMinor - $creditMinor);
+        $taxRate = $this->taxRateBps();
+        $tax = $this->taxOn($subtotal, $taxRate);
+
+        $invoice = Invoice::query()->withoutTenantScope()->create([
+            'number' => $this->numbers->next(), 'store_id' => $store->id, 'subscription_id' => $subscription->id, 'package_id' => $to->id,
+            'status' => InvoiceStatus::Open, 'billing_reason' => BillingReason::Proration, 'currency' => $this->currencyOf($subscription),
+            'subtotal_minor' => $subtotal, 'tax_rate_bps' => $taxRate, 'tax_minor' => $tax, 'total_minor' => $subtotal + $tax, 'amount_paid_minor' => 0,
+            'bill_to' => ['store' => $store->name, 'store_id' => $store->public_id, 'email' => $owner?->email],
+            'period_start' => $start, 'period_end' => $end, 'issued_at' => now(), 'due_at' => now(),
+        ]);
+        $range = $start->toDateString().' to '.$end->toDateString();
+        $invoice->lines()->create(['kind' => 'charge', 'description' => "{$to->name} plan, {$range}", 'quantity' => 1, 'unit_amount_minor' => $chargeMinor, 'amount_minor' => $chargeMinor, 'period_start' => $start, 'period_end' => $end]);
+        if ($creditMinor > 0) {
+            $invoice->lines()->create(['kind' => 'credit', 'description' => "Unused {$from->name} plan, {$range}", 'quantity' => 1, 'unit_amount_minor' => $creditMinor, 'amount_minor' => $creditMinor, 'period_start' => $start, 'period_end' => $end]);
+        }
+        $this->applyAccountCredit($invoice);
+
+        app(AuditLogger::class)->record('billing.invoice_issued', ['number' => $invoice->number, 'total_minor' => $invoice->total_minor, 'currency' => $invoice->currency, 'reason' => 'proration'], $invoice, $store->id);
+        $this->outbox->recordEventFor($store->id, 'billing.invoice_issued', $this->payload($invoice), "invoice:{$invoice->id}:issued");
+
+        return $invoice;
+    }
+
+    /** Phase B47 (Module 29 §57): Umar Techy's tax rate on its own invoices — a platform setting, none built in. */
+    public function taxRateBps(): int
+    {
+        return max(0, (int) app(\App\Domain\Settings\Services\ConfigService::class)->get('billing.tax_rate_bps'));
+    }
+
+    /** Integer maths on minor units, rounded half up — never floats. */
+    public function taxOn(int $amountMinor, int $rateBps): int
+    {
+        return intdiv($amountMinor * $rateBps + 5000, 10000);
+    }
+
+    /** Phase B47: the package the next period is billed for (a scheduled downgrade, or the current one). */
+    public function nextPackageId(Subscription $subscription): int
+    {
+        return (int) ($subscription->scheduled_package_id ?? $subscription->package_id);
+    }
+
+    /**
+     * Phase B47 (Module 29 §46): the store's account credit pays towards a new
+     * invoice first; an invoice it covers completely is settled at once.
+     */
+    private function applyAccountCredit(Invoice $invoice): void
+    {
+        if ($invoice->total_minor <= 0 || $invoice->status !== InvoiceStatus::Open) {
+            return;
+        }
+        $used = app(AccountCredit::class)->useOn($invoice, $invoice->total_minor);
+        if ($used === 0) {
+            return;
+        }
+        $covered = $used === $invoice->total_minor;
+        $invoice->update(['credit_applied_minor' => $used, 'total_minor' => $invoice->total_minor - $used]);
+        if ($covered) {
+            $this->markPaid($invoice);
+        }
     }
 
     public function intervalOf(Subscription $subscription): BillingInterval

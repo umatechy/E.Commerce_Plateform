@@ -63,6 +63,8 @@ export const FEATURE_LABELS: Record<string, string> = {
   'animation.advanced': 'Standard animation and scroll effects',
   'animation.premium': 'Premium and playful animation',
   'customers.advanced': 'Customer groups, tags, import/export and merge',
+  'reviews.product': 'Product reviews and ratings',
+  'products.units_sold': 'Units sold shown on product pages',
   'products.basic': 'Products',
 };
 

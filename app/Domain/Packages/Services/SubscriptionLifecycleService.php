@@ -239,7 +239,8 @@ final class SubscriptionLifecycleService
         }
     }
 
-    private function detectOverLimitUsage(Store $store, Package $newPackage): array
+    /** Module 04 §22 (public since Phase B47: the plan change preview shows it before anything changes). */
+    public function detectOverLimitUsage(Store $store, Package $newPackage): array
     {
         $overLimit = [];
 

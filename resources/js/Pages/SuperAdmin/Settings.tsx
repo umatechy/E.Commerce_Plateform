@@ -26,6 +26,13 @@ const INFO: Record<string, SettingInfo> = {
     description: 'When on, an owner cannot launch during the trial until their first invoice is paid. They get the invoice from their setup steps; the team records the payment under Billing.',
   },
   'platform.trial_package': { label: 'Trial package', description: 'The package a new self-service store starts its trial on.', itemHint: 'A package code such as basic.' },
+  // Phase B47 (Module 29): Umar Techy's own billing to stores.
+  'billing.tax_rate_bps': { label: 'Tax on platform invoices (basis points)', description: '1700 = 17 %. 0 = no tax. Applies to invoices issued from now on; issued invoices keep their tax.' },
+  'billing.tax_label': { label: 'Tax name on platform invoices', description: 'For example Tax, GST or Sales tax.' },
+  'billing.approval_threshold_minor': { label: 'Credit notes need a second person from (minor units)', description: 'A credit note of this amount or more waits until another team member approves it. 0 = no approval step. In minor units: 500000 = Rs. 5,000.' },
+  'billing.upgrade_timing': { label: 'When an upgrade starts', description: 'immediate_prorated: at once, with an invoice for the rest of the period. next_period: at the end of the paid period, like a downgrade.' },
+  'billing.issuer_name': { label: 'Name on invoices', description: 'Who issues the invoices and credit notes (shown on the PDF).' },
+  'billing.issuer_details': { label: 'Address and registration on invoices', description: 'Address, NTN / registration numbers, contact — printed under the name on every PDF.' },
   'platform.trial_days': { label: 'Trial length (days)', description: 'How long a new store’s trial lasts. Staff creating a store may choose another length.' },
   'platform.maintenance_mode': {
     label: 'Maintenance mode',
