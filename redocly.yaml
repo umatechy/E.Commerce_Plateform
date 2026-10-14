@@ -1,0 +1,6 @@
+# Phase B53 (SRS API-012; Module 31 §65): the OpenAPI description is linted in CI.
+# The licence of the API description is the owner's decision, not set here.
+extends:
+  - recommended
+rules:
+  info-license: off

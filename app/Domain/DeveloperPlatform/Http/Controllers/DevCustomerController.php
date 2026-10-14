@@ -15,7 +15,7 @@ final class DevCustomerController
     {
         $perPage = min(100, max(1, (int) $request->integer('per_page', 25)));
 
-        return DevCustomerResource::collection(Customer::query()->paginate($perPage));
+        return DevCustomerResource::collection(Customer::query()->orderBy('id')->paginate($perPage)); // Phase B53: deterministic pages (API-008)
     }
 
     public function show(Customer $customer): DevCustomerResource

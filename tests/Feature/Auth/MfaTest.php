@@ -264,6 +264,6 @@ final class MfaTest extends TestCase
         $this->signIn($user)->assertOk()->assertJsonPath('data.mfa_enabled', false);
         $this->getJson('/api/v1/auth/mfa')->assertOk()->assertJsonPath('data.required', false);
         // ...and the Super Admin surface refuses them as before, not with an MFA prompt.
-        $this->getJson('/api/v1/super-admin/dashboard')->assertStatus(403)->assertJsonMissingPath('code');
+        $this->getJson('/api/v1/super-admin/dashboard')->assertStatus(403)->assertJsonPath('code', 'forbidden'); // Phase B53: every error has a code — a plain refusal, not an MFA prompt
     }
 }

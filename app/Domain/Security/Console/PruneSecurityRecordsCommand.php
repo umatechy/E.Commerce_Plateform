@@ -20,14 +20,16 @@ final class PruneSecurityRecordsCommand extends Command
 {
     protected $signature = 'security:prune';
 
-    protected $description = 'Remove old security events, ended sessions and spent password reset links.';
+    protected $description = 'Remove old security events, ended sessions, spent password reset links and expired idempotency keys.';
 
     public function handle(): int
     {
         $events = SecurityEvent::query()->where('created_at', '<', now()->subDays(max(30, (int) config('security.monitoring.events_retention_days'))))->delete();
         $sessions = UserSession::query()->whereNotNull('revoked_at')->where('revoked_at', '<', now()->subDays(90))->delete();
         $resets = DB::table('staff_password_resets')->where(fn ($q) => $q->whereNotNull('used_at')->orWhere('expires_at', '<', now()))->where('created_at', '<', now()->subDays(7))->delete();
-        $this->info("Removed {$events} events, {$sessions} ended sessions, {$resets} reset links.");
+        // Phase B53: Idempotency-Key answers are kept 24 hours.
+        $keys = DB::table('idempotency_keys')->where('expires_at', '<', now())->delete();
+        $this->info("Removed {$events} events, {$sessions} ended sessions, {$resets} reset links, {$keys} idempotency keys.");
 
         return self::SUCCESS;
     }

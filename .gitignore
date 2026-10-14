@@ -23,3 +23,7 @@ yarn-error.log
 /.phpunit.result.cache
 /tsconfig.tsbuildinfo
 /dump.rdb
+
+# Phase B53: Playwright end-to-end results
+/test-results/
+/playwright-report/

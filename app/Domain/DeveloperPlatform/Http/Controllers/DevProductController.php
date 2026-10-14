@@ -24,7 +24,7 @@ final class DevProductController
     {
         $perPage = min(100, max(1, (int) $request->integer('per_page', 25)));
 
-        return DevProductResource::collection(Product::query()->paginate($perPage));
+        return DevProductResource::collection(Product::query()->orderBy('id')->paginate($perPage)); // Phase B53: deterministic pages (API-008)
     }
 
     public function show(Product $product): DevProductResource

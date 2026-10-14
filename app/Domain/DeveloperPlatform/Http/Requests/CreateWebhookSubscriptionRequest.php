@@ -18,7 +18,8 @@ final class CreateWebhookSubscriptionRequest extends FormRequest
         return [
             'url' => ['required', 'string', 'url', 'starts_with:https://'],
             'events' => ['required', 'array', 'min:1'],
-            'events.*' => ['required', 'string'],
+            // Phase B53 (Module 31 §35): only the documented event catalog.
+            'events.*' => ['required', 'string', \Illuminate\Validation\Rule::in(array_keys(\App\Domain\DeveloperPlatform\Support\WebhookEventCatalog::EVENTS))],
         ];
     }
 }

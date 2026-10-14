@@ -160,7 +160,7 @@ Route::middleware(['auth:sanctum', 'session.track', 'staff.principal', 'required
     Route::get('/billing/credit-notes/{creditNote}/pdf', [$account, 'creditNotePdf'])->middleware('throttle:30,1,billing-pdf');
     Route::get('/billing/invoices/{invoice}/pdf', [$account, 'invoicePdf'])->middleware('throttle:30,1,billing-pdf');
     Route::get('/billing/payment-notices', [$account, 'notices']);
-    Route::post('/billing/invoices/{invoice}/payment-notices', [$account, 'submitNotice'])->middleware('throttle:10,10,payment-notice');
+    Route::post('/billing/invoices/{invoice}/payment-notices', [$account, 'submitNotice'])->middleware(['idempotent', 'throttle:10,10,payment-notice']);
     // Phase B48: pay an invoice from JazzCash or Easypaisa into Umar Techy's account.
     Route::get('/billing/invoices/{invoice}/online-payment', [\App\Domain\Billing\Http\Controllers\BillingOnlinePaymentController::class, 'show'])->middleware('throttle:120,1,billing-online-status');
     Route::post('/billing/invoices/{invoice}/online-payment', [\App\Domain\Billing\Http\Controllers\BillingOnlinePaymentController::class, 'start'])->middleware('throttle:10,10,billing-online-pay');
@@ -245,7 +245,9 @@ Route::middleware(['auth:sanctum', 'session.track', 'staff.principal', 'required
     Route::post('/reservations/{reservation}/release', [ReservationController::class, 'release']);
 
     // --- Orders (Module 09, Phase B5) ---
-    Route::apiResource('orders', OrderController::class)->only(['index', 'show', 'store']);
+    Route::apiResource('orders', OrderController::class)->only(['index', 'show']);
+    // Phase B53 (SRS API-007): 'idempotent' honours the Idempotency-Key header on retry-sensitive writes.
+    Route::post('/orders', [OrderController::class, 'store'])->middleware('idempotent')->name('orders.store');
     Route::post('/orders/{order}/cancel', [OrderController::class, 'cancel']);
     Route::get('/orders/{order}/timeline', [OrderController::class, 'timeline']);
 
@@ -261,8 +263,8 @@ Route::middleware(['auth:sanctum', 'session.track', 'staff.principal', 'required
     Route::post('/returns/{return}/in-transit', [\App\Domain\Returns\Http\Controllers\ReturnController::class, 'inTransit']);
     Route::post('/returns/{return}/receive', [\App\Domain\Returns\Http\Controllers\ReturnController::class, 'receive']);
     Route::post('/returns/{return}/inspect', [\App\Domain\Returns\Http\Controllers\ReturnController::class, 'inspect']);
-    Route::post('/returns/{return}/approve-refund', [\App\Domain\Returns\Http\Controllers\ReturnController::class, 'approveRefund']);
-    Route::post('/returns/{return}/refund', [\App\Domain\Returns\Http\Controllers\ReturnController::class, 'refund']);
+    Route::post('/returns/{return}/approve-refund', [\App\Domain\Returns\Http\Controllers\ReturnController::class, 'approveRefund'])->middleware('idempotent');
+    Route::post('/returns/{return}/refund', [\App\Domain\Returns\Http\Controllers\ReturnController::class, 'refund'])->middleware('idempotent');
     Route::post('/returns/{return}/replacement', [\App\Domain\Returns\Http\Controllers\ReturnController::class, 'replacement']);
     // Photos (Phase B34): private files, served only through these routes.
     Route::post('/returns/{return}/photos', [\App\Domain\Returns\Http\Controllers\ReturnController::class, 'addPhoto'])->middleware('throttle:30,1,returns-photos');
@@ -273,8 +275,8 @@ Route::middleware(['auth:sanctum', 'session.track', 'staff.principal', 'required
     Route::get('/payments', [PaymentController::class, 'index']);
     Route::get('/payments/{payment}', [PaymentController::class, 'show']);
     Route::get('/payments/{payment}/transactions', [PaymentController::class, 'transactions']);
-    Route::post('/payments/{payment}/manual-confirm', [PaymentController::class, 'manualConfirm']);
-    Route::post('/payments/{payment}/refund', [PaymentController::class, 'refund']);
+    Route::post('/payments/{payment}/manual-confirm', [PaymentController::class, 'manualConfirm'])->middleware('idempotent');
+    Route::post('/payments/{payment}/refund', [PaymentController::class, 'refund'])->middleware('idempotent');
     // Phase B48 (gap G9): reconciliation findings, and the store's payment settings. Bank details and
     // merchant accounts decide where the money goes: those changes need a fresh password (step-up).
     Route::get('/payment-reconciliation', [\App\Domain\Payments\Http\Controllers\PaymentReconciliationController::class, 'index']);
@@ -292,7 +294,7 @@ Route::middleware(['auth:sanctum', 'session.track', 'staff.principal', 'required
     // --- Shipments (Module 13, Phase B8) ---
     Route::get('/shipments', [ShipmentController::class, 'index']);
     Route::get('/shipments/{shipment}', [ShipmentController::class, 'show']);
-    Route::post('/shipments', [ShipmentController::class, 'store']);
+    Route::post('/shipments', [ShipmentController::class, 'store'])->middleware('idempotent');
     Route::post('/shipments/{shipment}/status', [ShipmentController::class, 'updateStatus']);
     Route::get('/shipments/{shipment}/tracking-events', [ShipmentController::class, 'trackingEvents']);
     // Phase B49 (gap G9 shipping side; Module 13 §42–56, §70–72): couriers, labels, cash on delivery, returns.
@@ -422,7 +424,7 @@ Route::middleware(['auth:sanctum', 'session.track', 'staff.principal', 'required
     // Module 10 §56: explicit, audited, the password asked again.
     // Module 09 §52 (Phase B34): store credit. Giving or taking it by hand asks for the password again.
     Route::get('/customers/{customer}/store-credit', [\App\Domain\StoreCredit\Http\Controllers\StoreCreditController::class, 'show']);
-    Route::post('/customers/{customer}/store-credit/adjust', [\App\Domain\StoreCredit\Http\Controllers\StoreCreditController::class, 'adjust'])->middleware(['step_up', 'throttle:20,10,store-credit-adjust']);
+    Route::post('/customers/{customer}/store-credit/adjust', [\App\Domain\StoreCredit\Http\Controllers\StoreCreditController::class, 'adjust'])->middleware(['idempotent', 'step_up', 'throttle:20,10,store-credit-adjust']);
     Route::post('/customers/{customer}/merge', [\App\Domain\Customers\Http\Controllers\CustomerController::class, 'merge'])->middleware(['step_up', 'throttle:10,10,customers-merge']);
     Route::get('/customers/{customer}/activity', [\App\Domain\Customers\Http\Controllers\CustomerController::class, 'activity']);
     Route::get('/customers/{customer}/notes', [\App\Domain\Customers\Http\Controllers\CustomerRecordsController::class, 'notes']);
@@ -587,7 +589,7 @@ Route::middleware(['auth:sanctum', 'session.track', 'staff.principal', 'required
             Route::patch('/billing/prices/{price}', [SuperAdminBillingController::class, 'updatePrice'])->middleware('step_up');
             Route::get('/billing/invoices', [SuperAdminBillingController::class, 'invoices']);
             Route::get('/billing/invoices/{invoice}', [SuperAdminBillingController::class, 'invoice']);
-            Route::post('/billing/invoices/{invoice}/payments', [SuperAdminBillingController::class, 'recordPayment'])->middleware('step_up');
+            Route::post('/billing/invoices/{invoice}/payments', [SuperAdminBillingController::class, 'recordPayment'])->middleware(['idempotent', 'step_up']);
             Route::post('/billing/invoices/{invoice}/void', [SuperAdminBillingController::class, 'void'])->middleware('step_up');
             Route::post('/billing/invoices/{invoice}/extend-due-date', [SuperAdminBillingController::class, 'extendDueDate'])->middleware('step_up');
             // Phase B47 (Module 29 §42–43, §73–75, §79, §92): payment notices, credit notes, approvals, PDFs.
@@ -596,7 +598,7 @@ Route::middleware(['auth:sanctum', 'session.track', 'staff.principal', 'required
             Route::post('/billing/payment-notices/{notice}/approve', [$ops, 'approveNotice'])->middleware('step_up');
             Route::post('/billing/payment-notices/{notice}/reject', [$ops, 'rejectNotice'])->middleware('step_up');
             Route::get('/billing/credit-notes', [$ops, 'creditNotes']);
-            Route::post('/billing/invoices/{invoice}/credit-notes', [$ops, 'createCreditNote'])->middleware('step_up');
+            Route::post('/billing/invoices/{invoice}/credit-notes', [$ops, 'createCreditNote'])->middleware(['idempotent', 'step_up']);
             Route::post('/billing/credit-notes/{creditNote}/approve', [$ops, 'approveCreditNote'])->middleware('step_up');
             Route::post('/billing/credit-notes/{creditNote}/reject', [$ops, 'rejectCreditNote'])->middleware('step_up');
             Route::get('/billing/invoices/{invoice}/pdf', [$ops, 'invoicePdf']);

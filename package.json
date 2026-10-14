@@ -8,7 +8,8 @@
     "test": "vitest run",
     "test:e2e": "playwright test",
     "lint": "eslint resources/js",
-    "format": "prettier --write \"resources/js/**/*.{ts,tsx}\""
+    "format": "prettier --write \"resources/js/**/*.{ts,tsx}\"",
+    "e2e": "playwright test"
   },
   "dependencies": {
     "@fontsource/dm-sans": "^5.3.0",

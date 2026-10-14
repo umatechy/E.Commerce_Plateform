@@ -3,14 +3,15 @@ import AdminPage from '@/Components/AdminPage';
 import Button from '@/Components/ui/Button';
 import DataTable, { type Column } from '@/Components/ui/DataTable';
 import Dialog, { ConfirmDialog } from '@/Components/ui/Dialog';
-import { CheckboxField, FormError, TextAreaField, TextField } from '@/Components/ui/Form';
+import { CheckboxField, FormError, TextField } from '@/Components/ui/Form';
 import { StatusBadge } from '@/Components/ui/Badge';
-import { Card, EmptyPanel } from '@/Components/ui/Page';
+import { EmptyPanel } from '@/Components/ui/Page';
 import { useAccess } from '@/lib/access';
 import { useApi } from '@/lib/useApi';
 import { useAction, useForm } from '@/lib/useForm';
 import { adminFetch } from '@/lib/adminApi';
 import { dateTimeOrDash, formatDate } from '@/lib/datetime';
+import ApiReference, { useDeveloperSpec, webhookEvents } from '@/Components/Developer/ApiReference';
 
 /**
  * Module 31 "API & Developer Platform", the store's side
@@ -25,10 +26,9 @@ type Application = { id: string; name: string; status: string; created_at: strin
 type ApiKey = { id: string; key_prefix: string; scopes: string[]; status: string; last_used_at: string | null; expires_at: string | null; created_at: string };
 type Webhook = { id: number; url: string; subscribed_events: string[]; status: string; created_at: string };
 
-/** ApiScope (Phase B18): the Developer API is read-only. */
+/** ApiScope (Phase B18): the Developer API is read-only. Phase B53: only scopes with an endpoint are offered. */
 const SCOPES: [string, string][] = [
   ['products:read', 'Read products'],
-  ['categories:read', 'Read categories'],
   ['orders:read', 'Read orders'],
   ['customers:read', 'Read customers'],
   ['inventory:read', 'Read stock levels'],
@@ -47,7 +47,8 @@ function ApplicationDrawer({ application, canManage, onClose }: { application: A
   const keys = useApi<{ data: ApiKey[] }>(`${base}/keys`);
   const webhooks = useApi<{ data: Webhook[] }>(`${base}/webhooks`);
   const keyForm = useForm<{ scopes: string[]; expires_on: string }>({ scopes: [], expires_on: '' });
-  const hookForm = useForm({ url: '', events: '' });
+  const hookForm = useForm<{ url: string; events: string[] }>({ url: '', events: [] });
+  const { spec } = useDeveloperSpec(); // Phase B53: the webhook events offered come from the API's own description
   const [secret, setSecret] = useState<{ title: string; value: string } | null>(null);
   const [confirm, setConfirm] = useState<{ kind: 'revoke' | 'rotate'; key: ApiKey } | { kind: 'disable'; hook: Webhook } | null>(null);
   const { busy, run } = useAction();
@@ -71,10 +72,15 @@ function ApplicationDrawer({ application, canManage, onClose }: { application: A
 
   async function subscribe(event: FormEvent) {
     event.preventDefault();
-    const events = hookForm.values.events.split('\n').map((line) => line.trim()).filter((line) => line !== '');
+    const events = hookForm.values.events;
+    if (events.length === 0) {
+      hookForm.setFormError('Choose at least one event.');
+
+      return;
+    }
     const created = await hookForm.submit(() => adminFetch<{ data: Webhook; signing_secret: string }>(`${base}/webhooks`, { method: 'POST', body: { url: hookForm.values.url, events } }));
     if (created) {
-      hookForm.reset({ url: '', events: '' });
+      hookForm.reset({ url: '', events: [] });
       setSecret({ title: 'Webhook signing secret', value: created.signing_secret });
       webhooks.reload();
     }
@@ -138,7 +144,17 @@ function ApplicationDrawer({ application, canManage, onClose }: { application: A
               <h4 className="text-sm font-semibold text-slate-900">Add a webhook</h4>
               <FormError message={hookForm.formError} />
               <TextField label="Address" type="url" value={hookForm.values.url} onChange={(v) => hookForm.set('url', v)} error={hookForm.errors.url} required hint="Must start with https:// and be reachable from the internet." />
-              <TextAreaField label="Events" rows={3} value={hookForm.values.events} onChange={(v) => hookForm.set('events', v)} error={hookForm.errors.events ?? hookForm.errors['events.0']} required hint="One event name per line, as listed in the Developer API documentation." />
+              <fieldset>
+                <legend className="text-sm font-medium text-slate-700">Events</legend>
+                {!spec && <p className="mt-1 text-xs text-slate-500">Loading the events…</p>}
+                <div className="mt-2 grid gap-2 sm:grid-cols-2">
+                  {spec && webhookEvents(spec).map((w) => (
+                    <CheckboxField key={w.event} label={w.event} hint={w.description} checked={hookForm.values.events.includes(w.event)}
+                      onChange={(on) => hookForm.set('events', on ? [...hookForm.values.events, w.event] : hookForm.values.events.filter((e) => e !== w.event))} />
+                  ))}
+                </div>
+                {(hookForm.errors.events ?? hookForm.errors['events.0']) && <p role="alert" className="mt-1 text-xs font-medium text-red-700">{hookForm.errors.events ?? hookForm.errors['events.0']}</p>}
+              </fieldset>
               <div className="flex justify-end">
                 <Button type="submit" variant="primary" busy={hookForm.busy} busyLabel="Adding…">Add webhook</Button>
               </div>
@@ -238,9 +254,7 @@ export default function Developer() {
       />
 
       <div className="mt-6">
-        <Card title="About the Developer API">
-          <p className="text-sm text-slate-700">It is read-only: a key can read products, categories, orders, customers and stock, according to what you allow it. A key acts for this store only.</p>
-        </Card>
+        <ApiReference />
       </div>
 
       <Dialog open={adding} title="Add application" onClose={() => setAdding(false)} busy={form.busy}>

@@ -15,6 +15,6 @@ final class DevInventoryController
     {
         $perPage = min(100, max(1, (int) $request->integer('per_page', 25)));
 
-        return DevInventoryResource::collection(Inventory::query()->paginate($perPage));
+        return DevInventoryResource::collection(Inventory::query()->orderBy('id')->paginate($perPage)); // Phase B53: deterministic pages (API-008)
     }
 }

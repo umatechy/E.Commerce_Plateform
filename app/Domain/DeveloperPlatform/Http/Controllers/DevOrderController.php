@@ -15,7 +15,7 @@ final class DevOrderController
     {
         $perPage = min(100, max(1, (int) $request->integer('per_page', 25)));
 
-        return DevOrderResource::collection(Order::query()->orderByDesc('created_at')->paginate($perPage));
+        return DevOrderResource::collection(Order::query()->orderByDesc('created_at')->orderByDesc('id')->paginate($perPage)); // Phase B53: ties broken by id (API-008)
     }
 
     public function show(Order $order): DevOrderResource

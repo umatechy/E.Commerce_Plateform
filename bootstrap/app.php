@@ -39,6 +39,7 @@ return Application::configure(basePath: dirname(__DIR__))
         app_path('Domain/Shipping/Console'), // Phase B49: shipping:track
         app_path('Domain/SuperAdmin/Console'), // Phase B52: platform:staff
         app_path('Domain/Security/Console'), // Phase B52: security:prune
+        app_path('Domain/DeveloperPlatform/Console'), // Phase B53: api:openapi
     ])
     ->withRouting(
         web: __DIR__.'/../routes/web.php',
@@ -85,6 +86,8 @@ return Application::configure(basePath: dirname(__DIR__))
 
         // Module 32 (Phase B22): baseline security headers on every response.
         $middleware->append(\App\Http\Middleware\AddSecurityHeaders::class);
+        // Phase B53 (SRS API-010): one error shape for every /api answer.
+        $middleware->append(\App\Http\Middleware\NormalizeApiErrors::class);
 
         // SRS API-011 (Phase B29): one request ID per request, first in line
         // so every later log line and audit entry carries it.
@@ -153,15 +156,17 @@ return Application::configure(basePath: dirname(__DIR__))
             'store.operational' => \App\Http\Middleware\EnsureStoreOperational::class, // Phase B51
             'platform.capability' => \App\Http\Middleware\EnsurePlatformCapability::class, // Phase B52
             'session.track' => \App\Http\Middleware\TrackUserSession::class, // Phase B52
+            'idempotent' => \App\Http\Middleware\EnforceIdempotency::class, // Phase B53: Idempotency-Key
             'customer.principal' => EnsureCustomerPrincipal::class,
             'customer.optional' => AttemptCustomerAuthentication::class,
             'storefront.store' => \App\Domain\Storefront\Http\Middleware\ResolveStorefrontStore::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
-        // Module 31 §2.23-consistent standard error envelope for API
-        // responses is added when the first real API endpoints ship
-        // (Phase B3+) — Phase B0 establishes the registration point only.
+        // Module 31 §2.23 standard error envelope: NormalizeApiErrors (Phase B53)
+        // gives every /api error its code, message, details and requestId.
+        // Unhandled exceptions are always answered as JSON under /api.
+        $exceptions->shouldRenderJsonWhen(fn (\Illuminate\Http\Request $request) => $request->is('api/*') || $request->expectsJson());
 
         // Safety net for package-entitlement refusals (Module 04): most
         // controllers catch these and answer 403 themselves, but one that

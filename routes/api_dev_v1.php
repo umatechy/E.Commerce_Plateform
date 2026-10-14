@@ -21,6 +21,10 @@ use Illuminate\Support\Facades\Route;
 // with null fields) instead of the tenant-scoped row or a 404. Laravel's
 // middleware priority keeps it after api_key.authenticate, which is what
 // resolves the tenant the binding query is scoped to.
+// Phase B53 (SRS API-012; Module 31 §51): the OpenAPI description, public (it describes, it reveals no data).
+Route::get('/openapi.json', fn () => response(\App\Domain\DeveloperPlatform\Support\DeveloperApiSpec::json(), 200, ['Content-Type' => 'application/json', 'Cache-Control' => 'public, max-age=300']))
+    ->middleware('throttle:60,1');
+
 Route::middleware(['api_key.authenticate', 'throttle:developer_api', 'api_key.log', SubstituteBindings::class])->group(function () {
     Route::middleware('api_key.scope:products:read')->group(function () {
         Route::get('/products', [DevProductController::class, 'index']);

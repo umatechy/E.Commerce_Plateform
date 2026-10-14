@@ -1,0 +1,1762 @@
+{
+    "openapi": "3.1.0",
+    "info": {
+        "title": "Umar Techy Developer API",
+        "version": "v1",
+        "description": "Read a store’s products, orders, customers and stock, and receive its events by webhook.\n\n**Authentication.** Create an application and an API key under Settings → Developer. Send it as `Authorization: Bearer <key>`. A key belongs to one store and carries scopes; a call outside its scopes gets 403.\n\n**Rate limits.** 60 requests a minute per key by default (Umar Techy may set another limit). Over the limit you get 429 with `Retry-After`.\n\n**Errors.** Every error has the same body: `code` (stable), `message`, `details` and `requestId`. Validation errors list the fields in `details.fields`. Send the `requestId` (also in the `X-Request-Id` header) when you contact support.\n\n**Retries.** Do not retry 4xx answers unchanged. Retry 429, 503 and network failures with back-off.\n\n**Versioning.** The version is in the path. Fields may be added within v1; nothing is removed or renamed without a new version.\n\n**Availability.** Keys stop working when their store is suspended or closed (423) and when Umar Techy switches the developer API off during an incident (503)."
+    },
+    "servers": [
+        {
+            "url": "/api/dev/v1",
+            "description": "Relative to the platform address"
+        }
+    ],
+    "security": [
+        {
+            "apiKey": []
+        }
+    ],
+    "paths": {
+        "/customers": {
+            "get": {
+                "operationId": "listCustomers",
+                "summary": "List customers",
+                "description": "The store’s customers, ordered by id. Contains personal data: keep it as safe as the store does.\n\nScope: `customers:read`.",
+                "tags": [
+                    "Customer"
+                ],
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "default": 1
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "maximum": 100,
+                            "default": 25
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "headers": {
+                            "X-Request-Id": {
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "required": [
+                                        "data",
+                                        "links",
+                                        "meta"
+                                    ],
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/Customer"
+                                            }
+                                        },
+                                        "links": {
+                                            "$ref": "#/components/schemas/PageLinks"
+                                        },
+                                        "meta": {
+                                            "$ref": "#/components/schemas/PageMeta"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthenticated"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Forbidden"
+                    },
+                    "423": {
+                        "$ref": "#/components/responses/Locked"
+                    },
+                    "429": {
+                        "$ref": "#/components/responses/TooManyRequests"
+                    },
+                    "503": {
+                        "$ref": "#/components/responses/Unavailable"
+                    }
+                },
+                "x-scope": "customers:read"
+            }
+        },
+        "/customers/{customer}": {
+            "get": {
+                "operationId": "getACustomer",
+                "summary": "Get a customer",
+                "description": "One customer by its id.\n\nScope: `customers:read`.",
+                "tags": [
+                    "Customer"
+                ],
+                "parameters": [
+                    {
+                        "name": "customer",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        },
+                        "description": "The customer id."
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "headers": {
+                            "X-Request-Id": {
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "required": [
+                                        "data"
+                                    ],
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/Customer"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthenticated"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Forbidden"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/NotFound"
+                    },
+                    "423": {
+                        "$ref": "#/components/responses/Locked"
+                    },
+                    "429": {
+                        "$ref": "#/components/responses/TooManyRequests"
+                    },
+                    "503": {
+                        "$ref": "#/components/responses/Unavailable"
+                    }
+                },
+                "x-scope": "customers:read"
+            }
+        },
+        "/inventory": {
+            "get": {
+                "operationId": "listStockLevels",
+                "summary": "List stock levels",
+                "description": "Stock per product and warehouse, ordered by id. `available` is on hand minus reserved for open orders.\n\nScope: `inventory:read`.",
+                "tags": [
+                    "Inventory"
+                ],
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "default": 1
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "maximum": 100,
+                            "default": 25
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "headers": {
+                            "X-Request-Id": {
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "required": [
+                                        "data",
+                                        "links",
+                                        "meta"
+                                    ],
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/Inventory"
+                                            }
+                                        },
+                                        "links": {
+                                            "$ref": "#/components/schemas/PageLinks"
+                                        },
+                                        "meta": {
+                                            "$ref": "#/components/schemas/PageMeta"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthenticated"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Forbidden"
+                    },
+                    "423": {
+                        "$ref": "#/components/responses/Locked"
+                    },
+                    "429": {
+                        "$ref": "#/components/responses/TooManyRequests"
+                    },
+                    "503": {
+                        "$ref": "#/components/responses/Unavailable"
+                    }
+                },
+                "x-scope": "inventory:read"
+            }
+        },
+        "/orders": {
+            "get": {
+                "operationId": "listOrders",
+                "summary": "List orders",
+                "description": "The store’s orders, newest first.\n\nScope: `orders:read`.",
+                "tags": [
+                    "Order"
+                ],
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "default": 1
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "maximum": 100,
+                            "default": 25
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "headers": {
+                            "X-Request-Id": {
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "required": [
+                                        "data",
+                                        "links",
+                                        "meta"
+                                    ],
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/Order"
+                                            }
+                                        },
+                                        "links": {
+                                            "$ref": "#/components/schemas/PageLinks"
+                                        },
+                                        "meta": {
+                                            "$ref": "#/components/schemas/PageMeta"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthenticated"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Forbidden"
+                    },
+                    "423": {
+                        "$ref": "#/components/responses/Locked"
+                    },
+                    "429": {
+                        "$ref": "#/components/responses/TooManyRequests"
+                    },
+                    "503": {
+                        "$ref": "#/components/responses/Unavailable"
+                    }
+                },
+                "x-scope": "orders:read"
+            }
+        },
+        "/orders/{order}": {
+            "get": {
+                "operationId": "getAnOrder",
+                "summary": "Get an order",
+                "description": "One order by its id.\n\nScope: `orders:read`.",
+                "tags": [
+                    "Order"
+                ],
+                "parameters": [
+                    {
+                        "name": "order",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        },
+                        "description": "The order id."
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "headers": {
+                            "X-Request-Id": {
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "required": [
+                                        "data"
+                                    ],
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/Order"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthenticated"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Forbidden"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/NotFound"
+                    },
+                    "423": {
+                        "$ref": "#/components/responses/Locked"
+                    },
+                    "429": {
+                        "$ref": "#/components/responses/TooManyRequests"
+                    },
+                    "503": {
+                        "$ref": "#/components/responses/Unavailable"
+                    }
+                },
+                "x-scope": "orders:read"
+            }
+        },
+        "/products": {
+            "get": {
+                "operationId": "listProducts",
+                "summary": "List products",
+                "description": "The store’s products, ordered by id. Includes every status (draft, active, archived).\n\nScope: `products:read`.",
+                "tags": [
+                    "Product"
+                ],
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "default": 1
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "maximum": 100,
+                            "default": 25
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "headers": {
+                            "X-Request-Id": {
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "required": [
+                                        "data",
+                                        "links",
+                                        "meta"
+                                    ],
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/Product"
+                                            }
+                                        },
+                                        "links": {
+                                            "$ref": "#/components/schemas/PageLinks"
+                                        },
+                                        "meta": {
+                                            "$ref": "#/components/schemas/PageMeta"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthenticated"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Forbidden"
+                    },
+                    "423": {
+                        "$ref": "#/components/responses/Locked"
+                    },
+                    "429": {
+                        "$ref": "#/components/responses/TooManyRequests"
+                    },
+                    "503": {
+                        "$ref": "#/components/responses/Unavailable"
+                    }
+                },
+                "x-scope": "products:read"
+            }
+        },
+        "/products/{product}": {
+            "get": {
+                "operationId": "getAProduct",
+                "summary": "Get a product",
+                "description": "One product by its id.\n\nScope: `products:read`.",
+                "tags": [
+                    "Product"
+                ],
+                "parameters": [
+                    {
+                        "name": "product",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        },
+                        "description": "The product id."
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "headers": {
+                            "X-Request-Id": {
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "required": [
+                                        "data"
+                                    ],
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/Product"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthenticated"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Forbidden"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/NotFound"
+                    },
+                    "423": {
+                        "$ref": "#/components/responses/Locked"
+                    },
+                    "429": {
+                        "$ref": "#/components/responses/TooManyRequests"
+                    },
+                    "503": {
+                        "$ref": "#/components/responses/Unavailable"
+                    }
+                },
+                "x-scope": "products:read"
+            }
+        }
+    },
+    "webhooks": {
+        "order.cancelled": {
+            "post": {
+                "operationId": "webhookOrderCancelled",
+                "summary": "order.cancelled",
+                "description": "An order was cancelled.\n\nSent as POST to your webhook address. Check `X-Umartechy-Signature`: the HMAC-SHA256 (hex) of the raw body with your webhook signing secret. Answer 2xx within 10 seconds; otherwise the delivery is retried after 10 s, 30 s, 1 min, 5 min and 15 min. Use `idempotency_key` to ignore a delivery you already handled.",
+                "parameters": [
+                    {
+                        "name": "X-Umartechy-Signature",
+                        "in": "header",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "X-Umartechy-Event",
+                        "in": "header",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "const": "order.cancelled"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "required": [
+                                    "event",
+                                    "data",
+                                    "idempotency_key"
+                                ],
+                                "properties": {
+                                    "event": {
+                                        "type": "string",
+                                        "const": "order.cancelled"
+                                    },
+                                    "data": {
+                                        "type": "object",
+                                        "properties": {
+                                            "order_id": {
+                                                "type": "integer",
+                                                "description": "The order."
+                                            },
+                                            "reason": {
+                                                "type": "string",
+                                                "description": "Why, as a code."
+                                            }
+                                        }
+                                    },
+                                    "idempotency_key": {
+                                        "type": "string",
+                                        "description": "The same for every retry of this delivery."
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "2XX": {
+                        "description": "Received."
+                    }
+                }
+            }
+        },
+        "order.created": {
+            "post": {
+                "operationId": "webhookOrderCreated",
+                "summary": "order.created",
+                "description": "A new order was placed.\n\nSent as POST to your webhook address. Check `X-Umartechy-Signature`: the HMAC-SHA256 (hex) of the raw body with your webhook signing secret. Answer 2xx within 10 seconds; otherwise the delivery is retried after 10 s, 30 s, 1 min, 5 min and 15 min. Use `idempotency_key` to ignore a delivery you already handled.",
+                "parameters": [
+                    {
+                        "name": "X-Umartechy-Signature",
+                        "in": "header",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "X-Umartechy-Event",
+                        "in": "header",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "const": "order.created"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "required": [
+                                    "event",
+                                    "data",
+                                    "idempotency_key"
+                                ],
+                                "properties": {
+                                    "event": {
+                                        "type": "string",
+                                        "const": "order.created"
+                                    },
+                                    "data": {
+                                        "type": "object",
+                                        "properties": {
+                                            "order_id": {
+                                                "type": "integer",
+                                                "description": "The order (GET /orders/{id})."
+                                            },
+                                            "order_number": {
+                                                "type": "string",
+                                                "description": "The order number customers see."
+                                            },
+                                            "grand_total_minor": {
+                                                "type": "integer",
+                                                "description": "The total in minor units (paisa for PKR)."
+                                            }
+                                        }
+                                    },
+                                    "idempotency_key": {
+                                        "type": "string",
+                                        "description": "The same for every retry of this delivery."
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "2XX": {
+                        "description": "Received."
+                    }
+                }
+            }
+        },
+        "payment.refunded": {
+            "post": {
+                "operationId": "webhookPaymentRefunded",
+                "summary": "payment.refunded",
+                "description": "A payment was refunded, fully or in part.\n\nSent as POST to your webhook address. Check `X-Umartechy-Signature`: the HMAC-SHA256 (hex) of the raw body with your webhook signing secret. Answer 2xx within 10 seconds; otherwise the delivery is retried after 10 s, 30 s, 1 min, 5 min and 15 min. Use `idempotency_key` to ignore a delivery you already handled.",
+                "parameters": [
+                    {
+                        "name": "X-Umartechy-Signature",
+                        "in": "header",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "X-Umartechy-Event",
+                        "in": "header",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "const": "payment.refunded"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "required": [
+                                    "event",
+                                    "data",
+                                    "idempotency_key"
+                                ],
+                                "properties": {
+                                    "event": {
+                                        "type": "string",
+                                        "const": "payment.refunded"
+                                    },
+                                    "data": {
+                                        "type": "object",
+                                        "properties": {
+                                            "payment_id": {
+                                                "type": "integer",
+                                                "description": "The payment."
+                                            },
+                                            "amount_minor": {
+                                                "type": "integer",
+                                                "description": "The refunded amount."
+                                            },
+                                            "full": {
+                                                "type": "boolean",
+                                                "description": "Whether the whole payment was refunded."
+                                            }
+                                        }
+                                    },
+                                    "idempotency_key": {
+                                        "type": "string",
+                                        "description": "The same for every retry of this delivery."
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "2XX": {
+                        "description": "Received."
+                    }
+                }
+            }
+        },
+        "payment.succeeded": {
+            "post": {
+                "operationId": "webhookPaymentSucceeded",
+                "summary": "payment.succeeded",
+                "description": "An online payment was confirmed.\n\nSent as POST to your webhook address. Check `X-Umartechy-Signature`: the HMAC-SHA256 (hex) of the raw body with your webhook signing secret. Answer 2xx within 10 seconds; otherwise the delivery is retried after 10 s, 30 s, 1 min, 5 min and 15 min. Use `idempotency_key` to ignore a delivery you already handled.",
+                "parameters": [
+                    {
+                        "name": "X-Umartechy-Signature",
+                        "in": "header",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "X-Umartechy-Event",
+                        "in": "header",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "const": "payment.succeeded"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "required": [
+                                    "event",
+                                    "data",
+                                    "idempotency_key"
+                                ],
+                                "properties": {
+                                    "event": {
+                                        "type": "string",
+                                        "const": "payment.succeeded"
+                                    },
+                                    "data": {
+                                        "type": "object",
+                                        "properties": {
+                                            "payment_id": {
+                                                "type": "integer",
+                                                "description": "The payment."
+                                            },
+                                            "order_id": {
+                                                "type": "integer",
+                                                "description": "Its order."
+                                            },
+                                            "provider": {
+                                                "type": "string",
+                                                "description": "jazzcash, easypaisa …"
+                                            },
+                                            "amount_minor": {
+                                                "type": "integer",
+                                                "description": "The amount in minor units."
+                                            }
+                                        }
+                                    },
+                                    "idempotency_key": {
+                                        "type": "string",
+                                        "description": "The same for every retry of this delivery."
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "2XX": {
+                        "description": "Received."
+                    }
+                }
+            }
+        },
+        "return.approved": {
+            "post": {
+                "operationId": "webhookReturnApproved",
+                "summary": "return.approved",
+                "description": "The store approved a return.\n\nSent as POST to your webhook address. Check `X-Umartechy-Signature`: the HMAC-SHA256 (hex) of the raw body with your webhook signing secret. Answer 2xx within 10 seconds; otherwise the delivery is retried after 10 s, 30 s, 1 min, 5 min and 15 min. Use `idempotency_key` to ignore a delivery you already handled.",
+                "parameters": [
+                    {
+                        "name": "X-Umartechy-Signature",
+                        "in": "header",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "X-Umartechy-Event",
+                        "in": "header",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "const": "return.approved"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "required": [
+                                    "event",
+                                    "data",
+                                    "idempotency_key"
+                                ],
+                                "properties": {
+                                    "event": {
+                                        "type": "string",
+                                        "const": "return.approved"
+                                    },
+                                    "data": {
+                                        "type": "object",
+                                        "properties": {
+                                            "return_id": {
+                                                "type": "integer",
+                                                "description": "The return."
+                                            },
+                                            "order_id": {
+                                                "type": "integer",
+                                                "description": "Its order."
+                                            }
+                                        }
+                                    },
+                                    "idempotency_key": {
+                                        "type": "string",
+                                        "description": "The same for every retry of this delivery."
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "2XX": {
+                        "description": "Received."
+                    }
+                }
+            }
+        },
+        "return.received": {
+            "post": {
+                "operationId": "webhookReturnReceived",
+                "summary": "return.received",
+                "description": "Returned items arrived at the store.\n\nSent as POST to your webhook address. Check `X-Umartechy-Signature`: the HMAC-SHA256 (hex) of the raw body with your webhook signing secret. Answer 2xx within 10 seconds; otherwise the delivery is retried after 10 s, 30 s, 1 min, 5 min and 15 min. Use `idempotency_key` to ignore a delivery you already handled.",
+                "parameters": [
+                    {
+                        "name": "X-Umartechy-Signature",
+                        "in": "header",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "X-Umartechy-Event",
+                        "in": "header",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "const": "return.received"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "required": [
+                                    "event",
+                                    "data",
+                                    "idempotency_key"
+                                ],
+                                "properties": {
+                                    "event": {
+                                        "type": "string",
+                                        "const": "return.received"
+                                    },
+                                    "data": {
+                                        "type": "object",
+                                        "properties": {
+                                            "return_id": {
+                                                "type": "integer",
+                                                "description": "The return."
+                                            },
+                                            "order_id": {
+                                                "type": "integer",
+                                                "description": "Its order."
+                                            }
+                                        }
+                                    },
+                                    "idempotency_key": {
+                                        "type": "string",
+                                        "description": "The same for every retry of this delivery."
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "2XX": {
+                        "description": "Received."
+                    }
+                }
+            }
+        },
+        "return.refunded": {
+            "post": {
+                "operationId": "webhookReturnRefunded",
+                "summary": "return.refunded",
+                "description": "A return was refunded.\n\nSent as POST to your webhook address. Check `X-Umartechy-Signature`: the HMAC-SHA256 (hex) of the raw body with your webhook signing secret. Answer 2xx within 10 seconds; otherwise the delivery is retried after 10 s, 30 s, 1 min, 5 min and 15 min. Use `idempotency_key` to ignore a delivery you already handled.",
+                "parameters": [
+                    {
+                        "name": "X-Umartechy-Signature",
+                        "in": "header",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "X-Umartechy-Event",
+                        "in": "header",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "const": "return.refunded"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "required": [
+                                    "event",
+                                    "data",
+                                    "idempotency_key"
+                                ],
+                                "properties": {
+                                    "event": {
+                                        "type": "string",
+                                        "const": "return.refunded"
+                                    },
+                                    "data": {
+                                        "type": "object",
+                                        "properties": {
+                                            "return_id": {
+                                                "type": "integer",
+                                                "description": "The return."
+                                            },
+                                            "order_id": {
+                                                "type": "integer",
+                                                "description": "Its order."
+                                            },
+                                            "amount_minor": {
+                                                "type": "integer",
+                                                "description": "Refunded to the payment."
+                                            },
+                                            "store_credit_minor": {
+                                                "type": "integer",
+                                                "description": "Given as store credit."
+                                            }
+                                        }
+                                    },
+                                    "idempotency_key": {
+                                        "type": "string",
+                                        "description": "The same for every retry of this delivery."
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "2XX": {
+                        "description": "Received."
+                    }
+                }
+            }
+        },
+        "return.requested": {
+            "post": {
+                "operationId": "webhookReturnRequested",
+                "summary": "return.requested",
+                "description": "A customer asked to return items.\n\nSent as POST to your webhook address. Check `X-Umartechy-Signature`: the HMAC-SHA256 (hex) of the raw body with your webhook signing secret. Answer 2xx within 10 seconds; otherwise the delivery is retried after 10 s, 30 s, 1 min, 5 min and 15 min. Use `idempotency_key` to ignore a delivery you already handled.",
+                "parameters": [
+                    {
+                        "name": "X-Umartechy-Signature",
+                        "in": "header",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "X-Umartechy-Event",
+                        "in": "header",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "const": "return.requested"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "required": [
+                                    "event",
+                                    "data",
+                                    "idempotency_key"
+                                ],
+                                "properties": {
+                                    "event": {
+                                        "type": "string",
+                                        "const": "return.requested"
+                                    },
+                                    "data": {
+                                        "type": "object",
+                                        "properties": {
+                                            "return_id": {
+                                                "type": "integer",
+                                                "description": "The return."
+                                            },
+                                            "order_id": {
+                                                "type": "integer",
+                                                "description": "Its order."
+                                            }
+                                        }
+                                    },
+                                    "idempotency_key": {
+                                        "type": "string",
+                                        "description": "The same for every retry of this delivery."
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "2XX": {
+                        "description": "Received."
+                    }
+                }
+            }
+        },
+        "shipment.cancelled": {
+            "post": {
+                "operationId": "webhookShipmentCancelled",
+                "summary": "shipment.cancelled",
+                "description": "A shipment was cancelled before pickup.\n\nSent as POST to your webhook address. Check `X-Umartechy-Signature`: the HMAC-SHA256 (hex) of the raw body with your webhook signing secret. Answer 2xx within 10 seconds; otherwise the delivery is retried after 10 s, 30 s, 1 min, 5 min and 15 min. Use `idempotency_key` to ignore a delivery you already handled.",
+                "parameters": [
+                    {
+                        "name": "X-Umartechy-Signature",
+                        "in": "header",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "X-Umartechy-Event",
+                        "in": "header",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "const": "shipment.cancelled"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "required": [
+                                    "event",
+                                    "data",
+                                    "idempotency_key"
+                                ],
+                                "properties": {
+                                    "event": {
+                                        "type": "string",
+                                        "const": "shipment.cancelled"
+                                    },
+                                    "data": {
+                                        "type": "object",
+                                        "properties": {
+                                            "shipment_id": {
+                                                "type": "integer",
+                                                "description": "The shipment."
+                                            },
+                                            "order_id": {
+                                                "type": "integer",
+                                                "description": "Its order."
+                                            }
+                                        }
+                                    },
+                                    "idempotency_key": {
+                                        "type": "string",
+                                        "description": "The same for every retry of this delivery."
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "2XX": {
+                        "description": "Received."
+                    }
+                }
+            }
+        },
+        "shipment.created": {
+            "post": {
+                "operationId": "webhookShipmentCreated",
+                "summary": "shipment.created",
+                "description": "A shipment was created for an order.\n\nSent as POST to your webhook address. Check `X-Umartechy-Signature`: the HMAC-SHA256 (hex) of the raw body with your webhook signing secret. Answer 2xx within 10 seconds; otherwise the delivery is retried after 10 s, 30 s, 1 min, 5 min and 15 min. Use `idempotency_key` to ignore a delivery you already handled.",
+                "parameters": [
+                    {
+                        "name": "X-Umartechy-Signature",
+                        "in": "header",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "X-Umartechy-Event",
+                        "in": "header",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "const": "shipment.created"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "required": [
+                                    "event",
+                                    "data",
+                                    "idempotency_key"
+                                ],
+                                "properties": {
+                                    "event": {
+                                        "type": "string",
+                                        "const": "shipment.created"
+                                    },
+                                    "data": {
+                                        "type": "object",
+                                        "properties": {
+                                            "shipment_id": {
+                                                "type": "integer",
+                                                "description": "The shipment."
+                                            },
+                                            "order_id": {
+                                                "type": "integer",
+                                                "description": "Its order."
+                                            },
+                                            "carrier": {
+                                                "type": "string",
+                                                "description": "The courier code."
+                                            }
+                                        }
+                                    },
+                                    "idempotency_key": {
+                                        "type": "string",
+                                        "description": "The same for every retry of this delivery."
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "2XX": {
+                        "description": "Received."
+                    }
+                }
+            }
+        },
+        "shipment.status_changed": {
+            "post": {
+                "operationId": "webhookShipmentStatusChanged",
+                "summary": "shipment.status_changed",
+                "description": "A shipment moved on (picked up, in transit, delivered …).\n\nSent as POST to your webhook address. Check `X-Umartechy-Signature`: the HMAC-SHA256 (hex) of the raw body with your webhook signing secret. Answer 2xx within 10 seconds; otherwise the delivery is retried after 10 s, 30 s, 1 min, 5 min and 15 min. Use `idempotency_key` to ignore a delivery you already handled.",
+                "parameters": [
+                    {
+                        "name": "X-Umartechy-Signature",
+                        "in": "header",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "X-Umartechy-Event",
+                        "in": "header",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "const": "shipment.status_changed"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "required": [
+                                    "event",
+                                    "data",
+                                    "idempotency_key"
+                                ],
+                                "properties": {
+                                    "event": {
+                                        "type": "string",
+                                        "const": "shipment.status_changed"
+                                    },
+                                    "data": {
+                                        "type": "object",
+                                        "properties": {
+                                            "shipment_id": {
+                                                "type": "integer",
+                                                "description": "The shipment."
+                                            },
+                                            "status": {
+                                                "type": "string",
+                                                "description": "The new status."
+                                            },
+                                            "direction": {
+                                                "type": "string",
+                                                "description": "outbound or return."
+                                            }
+                                        }
+                                    },
+                                    "idempotency_key": {
+                                        "type": "string",
+                                        "description": "The same for every retry of this delivery."
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "2XX": {
+                        "description": "Received."
+                    }
+                }
+            }
+        }
+    },
+    "components": {
+        "securitySchemes": {
+            "apiKey": {
+                "type": "http",
+                "scheme": "bearer",
+                "description": "An API key from Settings → Developer."
+            }
+        },
+        "schemas": {
+            "Product": {
+                "type": "object",
+                "required": [
+                    "id",
+                    "name",
+                    "slug",
+                    "sku",
+                    "price_minor",
+                    "currency",
+                    "status"
+                ],
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "description": "Product id.",
+                        "examples": [
+                            1042
+                        ]
+                    },
+                    "name": {
+                        "type": "string",
+                        "description": "Product name.",
+                        "examples": [
+                            "Rose Attar 12ml"
+                        ]
+                    },
+                    "slug": {
+                        "type": "string",
+                        "description": "Address part on the storefront.",
+                        "examples": [
+                            "rose-attar-12ml"
+                        ]
+                    },
+                    "sku": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "description": "Stock keeping unit.",
+                        "examples": [
+                            "ATR-001"
+                        ]
+                    },
+                    "price_minor": {
+                        "type": "integer",
+                        "description": "Price in minor units (paisa for PKR).",
+                        "examples": [
+                            250000
+                        ]
+                    },
+                    "currency": {
+                        "type": "string",
+                        "description": "ISO 4217 code.",
+                        "examples": [
+                            "PKR"
+                        ]
+                    },
+                    "status": {
+                        "type": "string",
+                        "description": "draft, active or archived.",
+                        "examples": [
+                            "active"
+                        ]
+                    }
+                }
+            },
+            "Order": {
+                "type": "object",
+                "required": [
+                    "id",
+                    "order_number",
+                    "status",
+                    "grand_total_minor",
+                    "currency",
+                    "created_at"
+                ],
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "description": "Order id.",
+                        "examples": [
+                            5581
+                        ]
+                    },
+                    "order_number": {
+                        "type": "string",
+                        "description": "The number customers see.",
+                        "examples": [
+                            "ORD-000123"
+                        ]
+                    },
+                    "status": {
+                        "type": "string",
+                        "description": "Order status, e.g. confirmed, shipped, delivered, cancelled.",
+                        "examples": [
+                            "confirmed"
+                        ]
+                    },
+                    "grand_total_minor": {
+                        "type": "integer",
+                        "description": "Total in minor units.",
+                        "examples": [
+                            177000
+                        ]
+                    },
+                    "currency": {
+                        "type": "string",
+                        "description": "ISO 4217 code.",
+                        "examples": [
+                            "PKR"
+                        ]
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "description": "When it was placed (ISO 8601, UTC).",
+                        "examples": [
+                            "2026-10-14T10:30:00+00:00"
+                        ]
+                    }
+                }
+            },
+            "Customer": {
+                "type": "object",
+                "required": [
+                    "id",
+                    "name",
+                    "email",
+                    "created_at"
+                ],
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "description": "Customer id.",
+                        "examples": [
+                            311
+                        ]
+                    },
+                    "name": {
+                        "type": "string",
+                        "description": "Name.",
+                        "examples": [
+                            "Ayesha Khan"
+                        ]
+                    },
+                    "email": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "description": "Email address.",
+                        "examples": [
+                            "ayesha@example.com"
+                        ]
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "description": "When the customer was created (ISO 8601).",
+                        "examples": [
+                            "2026-09-01T08:00:00+00:00"
+                        ]
+                    }
+                }
+            },
+            "Inventory": {
+                "type": "object",
+                "required": [
+                    "product_id",
+                    "warehouse_id",
+                    "on_hand",
+                    "reserved",
+                    "available"
+                ],
+                "properties": {
+                    "product_id": {
+                        "type": "integer",
+                        "description": "Product id.",
+                        "examples": [
+                            1042
+                        ]
+                    },
+                    "warehouse_id": {
+                        "type": "integer",
+                        "description": "Warehouse id.",
+                        "examples": [
+                            3
+                        ]
+                    },
+                    "on_hand": {
+                        "type": "integer",
+                        "description": "Units in the warehouse.",
+                        "examples": [
+                            40
+                        ]
+                    },
+                    "reserved": {
+                        "type": "integer",
+                        "description": "Units held for open orders.",
+                        "examples": [
+                            2
+                        ]
+                    },
+                    "available": {
+                        "type": "integer",
+                        "description": "on_hand − reserved.",
+                        "examples": [
+                            38
+                        ]
+                    }
+                }
+            },
+            "Error": {
+                "type": "object",
+                "required": [
+                    "code",
+                    "message",
+                    "details",
+                    "requestId"
+                ],
+                "properties": {
+                    "code": {
+                        "type": "string",
+                        "description": "Stable, lowercase code to act on, e.g. `unauthenticated`, `insufficient_scope`, `not_found`, `too_many_requests`."
+                    },
+                    "message": {
+                        "type": "string",
+                        "description": "Safe, human-readable text."
+                    },
+                    "details": {
+                        "type": "object",
+                        "description": "More about the error; `fields` lists invalid fields on 422."
+                    },
+                    "requestId": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "description": "Equals the X-Request-Id header."
+                    }
+                }
+            },
+            "PageLinks": {
+                "type": "object",
+                "properties": {
+                    "first": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "last": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "prev": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "next": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    }
+                }
+            },
+            "PageMeta": {
+                "type": "object",
+                "properties": {
+                    "current_page": {
+                        "type": "integer"
+                    },
+                    "last_page": {
+                        "type": "integer"
+                    },
+                    "per_page": {
+                        "type": "integer"
+                    },
+                    "total": {
+                        "type": "integer"
+                    },
+                    "from": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ]
+                    },
+                    "to": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ]
+                    }
+                }
+            }
+        },
+        "responses": {
+            "Unauthenticated": {
+                "description": "No or an invalid API key.",
+                "content": {
+                    "application/json": {
+                        "schema": {
+                            "$ref": "#/components/schemas/Error"
+                        },
+                        "example": {
+                            "code": "unauthenticated",
+                            "message": "No or an invalid API key.",
+                            "details": {},
+                            "requestId": "5b0f6a3e-2c3d-4c1e-9a77-2f1d0e6c8b11"
+                        }
+                    }
+                }
+            },
+            "Forbidden": {
+                "description": "The key does not have the scope this call needs.",
+                "content": {
+                    "application/json": {
+                        "schema": {
+                            "$ref": "#/components/schemas/Error"
+                        },
+                        "example": {
+                            "code": "insufficient_scope",
+                            "message": "The key does not have the scope this call needs.",
+                            "details": {},
+                            "requestId": "5b0f6a3e-2c3d-4c1e-9a77-2f1d0e6c8b11"
+                        }
+                    }
+                }
+            },
+            "NotFound": {
+                "description": "No such record in this store.",
+                "content": {
+                    "application/json": {
+                        "schema": {
+                            "$ref": "#/components/schemas/Error"
+                        },
+                        "example": {
+                            "code": "not_found",
+                            "message": "No such record in this store.",
+                            "details": {},
+                            "requestId": "5b0f6a3e-2c3d-4c1e-9a77-2f1d0e6c8b11"
+                        }
+                    }
+                }
+            },
+            "Locked": {
+                "description": "The store is suspended, closed or archived.",
+                "content": {
+                    "application/json": {
+                        "schema": {
+                            "$ref": "#/components/schemas/Error"
+                        },
+                        "example": {
+                            "code": "store_not_operational",
+                            "message": "The store is suspended, closed or archived.",
+                            "details": {},
+                            "requestId": "5b0f6a3e-2c3d-4c1e-9a77-2f1d0e6c8b11"
+                        }
+                    }
+                }
+            },
+            "TooManyRequests": {
+                "description": "Rate limit reached. Wait for Retry-After seconds.",
+                "content": {
+                    "application/json": {
+                        "schema": {
+                            "$ref": "#/components/schemas/Error"
+                        },
+                        "example": {
+                            "code": "too_many_requests",
+                            "message": "Rate limit reached. Wait for Retry-After seconds.",
+                            "details": {},
+                            "requestId": "5b0f6a3e-2c3d-4c1e-9a77-2f1d0e6c8b11"
+                        }
+                    }
+                }
+            },
+            "Unavailable": {
+                "description": "The developer API is switched off for now.",
+                "content": {
+                    "application/json": {
+                        "schema": {
+                            "$ref": "#/components/schemas/Error"
+                        },
+                        "example": {
+                            "code": "developer_api_disabled",
+                            "message": "The developer API is switched off for now.",
+                            "details": {},
+                            "requestId": "5b0f6a3e-2c3d-4c1e-9a77-2f1d0e6c8b11"
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

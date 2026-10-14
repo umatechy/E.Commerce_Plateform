@@ -18,6 +18,12 @@ final class WebhookEventRouter
 {
     public function route(string $eventType, int $storeId, array $payload, string $sourceIdempotencyKey): void
     {
+        // Phase B53 (Module 31 §35): only catalog events leave the platform, with only their documented fields.
+        if (! \App\Domain\DeveloperPlatform\Support\WebhookEventCatalog::has($eventType)) {
+            return;
+        }
+        $payload = \App\Domain\DeveloperPlatform\Support\WebhookEventCatalog::payload($eventType, $payload);
+
         $subscriptions = WebhookSubscription::query()
             ->where('store_id', $storeId)
             ->where('status', WebhookSubscriptionStatus::Active)
