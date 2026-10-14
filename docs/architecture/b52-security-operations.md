@@ -27,6 +27,9 @@ How it is enforced:
 - Giving an account platform access at all happens only on the server, with `php artisan platform:staff` (operator, reason, the email typed again). A stolen admin session therefore cannot create new staff.
 - On the Security page a security admin can change a staff member's role or remove their access. Nobody can change their own role, and the last active super admin can never be demoted, removed or deactivated.
 - Every change is audited and raises an alert. When the new role has fewer rights, the person's sessions end.
+- **Owner decision 16 (2026-10-14):** the super admins are umartechy01@gmail.com and callmodeai@gmail.com. On a new server, after each account exists:
+  `php artisan platform:staff <email> super_admin --operator="<name>" --reason="Owner decision 16"`.
+  Both set up two-step sign-in at their first sign-in. Everyone else gets a narrower role.
 - The screens hide buttons the role cannot use (Store life card, Store page). The server checks every call anyway.
 
 ## 2. Sessions (SRS AUTH-005; Module 32 §9; Module 30 §5)
