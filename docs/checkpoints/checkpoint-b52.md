@@ -143,6 +143,6 @@ Owner inputs needed (at the end, as agreed):
 - the incident runbook contacts (still open since B29);
 - who should hold super admin.
 
-CI: pending — to be recorded after the push.
+CI: run on b6a0401 — success (security, backend, frontend), verified 2026-10-14.
 
 Next (on the owner's word): B53 — API quality.
