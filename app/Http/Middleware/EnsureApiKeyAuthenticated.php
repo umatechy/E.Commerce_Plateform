@@ -47,6 +47,12 @@ final class EnsureApiKeyAuthenticated
             return response()->json(['message' => 'Invalid or inactive API credentials.', 'code' => 'unauthenticated'], 401);
         }
 
+        // Phase B51 (Module 31 §2.27): a suspended, closed or archived store's API keys stop working with it.
+        $store = \App\Domain\Tenancy\Models\Store::query()->withTrashed()->find($key->store_id);
+        if ($store === null || ! $store->isOperational()) {
+            return response()->json(['message' => 'This store is not open for API access.', 'code' => 'store_not_operational'], 423);
+        }
+
         $this->context->set($key);
         $this->tenantContext->resolveToStore($key->store_id);
 

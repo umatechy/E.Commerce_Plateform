@@ -98,6 +98,7 @@ Route::middleware(['auth', 'required.mfa'])->group(function () {
         '/backups' => 'Backups/Index',
         '/settings' => 'Settings/Index', '/settings/audit-log' => 'Settings/AuditLog', '/settings/developer' => 'Settings/Developer', '/settings/tax' => 'Settings/Tax', // tax: Phase B46
         '/settings/payments' => 'Settings/Payments', // Phase B48
+        '/settings/close-store' => 'Settings/CloseStore', // Phase B51
     ] as $uri => $page) {
         Route::get($uri, fn () => Inertia::render($page));
     }

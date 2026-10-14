@@ -68,7 +68,8 @@ Route::post('/auth/login/mfa', [AuthController::class, 'loginMfa'])->middleware(
 
 // 'required.mfa': a Store Owner without MFA reaches only its own /auth/*
 // endpoints here, so it can enrol (owner decision 2026-10-01).
-Route::middleware(['auth:sanctum', 'staff.principal', 'required.mfa'])->group(function () {
+// 'store.operational' (Phase B51): a suspended, closed or archived store is read-only.
+Route::middleware(['auth:sanctum', 'staff.principal', 'required.mfa', 'store.operational'])->group(function () {
     Route::post('/auth/logout', [AuthController::class, 'logout']);
     Route::get('/auth/me', [AuthController::class, 'me']);
 
@@ -122,6 +123,13 @@ Route::middleware(['auth:sanctum', 'staff.principal', 'required.mfa'])->group(fu
     // --- Storefront setup & launch (Module 05, Phase B24) ---
     Route::get('/storefront/setup', [\App\Domain\Storefront\Http\Controllers\StorefrontSetupController::class, 'show']);
     Route::post('/storefront/launch', [\App\Domain\Storefront\Http\Controllers\StorefrontSetupController::class, 'launch']);
+
+    // --- Phase B51 (Module 03 §35, §40; SRS STORE-009): Settings → Close store ---
+    $closure = \App\Domain\Tenancy\Http\Controllers\StoreClosureController::class;
+    Route::get('/store-lifecycle', [$closure, 'show']);
+    Route::post('/store-lifecycle/close', [$closure, 'close'])->middleware(['step_up', 'throttle:5,10,store-close']);
+    Route::post('/store-lifecycle/reopen', [$closure, 'reopen'])->middleware(['step_up', 'throttle:5,10,store-reopen']);
+    Route::get('/store-lifecycle/export/{dataset}', [$closure, 'export'])->where('dataset', '[a-z-]{3,20}')->middleware('throttle:20,10,store-data-export');
 
     // --- Billing, Invoices & Renewals (Module 29, Phase B23) — the store's own only ---
     Route::get('/billing', [BillingController::class, 'show']);
@@ -510,6 +518,8 @@ Route::middleware(['auth:sanctum', 'staff.principal', 'required.mfa'])->group(fu
             Route::post('/messaging/channels/{channel}/test', [$messagingAdmin, 'test'])->where('channel', 'sms|whatsapp')->middleware('throttle:10,10,platform-messaging-test');
             Route::put('/messaging/alert-template', [$messagingAdmin, 'saveTemplate'])->middleware('step_up');
             Route::get('/notifications/failures', [SuperAdminNotificationController::class, 'failures']);
+            // Phase B51: every store deletion, including stores already deleted.
+            Route::get('/store-deletions', [\App\Domain\SuperAdmin\Http\Controllers\SuperAdminStoreLifecycleController::class, 'deletions']);
             Route::get('/domains', [SuperAdminDomainController::class, 'indexAll']);
 
             Route::get('/settings', [SuperAdminSettingController::class, 'index']);
@@ -577,9 +587,21 @@ Route::middleware(['auth:sanctum', 'staff.principal', 'required.mfa'])->group(fu
         ->prefix('super-admin')
         ->group(function () {
             Route::get('/stores/{store}/impersonate', [SuperAdminStoreController::class, 'impersonate'])->middleware('step_up'); // SRS SA-004
-            Route::get('/stores/{store}', [SuperAdminStoreController::class, 'show']);
+            Route::get('/stores/{store}', [SuperAdminStoreController::class, 'show'])->withTrashed(); // Phase B51: a deleted store's record stays readable
             Route::post('/stores/{store}/owner-invitation', [SuperAdminStoreController::class, 'inviteOwner'])->middleware('step_up'); // Phase B44
             Route::get('/stores/{store}/health', [SuperAdminMonitoringController::class, 'storeHealth']);
+
+            // Phase B51 (Module 30 §10, §140; Module 03 §33–37): the store's life.
+            $life = \App\Domain\SuperAdmin\Http\Controllers\SuperAdminStoreLifecycleController::class;
+            Route::get('/stores/{store}/lifecycle', [$life, 'show'])->withTrashed();
+            Route::get('/stores/{store}/lifecycle/deletion-plan', [$life, 'plan']);
+            foreach (['suspend', 'reactivate', 'close', 'reopen', 'archive', 'restore'] as $action) {
+                Route::post("/stores/{store}/lifecycle/{$action}", [$life, $action])->middleware('step_up');
+            }
+            Route::put('/stores/{store}/lifecycle/legal-hold', [$life, 'legalHold'])->middleware('step_up');
+            Route::post('/stores/{store}/lifecycle/deletion', [$life, 'requestDeletion'])->middleware(['step_up', 'throttle:5,60,store-deletion']);
+            Route::post('/stores/{store}/lifecycle/deletion/cancel', [$life, 'cancelDeletion'])->middleware('step_up');
+            Route::post('/stores/{store}/lifecycle/deletion/retry', [$life, 'retryDeletion'])->middleware('step_up');
 
             // Package/subscription platform administration (Module 04
             // "Package Administration" / "Subscription Administration").

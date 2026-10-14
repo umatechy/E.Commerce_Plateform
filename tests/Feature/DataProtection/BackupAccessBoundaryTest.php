@@ -202,6 +202,8 @@ final class BackupAccessBoundaryTest extends TestCase
             'POST api/v1/super-admin/backups/{backup}/rehearse',
             'POST api/v1/super-admin/backups/{backup}/verify',
             'POST api/v1/super-admin/restore-jobs/{backupRestoreJob}/authorize',
+            // Phase B51: brings an archived store back to "closed" — no backup or artifact involved.
+            'POST api/v1/super-admin/stores/{store}/lifecycle/restore',
         ], $routes);
 
         // None of them is on the public storefront or the developer API.

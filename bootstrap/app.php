@@ -147,6 +147,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'privileged.mfa' => \App\Http\Middleware\EnsurePrivilegedMfa::class,
             'required.mfa' => \App\Http\Middleware\EnsureRequiredMfa::class,
             'step_up' => \App\Http\Middleware\RequireStepUp::class,
+            'store.operational' => \App\Http\Middleware\EnsureStoreOperational::class, // Phase B51
             'customer.principal' => EnsureCustomerPrincipal::class,
             'customer.optional' => AttemptCustomerAuthentication::class,
             'storefront.store' => \App\Domain\Storefront\Http\Middleware\ResolveStorefrontStore::class,
@@ -163,6 +164,10 @@ return Application::configure(basePath: dirname(__DIR__))
         // of surfacing a 500. Same body shape as StoreThemeController.
         $exceptions->render(function (\App\Domain\Packages\Exceptions\FeatureNotEntitledException|\App\Domain\Packages\Exceptions\SubscriptionInactiveException $e) {
             return response()->json(['message' => $e->getMessage(), 'code' => 'feature_not_entitled'], 403);
+        });
+        // Phase B51: a store lifecycle change not allowed now (StoreLifecycleService).
+        $exceptions->render(function (\App\Domain\Tenancy\Exceptions\StoreLifecycleException $e) {
+            return response()->json(['message' => $e->getMessage(), 'code' => $e->errorCode], 422);
         });
     })
     ->create();

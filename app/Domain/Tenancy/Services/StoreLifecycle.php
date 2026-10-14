@@ -23,16 +23,38 @@ use Illuminate\Support\Facades\DB;
  * operational status (pending_setup, active, suspended, cancelled,
  * archived) and the stage shown is derived from both, plus whether the
  * store has an owner yet. PROVISIONING needs no state: provisioning is one
- * transaction, so a half-made store never exists (§56). DELETING belongs to
- * the closure workflow (gap G14).
+ * transaction, so a half-made store never exists (§56). Phase B51 added
+ * the closure workflow (gap G14): cancelled (closed, kept for the retention
+ * period), archived, deleting and deleted — see StoreLifecycleService.
  */
 final class StoreLifecycle
 {
-    public const STAGES = ['awaiting_owner', 'onboarding', 'trial', 'active', 'payment_due', 'grace_period', 'suspended', 'cancelled', 'archived'];
+    public const STAGES = ['awaiting_owner', 'onboarding', 'trial', 'active', 'payment_due', 'grace_period', 'suspended', 'cancelled', 'archived', 'deleting', 'deleted'];
+
+    /** How a store status reads in messages ("a closed store cannot be …"). */
+    public static function label(StoreStatus $status): string
+    {
+        return match ($status) {
+            StoreStatus::PendingSetup => 'not yet launched',
+            StoreStatus::Cancelled => 'closed',
+            default => $status->value,
+        };
+    }
+
+    public static function actionLabel(string $action): string
+    {
+        return match ($action) {
+            'close' => 'closed', 'reopen' => 'reopened', 'suspend' => 'suspended', 'reactivate' => 'reactivated',
+            'archive' => 'archived', 'restore' => 'restored', 'request_deletion', 'start_deletion', 'finish_deletion' => 'deleted',
+            'cancel_deletion' => 'kept', default => str_replace('_', ' ', $action),
+        };
+    }
 
     public static function stage(Store $store, ?Subscription $subscription, bool $hasOwner): string
     {
         return match (true) {
+            $store->status === StoreStatus::Deleted => 'deleted',
+            $store->status === StoreStatus::Deleting => 'deleting',
             $store->status === StoreStatus::Archived || $subscription?->status === SubscriptionStatus::Archived => 'archived',
             $store->status === StoreStatus::Cancelled || $subscription?->status === SubscriptionStatus::Cancelled => 'cancelled',
             $store->status === StoreStatus::Suspended,

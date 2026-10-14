@@ -30,6 +30,10 @@ final class StorefrontGate
             return StorefrontAvailability::NotLaunched;
         }
 
+        if (in_array($store->status, [StoreStatus::Cancelled, StoreStatus::Archived, StoreStatus::Deleting, StoreStatus::Deleted], true)) {
+            return StorefrontAvailability::Closed; // Phase B51
+        }
+
         if ($store->status !== StoreStatus::Active || ! $this->subscriptionGrantsAccess($store)) {
             return StorefrontAvailability::Unavailable;
         }

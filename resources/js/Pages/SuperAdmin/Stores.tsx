@@ -14,6 +14,7 @@ import { useUrlState } from '@/lib/useUrlState';
 import { adminFetch, idempotencyKey } from '@/lib/adminApi';
 import { formatDate } from '@/lib/datetime';
 import { STAGE_LABEL, STAGE_TONE } from '@/lib/stores';
+import { DELETION_STATUS } from '@/lib/storeLifecycle';
 
 /**
  * Module 30 store administration: every store on the platform
@@ -86,6 +87,8 @@ export default function Stores() {
       <DataTable caption="Stores" columns={columns} rows={list.rows} rowKey={(store) => store.id} loading={list.loading} error={list.error} onRetry={list.reload} empty={<EmptyPanel title={filters.search ? 'No store matches' : 'No stores yet'} />} />
       <Pagination meta={list.meta} disabled={list.loading} onPage={(page) => setFilters({ page: String(page) })} />
 
+      <Deletions />
+
       {creating && <CreateStoreDialog categories={categories.data?.data ?? []} onClose={() => setCreating(false)} />}
     </AdminPage>
   );
@@ -152,5 +155,27 @@ function CreateStoreDialog({ categories, onClose }: { categories: Option[]; onCl
         </div>
       </form>
     </Dialog>
+  );
+}
+
+type DeletionRow = { id: string; status: string; not_before: string; completed_at: string | null; removed_rows: number; remaining_rows: number; store: { id: string | null; name: string | null; slug: string | null } };
+
+/** Phase B51 (Module 30 §140): every permanent store deletion, including stores already deleted — the record that stays. */
+function Deletions() {
+  const state = useApi<{ data: DeletionRow[] }>('/super-admin/store-deletions');
+  const rows = state.data?.data ?? [];
+  if (rows.length === 0) return null;
+  const columns: Column<DeletionRow>[] = [
+    { key: 'store', header: 'Store', render: (d) => <span><span className="font-medium">{d.store.name}</span> <span className="font-mono text-xs text-slate-500">{d.store.slug}</span></span> },
+    { key: 'status', header: 'Status', priority: true, render: (d) => <Badge tone={DELETION_STATUS[d.status]?.tone ?? 'neutral'}>{DELETION_STATUS[d.status]?.label ?? d.status}</Badge> },
+    { key: 'when', header: 'When', render: (d) => formatDate(d.completed_at ?? d.not_before) },
+    { key: 'rows', header: 'Rows removed', align: 'right', render: (d) => (d.status === 'completed' ? `${d.removed_rows.toLocaleString()}${d.remaining_rows === 0 ? ' · checked' : ` · ${d.remaining_rows} left`}` : '—') },
+  ];
+
+  return (
+    <section aria-labelledby="deletions-heading" className="mt-8">
+      <h2 id="deletions-heading" className="mb-2 text-base font-semibold text-slate-900">Store deletions</h2>
+      <DataTable caption="Store deletions" columns={columns} rows={rows} rowKey={(d) => d.id} loading={state.loading} error={state.error} onRetry={state.reload} empty={null} />
+    </section>
   );
 }

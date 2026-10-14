@@ -44,6 +44,10 @@ final class SettingValidator
         'payments.order_payment_minutes' => [5, 15],
         'shipping.default_weight_grams' => [1, 100000], // Phase B49: up to 100 kg
         'messaging.daily_limit' => [1, 100000], // Phase B50
+        // Phase B51: owner decision 5 sets 90 days as the floor; longer only when law or contract asks.
+        'stores.closure_retention_days' => [90, 3650],
+        'stores.deletion_cooling_hours' => [24, 720],
+        'stores.closure_reminder_days' => [1, 60],
     ];
 
     private function validateInteger(mixed $value, SettingDefinition $definition): int

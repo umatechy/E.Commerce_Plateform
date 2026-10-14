@@ -72,7 +72,8 @@ final class NotificationService
         // messages are subject to consent/suppression — mandatory
         // transactional/system/security/administrative communication
         // is never blocked by a marketing preference.
-        if ($messageType->requiresMarketingConsent() && ! $this->isEligibleForMarketing($recipientType, $recipientId, $channel, $destination)) {
+        // Phase B51: a suspended, closed or archived store sends no marketing (campaigns, abandoned carts).
+        if ($messageType->requiresMarketingConsent() && (! $this->storeIsOperational($message) || ! $this->isEligibleForMarketing($recipientType, $recipientId, $channel, $destination))) {
             $this->transitionTo($message, NotificationStatus::Suppressed);
             $message->update(['sealed_body' => null]); // never delivered, so nothing needs the secret
 
@@ -83,6 +84,13 @@ final class NotificationService
         DeliverNotificationJob::dispatch($message->id);
 
         return $message->fresh();
+    }
+
+    private function storeIsOperational(NotificationMessage $message): bool
+    {
+        $store = $message->store_id === null ? null : \App\Domain\Tenancy\Models\Store::query()->withTrashed()->find($message->store_id);
+
+        return $store === null || $store->isOperational();
     }
 
     private function isEligibleForMarketing(RecipientType $recipientType, ?int $recipientId, NotificationChannel $channel, string $destination): bool

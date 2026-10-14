@@ -32,9 +32,8 @@ final class HandleInertiaRequests extends Middleware
             ...parent::share($request),
             'auth' => [
                 'user' => $user ? (new UserResource($user))->resolve($request) : null,
-                'activeStore' => $activeStoreId
-                    ? Store::query()->withoutGlobalScopes()->find($activeStoreId)?->only(['id', 'name', 'slug'])
-                    : null,
+                // Phase B51: with its lifecycle status, so the admin can say why it is read-only.
+                'activeStore' => $activeStoreId ? $this->activeStore($activeStoreId) : null,
                 // The timezone admin pages show dates in (Module 33 §50.3):
                 // the store's, or UTC when no store is in context.
                 'timezone' => app(StoreClock::class)->timezoneName(),
@@ -50,6 +49,17 @@ final class HandleInertiaRequests extends Middleware
                 // user may open and what the package includes. Display only.
                 ...app(AdminShellProps::class)->for($user, $activeStoreId),
             ],
+        ];
+    }
+
+    /** @return array{id: int, name: string, slug: string, status: string, retention_ends_at: ?string}|null */
+    private function activeStore(int $id): ?array
+    {
+        $store = Store::query()->withoutGlobalScopes()->find($id);
+
+        return $store === null ? null : [
+            'id' => $store->id, 'name' => $store->name, 'slug' => $store->slug, 'status' => $store->status->value,
+            'retention_ends_at' => $store->retention_ends_at?->toIso8601String(),
         ];
     }
 }

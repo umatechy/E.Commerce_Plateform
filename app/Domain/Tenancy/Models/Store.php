@@ -66,7 +66,24 @@ final class Store extends Model
             'status' => StoreStatus::class,
             'allow_overselling' => 'boolean',
             'activated_at' => 'datetime',
+            // Phase B51: the lifecycle columns are set only by StoreLifecycleService (never fillable).
+            'closed_at' => 'datetime',
+            'suspended_at' => 'datetime',
+            'retention_ends_at' => 'datetime',
+            'retention_reminded_at' => 'datetime',
+            'archived_at' => 'datetime',
+            'legal_hold' => 'boolean',
         ];
+    }
+
+    /**
+     * Phase B51: whether the store runs normally — its admin can change
+     * things and its storefront may open. Suspended, closed, archived and
+     * deleted stores are read-only (EnsureStoreOperational).
+     */
+    public function isOperational(): bool
+    {
+        return in_array($this->status, [StoreStatus::PendingSetup, StoreStatus::Active], true);
     }
 
     /** @return BelongsToMany<User, $this> */

@@ -62,6 +62,12 @@ final class SettingRegistry
             // Phase B50 (owner decision 3): SMS providers that may send real messages, after Umar Techy's
             // sender-ID, delivery and pricing checks. Empty until then.
             'messaging.live_providers' => new SettingDefinition(key: 'messaging.live_providers', scope: SettingScope::Platform, type: SettingType::StringArray, default: []),
+            // Phase B51 (owner decision 5; Module 03 §35–37): closed and suspended stores are kept 90 days
+            // (longer only when law or contract asks — never shorter); a permanent deletion waits a cooling
+            // period in which it can still be cancelled; owners are reminded before their data is archived.
+            'stores.closure_retention_days' => new SettingDefinition(key: 'stores.closure_retention_days', scope: SettingScope::Platform, type: SettingType::Integer, default: 90),
+            'stores.deletion_cooling_hours' => new SettingDefinition(key: 'stores.deletion_cooling_hours', scope: SettingScope::Platform, type: SettingType::Integer, default: 72),
+            'stores.closure_reminder_days' => new SettingDefinition(key: 'stores.closure_reminder_days', scope: SettingScope::Platform, type: SettingType::Integer, default: 14),
             'payments.webhook_tolerance_seconds' => new SettingDefinition(key: 'payments.webhook_tolerance_seconds', scope: SettingScope::Platform, type: SettingType::Integer, default: 300),
             'payments.order_payment_minutes' => new SettingDefinition(key: 'payments.order_payment_minutes', scope: SettingScope::Platform, type: SettingType::Integer, default: 15),
             'platform.trial_days' => new SettingDefinition(

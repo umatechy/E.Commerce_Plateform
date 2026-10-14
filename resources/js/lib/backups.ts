@@ -7,7 +7,7 @@ export type Backup = {
   id: string;
   scope: 'platform' | 'store';
   status: string;
-  initiated_by: 'manual' | 'scheduled' | 'pre_restore_safety';
+  initiated_by: 'manual' | 'scheduled' | 'pre_restore_safety' | 'pre_deletion_safety';
   retention_tier: 'daily' | 'monthly' | 'manual' | 'pre_change';
   size_bytes: number | null;
   is_encrypted: boolean;
@@ -80,6 +80,7 @@ const TRIGGERS: Record<Backup['initiated_by'], string> = {
   manual: 'Manual',
   scheduled: 'Scheduled',
   pre_restore_safety: 'Before a restore',
+  pre_deletion_safety: 'Before a store deletion',
 };
 
 export function triggerLabel(backup: Pick<Backup, 'initiated_by' | 'retention_tier'>): string {

@@ -107,7 +107,7 @@ final class ResolveStorefrontStore
     {
         if ($mode === 'api') {
             return response()->json(['message' => $message, 'code' => $code], $status)
-                ->withHeaders($status === 503 ? ['Retry-After' => '3600'] : []);
+                ->withHeaders($status === 503 && $code !== 'storefront_closed' ? ['Retry-After' => '3600'] : []); // a closed shop is not coming back in an hour
         }
 
         return Inertia::render('Storefront/Unavailable', [

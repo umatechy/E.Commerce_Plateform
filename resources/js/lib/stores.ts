@@ -13,8 +13,10 @@ export const STAGE_LABEL: Record<string, string> = {
   payment_due: 'Payment due',
   grace_period: 'Grace period',
   suspended: 'Suspended',
-  cancelled: 'Cancelled',
+  cancelled: 'Closed',
   archived: 'Archived',
+  deleting: 'Being deleted',
+  deleted: 'Deleted',
 };
 
 export const STAGE_TONE: Record<string, Tone> = {
@@ -25,6 +27,8 @@ export const STAGE_TONE: Record<string, Tone> = {
   payment_due: 'amber',
   grace_period: 'amber',
   suspended: 'red',
-  cancelled: 'neutral',
+  cancelled: 'amber',
   archived: 'neutral',
+  deleting: 'red',
+  deleted: 'neutral',
 };

@@ -121,6 +121,9 @@ final class StepUpTest extends TestCase
             'POST api/v1/customers/{customer}/merge',
             // Phase B34: giving or taking store credit by hand.
             'POST api/v1/customers/{customer}/store-credit/adjust',
+            // Phase B51: closing and reopening a store (the Owner, the store's name typed in full).
+            'POST api/v1/store-lifecycle/close',
+            'POST api/v1/store-lifecycle/reopen',
             // Phase B47: credit notes and their approval, payment notices.
             'POST api/v1/super-admin/billing/credit-notes/{creditNote}/approve',
             'POST api/v1/super-admin/billing/credit-notes/{creditNote}/reject',
@@ -137,6 +140,16 @@ final class StepUpTest extends TestCase
             'POST api/v1/super-admin/settings/revisions/{revisionId}/rollback',
             // Phase B44: creating a store for a customer, and inviting its owner.
             'POST api/v1/super-admin/stores',
+            // Phase B51: a store's life — suspend, close, archive, restore, permanent deletion.
+            'POST api/v1/super-admin/stores/{store}/lifecycle/archive',
+            'POST api/v1/super-admin/stores/{store}/lifecycle/close',
+            'POST api/v1/super-admin/stores/{store}/lifecycle/deletion',
+            'POST api/v1/super-admin/stores/{store}/lifecycle/deletion/cancel',
+            'POST api/v1/super-admin/stores/{store}/lifecycle/deletion/retry',
+            'POST api/v1/super-admin/stores/{store}/lifecycle/reactivate',
+            'POST api/v1/super-admin/stores/{store}/lifecycle/reopen',
+            'POST api/v1/super-admin/stores/{store}/lifecycle/restore',
+            'POST api/v1/super-admin/stores/{store}/lifecycle/suspend',
             'POST api/v1/super-admin/stores/{store}/owner-invitation',
             'POST api/v1/super-admin/stores/{store}/starter-template', // Phase B45: save a store's structure as a template
             'POST api/v1/super-admin/users/{user}/deactivate',
@@ -157,6 +170,7 @@ final class StepUpTest extends TestCase
             'PUT api/v1/super-admin/payment-providers/{provider}/live',
             'PUT api/v1/super-admin/settings/{key}',
             'PUT api/v1/super-admin/starter-templates/{key}',
+            'PUT api/v1/super-admin/stores/{store}/lifecycle/legal-hold',
         ], $guarded);
     }
 }

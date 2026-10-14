@@ -11,7 +11,7 @@ import { DEFAULT_CURRENCY, SUPPORTED_CURRENCIES } from './money';
  */
 export type AuthProps = {
   user: { id: string; name: string; email: string; is_platform_staff?: boolean; mfa_enabled?: boolean } | null;
-  activeStore: { id: number; name: string; slug: string } | null;
+  activeStore: { id: number; name: string; slug: string; status?: string; retention_ends_at?: string | null } | null;
   timezone?: string | null;
   mfa_enrollment_required?: boolean;
   permissions?: string[];

@@ -18,6 +18,8 @@ export type NavItem = {
   permissions?: string[];
   /** A package feature the whole page depends on. */
   feature?: string;
+  /** Phase B51: only the store's Owner (closing the store is not a permission others can be given). */
+  ownerOnly?: boolean;
 };
 
 export type NavGroup = { label: string; items: NavItem[] };
@@ -86,6 +88,7 @@ export const storeNav: NavGroup[] = [
       { href: '/settings/audit-log', label: 'Audit log', description: 'Who did what in your store.', permissions: ['audit.view'] },
       { href: '/settings/developer', label: 'Developer', description: 'API keys and webhooks.', permissions: ['developer_platform.view'] },
       { href: '/backups', label: 'Backups', description: 'Backups of your store data.', permissions: ['backups.view'] },
+      { href: '/settings/close-store', label: 'Close store', description: 'Download your data, close or reopen the store.', ownerOnly: true },
       { href: '/support', label: 'Support', description: 'Customer tickets and your requests to the platform.', permissions: ['support.view', 'support.reply', 'support.manage', 'support.platform'] },
     ],
   },
@@ -143,7 +146,7 @@ export function navigationFor(access: Access, store: NavGroup[] = storeNav): Res
   if (access.hasStore) {
     for (const group of store) {
       const items = group.items
-        .filter((item) => item.permissions === undefined || access.can(item.permissions))
+        .filter((item) => (item.ownerOnly ? access.isOwner : item.permissions === undefined || access.can(item.permissions)))
         .map((item) => resolve(item, access));
       if (items.length > 0) groups.push({ label: group.label, platform: false, items });
     }

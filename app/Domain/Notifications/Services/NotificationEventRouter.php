@@ -53,6 +53,8 @@ final class NotificationEventRouter
             'marketing.recipient_queued' => $this->handleMarketingRecipientQueued($payload),
             'marketing.abandoned_cart_detected' => $this->handleAbandonedCartDetected($payload),
             'billing.invoice_issued', 'billing.invoice_paid', 'billing.payment_overdue' => $this->handleBillingEvent($eventType, $payload),
+            // Phase B51: the owner hears what happened to their store (closed, suspended, archived …).
+            'store.lifecycle_changed' => app(\App\Domain\Tenancy\Services\StoreLifecycleNotifier::class)->route($payload),
             // Module 34 (Phase B26): support emails.
             'support.ticket_created', 'support.agent_replied', 'support.requester_replied', 'support.sla_breached' => app(\App\Domain\Support\Services\SupportNotifier::class)->route($eventType, $payload),
             // Phase B30 (gap G4): critical operational alerts to the platform's operators.

@@ -99,7 +99,7 @@ Architecture v1.0 arrived after this review was written and are now in
 |---|---|---|---|---|---|
 | 01 | Complete Platform Structure | B0 (foundation) | 🟡 | Modular monolith, ADR-001–005, one codebase, entitlement tiers | Foundation map; its items live in other modules. Self-service onboarding flow §16 is only partly covered by B24's launch checklist |
 | 02 | Authentication, Users, Roles & Permissions | B1 | 🟡 | Staff login/register, Sanctum, roles and permissions, policies, super-admin impersonation with reason | Staff invitation (§18), member management (§19, §29), custom roles (§17), 7 predefined roles (§6), MFA (§13), session/device management (§12), email verification for staff (§10), ownership transfer (§21) |
-| 03 | Multi-Tenant & Store Management | B1 | 🟡 | Tenant resolution, `BelongsToTenant`, store roles seeding, domain/slug routing | Lifecycle has 5 states; the blueprint has 9, missing PROVISIONING, ONBOARDING, TRIAL, GRACE_PERIOD, DELETING (§7–8). No setup checklist entity (§24), store deletion/retention workflow (§35–37), cloning (§52), import/export (§40–41) |
+| 03 | Multi-Tenant & Store Management | B1, B44, B45, B51 | 🟡 | Tenant resolution, `BelongsToTenant`, store roles seeding, domain/slug routing; B44 stages and setup checklist; B51 lifecycle (suspend with reason, close, 90-day retention, archive, restore, legal hold, permanent deletion with backup and final check), read-only admin for non-operational stores, owner data export (§33–37, §40) | Ownership transfer (§28), cloning (§52), store import (§41) |
 | 04 | Subscription, Packages & Entitlements | B2 | 🟡 | Packages, entitlements, usage counters, trial dates, subscription lifecycle | Add-ons (§23–24), promotional entitlements (§25), contract overrides (§27), package versioning (§19), threshold alerts (downgrade preview §22, §47: built in B47) (§42); Business/Premium numeric limits unset by design |
 | 05 | Storefront | B24 | 🟡 | `/shop/{slug}` and custom domains, catalog, search, product pages, cart, guest checkout, SEO, launch flow; reviews and ratings (§27, §14, §55) and units sold on Business/Premium (owner decision 15) | Review images (§27), sort by rating (§19), review request emails (M15 §32), RTL/multi-language (§40–41) (B38 built storefront languages), collections (§16) built in B39, maintenance/coming-soon modes (§57–58), preview/publish of storefront config (§86–88), image renditions (§50), recommendations (§66), page CSP |
 | 06 | Product & Catalog | B3 | 🟡 | Products, variants, statuses, visibility, images, slugs, SKUs | Per-category manual order (§94), variant generation (§10), versioning (§59), search index (§54–55), catalog events (§57). B39 built collections (§34), tags (§35), featured (§37), relationships (§38), bulk operations (§46–47, without stock reference) and duplication (§60); B40 built CSV import/export (§48–51); B43 built badges (§36), featured ranking and sort priority (§37, §93) |
@@ -159,7 +159,7 @@ Architecture v1.0 arrived after this review was written and are now in
 | MT-014 | ✅ | Super Admin impersonation with reason + audit | P0 |
 | MT-015 | ✅ | Package change keeps store and data | P0 |
 | MT-016 | ✅ | Suspension is non-destructive | P0 |
-| MT-017 | 🟡 | `cancelled`/`archived` states exist; no deletion/retention workflow | P1 |
+| MT-017 | ✅ | B51: closure → 90-day retention → archive → approved deletion (cooling period, verified backup, purge by StoreDataMap, final check) | P1 |
 | MT-018 | ✅ | `docs/testing/tenant-isolation-tests.md`, per-domain isolation tests | P0 |
 
 ### 3.2 Identity & authentication (AUTH)
@@ -200,13 +200,13 @@ Architecture v1.0 arrived after this review was written and are now in
 |---|---|---|---|
 | STORE-001 | ✅ | Registration creates a store | P0 |
 | STORE-002 | ✅ | `StoreObserver` seeds roles/defaults | P0 |
-| STORE-003 | 🟡 | 5 states vs 9 in Module 03 §7 | P1 |
+| STORE-003 | ✅ | B51: operational states incl. deleting/deleted, moves only through StoreLifecycleService (subscription states stay billing's, see b44/b51 docs) | P1 |
 | STORE-004 | 🟡 | Name/slug only; business identity fields minimal | P1 |
 | STORE-005 | ✅ | `store_settings` | P0 |
 | STORE-006 | ✅ | Storefront/theme settings, with admin pages since B31 | P1 |
 | STORE-007 | ✅ | Invitations, role changes, suspend/reactivate/remove (B27, gap G1) | P0 |
 | STORE-008 | ✅ | Explicit store header + membership | P0 |
-| STORE-009 | 🟡 | No controlled closure workflow | P1 |
+| STORE-009 | ✅ | B51: owner closes/reopens (name + step-up), Super Admin lifecycle control | P1 |
 
 ### 3.5 Packages & entitlements (PKG)
 
@@ -417,7 +417,7 @@ existing pattern: feature tests plus tenant-isolation tests for every endpoint.
 | G11 | ✅ **Closed for storefronts in B38** (checkpoint-b38; not built: admin/emails in Urdu, per-language SEO fields — docs/architecture/b38-localization.md §10). Localization + RTL (Urdu) | LOC-001/002/006, M05 §40–41, M17 §9 | Cannot serve Urdu storefronts | i18n framework, RTL-aware components | P1 | — |
 | G12 | Module 34 documentation side | SUP-001/005/006, M34 §6–15, §31–34, §43 | No self-help for merchants | Knowledge base, help center, release notes | P1 | — |
 | G13 | API contract quality: error shape, OpenAPI, E2E tests | API-010/012, TEST-009, Master Prompt §15 | Integrators break; regressions reach users | Standard error envelope, OpenAPI generation, Playwright journeys in CI | P1 | G2 (request IDs) |
-| G14 | Store lifecycle states + closure/retention workflow | STORE-003/009, MT-017, M03 §7–8, §35–37 | Undefined behavior on cancellation/deletion | Add missing states and a retention-safe deletion workflow | P1 | Retention period decision |
+| G14 | ✅ **Closed in B51** (checkpoint-b51; docs/architecture/b51-store-lifecycle.md): owner closure and reopening, platform suspension with reasons, 90-day retention (owner decision 5), reminders and automatic archiving, restore, legal hold, permanent deletion (cooling period, verified backup, purge of classified tables, final check, records kept), read-only admin, closed storefront, data export. Store lifecycle states + closure/retention workflow | STORE-003/009, MT-017, M03 §7–8, §35–37 | Undefined behavior on cancellation/deletion | Add missing states and a retention-safe deletion workflow | P1 | Retention period decision |
 | G15 | 🟡 **Part 1 done in B39** (checkpoint-b39; docs/architecture/b39-collections-merchandising.md): collections, tags, featured, related products, duplication, bulk changes, promotions on a collection. B40 added CSV import/export (checkpoint-b40); B41 attribute sets, specifications and faceted category filters (checkpoint-b41). B42 attribute translations and attributes in the CSV (checkpoint-b42). B43 badges and featured ranking (checkpoint-b43). Still open: category templates, per-category manual order. Catalog/taxonomy depth: collections, import/export, bulk ops, tags, attribute sets, filters | M05 §16, M06 §34–51, M07 §18–19, §44–47 | Onboarding existing merchants is slow | Collections first (also unblocks M14 §9), then import/export | P1 | — |
 | G16 | Module 25 PWA | PWA-001/003, M25 | Mobile install/offline missing | Build per blueprint (after G11 and G6 theme) | P2 | G11 |
 | G17 | ✅ **Core built in B36** (checkpoint-b36; open items in docs/development/b36-inspection-findings.md). Module 18 Animation | ANIM-001–004, M18 | Visual polish only | Build per blueprint | P2 | M17 |

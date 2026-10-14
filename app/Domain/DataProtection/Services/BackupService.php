@@ -52,7 +52,7 @@ final class BackupService
         ?BackupRetentionTier $tier = null,
         ?string $scheduleKey = null,
     ): Backup {
-        $tier ??= $initiator === BackupInitiator::PreRestoreSafety ? BackupRetentionTier::PreChange : BackupRetentionTier::Manual;
+        $tier ??= in_array($initiator, [BackupInitiator::PreRestoreSafety, BackupInitiator::PreDeletionSafety], true) ? BackupRetentionTier::PreChange : BackupRetentionTier::Manual;
 
         // ADR-004: the row, its first transition and the outbox event
         // commit together. The job is dispatched only after the commit so

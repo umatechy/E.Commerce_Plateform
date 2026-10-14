@@ -292,6 +292,8 @@ export default function AuthenticatedLayout({ children }: PropsWithChildren) {
           </div>
         )}
 
+        {!locked && <StoreStateBanner auth={auth} isOwner={access.isOwner} />}
+
         <main id="main" className="mx-auto max-w-7xl px-4 py-6">
           {children}
         </main>
@@ -299,6 +301,34 @@ export default function AuthenticatedLayout({ children }: PropsWithChildren) {
 
       <Toaster />
       {auth.user && <StepUpDialog mfaEnabled={auth.user.mfa_enabled === true} />}
+    </div>
+  );
+}
+
+/**
+ * Phase B51 (Module 03 §33–36): on every admin page, why the store is
+ * read-only and what can still be done — so a refused change never comes
+ * as a surprise.
+ */
+function StoreStateBanner({ auth, isOwner }: { auth: AuthProps; isOwner: boolean }) {
+  const store = auth.activeStore;
+  const status = store?.status;
+  if (!store || !status || ['active', 'pending_setup'].includes(status)) return null;
+  const until = store.retention_ends_at ? new Date(store.retention_ends_at).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' }) : null;
+  const text =
+    status === 'suspended'
+      ? 'This store is suspended by Umar Techy. Its shop is closed and nothing can be changed; you can still look and download your data.'
+      : status === 'cancelled'
+        ? `This store is closed and read-only.${until ? ` Its data is kept until ${until}.` : ''}`
+        : 'This store is archived. Its data is no longer shown here.';
+
+  return (
+    <div role="status" className={`border-b ${status === 'suspended' ? 'border-red-300 bg-red-50 text-red-900' : 'border-amber-300 bg-amber-50 text-amber-900'}`}>
+      <p className="mx-auto flex max-w-7xl flex-wrap items-center gap-x-3 gap-y-1 px-4 py-3 text-sm">
+        <span>{text}</span>
+        {isOwner && status === 'cancelled' && <Link href="/settings/close-store" className="font-semibold underline">Reopen or download your data</Link>}
+        {status !== 'cancelled' && <Link href="/support" className="font-semibold underline">Contact Umar Techy support</Link>}
+      </p>
     </div>
   );
 }

@@ -12,6 +12,7 @@ import { useAction, useForm } from '@/lib/useForm';
 import { adminFetch } from '@/lib/adminApi';
 import { formatDate } from '@/lib/datetime';
 import { STAGE_LABEL, STAGE_TONE } from '@/lib/stores';
+import StoreLifecycleCard from '@/Components/SuperAdmin/StoreLifecycleCard';
 
 /** Phase B44: a new owner invitation (the old link stops working). */
 function OwnerInvitationDialog({ storeId, current, onClose, onDone }: { storeId: string; current: string; onClose: () => void; onDone: () => void }) {
@@ -155,8 +156,10 @@ function SubscriptionDialog({ storeId, action, packages, current, onClose, onDon
 export default function Store({ storeId }: { storeId: string }) {
   const base = `/super-admin/stores/${storeId}`;
   const detail = useApi<{ data: StoreDetail }>(base);
-  const health = useApi<{ data: Health }>(`${base}/health`);
-  const domains = useApi<{ data: Domain[] }>(`${base}/domains`);
+  // Phase B51: a deleted store has no health or domains left; its record and history stay.
+  const live = detail.data !== null && detail.data.data.store.status !== 'deleted';
+  const health = useApi<{ data: Health }>(live ? `${base}/health` : null);
+  const domains = useApi<{ data: Domain[] }>(live ? `${base}/domains` : null);
   const packages = useApi<{ data: Package[] }>('/super-admin/packages');
   const [dialog, setDialog] = useState<'change-package' | 'suspend' | 'reactivate' | null>(null);
   const [inviting, setInviting] = useState(false);
@@ -200,7 +203,7 @@ export default function Store({ storeId }: { storeId: string }) {
               actions={
                 <>
                   <Button size="sm" onClick={() => setDialog('change-package')}>Change package</Button>
-                  {data.subscription_status === 'suspended' ? <Button size="sm" variant="primary" onClick={() => setDialog('reactivate')}>Reactivate</Button> : <Button size="sm" variant="danger" onClick={() => setDialog('suspend')}>Suspend</Button>}
+                  {data.subscription_status === 'suspended' ? <Button size="sm" variant="primary" onClick={() => setDialog('reactivate')}>Reactivate subscription</Button> : <Button size="sm" onClick={() => setDialog('suspend')}>Suspend subscription</Button>}
                 </>
               }
             >
@@ -221,6 +224,9 @@ export default function Store({ storeId }: { storeId: string }) {
             </Card>
           )}
         </QueryState>
+
+        {/* Phase B51: suspend, close, archive, legal hold, permanent deletion. */}
+        <StoreLifecycleCard storeId={storeId} onChanged={detail.reload} />
 
         <QueryState state={detail} lines={2}>
           {({ data }) => (
@@ -257,13 +263,17 @@ export default function Store({ storeId }: { storeId: string }) {
           )}
         </QueryState>
 
-        <Card title="Health">
-          <QueryState state={health} lines={3}>{({ data }) => <HealthCheckList checks={data.checks} />}</QueryState>
-        </Card>
+        {live && (
+          <Card title="Health">
+            <QueryState state={health} lines={3}>{({ data }) => <HealthCheckList checks={data.checks} />}</QueryState>
+          </Card>
+        )}
 
-        <Card title="Domains">
-          <DataTable caption="Domains of this store" columns={domainColumns} rows={domains.data?.data ?? null} rowKey={(domain) => domain.id} loading={domains.loading} error={domains.error} onRetry={domains.reload} empty={<p className="text-sm text-slate-600">No domains.</p>} />
-        </Card>
+        {live && (
+          <Card title="Domains">
+            <DataTable caption="Domains of this store" columns={domainColumns} rows={domains.data?.data ?? null} rowKey={(domain) => domain.id} loading={domains.loading} error={domains.error} onRetry={domains.reload} empty={<p className="text-sm text-slate-600">No domains.</p>} />
+          </Card>
+        )}
       </div>
 
       {savingTemplate && (

@@ -55,6 +55,8 @@ Schedule::command('payments:reconcile')->everyMinute()->withoutOverlapping();
 // Module 13 §54 (Phase B49): read couriers' tracking for parcels on their way (each on its own
 // schedule with back-off; a courier notification reads it at once).
 Schedule::command('shipping:track')->everyFiveMinutes()->withoutOverlapping();
+// Phase B51: reminders before archiving, archiving after the retention period, approved store deletions.
+Schedule::command('stores:lifecycle')->hourly()->withoutOverlapping();
 Schedule::command('payments:reconcile --deep')->cron('15 */6 * * *')->withoutOverlapping();
 
 // Module 09 §52 (Phase B35): store credit that reached its expiry date
