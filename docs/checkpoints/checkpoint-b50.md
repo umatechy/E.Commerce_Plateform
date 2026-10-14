@@ -95,6 +95,6 @@ Owner inputs needed (at the end, as agreed): a WhatsApp Business account
 alerts and the first store; the SMS provider choice and its sender-ID check
 (Twilio or a Pakistani provider).
 
-CI: pending — to be recorded after the push.
+CI: run on 87b7ed4 — success (security, backend, frontend), verified 2026-10-14.
 
 Next (on the owner's word): B51 — store lifecycle and closure.
