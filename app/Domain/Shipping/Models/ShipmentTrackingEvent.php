@@ -21,7 +21,7 @@ final class ShipmentTrackingEvent extends Model
     public const UPDATED_AT = null;
 
     protected $fillable = [
-        'store_id', 'shipment_id', 'status', 'carrier_event_code',
+        'store_id', 'shipment_id', 'status', 'carrier_event_code', 'event_key',
         'description', 'location', 'source', 'actor_id', 'occurred_at',
     ];
 

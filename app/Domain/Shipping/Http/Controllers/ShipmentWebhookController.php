@@ -19,6 +19,13 @@ final class ShipmentWebhookController
 {
     public function __invoke(Request $request, string $provider): JsonResponse
     {
+        // Phase B49: connected couriers notify the courier engine, which asks the courier itself.
+        if ($adapter = app(\App\Domain\Shipping\Couriers\CourierRegistry::class)->find($provider)) {
+            $event = app(\App\Domain\Shipping\Services\CourierShippingService::class)->handleNotification($adapter, $request);
+
+            return response()->json(['received' => true, 'status' => $event->status->value]);
+        }
+
         $rawPayload = $request->getContent();
         $signatureHeader = $request->header('X-Mock-Courier-Signature');
         $externalEventId = $request->header('X-Mock-Courier-Event-Id') ?? $request->input('event_id');
@@ -26,8 +33,14 @@ final class ShipmentWebhookController
         if ($externalEventId === null) {
             return response()->json(['message' => 'Missing event identifier.'], 400);
         }
+        // Phase B49 (Module 13 §53, as Phase B48 did for payments): the sending time is signed with
+        // the body and must be recent, so a captured notification cannot be replayed later.
+        $timestamp = $request->header('X-Mock-Courier-Timestamp');
+        if (! is_string($timestamp) || ! ctype_digit($timestamp)) {
+            return response()->json(['message' => 'Missing timestamp.'], 400);
+        }
 
-        $event = app(ShipmentService::class)->handleWebhook($provider, $rawPayload, $signatureHeader, $externalEventId);
+        $event = app(ShipmentService::class)->handleWebhook($provider, $rawPayload, $signatureHeader, $externalEventId, (int) $timestamp);
 
         // Always 200 for a structurally-valid, deduplicated request —
         // same oracle-attack-prevention reasoning as Phase B7's

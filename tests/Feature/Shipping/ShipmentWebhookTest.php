@@ -70,11 +70,13 @@ final class ShipmentWebhookTest extends TestCase
     private function signedWebhookRequest(Store $store, array $payload, string $eventId): TestResponse
     {
         $raw = json_encode($payload);
-        $signature = hash_hmac('sha256', $raw, $store->shipment_webhook_secret);
+        $time = (string) now()->getTimestamp(); // Phase B49: signed with the body
+        $signature = hash_hmac('sha256', $time.'.'.$raw, $store->shipment_webhook_secret);
 
         return $this->call('POST', '/api/v1/shipment-webhooks/mock_courier', [], [], [], [
             'HTTP_X-Mock-Courier-Signature' => $signature,
             'HTTP_X-Mock-Courier-Event-Id' => $eventId,
+            'HTTP_X-Mock-Courier-Timestamp' => $time,
             'CONTENT_TYPE' => 'application/json',
         ], $raw);
     }
@@ -99,6 +101,7 @@ final class ShipmentWebhookTest extends TestCase
         $response = $this->call('POST', '/api/v1/shipment-webhooks/mock_courier', [], [], [], [
             'HTTP_X-Mock-Courier-Signature' => 'forged',
             'HTTP_X-Mock-Courier-Event-Id' => 'evt-forged',
+            'HTTP_X-Mock-Courier-Timestamp' => (string) now()->getTimestamp(),
             'CONTENT_TYPE' => 'application/json',
         ], $raw);
 

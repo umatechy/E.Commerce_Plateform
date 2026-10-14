@@ -31,6 +31,40 @@ final class ShipmentStateMachine
     ];
 
     /**
+     * Phase B49: the shortest way from one status to another through allowed
+     * steps (breadth first), the steps after `$from`; null when there is
+     * none. A courier often reports "delivered" when the last thing we knew
+     * was "label created": the parcel went through the steps in between, and
+     * the record still only ever moves along allowed transitions.
+     *
+     * @return list<ShipmentStatus>|null
+     */
+    public function path(ShipmentStatus $from, ShipmentStatus $to): ?array
+    {
+        if ($from === $to) {
+            return [];
+        }
+        $queue = [[$from->value]];
+        $seen = [$from->value => true];
+        while ($queue !== []) {
+            $route = array_shift($queue);
+            foreach (self::TRANSITIONS[end($route)] ?? [] as $next) {
+                if (isset($seen[$next])) {
+                    continue;
+                }
+                $extended = [...$route, $next];
+                if ($next === $to->value) {
+                    return array_map(fn (string $s) => ShipmentStatus::from($s), array_slice($extended, 1));
+                }
+                $seen[$next] = true;
+                $queue[] = $extended;
+            }
+        }
+
+        return null;
+    }
+
+    /**
      * @throws InvalidShipmentStateTransitionException
      */
     public function assertCanTransition(ShipmentStatus $from, ShipmentStatus $to): void

@@ -87,9 +87,13 @@ final class CustomerOrderHistory
                 'status' => $payment->status->value,
                 'amount_minor' => $payment->amount_minor,
             ])->all(),
-            'shipments' => $order->shipments->map(fn (Shipment $shipment) => [
+            'shipments' => $order->shipments->filter(fn (Shipment $shipment) => $shipment->status->value !== 'cancelled')->map(fn (Shipment $shipment) => [
                 'id' => $shipment->public_id,
                 'carrier' => $shipment->carrier,
+                // Phase B49: the courier's name and the store's tracking link for it.
+                'carrier_label' => app(\App\Domain\Shipping\Services\ShippingLabelService::class)->carrierName($shipment),
+                'tracking_url' => \App\Domain\Shipping\Services\TrackingLink::for($shipment),
+                'direction' => $shipment->direction,
                 'status' => $shipment->status->value,
                 'tracking_number' => $shipment->tracking_number,
                 'shipped_at' => $shipment->shipped_at?->toIso8601String(),

@@ -18,7 +18,12 @@ final class CreateShipmentRequest extends FormRequest
         return [
             'order_id' => ['required', 'string'], // the Order's public_id (ULID) — never the internal integer id (this milestone's Step 19: "Do not expose internal IDs as authorization authority")
             'warehouse_id' => ['required', 'integer'],
-            'carrier' => ['required', 'in:store_pickup,local_delivery,mock_courier'],
+            // Phase B49: "another courier" (booked outside) and the connected couriers of CourierRegistry.
+            'carrier' => ['required', \Illuminate\Validation\Rule::in(['store_pickup', 'local_delivery', 'mock_courier', \App\Domain\Shipping\Couriers\CourierRegistry::MANUAL, ...array_keys(app(\App\Domain\Shipping\Couriers\CourierRegistry::class)->all())])],
+            'carrier_name' => ['required_if:carrier,manual_courier', 'nullable', 'string', 'max:64'],
+            'tracking_number' => ['nullable', 'string', 'max:64', 'regex:/^[A-Za-z0-9\-\/ ]+$/', \Illuminate\Validation\Rule::unique('shipments', 'tracking_number')->where('store_id', app(\App\Domain\Tenancy\Support\TenantContext::class)->storeId())],
+            'weight_grams' => ['nullable', 'integer', 'min:1', 'max:100000'],
+            'pieces' => ['nullable', 'integer', 'min:1', 'max:99'],
             'shipping_method_id' => ['nullable', 'integer'],
             'pickup_location_id' => ['nullable', 'integer'],
             'items' => ['required', 'array', 'min:1'],

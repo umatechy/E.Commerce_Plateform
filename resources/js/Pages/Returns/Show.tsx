@@ -1,4 +1,5 @@
 import { FormEvent, useState } from 'react';
+import ReturnParcelCard from '@/Components/Shipping/ReturnParcelCard';
 import { Link } from '@inertiajs/react';
 import AdminPage from '@/Components/AdminPage';
 import Button, { ButtonLink, FOCUS_RING } from '@/Components/ui/Button';
@@ -436,6 +437,8 @@ export default function Show({ returnId }: { returnId: string }) {
                 </p>
               )}
             </Card>
+            {/* Phase B49 (Module 13 §70): the parcel coming back. */}
+            <ReturnParcelCard returnId={record.id} status={record.status} onChanged={state.reload} />
             <Card title="Progress">
               <ol className="space-y-2 text-sm">
                 {returnSteps(record).map((step) => (

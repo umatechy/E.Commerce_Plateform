@@ -346,6 +346,96 @@ final class InventoryService
     }
 
     /**
+     * Phase B49: ship units the order holds no active reservation for (an
+     * order placed before reservations of placed orders stopped expiring,
+     * or shipped again after a cancelled shipment put its units back). Only
+     * available stock can go — reserved units are promised to other orders.
+     *
+     * @throws InsufficientStockException
+     */
+    public function shipUnreserved(Inventory $inventory, int $quantity, string $idempotencyKey, ?int $shipmentId = null): StockMovement
+    {
+        if ($existing = $this->findByIdempotencyKey($idempotencyKey)) {
+            return $existing;
+        }
+        if ($quantity <= 0) {
+            throw new \InvalidArgumentException('The shipped quantity must be positive.');
+        }
+
+        return DB::transaction(function () use ($inventory, $quantity, $idempotencyKey, $shipmentId) {
+            $previous = (int) DB::table('inventories')->where('id', $inventory->id)->lockForUpdate()->value('on_hand');
+            $affected = DB::table('inventories')->where('id', $inventory->id)
+                ->whereRaw('on_hand - reserved >= ?', [$quantity])
+                ->update(['on_hand' => DB::raw("on_hand - {$quantity}"), 'updated_at' => now()]);
+            if ($affected === 0) {
+                throw new InsufficientStockException($inventory->id, $quantity);
+            }
+
+            return $this->recordMovement(
+                $inventory, StockMovementType::SaleOut, -$quantity,
+                previousOnHand: $previous, newOnHand: $previous - $quantity,
+                reason: 'Shipment fulfillment', actorId: null, idempotencyKey: $idempotencyKey,
+                referenceType: $shipmentId !== null ? 'shipment' : null, referenceId: $shipmentId,
+            );
+        });
+    }
+
+    /**
+     * Phase B49 (Module 13 §72): a shipment cancelled before the courier took
+     * it. Its units never left: they go back on hand AND stay promised to the
+     * order (a new active reservation), so shipping the order again takes
+     * them, and cancelling the order releases them.
+     */
+    public function reinstateForOrder(Inventory $inventory, int $quantity, int $orderId, int $shipmentId, ?int $actorId, string $idempotencyKey): StockMovement
+    {
+        if ($existing = $this->findByIdempotencyKey($idempotencyKey)) {
+            return $existing;
+        }
+
+        return DB::transaction(function () use ($inventory, $quantity, $orderId, $shipmentId, $actorId, $idempotencyKey) {
+            $previous = (int) DB::table('inventories')->where('id', $inventory->id)->lockForUpdate()->value('on_hand');
+            DB::table('inventories')->where('id', $inventory->id)->update([
+                'on_hand' => DB::raw("on_hand + {$quantity}"), 'reserved' => DB::raw("reserved + {$quantity}"), 'updated_at' => now(),
+            ]);
+            StockReservation::query()->create([
+                'store_id' => $inventory->store_id, 'inventory_id' => $inventory->id, 'quantity' => $quantity,
+                'status' => ReservationStatus::Active, 'reference_type' => 'order', 'reference_id' => $orderId,
+                'idempotency_key' => "{$idempotencyKey}:reservation", 'expires_at' => now()->addMinutes(15),
+            ]);
+
+            return $this->recordMovement(
+                $inventory, StockMovementType::ReturnIn, $quantity,
+                previousOnHand: $previous, newOnHand: $previous + $quantity,
+                reason: 'Shipment cancelled before pickup: back in stock, still held for the order', actorId: $actorId,
+                idempotencyKey: $idempotencyKey, referenceType: 'shipment', referenceId: $shipmentId,
+            );
+        });
+    }
+
+    /**
+     * Phase B49 (Module 13 §68–70): a parcel the courier brought back
+     * (returned to sender). Its units are on the shelf again and sellable.
+     */
+    public function receiveShipmentBack(Inventory $inventory, int $quantity, int $shipmentId, ?int $actorId, string $idempotencyKey): StockMovement
+    {
+        if ($existing = $this->findByIdempotencyKey($idempotencyKey)) {
+            return $existing;
+        }
+
+        return DB::transaction(function () use ($inventory, $quantity, $shipmentId, $actorId, $idempotencyKey) {
+            $previous = (int) DB::table('inventories')->where('id', $inventory->id)->lockForUpdate()->value('on_hand');
+            DB::table('inventories')->where('id', $inventory->id)->update(['on_hand' => DB::raw("on_hand + {$quantity}"), 'updated_at' => now()]);
+
+            return $this->recordMovement(
+                $inventory, StockMovementType::ReturnIn, $quantity,
+                previousOnHand: $previous, newOnHand: $previous + $quantity,
+                reason: 'Parcel returned to sender: back in stock', actorId: $actorId,
+                idempotencyKey: $idempotencyKey, referenceType: 'shipment', referenceId: $shipmentId,
+            );
+        });
+    }
+
+    /**
      * Module 08 §46–47 / Module 09 §48 (Phase B33): goods of a customer
      * return, after inspection.
      *
@@ -488,6 +578,11 @@ final class InventoryService
         $stale = StockReservation::query()->withoutTenantScope()
             ->where('status', ReservationStatus::Active)
             ->where('expires_at', '<=', now())
+            // Phase B49 (Module 08 §21: "Order Confirmed → Reservation Converted"): stock held
+            // for a placed order stays held until it ships or the order is cancelled. Before
+            // this, it was released after 15 minutes and shipping later took nothing off the
+            // shelf. Unpaid online orders are cancelled by payments:reconcile (Phase B48).
+            ->where(fn ($q) => $q->whereNull('reference_type')->orWhere('reference_type', '!=', 'order'))
             ->limit($limit)
             ->get();
 

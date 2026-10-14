@@ -5,17 +5,28 @@ import { FormError, TextField } from '@/Components/ui/Form';
 import { useForm } from '@/lib/useForm';
 import { adminFetch } from '@/lib/adminApi';
 import { fromMinor, toMinor } from '@/lib/money';
-import type { ProviderInfo } from '@/lib/payments';
+import type { CredentialFieldDef } from '@/lib/payments';
+
+/** Phase B49: what the dialog needs of a payment provider or a courier. */
+export type AccountInfo = {
+  provider: string;
+  label: string;
+  credential_fields: CredentialFieldDef[];
+  live_allowed?: boolean;
+  account: { environment: 'sandbox' | 'production'; credential_hints: Record<string, string>; min_amount_minor?: number | null; max_amount_minor?: number | null } | null;
+};
 
 /**
  * Phase B48 (Module 12 §31–33; Module 30 §27): connect or change a merchant
  * account — a store's own (with its payment limits) or Umar Techy's (for
- * invoices, no limits). Secrets are write-only: an empty field keeps the
+ * invoices, no limits); Phase B49: also a store's courier account. Secrets are write-only: an empty field keeps the
  * saved value; nothing saved is ever shown in full. Sandbox and production
  * credentials are kept apart: switching environment asks for every value.
  */
-export default function AccountDialog({ info, endpoint, currency, owner, onClose, onSaved }: {
-  info: ProviderInfo;
+export default function AccountDialog({ info, endpoint, currency, owner, kind = 'payment', onClose, onSaved }: {
+  info: AccountInfo;
+  /** payment: money into the account; courier: parcels booked with it. */
+  kind?: 'payment' | 'courier';
   endpoint: string;
   /** Store accounts: the store currency, for the minimum and maximum. Null: no limits (Umar Techy's own account). */
   currency: string | null;
@@ -33,7 +44,8 @@ export default function AccountDialog({ info, endpoint, currency, owner, onClose
   const v = form.values;
   // Saved values only count in the environment they were saved for.
   const keeps = (key: string) => account !== null && account.environment === v.environment && account.credential_hints[key] !== undefined;
-  const productionBlocked = info.provider === 'simulator' || !info.live_allowed;
+  const isTest = info.provider === 'simulator' || info.provider === 'test_courier';
+  const productionBlocked = isTest || !info.live_allowed;
   const whose = owner === 'store' ? 'your' : 'Umar Techy’s';
 
   async function save(event: FormEvent) {
@@ -44,7 +56,7 @@ export default function AccountDialog({ info, endpoint, currency, owner, onClose
   }
 
   return (
-    <Dialog open title={account ? `${info.label} details` : `Connect ${info.label}`} description={`From ${whose} merchant account with ${info.label}. Saved encrypted; never shown again in full.`} onClose={onClose} busy={form.busy}>
+    <Dialog open title={account ? `${info.label} details` : `Connect ${info.label}`} description={`From ${whose} ${kind === 'courier' ? 'courier' : 'merchant'} account with ${info.label}. Saved encrypted; never shown again in full.`} onClose={onClose} busy={form.busy}>
       <form onSubmit={save} className="space-y-4" noValidate>
         <FormError message={form.formError} />
         <fieldset>
@@ -62,8 +74,8 @@ export default function AccountDialog({ info, endpoint, currency, owner, onClose
                       {env === 'sandbox'
                         ? 'Test credentials. No real money.'
                         : disabled
-                          ? (info.provider === 'simulator' ? 'The test wallet has no production.' : `Opens once ${info.label} is open for real payments (Payment providers).`)
-                          : `Real payments into ${whose} account.`}
+                          ? (isTest ? `The ${info.label.toLowerCase()} has no production.` : kind === 'courier' ? `Opens once ${info.label} has been checked in its sandbox.` : `Opens once ${info.label} is open for real payments (Payment providers).`)
+                          : kind === 'courier' ? 'Real parcels booked with your account.' : `Real payments into ${whose} account.`}
                     </span>
                   </span>
                 </label>

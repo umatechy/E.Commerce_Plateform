@@ -155,6 +155,10 @@ final class SettingRegistry
             'tax.label' => new SettingDefinition(key: 'tax.label', scope: SettingScope::Store, type: SettingType::String, default: 'Tax'),
             // Phase B48 (gap G9; Module 12 §16, §18–19, §36–37): how shoppers may pay. Changed only on the
             // Payments page (payments.provider_config). Bank transfer is offered once the account is filled in.
+            // Phase B49 (Module 13 §57, §74): couriers. Changed on the Shipping setup page only.
+            'shipping.default_weight_grams' => new SettingDefinition(key: 'shipping.default_weight_grams', scope: SettingScope::Store, type: SettingType::Integer, default: 500),
+            // A link customers follow to the courier's own tracking page, with {tracking} for the number. Empty: none.
+            'shipping.tracking_url_template' => new SettingDefinition(key: 'shipping.tracking_url_template', scope: SettingScope::Store, type: SettingType::String, default: null),
             'payments.cod.enabled' => new SettingDefinition(key: 'payments.cod.enabled', scope: SettingScope::Store, type: SettingType::Boolean, default: true),
             'payments.cod.min_order_minor' => new SettingDefinition(key: 'payments.cod.min_order_minor', scope: SettingScope::Store, type: SettingType::Integer, default: 0), // 0: no minimum
             'payments.cod.max_order_minor' => new SettingDefinition(key: 'payments.cod.max_order_minor', scope: SettingScope::Store, type: SettingType::Integer, default: 0), // 0: no maximum

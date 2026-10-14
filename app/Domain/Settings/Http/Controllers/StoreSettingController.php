@@ -36,7 +36,7 @@ final class StoreSettingController
      * tax.manage, "a rate before tax is on"); this generic endpoint neither
      * lists nor changes them, so neither check can be gone round.
      */
-    private const OWN_PAGE_PREFIXES = ['tax.', 'payments.']; // payments.: Phase B48, the Payments page (payments.provider_config)
+    private const OWN_PAGE_PREFIXES = ['tax.', 'payments.', 'shipping.']; // payments.: Phase B48; shipping.: Phase B49 (Shipping setup)
 
     private function hasOwnPage(string $key): bool
     {
@@ -45,9 +45,11 @@ final class StoreSettingController
 
     private function ownPageResponse(string $key): JsonResponse
     {
-        return str_starts_with($key, 'payments.')
-            ? response()->json(['message' => 'Payment settings are changed on the Payments settings page.', 'code' => 'managed_on_payments_page'], 403)
-            : response()->json(['message' => 'Tax settings are changed on the Tax page.', 'code' => 'managed_on_tax_page'], 403);
+        return match (true) {
+            str_starts_with($key, 'payments.') => response()->json(['message' => 'Payment settings are changed on the Payments settings page.', 'code' => 'managed_on_payments_page'], 403),
+            str_starts_with($key, 'shipping.') => response()->json(['message' => 'Shipping settings are changed on the Shipping setup page.', 'code' => 'managed_on_shipping_page'], 403),
+            default => response()->json(['message' => 'Tax settings are changed on the Tax page.', 'code' => 'managed_on_tax_page'], 403),
+        };
     }
 
     public function index(Request $request, ConfigService $config): JsonResponse

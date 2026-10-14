@@ -106,6 +106,7 @@ final class StepUpTest extends TestCase
         $this->assertSame([
             // Phase B48: where a store's money goes (merchant accounts, bank details), and Umar Techy's
             // own accounts and which providers may take real money.
+            'DELETE api/v1/courier-settings/couriers/{provider}', // Phase B49: courier accounts
             'DELETE api/v1/payment-settings/providers/{provider}',
             'DELETE api/v1/super-admin/payment-providers/{provider}/account',
             // Phase B45 follow-up: deleting a starter template saved from a store.
@@ -138,6 +139,7 @@ final class StepUpTest extends TestCase
             'POST api/v1/super-admin/stores/{store}/starter-template', // Phase B45: save a store's structure as a template
             'POST api/v1/super-admin/users/{user}/deactivate',
             'POST api/v1/super-admin/users/{user}/reactivate',
+            'PUT api/v1/courier-settings/couriers/{provider}',
             'PUT api/v1/payment-settings/bank-transfer',
             'PUT api/v1/payment-settings/providers/{provider}',
             'PUT api/v1/payment-settings/providers/{provider}/enabled',

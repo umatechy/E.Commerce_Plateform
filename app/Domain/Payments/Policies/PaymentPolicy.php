@@ -40,6 +40,12 @@ final class PaymentPolicy extends BaseTenantPolicy
         return $this->userHasPermission($user, 'payments.provider_config') || $this->isOwner($user);
     }
 
+    /** Phase B49: record cash a courier or rider paid over (cash on delivery remittance). */
+    public function recordCash(User $user): bool
+    {
+        return $this->userHasPermission($user, 'payments.manage') || $this->isOwner($user);
+    }
+
     /** Phase B48: resolve what reconciliation flagged. */
     public function reconcile(User $user): bool
     {

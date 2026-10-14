@@ -11,6 +11,7 @@ use App\Domain\Payments\Models\PaymentAttempt;
 use App\Domain\Payments\Models\PaymentProviderAccount;
 use App\Domain\Payments\Models\PlatformPaymentAccount;
 use App\Domain\Payments\Providers\CredentialField;
+use App\Domain\Payments\Providers\CredentialForm;
 use App\Domain\Payments\Providers\ProviderAdapter;
 use App\Domain\Payments\Providers\ProviderCredentials;
 use App\Domain\Payments\Providers\ProviderRegistry;
@@ -55,15 +56,14 @@ final class ProviderAccountService
         }
 
         $sameEnvironment = $account !== null && $account->environment === $environment;
-        $credentials = $this->credentials($adapter, (array) ($input['credentials'] ?? []), $sameEnvironment ? (array) $account->credentials : []);
+        $credentials = CredentialForm::values($adapter->credentialFields(), (array) ($input['credentials'] ?? []), $sameEnvironment ? (array) $account->credentials : []);
         $limits = $storeId !== null ? $this->limits($input) : [];
 
-        $old = $sameEnvironment ? (array) $account->credentials : [];
-        $changed = array_keys(array_filter($credentials, fn ($value, $key) => ($old[$key] ?? null) !== $value, ARRAY_FILTER_USE_BOTH));
+        $changed = CredentialForm::changed($credentials, $sameEnvironment ? (array) $account->credentials : []);
 
         $attributes = [
             'provider' => $provider, 'environment' => $environment, 'credentials' => $credentials,
-            'credential_hints' => $this->hints($adapter, $credentials), 'updated_by' => $actor->id, ...$limits,
+            'credential_hints' => CredentialForm::hints($adapter->credentialFields(), $credentials), 'updated_by' => $actor->id, ...$limits,
         ];
         if (! $sameEnvironment) {
             // A new environment starts unproven and off.
@@ -142,53 +142,6 @@ final class ProviderAccountService
                 'updated_at' => $account->updated_at?->toIso8601String(),
             ],
         ];
-    }
-
-    /**
-     * @param array<string, mixed> $given
-     * @param array<string, mixed> $stored
-     * @return array<string, string>
-     * @throws ValidationException
-     */
-    private function credentials(ProviderAdapter $adapter, array $given, array $stored): array
-    {
-        $values = [];
-        $errors = [];
-        foreach ($adapter->credentialFields() as $field) {
-            $value = isset($given[$field->key]) && is_string($given[$field->key]) ? trim($given[$field->key]) : '';
-            if ($value === '') {
-                $kept = (string) ($stored[$field->key] ?? '');
-                if ($kept === '') {
-                    $errors["credentials.{$field->key}"] = "{$field->label} is required.";
-                }
-                $values[$field->key] = $kept;
-
-                continue;
-            }
-            if (mb_strlen($value) > $field->maxLength) {
-                $errors["credentials.{$field->key}"] = "{$field->label} is at most {$field->maxLength} characters.";
-            } elseif ($field->pattern !== null && preg_match($field->pattern, $value) !== 1) {
-                $errors["credentials.{$field->key}"] = "{$field->label} does not look right. Copy it exactly as the provider gave it.";
-            }
-            $values[$field->key] = $value;
-        }
-        if ($errors !== []) {
-            throw ValidationException::withMessages($errors);
-        }
-
-        return $values;
-    }
-
-    /** @param array<string, string> $credentials @return array<string, string> */
-    private function hints(ProviderAdapter $adapter, array $credentials): array
-    {
-        $hints = [];
-        foreach ($adapter->credentialFields() as $field) {
-            $value = $credentials[$field->key] ?? '';
-            $hints[$field->key] = $field->secret ? 'set' : (mb_strlen($value) <= 4 ? str_repeat('•', mb_strlen($value)) : mb_substr($value, 0, 2).'••••'.mb_substr($value, -2));
-        }
-
-        return $hints;
     }
 
     /**

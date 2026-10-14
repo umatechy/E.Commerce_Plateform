@@ -61,11 +61,12 @@ export default function PaymentChoice({ options, value, onChange, payer, onPayer
         return (
           <div key={option.method} className={`rounded-sf border transition-colors ${selected ? 'border-sf-primary ring-1 ring-sf-primary' : 'border-sf-border'} ${range ? 'opacity-60' : ''}`}>
             <label htmlFor={id} className={`flex items-start gap-3 p-3 ${range ? 'cursor-not-allowed' : 'cursor-pointer'}`}>
-              <input id={id} type="radio" name="payment" className="mt-1" checked={selected} disabled={range !== null} onChange={() => onChange(option.method)} />
+              {/* Named by its title only; the explanation is its description (a short name for screen readers). */}
+              <input id={id} type="radio" name="payment" className="mt-1" checked={selected} disabled={range !== null} onChange={() => onChange(option.method)} aria-labelledby={`${id}-title`} aria-describedby={`${id}-text`} />
               <Icon className="mt-0.5 h-5 w-5 shrink-0 text-sf-muted" />
               <span className="min-w-0">
-                <span className="block font-medium">{title}</span>
-                <span className="block text-sm text-sf-muted">
+                <span id={`${id}-title`} className="block font-medium">{title}</span>
+                <span id={`${id}-text`} className="block text-sm text-sf-muted">
                   {range === 'below' && t('Available for orders from {amount}.', { amount: formatMoney(option.min_minor ?? 0, currency) })}
                   {range === 'above' && t('Available for orders up to {amount}.', { amount: formatMoney(option.max_minor ?? 0, currency) })}
                   {range === null && option.kind === 'cod' && t('Pay in cash when your order arrives.')}

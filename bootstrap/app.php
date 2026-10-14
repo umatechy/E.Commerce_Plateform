@@ -36,6 +36,7 @@ return Application::configure(basePath: dirname(__DIR__))
         app_path('Domain/Tenancy/Console'),
         app_path('Domain/StoreCredit/Console'),
         app_path('Domain/Payments/Console'), // Phase B48: payments:reconcile
+        app_path('Domain/Shipping/Console'), // Phase B49: shipping:track
     ])
     ->withRouting(
         web: __DIR__.'/../routes/web.php',

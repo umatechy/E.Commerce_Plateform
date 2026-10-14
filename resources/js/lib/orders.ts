@@ -21,10 +21,15 @@ export const SHIPMENT_STATUSES = ['draft', 'ready', 'label_created', 'pickup_req
 
 export const PAYMENT_STATUSES = ['created', 'pending', 'requires_action', 'authorized', 'paid', 'partially_paid', 'failed', 'cancelled', 'expired', 'refund_pending', 'partially_refunded', 'refunded', 'disputed', 'reversed'] as const;
 
-/** The carriers the backend has (CreateShipmentRequest). There is no real courier integration yet. */
+/**
+ * Carrier codes in words (CreateShipmentRequest). Phase B49: "another courier" is any courier booked
+ * outside the platform; the test courier moves no parcel. No real courier is connected yet.
+ */
 export const CARRIER_LABELS: Record<string, string> = {
   store_pickup: 'Store pickup',
-  local_delivery: 'Local delivery',
+  local_delivery: 'Own delivery (rider)',
+  manual_courier: 'Another courier',
+  test_courier: 'Test courier (no real parcel)',
   mock_courier: 'Test courier (no real carrier connected)',
 };
 
@@ -159,6 +164,24 @@ export type Shipment = {
   created_at: string | null;
   items?: { order_item_id: number; product_name: string; quantity: number }[];
   tracking_events?: TrackingEvent[];
+  // Phase B49: couriers, labels, cash on delivery, returns.
+  direction?: 'outbound' | 'return';
+  carrier_label?: string;
+  carrier_name?: string | null;
+  carrier_reference?: string | null;
+  tracking_url?: string | null;
+  weight_grams?: number | null;
+  pieces?: number;
+  cod_amount_minor?: number;
+  cod_status?: 'none' | 'pending' | 'to_remit' | 'remitted';
+  cod_remitted_at?: string | null;
+  cod_remittance_reference?: string | null;
+  booking_status?: 'booking' | 'requesting' | 'booked' | 'failed' | 'unknown' | null;
+  booking_error?: string | null;
+  label_source?: 'courier' | 'platform' | null;
+  last_polled_at?: string | null;
+  restocked_at?: string | null;
+  actions?: { book: boolean; cancel: boolean; refresh: boolean; restock: boolean; set_tracking: boolean };
 };
 
 /** Who placed the order, in words. */

@@ -42,6 +42,7 @@ final class SettingValidator
         'payments.webhook_tolerance_seconds' => [30, 3600],
         // Stock is held for 15 minutes (InventoryService::reserve()); a longer window would wait on stock that is gone.
         'payments.order_payment_minutes' => [5, 15],
+        'shipping.default_weight_grams' => [1, 100000], // Phase B49: up to 100 kg
     ];
 
     private function validateInteger(mixed $value, SettingDefinition $definition): int
@@ -89,9 +90,13 @@ final class SettingValidator
         }
 
         // Phase B44: business information and the trial package.
-        $max = ['payments.bank.account_title' => 120, 'payments.bank.bank_name' => 120, 'payments.bank.account_number' => 40, 'payments.bank.instructions' => 500, 'store.legal_name' => 200, 'store.contact_email' => 191, 'store.contact_phone' => 32, 'tax.label' => 40, 'billing.tax_label' => 40, 'billing.issuer_name' => 120, 'billing.issuer_details' => 500][$definition->key] ?? null; // tax.label: Phase B46
+        $max = ['shipping.tracking_url_template' => 255, 'payments.bank.account_title' => 120, 'payments.bank.bank_name' => 120, 'payments.bank.account_number' => 40, 'payments.bank.instructions' => 500, 'store.legal_name' => 200, 'store.contact_email' => 191, 'store.contact_phone' => 32, 'tax.label' => 40, 'billing.tax_label' => 40, 'billing.issuer_name' => 120, 'billing.issuer_details' => 500][$definition->key] ?? null; // tax.label: Phase B46
         if ($max !== null && mb_strlen($normalized) > $max) {
             throw new InvalidSettingValueException("At most {$max} characters.");
+        }
+        // Phase B49: a courier tracking link — HTTPS, with the place for the number.
+        if ($definition->key === 'shipping.tracking_url_template' && (! str_starts_with($normalized, 'https://') || ! str_contains($normalized, '{tracking}') || filter_var(str_replace('{tracking}', 'X', $normalized), FILTER_VALIDATE_URL) === false)) {
+            throw new InvalidSettingValueException('Enter an https:// address with {tracking} where the tracking number goes.');
         }
         if ($definition->key === 'store.contact_email' && filter_var($normalized, FILTER_VALIDATE_EMAIL) === false) {
             throw new InvalidSettingValueException('Value must be an email address.');

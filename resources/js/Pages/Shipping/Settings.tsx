@@ -13,6 +13,7 @@ import { adminFetch } from '@/lib/adminApi';
 import { fromMinor, money, toMinor } from '@/lib/money';
 import { options } from '@/lib/labels';
 import CurrencyField from '@/Components/CurrencyField';
+import CouriersCard from '@/Components/Shipping/CouriersCard';
 
 /**
  * Module 13 §5/§22 shipping configuration: zones (where you deliver),
@@ -178,6 +179,8 @@ export default function Settings() {
   return (
     <AdminPage title="Shipping setup" description="Where you deliver, how, and what it costs. Customers choose from these at checkout.">
       <div className="space-y-4">
+        {/* Phase B49: couriers, parcel weight and the customer tracking link. */}
+        <CouriersCard />
         <Card title="Zones" actions={<Button size="sm" onClick={() => setDialog('zone')}>Add zone</Button>}>
           <DataTable caption="Shipping zones" columns={zoneColumns} rows={zoneList} rowKey={(zone) => zone.id} loading={zones.loading} error={zones.error} onRetry={zones.reload} empty={<p className="text-sm text-slate-600">No zones yet.</p>} />
         </Card>

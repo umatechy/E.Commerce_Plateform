@@ -26,7 +26,7 @@ export type OrderDetail = OrderSummary & {
   items: { name: string; sku: string | null; variant: Record<string, string> | string | null; quantity: number; unit_price_minor: number; line_total_minor: number }[];
   /** Phase B48: `awaiting_payment` — an online payment not finished yet, payable from the order page. */
   payments: { id?: string; online?: boolean; awaiting_payment?: boolean; method: string; status: string; amount_minor: number }[];
-  shipments: { id: string; carrier: string | null; status: string; tracking_number: string | null; shipped_at: string | null; delivered_at: string | null; estimated_delivery_at: string | null }[];
+  shipments: { id: string; carrier: string | null; carrier_label?: string; tracking_url?: string | null; direction?: 'outbound' | 'return'; status: string; tracking_number: string | null; shipped_at: string | null; delivered_at: string | null; estimated_delivery_at: string | null }[];
 };
 
 /** Shopper-friendly wording for order status codes. */

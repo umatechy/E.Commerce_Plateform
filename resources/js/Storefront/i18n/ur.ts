@@ -549,4 +549,10 @@ export const ur: Record<string, string> = {
   'Transfer {amount} to': '{amount} اس اکاؤنٹ میں منتقل کریں',
   'Place order and pay {amount}': 'آرڈر دیں اور {amount} ادا کریں',
   'After you place the order, approve the payment on your phone.': 'آرڈر دینے کے بعد اپنے فون پر ادائیگی کی منظوری دیں۔',
+  // Phase B49: couriers and tracking.
+  'Return parcel': 'واپسی کا پارسل',
+  'Track your parcel': 'اپنا پارسل ٹریک کریں',
+  'Store delivery': 'اسٹور کی ڈیلیوری',
+  'Store pickup': 'اسٹور سے وصولی',
+  'Test courier': 'ٹیسٹ کورئیر',
 };

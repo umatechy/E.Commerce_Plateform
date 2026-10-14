@@ -277,6 +277,22 @@ Route::middleware(['auth:sanctum', 'staff.principal', 'required.mfa'])->group(fu
     Route::post('/shipments', [ShipmentController::class, 'store']);
     Route::post('/shipments/{shipment}/status', [ShipmentController::class, 'updateStatus']);
     Route::get('/shipments/{shipment}/tracking-events', [ShipmentController::class, 'trackingEvents']);
+    // Phase B49 (gap G9 shipping side; Module 13 §42–56, §70–72): couriers, labels, cash on delivery, returns.
+    Route::post('/shipments/cod-remittance', [ShipmentController::class, 'codRemittance'])->middleware('throttle:30,1,cod-remittance');
+    Route::post('/shipments/{shipment}/book', [ShipmentController::class, 'book'])->middleware('throttle:20,1,shipment-book');
+    Route::post('/shipments/{shipment}/cancel', [ShipmentController::class, 'cancel']);
+    Route::post('/shipments/{shipment}/refresh', [ShipmentController::class, 'refresh'])->middleware('throttle:30,1,shipment-refresh');
+    Route::post('/shipments/{shipment}/restock', [ShipmentController::class, 'restock']);
+    Route::put('/shipments/{shipment}/tracking', [ShipmentController::class, 'setTracking']);
+    Route::get('/shipments/{shipment}/label', [ShipmentController::class, 'label'])->middleware('throttle:60,1,shipment-label');
+    $couriers = \App\Domain\Shipping\Http\Controllers\CourierSettingsController::class;
+    Route::get('/courier-settings', [$couriers, 'show']);
+    Route::put('/courier-settings', [$couriers, 'update']);
+    Route::put('/courier-settings/couriers/{provider}', [$couriers, 'saveCourier'])->where('provider', '[a-z_]{3,32}')->middleware(['step_up', 'throttle:20,10,courier-save']);
+    Route::put('/courier-settings/couriers/{provider}/enabled', [$couriers, 'setEnabled'])->where('provider', '[a-z_]{3,32}');
+    Route::delete('/courier-settings/couriers/{provider}', [$couriers, 'disconnect'])->where('provider', '[a-z_]{3,32}')->middleware('step_up');
+    Route::get('/returns/{return}/shipments', [\App\Domain\Shipping\Http\Controllers\ReturnShipmentController::class, 'index']);
+    Route::post('/returns/{return}/shipments', [\App\Domain\Shipping\Http\Controllers\ReturnShipmentController::class, 'store'])->middleware('throttle:20,1,return-shipment');
 
     // --- Shipping configuration (Module 13 §5/§22, Phase B8) ---
     Route::get('/shipping/zones', [ShippingConfigController::class, 'zones']);

@@ -29,8 +29,9 @@ final class CustomerShipmentController
 
         $order = Order::query()->where('public_id', $orderPublicId)->where('customer_id', $customer->id)->firstOrFail();
 
-        return ShipmentResource::collection(
-            $order->shipments()->with(['items', 'trackingEvents'])->get()
+        // Phase B49: the customer's view only (CustomerShipmentResource), not the staff resource.
+        return \App\Domain\Shipping\Http\Resources\CustomerShipmentResource::collection(
+            $order->shipments()->with(['trackingEvents'])->where('status', '!=', 'cancelled')->get()
         );
     }
 }

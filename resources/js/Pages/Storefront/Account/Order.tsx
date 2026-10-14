@@ -120,8 +120,13 @@ export default function Order({ storefront, seo, order_id }: StorefrontPageProps
               <ul className="space-y-2 text-sm">
                 {order.shipments.map((shipment) => (
                   <li key={shipment.id} className="rounded-sf border border-sf-border p-3">
-                    <span className="font-medium">{shipment.carrier ?? t('Shipment')}</span> · {t(shipment.status.replace(/_/g, ' '))}
-                    {shipment.tracking_number && <span className="block text-sf-muted">{t('Tracking number:')} {shipment.tracking_number}</span>}
+                    {/* Phase B49: the courier's name, and the store's link to the courier's own tracking page. */}
+                    {shipment.direction === 'return' && <span className="me-1 rounded-sf bg-black/5 px-1.5 py-0.5 text-xs">{t('Return parcel')}</span>}
+                    <span className="font-medium">{shipment.carrier_label ? t(shipment.carrier_label) : t('Shipment')}</span> · {t(shipment.status.replace(/_/g, ' '))}
+                    {shipment.tracking_number && <span className="block text-sf-muted" dir="ltr">{t('Tracking number:')} {shipment.tracking_number}</span>}
+                    {shipment.tracking_url && (
+                      <a href={shipment.tracking_url} target="_blank" rel="noreferrer noopener" className="mt-1 inline-block text-sf-accent underline">{t('Track your parcel')}</a>
+                    )}
                     {shipment.estimated_delivery_at && !shipment.delivered_at && (
                       <span className="block text-sf-muted">{t('Expected by {date}', { date: formatDate(shipment.estimated_delivery_at) })}</span>
                     )}
