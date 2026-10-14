@@ -30,12 +30,19 @@ final class SuperAdminSettingController
      * providers page only — closing one there also switches every store's
      * live account off, which a plain setting change would skip.
      */
-    private const OWN_PAGE = ['payments.live_providers', 'messaging.live_providers']; // messaging: Phase B50
+    /** Settings with a page of their own: key => [where, code]. Phase B50: messaging; Phase B52: the emergency controls. */
+    private const OWN_PAGE = [
+        'payments.live_providers' => ['Change this on the Payment providers page.', 'managed_on_payment_providers_page'],
+        'messaging.live_providers' => ['Change this on the WhatsApp & SMS page.', 'managed_on_messaging_page'],
+        'platform.maintenance_mode' => ['Change this under Security → Emergency controls.', 'managed_on_security_page'],
+        'platform.self_signup_enabled' => ['Change this under Security → Emergency controls.', 'managed_on_security_page'],
+        'platform.developer_api_enabled' => ['Change this under Security → Emergency controls.', 'managed_on_security_page'],
+    ];
 
     public function index(ConfigService $config): JsonResponse
     {
         $resources = collect(SettingRegistry::all())
-            ->filter(fn ($definition) => $definition->scope === SettingScope::Platform && ! in_array($definition->key, self::OWN_PAGE, true))
+            ->filter(fn ($definition) => $definition->scope === SettingScope::Platform && ! isset(self::OWN_PAGE[$definition->key]))
             ->map(fn ($definition) => new SettingResource($definition, $config->get($definition->key)))
             ->values();
 
@@ -56,8 +63,10 @@ final class SuperAdminSettingController
     /** Phase B32: puts an earlier value of a PLATFORM setting back, through the validated write path; audited. */
     public function rollback(Request $request, int $revisionId, ConfigService $config): JsonResponse
     {
-        if (in_array(\App\Domain\Settings\Models\SettingRevision::query()->whereKey($revisionId)->value('key'), self::OWN_PAGE, true)) {
-            return response()->json(['message' => 'Change this on the Payment providers page.', 'code' => 'managed_on_payment_providers_page'], 403);
+        if (isset(self::OWN_PAGE[(string) \App\Domain\Settings\Models\SettingRevision::query()->whereKey($revisionId)->value('key')])) {
+            [$message, $code] = self::OWN_PAGE[(string) \App\Domain\Settings\Models\SettingRevision::query()->whereKey($revisionId)->value('key')];
+
+            return response()->json(['message' => $message, 'code' => $code], 403);
         }
 
         try {
@@ -76,8 +85,8 @@ final class SuperAdminSettingController
     public function update(Request $request, string $key, ConfigService $config): JsonResponse
     {
         $request->validate(['value' => ['required'], 'reason' => ['sometimes', 'nullable', 'string', 'max:500']]);
-        if (in_array($key, self::OWN_PAGE, true)) {
-            return response()->json(['message' => 'Change this on the Payment providers page.', 'code' => 'managed_on_payment_providers_page'], 403);
+        if (isset(self::OWN_PAGE[$key])) {
+            return response()->json(['message' => self::OWN_PAGE[$key][0], 'code' => self::OWN_PAGE[$key][1]], 403);
         }
 
         try {

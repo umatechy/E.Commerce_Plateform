@@ -57,6 +57,8 @@ Schedule::command('payments:reconcile')->everyMinute()->withoutOverlapping();
 Schedule::command('shipping:track')->everyFiveMinutes()->withoutOverlapping();
 // Phase B51: reminders before archiving, archiving after the retention period, approved store deletions.
 Schedule::command('stores:lifecycle')->hourly()->withoutOverlapping();
+// Phase B52: old security events, ended sessions and spent reset links.
+Schedule::command('security:prune')->dailyAt('02:15')->timezone('UTC')->withoutOverlapping();
 Schedule::command('payments:reconcile --deep')->cron('15 */6 * * *')->withoutOverlapping();
 
 // Module 09 §52 (Phase B35): store credit that reached its expiry date

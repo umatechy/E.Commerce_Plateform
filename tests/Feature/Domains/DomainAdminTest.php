@@ -98,7 +98,7 @@ final class DomainAdminTest extends TestCase
     {
         $store = Store::factory()->create();
         $domain = Domain::factory()->for($store)->create(['status' => DomainStatus::Active]);
-        $superAdmin = User::factory()->create(['platform_role' => 'support_agent']);
+        $superAdmin = User::factory()->create(['platform_role' => 'super_admin']);
 
         $response = $this->actingAs($superAdmin)->postJson("/api/v1/super-admin/stores/{$store->id}/domains/{$domain->id}/suspend");
 

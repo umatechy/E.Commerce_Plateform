@@ -44,6 +44,7 @@ final class ProductExport
         $paths = $this->categoryPaths();
 
         $this->audit->record('products.exported', ['rows' => $count, 'filters' => array_filter($filters), 'cost_prices' => $withCost], actor: $actor);
+        app(\App\Domain\Security\Services\SecurityMonitor::class)->export($actor, app(\App\Domain\Tenancy\Support\TenantContext::class)->hasStore() ? app(\App\Domain\Tenancy\Support\TenantContext::class)->storeId() : null, 'products', $count); // Phase B52
 
         return new StreamedResponse(function () use ($query, $header, $paths) {
             $out = fopen('php://output', 'wb');

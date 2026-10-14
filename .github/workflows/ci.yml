@@ -88,11 +88,14 @@ jobs:
       - name: JavaScript dependencies that ship (npm audit)
         run: npm audit --omit=dev --audit-level=high
 
-      # Build and test tooling (Vite, Vitest, esbuild) never ships. Its
-      # advisories are listed on every run but do not fail the build until
-      # the toolchain upgrade recorded in
-      # docs/security/b29-security-baseline.md is done.
-      - name: JavaScript build tooling (report only)
+      # Build and test tooling never ships. Phase B52 upgraded it (Vite 8,
+      # Vitest 5): a critical advisory now fails the build. The remaining
+      # high ones are in Tailwind CSS 3's file watching (braces, micromatch),
+      # fixed only by Tailwind 4 — listed here until that migration
+      # (docs/security/b52-security-review.md).
+      - name: JavaScript build tooling (critical fails)
+        run: npm audit --audit-level=critical
+      - name: JavaScript build tooling (all, report only)
         run: npm audit --audit-level=high
         continue-on-error: true
 

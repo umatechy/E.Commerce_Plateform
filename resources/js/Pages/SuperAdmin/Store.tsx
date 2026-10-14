@@ -13,6 +13,7 @@ import { adminFetch } from '@/lib/adminApi';
 import { formatDate } from '@/lib/datetime';
 import { STAGE_LABEL, STAGE_TONE } from '@/lib/stores';
 import StoreLifecycleCard from '@/Components/SuperAdmin/StoreLifecycleCard';
+import { useAccess } from '@/lib/access';
 
 /** Phase B44: a new owner invitation (the old link stops working). */
 function OwnerInvitationDialog({ storeId, current, onClose, onDone }: { storeId: string; current: string; onClose: () => void; onDone: () => void }) {
@@ -154,6 +155,7 @@ function SubscriptionDialog({ storeId, action, packages, current, onClose, onDon
 }
 
 export default function Store({ storeId }: { storeId: string }) {
+  const access = useAccess(); // Phase B52: buttons follow the platform role
   const base = `/super-admin/stores/${storeId}`;
   const detail = useApi<{ data: StoreDetail }>(base);
   // Phase B51: a deleted store has no health or domains left; its record and history stay.
@@ -201,10 +203,12 @@ export default function Store({ storeId }: { storeId: string }) {
             <Card
               title="Store and subscription"
               actions={
+                access.platformCan('billing') && (
                 <>
                   <Button size="sm" onClick={() => setDialog('change-package')}>Change package</Button>
                   {data.subscription_status === 'suspended' ? <Button size="sm" variant="primary" onClick={() => setDialog('reactivate')}>Reactivate subscription</Button> : <Button size="sm" onClick={() => setDialog('suspend')}>Suspend subscription</Button>}
                 </>
+                )
               }
             >
               <Details

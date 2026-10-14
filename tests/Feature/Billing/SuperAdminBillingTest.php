@@ -30,7 +30,7 @@ final class SuperAdminBillingTest extends TestCase
     {
         parent::setUp();
         $this->travelTo(CarbonImmutable::parse('2026-03-01 09:00:00'));
-        $this->superAdmin = User::factory()->create(['platform_role' => 'support_agent']);
+        $this->superAdmin = User::factory()->create(['platform_role' => 'super_admin']);
     }
 
     /** @return array{0: \App\Domain\Packages\Models\Subscription, 1: \App\Domain\Billing\Models\Invoice} an overdue store and its invoice */

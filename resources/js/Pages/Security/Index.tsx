@@ -7,12 +7,15 @@ import ErrorState from '@/Components/ErrorState';
 import LoadingState from '@/Components/LoadingState';
 import { AdminApiError, adminErrorMessage, adminFetch } from '@/lib/adminApi';
 import { formatDate } from '@/lib/datetime';
+import { PasswordCard, SessionsCard } from '@/Components/Security/AccountSecurity';
 
 /**
  * The signed-in user's own two-step sign-in (Module 32 §8; SRS AUTH-006,
  * AUTH-007). The server holds every rule: this page shows its answers
  * and never keeps the secret or the recovery codes beyond the screen
  * that displays them.
+ *
+ * Phase B52: the password and the places the account is signed in, below.
  */
 type Status = { enabled: boolean; confirmed_at: string | null; recovery_codes_remaining: number; required: boolean };
 type Setup = { secret: string; otpauth_uri: string };
@@ -210,6 +213,12 @@ export default function Index() {
           </div>
         </section>
       )}
+
+      {/* Phase B52 (SRS AUTH-005; Module 32 §7, §9). */}
+      <div className="mt-6 max-w-2xl space-y-6">
+        <SessionsCard />
+        <PasswordCard />
+      </div>
     </AuthenticatedLayout>
   );
 }

@@ -37,6 +37,8 @@ return Application::configure(basePath: dirname(__DIR__))
         app_path('Domain/StoreCredit/Console'),
         app_path('Domain/Payments/Console'), // Phase B48: payments:reconcile
         app_path('Domain/Shipping/Console'), // Phase B49: shipping:track
+        app_path('Domain/SuperAdmin/Console'), // Phase B52: platform:staff
+        app_path('Domain/Security/Console'), // Phase B52: security:prune
     ])
     ->withRouting(
         web: __DIR__.'/../routes/web.php',
@@ -92,6 +94,7 @@ return Application::configure(basePath: dirname(__DIR__))
         // AFTER auth (so it can read the authenticated user's store
         // membership) and BEFORE any controller/policy/model code runs.
         $middleware->appendToGroup('web', ResolveTenantContext::class);
+        $middleware->appendToGroup('web', \App\Http\Middleware\TrackUserSession::class); // Phase B52: ended sessions sign out
         $middleware->appendToGroup('web', HandleInertiaRequests::class);
         $middleware->appendToGroup('api', ResolveTenantContext::class);
         // Phase B38: the storefront's language for cart, checkout and account calls.
@@ -148,6 +151,8 @@ return Application::configure(basePath: dirname(__DIR__))
             'required.mfa' => \App\Http\Middleware\EnsureRequiredMfa::class,
             'step_up' => \App\Http\Middleware\RequireStepUp::class,
             'store.operational' => \App\Http\Middleware\EnsureStoreOperational::class, // Phase B51
+            'platform.capability' => \App\Http\Middleware\EnsurePlatformCapability::class, // Phase B52
+            'session.track' => \App\Http\Middleware\TrackUserSession::class, // Phase B52
             'customer.principal' => EnsureCustomerPrincipal::class,
             'customer.optional' => AttemptCustomerAuthentication::class,
             'storefront.store' => \App\Domain\Storefront\Http\Middleware\ResolveStorefrontStore::class,

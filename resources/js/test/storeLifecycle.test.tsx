@@ -102,7 +102,7 @@ const lifecycle = (extra: Partial<Lifecycle> = {}): Lifecycle => ({
 });
 
 describe('Super Admin → store life', () => {
-  beforeEach(() => setPage({ ...owner, user: { ...owner.user!, is_platform_staff: true } }, '/super-admin/stores/5'));
+  beforeEach(() => setPage({ ...owner, user: { ...owner.user!, is_platform_staff: true }, platform_capabilities: ['view', 'stores', 'store_deletion'] }, '/super-admin/stores/5'));
 
   it('suspends only with a reason and a note', async () => {
     let sent: unknown = null;

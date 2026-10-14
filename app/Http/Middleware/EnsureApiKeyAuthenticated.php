@@ -47,6 +47,11 @@ final class EnsureApiKeyAuthenticated
             return response()->json(['message' => 'Invalid or inactive API credentials.', 'code' => 'unauthenticated'], 401);
         }
 
+        // Phase B52 (Module 30 §61): the platform-wide kill switch for the developer API.
+        if (app(\App\Domain\Settings\Services\ConfigService::class)->get('platform.developer_api_enabled') === false) {
+            return response()->json(['message' => 'The developer API is switched off for now. Try again later.', 'code' => 'developer_api_disabled'], 503)->withHeaders(['Retry-After' => '600']);
+        }
+
         // Phase B51 (Module 31 §2.27): a suspended, closed or archived store's API keys stop working with it.
         $store = \App\Domain\Tenancy\Models\Store::query()->withTrashed()->find($key->store_id);
         if ($store === null || ! $store->isOperational()) {

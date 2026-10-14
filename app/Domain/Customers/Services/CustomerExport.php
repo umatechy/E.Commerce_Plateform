@@ -39,6 +39,7 @@ final class CustomerExport
         $currency = (string) $this->config->get('store.default_currency');
 
         $this->audit->record('customers.exported', ['rows' => $count, 'filters' => array_filter($filters, fn ($v) => $v !== null && $v !== '')], actor: $actor);
+        app(\App\Domain\Security\Services\SecurityMonitor::class)->export($actor, app(\App\Domain\Tenancy\Support\TenantContext::class)->hasStore() ? app(\App\Domain\Tenancy\Support\TenantContext::class)->storeId() : null, 'customers', $count); // Phase B52
 
         return new StreamedResponse(function () use ($query, $currency) {
             $out = fopen('php://output', 'wb');

@@ -128,6 +128,7 @@ Route::middleware(['auth', 'required.mfa'])->group(function () {
             '/monitoring' => 'SuperAdmin/Monitoring', '/audit-log' => 'SuperAdmin/AuditLog', '/catalog' => 'SuperAdmin/Platform',
             '/starter-templates' => 'SuperAdmin/StarterTemplates', // Phase B45 follow-up
             '/messaging' => 'SuperAdmin/Messaging', // Phase B50
+            '/security' => 'SuperAdmin/Security', // Phase B52
         ] as $uri => $page) {
             Route::get($uri, fn () => Inertia::render($page));
         }
@@ -158,6 +159,9 @@ Route::middleware('guest')->group(function () use ($intendedPath) {
     // Named: the auth middleware sends signed-out visitors of admin pages
     // here (without the name they got a 500, "Route [login] not defined").
     Route::get('/login', fn (Request $request) => Inertia::render('Auth/Login', ['intended' => $intendedPath($request)]))->name('login');
+    // Phase B52 (Module 32 §7.5): staff "forgot password"; the reset link carries the token in its #fragment.
+    Route::get('/forgot-password', fn () => Inertia::render('Auth/ForgotPassword'));
+    Route::get('/reset-password', fn () => Inertia::render('Auth/ResetPassword'));
     // Phase B44 (owner decision 13): sign-up may be closed; the page then says whom to contact.
     Route::get('/register', fn () => Inertia::render('Auth/Register', [
         'signupOpen' => app(\App\Domain\Settings\Services\ConfigService::class)->get('platform.self_signup_enabled') !== false,

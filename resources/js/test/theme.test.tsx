@@ -243,7 +243,8 @@ describe('storefront theme rendering', () => {
 
   it('reveals on scroll only when enabled, and never hides anything for reduced motion', () => {
     const observe = vi.fn();
-    vi.stubGlobal('IntersectionObserver', vi.fn(() => ({ observe, unobserve: vi.fn(), disconnect: vi.fn() })));
+    // A constructor (`new IntersectionObserver`): Vitest 4+ mocks keep arrow functions non-constructible.
+    vi.stubGlobal('IntersectionObserver', vi.fn(function () { return { observe, unobserve: vi.fn(), disconnect: vi.fn() }; }));
     const shell = shellWith({}, { profile: 'standard', reveal_on_scroll: true });
     const context = (reveal: boolean) => ({ shell, layout: { header_style: 'classic', container: 'standard', product_card: 'standard', grid_columns: 4, hero_style: 'simple', sticky_header: false, footer_style: 'simple' } as const, motion: { profile: 'standard', intensity: 'medium', reveal_on_scroll: reveal, hover_effects: true } as const, reveal });
 

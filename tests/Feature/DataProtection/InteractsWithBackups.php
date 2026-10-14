@@ -28,7 +28,7 @@ trait InteractsWithBackups
 
     protected function platformStaff(array $attributes = []): User
     {
-        return User::factory()->create(['platform_role' => 'support_agent', ...$attributes]);
+        return User::factory()->create(['platform_role' => 'operations_admin', ...$attributes]); // Phase B52: the role that runs backups
     }
 
     protected function ownerOf(Store $store): User

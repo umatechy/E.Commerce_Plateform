@@ -21,7 +21,7 @@ export default defineConfig({
     react(),
   ],
   resolve: {
-    alias: { '@': path.resolve(__dirname, 'resources/js') },
+    alias: { '@': path.resolve(import.meta.dirname, 'resources/js') },
   },
   test: {
     environment: 'jsdom',

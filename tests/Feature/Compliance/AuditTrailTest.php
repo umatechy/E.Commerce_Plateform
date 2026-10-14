@@ -166,7 +166,7 @@ final class AuditTrailTest extends TestCase
     {
         $store = Store::factory()->create();
         Subscription::factory()->for($store)->for(Package::factory())->create();
-        $superAdmin = User::factory()->create(['platform_role' => 'support_agent']);
+        $superAdmin = User::factory()->create(['platform_role' => 'super_admin']);
 
         $this->actingAs($superAdmin)
             ->postJson("/api/v1/super-admin/stores/{$store->id}/subscription/suspend", ['reason' => 'fraud_review'])

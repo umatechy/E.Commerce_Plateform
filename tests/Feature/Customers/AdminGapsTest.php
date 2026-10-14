@@ -101,7 +101,7 @@ final class AdminGapsTest extends TestCase
     {
         $store = Store::factory()->create();
         $owner = $this->owner($store);
-        $platform = User::factory()->create(['platform_role' => 'support_agent']);
+        $platform = User::factory()->create(['platform_role' => 'super_admin']);
 
         $this->actingAs($platform)->putJson('/api/v1/super-admin/settings/alerts.critical_email_recipients', ['value' => ['ops@example.com']])->assertOk();
         $revision = SettingRevision::query()->where('key', 'alerts.critical_email_recipients')->latest('id')->firstOrFail();
@@ -113,7 +113,7 @@ final class AdminGapsTest extends TestCase
 
     public function test_platform_settings_have_a_history_that_can_be_rolled_back(): void
     {
-        $platform = User::factory()->create(['platform_role' => 'support_agent']);
+        $platform = User::factory()->create(['platform_role' => 'super_admin']);
         $this->actingAs($platform)->putJson('/api/v1/super-admin/settings/backup.retention_days', ['value' => 30])->assertOk();
         $first = SettingRevision::query()->where('key', 'backup.retention_days')->latest('id')->firstOrFail();
         $this->actingAs($platform)->putJson('/api/v1/super-admin/settings/backup.retention_days', ['value' => 45])->assertOk();
@@ -138,7 +138,7 @@ final class AdminGapsTest extends TestCase
 
     public function test_platform_staff_change_what_a_package_includes_with_a_reason_and_history(): void
     {
-        $platform = User::factory()->create(['platform_role' => 'support_agent']);
+        $platform = User::factory()->create(['platform_role' => 'super_admin']);
         $basic = Package::factory()->create(['code' => 'basic-x']);
         $basic->entitlements()->create(['key' => 'payment.cod', 'type' => EntitlementType::Feature, 'boolean_value' => false]);
         $basic->entitlements()->create(['key' => 'max_products', 'type' => EntitlementType::UsageLimit, 'limit_value' => 50]);

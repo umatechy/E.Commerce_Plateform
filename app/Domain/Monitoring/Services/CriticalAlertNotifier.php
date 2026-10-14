@@ -51,6 +51,7 @@ final class CriticalAlertNotifier
         'backup.retention_cleanup_failed',
         'restore.failed',
         'restore.rehearsal_failed',
+        'security.alert', // Phase B52: security monitoring (SecurityMonitor)
     ];
 
     private const BODY = "{{alert.summary}}\n\n"
@@ -185,6 +186,9 @@ final class CriticalAlertNotifier
                 'Check backup storage permissions. The next cleanup run tries again.', 'Backup failure'),
             'restore.failed' => $this->alert('PRODUCTION RESTORE FAILED', 'A production restore did not complete. The live database may be partly restored.', "Restore job {$payload['restore_job_id']} from backup {$backup}; safety backup ".($payload['pre_restore_backup_public_id'] ?? 'unknown'), "restore:{$payload['restore_job_id']}",
                 'Do not retry blindly. Keep the platform in maintenance and follow the runbook. There is no automatic rollback.', 'Production restore'),
+            // Phase B52 (Module 32 §59): already described by SecurityMonitor.
+            'security.alert' => $this->alert('Security: '.(string) ($payload['summary'] ?? 'alert'), strtoupper((string) ($payload['severity'] ?? 'high')).' — '.(string) ($payload['summary'] ?? ''),
+                (string) ($payload['what'] ?? ''), (string) ($payload['reference'] ?? 'security'), (string) ($payload['action'] ?? 'Open Super Admin → Security.'), 'Security alert'),
             'restore.rehearsal_failed' => $this->alert('Restore rehearsal failed', 'A backup could not be restored in the rehearsal. Live data was not touched.', "Rehearsal {$payload['restore_job_id']} of backup {$backup}", "rehearsal:{$payload['restore_job_id']}",
                 'The backup may not be restorable. Take a new backup and rehearse it.', 'Restore rehearsal failure'),
             default => null,

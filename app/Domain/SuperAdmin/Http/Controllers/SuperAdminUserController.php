@@ -38,7 +38,12 @@ final class SuperAdminUserController
 
     public function deactivate(Request $request, User $user): JsonResponse
     {
+        abort_if($user->id === $request->user()->id, 422, 'You cannot deactivate your own account.');
+        abort_if(\App\Domain\SuperAdmin\Support\PlatformRoles::normalize($user->platform_role) === 'super_admin' && \App\Domain\SuperAdmin\Services\PlatformStaff::activeSuperAdmins() <= 1, 422, 'This is the last active super admin.');
         $user->update(['is_active' => false]);
+        // Phase B52 (b29 finding 10): a deactivated account is signed out everywhere at once.
+        app(\App\Domain\Identity\Services\UserSessions::class)->revokeAll($user, 'account_deactivated', $request->user());
+        app(\App\Domain\Security\Services\SecurityMonitor::class)->record('user_deactivated', $user, context: ['by' => $request->user()->email, 'reason' => $request->input('reason')]);
 
         app(\App\Domain\Compliance\Services\AuditLogger::class)->record('super_admin.user.deactivated', [
             'acting_super_admin_id' => $request->user()->id, 'target_user_id' => $user->id, 'reason' => $request->input('reason'),

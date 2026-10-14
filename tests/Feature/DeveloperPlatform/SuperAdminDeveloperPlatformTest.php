@@ -25,7 +25,7 @@ final class SuperAdminDeveloperPlatformTest extends TestCase
         $storeB = Store::factory()->create();
         DeveloperApplication::factory()->for($storeA)->create();
         DeveloperApplication::factory()->for($storeB)->create();
-        $superAdmin = User::factory()->create(['platform_role' => 'support_agent']);
+        $superAdmin = User::factory()->create(['platform_role' => 'super_admin']);
 
         $response = $this->actingAs($superAdmin)->getJson('/api/v1/super-admin/developer/applications');
 
@@ -37,7 +37,7 @@ final class SuperAdminDeveloperPlatformTest extends TestCase
     {
         $store = Store::factory()->create();
         $application = DeveloperApplication::factory()->for($store)->create();
-        $superAdmin = User::factory()->create(['platform_role' => 'support_agent']);
+        $superAdmin = User::factory()->create(['platform_role' => 'super_admin']);
 
         $response = $this->actingAs($superAdmin)->postJson("/api/v1/super-admin/developer/applications/{$application->id}/suspend");
 

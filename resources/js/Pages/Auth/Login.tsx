@@ -15,7 +15,17 @@ import { AdminApiError, adminErrorMessage, adminFetch } from '@/lib/adminApi';
  */
 type Errors = Partial<Record<'email' | 'password' | 'code' | 'form', string>>;
 
+/** Phase B52: why a session ended, when the server signed it out (TrackUserSession). */
+const ENDED: Record<string, string> = {
+  idle_timeout: 'You were signed out after a period without activity.',
+  expired: 'Your sign-in reached its time limit.',
+  password_changed: 'Your password was changed. Sign in with the new one.',
+  reset: 'Your password was reset. Sign in with the new one.',
+  revoked: 'This sign-in was ended.',
+};
+
 export default function Login({ intended }: { intended?: string | null }) {
+  const ended = typeof window === 'undefined' ? null : new URLSearchParams(window.location.search).get('ended');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [code, setCode] = useState('');
@@ -109,6 +119,9 @@ export default function Login({ intended }: { intended?: string | null }) {
   return (
     <div className="mx-auto mt-24 max-w-sm">
       <h1 className="text-xl font-semibold">Sign in</h1>
+      {ended && (
+        <p role="status" className="mt-3 rounded border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">{ENDED[ended] ?? ENDED.revoked}</p>
+      )}
 
       <form onSubmit={submitPassword} className="mt-6 space-y-4">
         <div>
@@ -146,6 +159,9 @@ export default function Login({ intended }: { intended?: string | null }) {
         <button type="submit" disabled={processing} className="w-full rounded bg-gray-900 py-2 text-white disabled:opacity-50">
           {processing ? 'Signing in…' : 'Sign in'}
         </button>
+        <p className="text-center text-sm">
+          <a href="/forgot-password" className="text-indigo-700 underline">Forgot your password?</a>
+        </p>
       </form>
     </div>
   );

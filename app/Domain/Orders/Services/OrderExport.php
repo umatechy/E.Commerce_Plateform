@@ -33,7 +33,9 @@ final class OrderExport
 
     public function orders(int $storeId, User $actor): StreamedResponse
     {
-        $this->audit->record('orders.exported', ['rows' => DB::table('orders')->where('store_id', $storeId)->count(), 'what' => 'orders'], storeId: $storeId, actor: $actor);
+        $rows = DB::table('orders')->where('store_id', $storeId)->count();
+        $this->audit->record('orders.exported', ['rows' => $rows, 'what' => 'orders'], storeId: $storeId, actor: $actor);
+        app(\App\Domain\Security\Services\SecurityMonitor::class)->export($actor, $storeId, 'orders', $rows); // Phase B52
 
         return $this->stream('orders', self::ORDERS, function ($out) use ($storeId) {
             DB::table('orders')->leftJoin('customers', 'customers.id', '=', 'orders.customer_id')->where('orders.store_id', $storeId)
@@ -56,7 +58,9 @@ final class OrderExport
 
     public function lines(int $storeId, User $actor): StreamedResponse
     {
-        $this->audit->record('orders.exported', ['rows' => DB::table('order_items')->where('store_id', $storeId)->count(), 'what' => 'order_lines'], storeId: $storeId, actor: $actor);
+        $rows = DB::table('order_items')->where('store_id', $storeId)->count();
+        $this->audit->record('orders.exported', ['rows' => $rows, 'what' => 'order_lines'], storeId: $storeId, actor: $actor);
+        app(\App\Domain\Security\Services\SecurityMonitor::class)->export($actor, $storeId, 'order lines', $rows); // Phase B52
 
         return $this->stream('order-lines', self::LINES, function ($out) use ($storeId) {
             DB::table('order_items')->join('orders', 'orders.id', '=', 'order_items.order_id')->where('order_items.store_id', $storeId)

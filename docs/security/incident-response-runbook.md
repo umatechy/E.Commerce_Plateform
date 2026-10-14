@@ -385,12 +385,36 @@ the application. If no platform staff member can sign in at all, this
 procedure, run from the server for one named account, is the break-glass
 path. It must not become routine: every use is an incident with a record.
 
+## Security alert
+
+Phase B52. Emails titled "[CRITICAL] Security: …" come from security
+monitoring (Super Admin → Security; docs/architecture/b52-security-operations.md §4).
+Each says what happened, the account or address, and what to do.
+
+1. Open Super Admin → Security → Security events. Filter by the account or
+   the address in the alert.
+2. Decide whether it was expected (a staff member who forgot a password, a
+   planned role change, an agreed export). If yes, nothing more to do.
+3. If not, open an incident (Security → Incidents) with a severity, and
+   contain it:
+   - repeated failed sign-ins on a staff account: sign the person out
+     everywhere (Security → Platform staff), deactivate the account if it
+     may be compromised, block the address at the firewall;
+   - two-step sign-in turned off, or an unexpected role change: deactivate
+     the account, put the role back with `php artisan platform:staff`, reset
+     the password;
+   - a large export: ask the store; suspend the store's staff member or the
+     store (Store life) if the export was not theirs;
+   - an unexpected store deletion request: cancel it on the store page during
+     the cooling period;
+   - an emergency control changed without reason: put it back under
+     Security → Emergency controls and find who changed it (audit log).
+4. Record every step in the incident's timeline, and close it with its
+   resolution and the post-incident review.
+
 ## What this runbook does not yet cover
 
-- Alerts on security events (many failed sign-ins, MFA disabled or reset on a
-  privileged account). Backup and restore alerts exist since Phase B30.
-- Monitoring for unusual patterns (many failed logins from one address,
-  unusual impersonation volume): Module 32 §58–59, not built.
+- Unusual impersonation volume (Module 32 §58): not watched yet.
 - A production restore that has actually been run. The rehearsal runs weekly;
   the destructive restore itself has not been executed.
 - Media/object backups, off-site copies and immutable backups.

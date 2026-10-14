@@ -74,6 +74,9 @@ final class SuperAdminBackupController
             return response()->json(['message' => 'The restore was not started: '.$e->getMessage().'.', 'code' => 'restore_refused'], 422);
         }
 
+        // Phase B52 (Module 32 §59 "restore operation"): every authorised production restore raises an alert.
+        app(\App\Domain\Security\Services\SecurityMonitor::class)->record('restore_authorized', $request->user(), "restore job {$backupRestoreJob->id}, reference {$input['reference']}");
+
         return response()->json(['data' => new BackupRestoreJobResource($backupRestoreJob->fresh())]);
     }
 

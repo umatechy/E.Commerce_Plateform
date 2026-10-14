@@ -221,6 +221,7 @@ final class StoreLifecycleService
             ]);
             $this->event($locked, 'deletion_requested', $locked->status, $locked->status, 'platform', $actor, null, $reason);
             $this->audit->record('store.deletion_requested', ['deletion' => $deletion->public_id, 'not_before' => $deletion->not_before->toIso8601String(), 'rows' => array_sum($plan)], $locked, $locked->id, $actor);
+            app(\App\Domain\Security\Services\SecurityMonitor::class)->record('store_deletion_requested', $actor, "{$locked->name} ({$locked->slug})", $locked->id, ['deletion' => $deletion->public_id]); // Phase B52
             $this->outbox->recordEventFor($locked->id, 'store.lifecycle_changed', ['store_id' => $locked->id, 'action' => 'deletion_requested', 'deletion_id' => $deletion->id], "store:{$locked->id}:deletion:{$deletion->public_id}:requested");
 
             return $deletion;

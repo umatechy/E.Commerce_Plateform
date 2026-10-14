@@ -5,6 +5,7 @@ import Dialog from '@/Components/ui/Dialog';
 import { CheckboxField, FormError, SelectField, TextAreaField, TextField } from '@/Components/ui/Form';
 import { Card, QueryState, Skeleton } from '@/Components/ui/Page';
 import { useApi } from '@/lib/useApi';
+import { useAccess } from '@/lib/access';
 import { useAction, useForm } from '@/lib/useForm';
 import { adminFetch } from '@/lib/adminApi';
 import { formatDate, formatDateTime } from '@/lib/datetime';
@@ -49,6 +50,10 @@ const ACTIONS: Record<string, { label: string; title: string; text: string; vari
 export default function StoreLifecycleCard({ storeId, onChanged }: { storeId: string; onChanged?: () => void }) {
   const base = `/super-admin/stores/${storeId}/lifecycle`;
   const state = useApi<{ data: Lifecycle }>(base);
+  // Phase B52: only the moves this platform role may make (the server checks each one).
+  const access = useAccess();
+  const canStores = access.platformCan('stores');
+  const canDelete = access.platformCan('store_deletion');
   const [action, setAction] = useState<string | null>(null);
   const [hold, setHold] = useState(false);
   const [planning, setPlanning] = useState(false);
@@ -87,16 +92,16 @@ export default function StoreLifecycleCard({ storeId, onChanged }: { storeId: st
             </dl>
 
             <div className="mt-4 flex flex-wrap gap-2 border-t border-slate-100 pt-3">
-              {data.allowed.filter((a) => ACTIONS[a]).map((a) => (
+              {canStores && data.allowed.filter((a) => ACTIONS[a]).map((a) => (
                 <Button key={a} size="sm" variant={ACTIONS[a].variant} onClick={() => setAction(a)}>{ACTIONS[a].label}</Button>
               ))}
-              {!['deleted', 'deleting'].includes(data.status) && (
+              {canDelete && !['deleted', 'deleting'].includes(data.status) && (
                 <Button size="sm" variant="ghost" onClick={() => setHold(true)}>{data.legal_hold ? 'Lift legal hold' : 'Set legal hold'}</Button>
               )}
             </div>
 
             {(data.status === 'archived' || data.deletion) && (
-              <DeletionPanel data={data} busy={busy} onPlan={() => setPlanning(true)}
+              <DeletionPanel data={data} busy={busy} canDelete={canDelete} onPlan={() => setPlanning(true)}
                 onCancel={() => setAction('cancel_deletion')}
                 onRetry={() => run('retry', () => adminFetch(`${base}/deletion/retry`, { method: 'POST' }), { success: 'The deletion will be tried again on the next run.' }).then((r) => r !== undefined && done())}
               />
@@ -137,7 +142,7 @@ function Row({ label, children }: { label: string; children: React.ReactNode }) 
   );
 }
 
-function DeletionPanel({ data, busy, onPlan, onCancel, onRetry }: { data: Lifecycle; busy: string | null; onPlan: () => void; onCancel: () => void; onRetry: () => void }) {
+function DeletionPanel({ data, busy, canDelete, onPlan, onCancel, onRetry }: { data: Lifecycle; busy: string | null; canDelete: boolean; onPlan: () => void; onCancel: () => void; onRetry: () => void }) {
   const d = data.deletion;
   const open = d !== null && ['scheduled', 'backing_up', 'purging', 'failed'].includes(d.status);
 
@@ -165,7 +170,7 @@ function DeletionPanel({ data, busy, onPlan, onCancel, onRetry }: { data: Lifecy
           <p className="mt-2 text-sm text-slate-700">The store can be deleted. Billing records, the audit trail and this history are kept.</p>
         )
       )}
-      <div className="mt-3 flex flex-wrap gap-2">
+      <div className={canDelete ? 'mt-3 flex flex-wrap gap-2' : 'hidden'}>
         {!open && data.status === 'archived' && <Button size="sm" variant="danger" onClick={onPlan} disabled={data.deletion_blockers.length > 0}>Plan deletion…</Button>}
         {d && (d.status === 'scheduled' || d.status === 'failed') && <Button size="sm" onClick={onCancel}>Cancel deletion</Button>}
         {d?.status === 'failed' && <Button size="sm" variant="primary" busy={busy === 'retry'} busyLabel="Saving…" onClick={onRetry}>Try again</Button>}

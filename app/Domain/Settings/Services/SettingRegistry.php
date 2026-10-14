@@ -79,6 +79,8 @@ final class SettingRegistry
             'store.contact_email' => new SettingDefinition(key: 'store.contact_email', scope: SettingScope::Store, type: SettingType::String, default: null),
             'store.contact_phone' => new SettingDefinition(key: 'store.contact_phone', scope: SettingScope::Store, type: SettingType::String, default: null),
             'store.country' => new SettingDefinition(key: 'store.country', scope: SettingScope::Store, type: SettingType::String, default: 'PK'),
+            // Phase B52 (Module 30 §61 kill switch): every store's API keys, on or off (Security → Emergency controls).
+            'platform.developer_api_enabled' => new SettingDefinition(key: 'platform.developer_api_enabled', scope: SettingScope::Platform, type: SettingType::Boolean, default: true),
             'platform.maintenance_mode' => new SettingDefinition(
                 key: 'platform.maintenance_mode', scope: SettingScope::Platform, type: SettingType::Boolean,
                 default: false,

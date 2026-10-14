@@ -142,7 +142,7 @@ final class AdminUiTest extends TestCase
     public function test_the_super_admin_pages_are_for_platform_staff_only(): void
     {
         [$store, $owner] = $this->storeWithOwner();
-        $platform = User::factory()->create(['platform_role' => 'support_agent']);
+        $platform = User::factory()->create(['platform_role' => 'super_admin']);
 
         $pages = [
             '/super-admin' => 'SuperAdmin/Dashboard', '/super-admin/stores' => 'SuperAdmin/Stores', "/super-admin/stores/{$store->id}" => 'SuperAdmin/Store',
@@ -314,7 +314,7 @@ final class AdminUiTest extends TestCase
 
     public function test_a_package_is_addressed_by_its_code_or_its_number(): void
     {
-        $platform = User::factory()->create(['platform_role' => 'support_agent']);
+        $platform = User::factory()->create(['platform_role' => 'super_admin']);
         $package = Package::factory()->create(['code' => 'starter-x', 'name' => 'Starter']);
 
         $this->actingAs($platform);

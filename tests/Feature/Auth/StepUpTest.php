@@ -154,6 +154,7 @@ final class StepUpTest extends TestCase
             'POST api/v1/super-admin/stores/{store}/starter-template', // Phase B45: save a store's structure as a template
             'POST api/v1/super-admin/users/{user}/deactivate',
             'POST api/v1/super-admin/users/{user}/reactivate',
+            'POST api/v1/super-admin/users/{user}/sessions/revoke', // Phase B52: end someone's sessions
             'PUT api/v1/courier-settings/couriers/{provider}',
             'PUT api/v1/messaging-settings/accounts/{provider}',
             'PUT api/v1/payment-settings/bank-transfer',
@@ -168,9 +169,11 @@ final class StepUpTest extends TestCase
             'PUT api/v1/super-admin/payment-providers/{provider}/account',
             'PUT api/v1/super-admin/payment-providers/{provider}/account/enabled',
             'PUT api/v1/super-admin/payment-providers/{provider}/live',
+            'PUT api/v1/super-admin/security/emergency/{key}', // Phase B52: emergency controls
             'PUT api/v1/super-admin/settings/{key}',
             'PUT api/v1/super-admin/starter-templates/{key}',
             'PUT api/v1/super-admin/stores/{store}/lifecycle/legal-hold',
+            'PUT api/v1/super-admin/users/{user}/platform-role', // Phase B52: platform roles
         ], $guarded);
     }
 }

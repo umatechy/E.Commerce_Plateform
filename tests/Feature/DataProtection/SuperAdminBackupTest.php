@@ -36,7 +36,7 @@ final class SuperAdminBackupTest extends TestCase
         $storeB = Store::factory()->create();
         Backup::factory()->create(['store_id' => $storeA->id]);
         Backup::factory()->create(['store_id' => $storeB->id]);
-        $superAdmin = User::factory()->create(['platform_role' => 'support_agent']);
+        $superAdmin = User::factory()->create(['platform_role' => 'super_admin']);
 
         $response = $this->actingAs($superAdmin)->getJson('/api/v1/super-admin/backups');
 
@@ -59,7 +59,7 @@ final class SuperAdminBackupTest extends TestCase
         $store = Store::factory()->create();
         $backup = Backup::factory()->withArtifact()->create(['store_id' => $store->id, 'status' => BackupStatus::Verified]);
         $restoreJob = BackupRestoreJob::query()->create(['backup_id' => $backup->id, 'target_store_id' => $store->id, 'status' => 'requested']);
-        $superAdmin = User::factory()->create(['platform_role' => 'support_agent']);
+        $superAdmin = User::factory()->create(['platform_role' => 'super_admin']);
 
         $response = $this->actingAs($superAdmin)->postJson("/api/v1/super-admin/restore-jobs/{$restoreJob->id}/authorize", [
             'confirmation' => $backup->public_id, 'reference' => 'Incident INC-0001',

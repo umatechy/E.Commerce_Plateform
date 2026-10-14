@@ -22,7 +22,7 @@ final class SuperAdminUserManagementTest extends TestCase
     public function test_platform_staff_can_search_users(): void
     {
         User::factory()->create(['email' => 'findme@example.com']);
-        $superAdmin = User::factory()->create(['platform_role' => 'support_agent']);
+        $superAdmin = User::factory()->create(['platform_role' => 'super_admin']);
 
         $response = $this->actingAs($superAdmin)->getJson('/api/v1/super-admin/users?search=findme');
 
@@ -33,7 +33,7 @@ final class SuperAdminUserManagementTest extends TestCase
     public function test_deactivating_a_user_prevents_future_login(): void
     {
         $user = User::factory()->create(['email' => 'locked@example.com', 'password' => Hash::make('secret123')]);
-        $superAdmin = User::factory()->create(['platform_role' => 'support_agent']);
+        $superAdmin = User::factory()->create(['platform_role' => 'super_admin']);
 
         $this->actingAs($superAdmin)->postJson("/api/v1/super-admin/users/{$user->id}/deactivate")->assertStatus(204);
 
@@ -45,7 +45,7 @@ final class SuperAdminUserManagementTest extends TestCase
     public function test_reactivating_a_user_restores_login(): void
     {
         $user = User::factory()->create(['email' => 'restored@example.com', 'password' => Hash::make('secret123'), 'is_active' => false]);
-        $superAdmin = User::factory()->create(['platform_role' => 'support_agent']);
+        $superAdmin = User::factory()->create(['platform_role' => 'super_admin']);
 
         $this->actingAs($superAdmin)->postJson("/api/v1/super-admin/users/{$user->id}/reactivate")->assertStatus(204);
 
@@ -62,7 +62,7 @@ final class SuperAdminUserManagementTest extends TestCase
         // every method operates exclusively on App\Domain\Identity\Models\User.
         $store = \App\Domain\Tenancy\Models\Store::factory()->create();
         $customer = \App\Domain\Orders\Models\Customer::factory()->for($store)->create(['password' => Hash::make('x')]);
-        $superAdmin = User::factory()->create(['platform_role' => 'support_agent']);
+        $superAdmin = User::factory()->create(['platform_role' => 'super_admin']);
         $staffUser = User::factory()->create();
 
         $this->actingAs($superAdmin)->postJson("/api/v1/super-admin/users/{$staffUser->id}/deactivate")->assertStatus(204);

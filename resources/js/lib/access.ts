@@ -22,6 +22,9 @@ export type AuthProps = {
   currency?: string | null;
   /** The currencies the platform offers (owner decision 2026-10-03). */
   currencies?: string[];
+  /** Phase B52: the platform role's name and what it may do (Super Admin). */
+  platform_role?: string | null;
+  platform_capabilities?: string[];
 };
 
 export type Access = {
@@ -31,6 +34,9 @@ export type Access = {
   feature: (key: string) => boolean | undefined;
   isOwner: boolean;
   isPlatformStaff: boolean;
+  /** Phase B52: whether the platform role has this capability (e.g. "security", "billing"). */
+  platformCan: (capability: string) => boolean;
+  platformRole: string | null;
   hasStore: boolean;
   locked: boolean;
   packageName: string | null;
@@ -49,6 +55,8 @@ export function accessFrom(auth: AuthProps): Access {
     feature: (key) => auth.features?.[key],
     isOwner,
     isPlatformStaff: auth.user?.is_platform_staff === true,
+    platformCan: (capability) => (auth.platform_capabilities ?? []).includes(capability),
+    platformRole: auth.platform_role ?? null,
     hasStore: auth.activeStore !== null && auth.activeStore !== undefined,
     locked: auth.mfa_enrollment_required === true,
     packageName: auth.package?.name ?? null,

@@ -108,6 +108,7 @@ export const platformNav: NavGroup = {
     { href: '/super-admin/billing', label: 'Platform billing', description: 'Prices, invoices and payments received.' },
     { href: '/super-admin/payments', label: 'Payment providers', description: 'JazzCash, Easypaisa: live access, health, lookups and findings.' },
     { href: '/super-admin/messaging', label: 'WhatsApp & SMS', description: 'Alert account and template, SMS providers’ live access, delivery.' },
+    { href: '/super-admin/security', label: 'Security', description: 'Sign-in alerts, staff roles and sessions, incidents, emergency controls.' },
     { href: '/super-admin/monitoring', label: 'Monitoring', description: 'Infrastructure, store health and queues.' },
     { href: '/super-admin/audit-log', label: 'Platform audit log', description: 'The audit trail of every store and the platform.' },
     { href: '/super-admin/catalog', label: 'Themes & domains', description: 'Themes, domains and developer applications.' },

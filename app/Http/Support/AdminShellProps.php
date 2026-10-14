@@ -47,6 +47,9 @@ final class AdminShellProps
             'currency' => $this->context->hasStore() ? (string) $this->config->get('store.default_currency') : null,
             // The currencies the platform offers (owner decision 2026-10-03), for the currency pickers.
             'currencies' => \App\Domain\Settings\Services\Currencies::supported(),
+            // Phase B52: what this person may do on the platform (display only; the server checks each call).
+            'platform_role' => $user->isPlatformStaff() ? \App\Domain\SuperAdmin\Support\PlatformRoles::label($user->platform_role) : null,
+            'platform_capabilities' => \App\Domain\SuperAdmin\Support\PlatformRoles::capabilitiesOf($user->platform_role),
         ];
     }
 

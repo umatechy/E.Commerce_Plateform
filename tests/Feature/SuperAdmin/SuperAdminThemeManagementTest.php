@@ -20,7 +20,7 @@ final class SuperAdminThemeManagementTest extends TestCase
 
     public function test_platform_staff_can_create_a_new_system_theme(): void
     {
-        $superAdmin = User::factory()->create(['platform_role' => 'support_agent']);
+        $superAdmin = User::factory()->create(['platform_role' => 'super_admin']);
 
         $response = $this->actingAs($superAdmin)->postJson('/api/v1/super-admin/themes', [
             'key' => 'seasonal-2027', 'name' => 'Seasonal 2027', 'version' => '1.0.0',
@@ -32,7 +32,7 @@ final class SuperAdminThemeManagementTest extends TestCase
     public function test_duplicate_theme_key_is_rejected(): void
     {
         Theme::query()->firstOrCreate(['key' => 'default'], ['name' => 'Default', 'version' => '1.0.0', 'status' => 'active']); // registered by the B36 migration already
-        $superAdmin = User::factory()->create(['platform_role' => 'support_agent']);
+        $superAdmin = User::factory()->create(['platform_role' => 'super_admin']);
 
         $response = $this->actingAs($superAdmin)->postJson('/api/v1/super-admin/themes', [
             'key' => 'default', 'name' => 'Duplicate', 'version' => '1.0.0',

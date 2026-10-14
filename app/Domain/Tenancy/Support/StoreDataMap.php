@@ -34,6 +34,7 @@ final class StoreDataMap
         'invoice_payments',
         'invoices',
         'payment_notices',
+        'security_events', // Phase B52: security monitoring; removed by its own retention (security:prune)
         'store_deletions',
         'store_lifecycle_events',
         'subscriptions',

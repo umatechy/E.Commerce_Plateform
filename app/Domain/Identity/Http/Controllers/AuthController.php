@@ -114,6 +114,7 @@ final class AuthController
 
     public function logout(Request $request): JsonResponse
     {
+        app(\App\Domain\Identity\Services\UserSessions::class)->endCurrent($request); // Phase B52
         Auth::guard('web')->logout();
 
         if ($request->hasSession()) {

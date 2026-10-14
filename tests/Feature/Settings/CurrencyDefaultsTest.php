@@ -97,7 +97,7 @@ final class CurrencyDefaultsTest extends TestCase
         $this->assertSame('EUR', app(ConfigService::class)->get('store.default_currency'));
         $this->actingAs($owner)->putJson('/api/v1/store/settings/store.default_currency', ['value' => 'CAD'])->assertUnprocessable();
 
-        $platform = User::factory()->create(['platform_role' => 'support_agent']);
+        $platform = User::factory()->create(['platform_role' => 'super_admin']);
         $this->app['auth']->forgetGuards();
         $this->actingAs($platform)->putJson('/api/v1/super-admin/settings/platform.supported_currencies', ['value' => ['pkr', 'Rupees']])->assertUnprocessable();
         $this->actingAs($platform)->putJson('/api/v1/super-admin/settings/platform.supported_currencies', ['value' => ['pkr', 'usd', 'PKR', 'cad']])->assertOk();

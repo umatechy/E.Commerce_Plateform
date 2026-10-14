@@ -64,6 +64,9 @@ final class LoginRequest extends FormRequest
         // reveals whether the email/password pair was correct.
         if (! $valid || ! $user->is_active) {
             event(new Failed('web', $valid ? $user : null, $credentials));
+            // Phase B52 (Module 32 §58–59): watched; repeated failures raise an alert.
+            app(\App\Domain\Security\Services\SecurityMonitor::class)->record('login_failed', $user instanceof User ? $user : null,
+                \App\Domain\Security\Services\SecurityMonitor::maskEmail((string) $this->input('email')), context: ['inactive' => $valid], ip: $this->ip());
             RateLimiter::hit($this->throttleKey());
 
             throw ValidationException::withMessages([
@@ -90,6 +93,9 @@ final class LoginRequest extends FormRequest
         }
 
         event(new Lockout($this));
+        // Phase B52 (Module 32 §58): sign-in slowed down for this account and address.
+        app(\App\Domain\Security\Services\SecurityMonitor::class)->record('login_locked', \App\Domain\Identity\Models\User::query()->where('email', (string) $this->input('email'))->first(),
+            \App\Domain\Security\Services\SecurityMonitor::maskEmail((string) $this->input('email')), ip: $this->ip());
 
         $seconds = RateLimiter::availableIn($this->throttleKey());
 

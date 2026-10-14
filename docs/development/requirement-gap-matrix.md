@@ -126,9 +126,9 @@ Architecture v1.0 arrived after this review was written and are now in
 | 27 | App / Plugin Marketplace & Integrations | — | ❌ | B18 developer apps/API keys/webhooks are a base | Extension registry, installation lifecycle, permissions, billing, review pipeline |
 | 28 | Affiliate & Reseller Program | — | ❌ | Nothing | Whole module (3,500-line blueprint) |
 | 29 | Billing, Invoices & Renewals | B23 | 🟡 | Package prices, invoices, hourly renewal/dunning, manual payments, revenue summary; B47: plan changes with proration and preview (§47–49), account credit (§45–46), credit notes and refunds (§42–43), approval (§92), payment notices (§73–74, §79), PDF documents (§75–76), platform tax setting (§57) | Card gateway (B48), debit adjustments (§44), add-ons (§50), usage/overage billing (§52–54), statements (§77), reseller/domain/marketplace billing |
-| 30 | Umar Techy Super Admin | B16 | 🟡 | Dashboard, stores, users, packages, impersonation with reason, backups/health oversight (API) | Step-up auth (§6), emergency lock/kill switch (§14, §61), feature flags (§22), platform announcements (§71), incident management (§87–89), KYC (§93), platform terms (§94–95). Super Admin UI built in B31 |
+| 30 | Umar Techy Super Admin | B16, B29, B51, B52 | 🟡 | Dashboard, stores, users, packages, impersonation with reason, backups/health oversight; step-up (B29); store lifecycle control (B51); B52: platform roles with capabilities (§3), privileged sessions (§5), security operations, emergency controls and kill switch (§58–61, §128), incidents (§59, §87–88). Super Admin UI built in B31 | Feature flags (§22), platform announcements (§71), alert routing/thresholds on screen (§89), KYC (§93), platform terms (§94–95), IP/device restrictions |
 | 31 | API & Developer Platform | B18 | 🟡 | `/api/dev/v1`, applications, hashed API keys, 5 read-only scopes, rate limits, request log, signed webhooks | Write scopes, OAuth (deferred by ADR-002), OpenAPI/docs (§51), sandbox (§49), developer portal (§48), idempotency on dev API, request/correlation IDs |
-| 32 | Security, Audit & Compliance | B22 | 🟡 | Hash-chained audit log, customer export/erasure, security headers, password policy | MFA (§8), session security (§9), page CSP, WORM storage for audit heads, incident response (§60–64), dependency security (§48), security dashboard (§85) |
+| 32 | Security, Audit & Compliance | B22, B29, B52 | 🟡 | Hash-chained audit log, customer export/erasure, security headers, password policy; MFA and step-up (B29); B52: staff password change and recovery (§7), session listing/revocation and staff limits (§9, §65.4), security monitoring and alerts (§58–59), incidents (§60–64), security dashboard (§85), toolchain upgraded (§48) | Page CSP, WORM storage for audit heads, passkeys, data-classification register, secret scanning, Tailwind 4 (build-tool advisories) |
 | 33 | System Settings & Configuration | B17 | 🟡 | Platform/store settings registry, validation, encrypted secrets, revisions/rollback | Feature flags (§16–17), most per-domain settings sections (§21–47), localization/multi-currency (§48–49), timezone consumption (§50), business hours, maintenance mode (§51–52) |
 | 34 | Help, Support & Documentation | B26 | 🟡 | Tickets (store, guest, customer, merchant→platform), SLA, internal notes | Knowledge base (§6–11), contextual help and onboarding (§12–15), troubleshooting/error-code docs (§24–26), release notes/changelog (§31–34), help center (§43), attachments (§49), status page (§51) |
 | 35 | Future Expansion Framework | — | ❌ | Outbox and provider adapters partly serve its extension points | Extension-point registry (§5), feature flags (§10), custom fields (§17), governance (§50–53). Mostly architecture guidance, not a feature |
@@ -170,7 +170,7 @@ Architecture v1.0 arrived after this review was written and are now in
 | AUTH-002 | 🟡 | No customer email verification flow (B25 out of scope) | P1 |
 | AUTH-003 | ✅ | Laravel hashing | P0 |
 | AUTH-004 | ✅ | Staff and customer reset tokens | P0 |
-| AUTH-005 | 🟡 | Logout only; no session list / revoke-all | P1 |
+| AUTH-005 | ✅ | B52: sessions listed per device, one or all others signed out; ended on password change/reset, MFA reset, deactivation; staff idle and absolute limits | P1 |
 | AUTH-006 | ✅ | TOTP MFA for staff accounts; mandatory for platform staff and Store Owners, optional for store staff (B29, gap G2) | P1 |
 | AUTH-007 | ✅ | Single-use recovery codes, stored hashed; server-side emergency reset, audited (B29) | P1 |
 | AUTH-008 | ✅ | Login throttling | P0 |
@@ -305,7 +305,7 @@ Architecture v1.0 arrived after this review was written and are now in
 | BKP-007 | ✅ | Weekly restore rehearsal into a throw-away database (B30). A production restore has not been executed | P1 |
 | HEALTH-001–002, 004, 006 | ✅ | B20/B21 | P1 |
 | HEALTH-003 | 🟡 | No storage/bandwidth metering | P2 |
-| HEALTH-005 | 🟡 | Critical email alerts for backup and restore conditions (B30). Store-health and security conditions do not alert yet | P1 |
+| HEALTH-005 | 🟡 | Critical email alerts for backup and restore conditions (B30); security conditions alert since B52 (SecurityMonitor). Store-health conditions do not alert yet | P1 |
 
 ### 3.14 PWA, AI, marketplace (APP), affiliate (AFF)
 
@@ -330,7 +330,7 @@ Architecture v1.0 arrived after this review was written and are now in
 | SA-001–003 | ✅ | B16; Super Admin pages since B31 | P0 |
 | SA-004 | ✅ | Reason required; step-up re-authentication on impersonation and 13 other actions (B29) | P0 |
 | SA-005 | 🟡 | No mass-action safeguards (no bulk actions yet) | P1 |
-| SA-006 | ➖ | No break-glass feature | P2 |
+| SA-006 | 🟡 | B52: `platform:staff` (server only, operator, reason, typed confirmation, audited and alerted) restores platform access when nobody can sign in; `mfa:emergency-reset` (B29). No separate break-glass account | P2 |
 | API-001–005, 008–009, 013–014, 016 | ✅ | Versioned routes, auth, tenant, rate limits, pagination, allowlists, signed webhooks with retries, key rotation | P0 |
 | API-006 | 🟡 | Per-key rate limits; no package API quotas | P1 |
 | API-007 | 🟡 | Checkout/order idempotency; not general | P1 |
@@ -347,7 +347,7 @@ Architecture v1.0 arrived after this review was written and are now in
 | SEC-001–003, 006–012 | ✅ | B22, encrypted settings, validated uploads, rate limits, audit | P0 |
 | SEC-004 | ⚪ | HTTPS is a deployment concern (Nginx template redirects) | P0 |
 | SEC-005 | 🟡 | No data-classification register | P1 |
-| SEC-013 | ✅ | `composer audit` and `npm audit` in CI (B29). Build tooling advisories open | P0 |
+| SEC-013 | ✅ | `composer audit` and `npm audit` in CI (B29). B52: Vite 8 / Vitest 5, 0 critical; CI fails on critical tooling advisories; Tailwind 3 high advisories reported until Tailwind 4 | P0 |
 | SEC-014 | 🟡 | Dependency gate added (B29). No secret scanning or static security analysis | P0 |
 | SEC-015 | ✅ | `docs/security/incident-response-runbook.md` (B29). Contacts to be filled by the owner | P1 |
 | CFG-001–004, 006–009 | ✅ | B17 | P1 |

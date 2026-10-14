@@ -65,11 +65,15 @@ Route::post('/auth/register', [AuthController::class, 'register'])->middleware('
 Route::post('/auth/login', [AuthController::class, 'login'])->middleware('throttle:10,1');
 // The second step of a sign-in for accounts with MFA (Module 32 §8 — Phase B29).
 Route::post('/auth/login/mfa', [AuthController::class, 'loginMfa'])->middleware('throttle:10,1');
+// Phase B52 (Module 32 §7.5–7.6): "forgot password" for staff accounts.
+Route::post('/auth/password/forgot', [\App\Domain\Identity\Http\Controllers\StaffPasswordResetController::class, 'forgot'])->middleware('throttle:5,1,staff-forgot');
+Route::post('/auth/password/reset', [\App\Domain\Identity\Http\Controllers\StaffPasswordResetController::class, 'reset'])->middleware('throttle:10,1,staff-reset');
 
 // 'required.mfa': a Store Owner without MFA reaches only its own /auth/*
 // endpoints here, so it can enrol (owner decision 2026-10-01).
 // 'store.operational' (Phase B51): a suspended, closed or archived store is read-only.
-Route::middleware(['auth:sanctum', 'staff.principal', 'required.mfa', 'store.operational'])->group(function () {
+// 'session.track' (Phase B52): a session ended elsewhere signs out here too.
+Route::middleware(['auth:sanctum', 'session.track', 'staff.principal', 'required.mfa', 'store.operational'])->group(function () {
     Route::post('/auth/logout', [AuthController::class, 'logout']);
     Route::get('/auth/me', [AuthController::class, 'me']);
 
@@ -80,6 +84,12 @@ Route::middleware(['auth:sanctum', 'staff.principal', 'required.mfa', 'store.ope
     Route::post('/auth/mfa/recovery-codes', [\App\Domain\Identity\Http\Controllers\MfaController::class, 'regenerateRecoveryCodes'])->middleware('throttle:10,1');
     Route::delete('/auth/mfa', [\App\Domain\Identity\Http\Controllers\MfaController::class, 'destroy'])->middleware('throttle:10,1');
     Route::post('/auth/step-up', [\App\Domain\Identity\Http\Controllers\MfaController::class, 'stepUp'])->middleware('throttle:10,1');
+    // Phase B52 (SRS AUTH-005; Module 32 §7, §9): the person's own sessions and password.
+    $accountSecurity = \App\Domain\Identity\Http\Controllers\AccountSecurityController::class;
+    Route::get('/auth/sessions', [$accountSecurity, 'sessions']);
+    Route::delete('/auth/sessions/{session}', [$accountSecurity, 'revoke'])->where('session', '[0-9A-Za-z]{26}');
+    Route::post('/auth/sessions/revoke-others', [$accountSecurity, 'revokeOthers'])->middleware('throttle:10,1,sessions-revoke');
+    Route::put('/auth/password', [$accountSecurity, 'changePassword'])->middleware('throttle:10,10,password-change');
 
     // --- Tenant switching ---
     Route::post('/store/switch', StoreSwitchController::class);
@@ -469,7 +479,7 @@ Route::middleware(['auth:sanctum', 'staff.principal', 'required.mfa', 'store.ope
     // --- Super Admin: platform-global actions (no target store — Phase
     // B16 fix, see docs/development/b16-inspection-findings.md
     // "Critical Bug Found") ---
-    Route::middleware(['can:super-admin.platform', 'privileged.mfa', 'super_admin.platform'])
+    Route::middleware(['can:super-admin.platform', 'privileged.mfa', 'super_admin.platform', 'platform.capability'])
         ->prefix('super-admin')
         ->group(function () {
             Route::get('/packages', [SuperAdminPackageController::class, 'index']);
@@ -498,6 +508,18 @@ Route::middleware(['auth:sanctum', 'staff.principal', 'required.mfa', 'store.ope
             Route::get('/users/{user}', [SuperAdminUserController::class, 'show']);
             Route::post('/users/{user}/deactivate', [SuperAdminUserController::class, 'deactivate'])->middleware('step_up');
             Route::post('/users/{user}/reactivate', [SuperAdminUserController::class, 'reactivate'])->middleware('step_up');
+            // Phase B52 (Module 32 §85, §58–64; Module 30 §3, §58–61, §87–88): Security.
+            $security = \App\Domain\SuperAdmin\Http\Controllers\SuperAdminSecurityController::class;
+            Route::put('/users/{user}/platform-role', [$security, 'changeRole'])->middleware('step_up');
+            Route::post('/users/{user}/sessions/revoke', [$security, 'revokeSessions'])->middleware('step_up');
+            Route::get('/security', [$security, 'overview']);
+            Route::get('/security/events', [$security, 'events']);
+            Route::get('/security/staff', [$security, 'staff']);
+            Route::put('/security/emergency/{key}', [$security, 'setControl'])->where('key', '[a-z_.]{3,64}')->middleware('step_up');
+            Route::get('/security/incidents', [$security, 'incidents']);
+            Route::post('/security/incidents', [$security, 'openIncident']);
+            Route::get('/security/incidents/{incident}', [$security, 'showIncident']);
+            Route::patch('/security/incidents/{incident}', [$security, 'updateIncident']);
             Route::get('/payments/failures', [SuperAdminPaymentController::class, 'failures']);
             // Phase B48 (Module 30 §26–27): payment providers, Umar Techy's own merchant accounts, lookup, findings.
             $providers = \App\Domain\SuperAdmin\Http\Controllers\SuperAdminPaymentProviderController::class;
@@ -583,7 +605,7 @@ Route::middleware(['auth:sanctum', 'staff.principal', 'required.mfa', 'store.ope
         });
 
     // --- Super Admin cross-tenant (ADR-001 Layer 7) ---
-    Route::middleware(['can:super-admin.impersonate', 'privileged.mfa', 'super_admin.impersonate'])
+    Route::middleware(['can:super-admin.impersonate', 'privileged.mfa', 'super_admin.impersonate', 'platform.capability'])
         ->prefix('super-admin')
         ->group(function () {
             Route::get('/stores/{store}/impersonate', [SuperAdminStoreController::class, 'impersonate'])->middleware('step_up'); // SRS SA-004

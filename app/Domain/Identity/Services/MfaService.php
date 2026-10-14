@@ -80,6 +80,7 @@ final class MfaService
 
         RateLimiter::clear($this->attemptKey($user));
         $this->audit->record('auth.mfa.enabled', [], $user, actor: $user, platform: true);
+        app(\App\Domain\Security\Services\SecurityMonitor::class)->record('mfa_enabled', $user); // Phase B52
 
         return $codes;
     }
@@ -127,6 +128,7 @@ final class MfaService
         });
 
         $this->audit->record('auth.mfa.disabled', [], $user, actor: $user, platform: true);
+        app(\App\Domain\Security\Services\SecurityMonitor::class)->record('mfa_disabled', $user, severity: $user->isPlatformStaff() ? 'high' : 'medium'); // Phase B52
     }
 
     /**
@@ -164,6 +166,9 @@ final class MfaService
         ];
 
         $this->audit->record('auth.mfa.emergency_reset', $context, $user, platform: true);
+        // Phase B52 (b29 finding 10): sessions already signed in end too, and an alert goes out.
+        app(\App\Domain\Identity\Services\UserSessions::class)->revokeAll($user, 'mfa_reset');
+        app(\App\Domain\Security\Services\SecurityMonitor::class)->record('mfa_reset', $user, context: ['operator' => $operator, 'reason' => $reason]);
         Log::critical('MFA emergency reset', ['user_id' => $user->id, ...$context]);
     }
 
@@ -248,6 +253,7 @@ final class MfaService
     {
         RateLimiter::hit($this->attemptKey($user), (int) config('security.mfa.lockout_minutes') * 60);
         $this->audit->record('auth.mfa.failed', ['purpose' => $purpose], $user, actor: $user, platform: true);
+        app(\App\Domain\Security\Services\SecurityMonitor::class)->record('mfa_failed', $user, context: ['purpose' => $purpose]); // Phase B52
 
         throw InvalidMfaCodeException::wrong();
     }

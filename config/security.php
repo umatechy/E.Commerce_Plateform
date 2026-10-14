@@ -36,6 +36,17 @@ return [
         'ttl_minutes' => (int) env('STEP_UP_TTL_MINUTES', 15),
     ],
 
+    // Phase B52 (Module 30 §5, Module 32 §65.4): platform staff sessions end sooner.
+    // Design defaults, not owner decisions; change them here or by environment.
+    'sessions' => [
+        'privileged_idle_minutes' => (int) env('PRIVILEGED_SESSION_IDLE_MINUTES', 30),
+        'privileged_absolute_hours' => (int) env('PRIVILEGED_SESSION_ABSOLUTE_HOURS', 12),
+    ],
+    // Phase B52 (Module 32 §58–59): security monitoring.
+    'monitoring' => [
+        'mass_export_rows' => (int) env('SECURITY_MASS_EXPORT_ROWS', 5000),
+        'events_retention_days' => (int) env('SECURITY_EVENTS_RETENTION_DAYS', 180),
+    ],
     'request_id' => [
         'header' => 'X-Request-Id',
     ],

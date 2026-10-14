@@ -20,9 +20,9 @@ final class SuperAdminSettingTest extends TestCase
 
     public function test_platform_staff_can_view_and_update_platform_settings(): void
     {
-        $superAdmin = User::factory()->create(['platform_role' => 'support_agent']);
+        $superAdmin = User::factory()->create(['platform_role' => 'super_admin']);
 
-        $update = $this->actingAs($superAdmin)->putJson('/api/v1/super-admin/settings/platform.maintenance_mode', ['value' => true]);
+        $update = $this->actingAs($superAdmin)->putJson('/api/v1/super-admin/settings/platform.trial_days', ['value' => 30]); // Phase B52: maintenance mode is an emergency control now
         $update->assertOk();
 
         $index = $this->actingAs($superAdmin)->getJson('/api/v1/super-admin/settings');
@@ -40,14 +40,14 @@ final class SuperAdminSettingTest extends TestCase
 
     public function test_platform_setting_update_is_audit_logged(): void
     {
-        $superAdmin = User::factory()->create(['platform_role' => 'support_agent']);
+        $superAdmin = User::factory()->create(['platform_role' => 'super_admin']);
 
         \Illuminate\Support\Facades\Log::shouldReceive('channel')->with('audit')->andReturnSelf();
         \Illuminate\Support\Facades\Log::shouldReceive('info')->with('super_admin.platform_action', \Mockery::type('array'));
         \Illuminate\Support\Facades\Log::shouldReceive('info')
             ->once()
-            ->with('super_admin.setting.updated', \Mockery::on(fn (array $c) => $c['key'] === 'platform.maintenance_mode'));
+            ->with('super_admin.setting.updated', \Mockery::on(fn (array $c) => $c['key'] === 'platform.trial_days'));
 
-        $this->actingAs($superAdmin)->putJson('/api/v1/super-admin/settings/platform.maintenance_mode', ['value' => true]);
+        $this->actingAs($superAdmin)->putJson('/api/v1/super-admin/settings/platform.trial_days', ['value' => 30]);
     }
 }

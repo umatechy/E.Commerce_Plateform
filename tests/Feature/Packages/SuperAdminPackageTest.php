@@ -20,7 +20,7 @@ final class SuperAdminPackageTest extends TestCase
 
     public function test_platform_staff_can_create_a_package(): void
     {
-        $admin = User::factory()->create(['platform_role' => 'catalog_manager']);
+        $admin = User::factory()->create(['platform_role' => 'platform_admin']); // Phase B52: a role with the catalog capability
 
         $response = $this->actingAs($admin)->postJson('/api/v1/super-admin/packages', [
             'code' => 'enterprise',
@@ -54,7 +54,7 @@ final class SuperAdminPackageTest extends TestCase
     {
         $store = Store::factory()->create();
         \App\Domain\Packages\Models\Subscription::factory()->for($store)->for(Package::factory())->create();
-        $admin = User::factory()->create(['platform_role' => 'support_agent']);
+        $admin = User::factory()->create(['platform_role' => 'super_admin']);
 
         $response = $this->actingAs($admin)->postJson(
             "/api/v1/super-admin/stores/{$store->id}/subscription/suspend",

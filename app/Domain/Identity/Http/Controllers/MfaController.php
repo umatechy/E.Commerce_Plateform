@@ -145,6 +145,7 @@ final class MfaController
         if (! Hash::check($request->string('password')->toString(), (string) $user->password)) {
             RateLimiter::hit($key, 60);
             app(AuditLogger::class)->record('auth.password_confirmation.failed', ['route' => $request->path()], $user, actor: $user, platform: true);
+            app(\App\Domain\Security\Services\SecurityMonitor::class)->record('step_up_failed', $user, context: ['route' => $request->path()]); // Phase B52
 
             throw ValidationException::withMessages(['password' => trans('auth.password')]);
         }

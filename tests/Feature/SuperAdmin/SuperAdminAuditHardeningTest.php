@@ -26,7 +26,7 @@ final class SuperAdminAuditHardeningTest extends TestCase
         $store = Store::factory()->create();
         // Suspension acts on the store's current subscription.
         \App\Domain\Packages\Models\Subscription::factory()->for($store)->for(Package::factory())->create();
-        $superAdmin = User::factory()->create(['platform_role' => 'support_agent']);
+        $superAdmin = User::factory()->create(['platform_role' => 'super_admin']);
 
         \Illuminate\Support\Facades\Log::shouldReceive('channel')->with('audit')->andReturnSelf();
         \Illuminate\Support\Facades\Log::shouldReceive('info')->with('super_admin.impersonation.started', \Mockery::type('array'));
@@ -43,7 +43,7 @@ final class SuperAdminAuditHardeningTest extends TestCase
     public function test_package_update_writes_before_and_after_state(): void
     {
         $package = Package::factory()->create(['name' => 'Old Name']);
-        $superAdmin = User::factory()->create(['platform_role' => 'support_agent']);
+        $superAdmin = User::factory()->create(['platform_role' => 'super_admin']);
 
         \Illuminate\Support\Facades\Log::shouldReceive('channel')->with('audit')->andReturnSelf();
         \Illuminate\Support\Facades\Log::shouldReceive('info')
