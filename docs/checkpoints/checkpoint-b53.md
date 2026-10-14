@@ -115,6 +115,6 @@ Not built (b53-api-quality.md §7):
 - public ULIDs in a developer API v2;
 - package API quotas.
 
-CI: pending — to be recorded after the push.
+CI: run on 17a40ff — success (backend, frontend, security, and the new e2e job), verified 2026-10-14.
 
 Next (on the owner's word): B54 — help and documentation (gap G12).
