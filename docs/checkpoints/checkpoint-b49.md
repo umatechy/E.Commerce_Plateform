@@ -98,4 +98,6 @@ allocation, shipping notifications (B50).
 Owner inputs needed (at the end, as agreed): the first courier (merchant
 API guide and sandbox credentials).
 
+CI: run on 342f4cd — success, verified 2026-10-14.
+
 Next (on the owner's word): B50 — WhatsApp and SMS.
