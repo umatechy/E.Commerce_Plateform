@@ -87,4 +87,8 @@ payments, payment notifications to customers (B50).
 Owner inputs needed (at the end, as agreed): JazzCash and Easypaisa sandbox
 and production merchant credentials; the card provider.
 
+CI: run on b03ffd4 failed (2 storefront-page tests needed withoutVite(): the
+backend job has no built assets); fixed in 9b8c889 — success, verified
+2026-10-14.
+
 Next (on the owner's word): B49 — courier adapter, labels, returns.
