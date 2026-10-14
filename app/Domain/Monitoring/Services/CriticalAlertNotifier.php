@@ -137,6 +137,8 @@ final class CriticalAlertNotifier
             // Email is sent as HTML: keep the lines apart there.
             $channel === NotificationChannel::Email ? nl2br(self::BODY) : self::BODY,
             $variables, $key, $eventType,
+            // Phase B50: Umar Techy's approved WhatsApp template "critical_alert" takes these two values.
+            providerParameters: $channel === NotificationChannel::WhatsApp ? [$alert['summary'], $alert['reference']] : [],
         );
 
         return 1;

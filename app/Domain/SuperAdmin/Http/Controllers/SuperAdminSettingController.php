@@ -30,7 +30,7 @@ final class SuperAdminSettingController
      * providers page only — closing one there also switches every store's
      * live account off, which a plain setting change would skip.
      */
-    private const OWN_PAGE = ['payments.live_providers'];
+    private const OWN_PAGE = ['payments.live_providers', 'messaging.live_providers']; // messaging: Phase B50
 
     public function index(ConfigService $config): JsonResponse
     {

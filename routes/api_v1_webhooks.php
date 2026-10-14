@@ -17,3 +17,8 @@ Route::post('/payment-webhooks/{provider}', PaymentWebhookController::class);
 // same no-auth-middleware registration, mirroring the payment webhook
 // route exactly.
 Route::post('/shipment-webhooks/{provider}', ShipmentWebhookController::class);
+
+// Phase B50 (Module 21 §35–36): SMS and WhatsApp providers. The token names one account; the
+// provider's signature with that account's secret decides trust. GET answers Meta's check.
+Route::match(['GET', 'POST'], '/messaging-webhooks/{token}', \App\Domain\Notifications\Http\Controllers\MessagingWebhookController::class)
+    ->where('token', '[A-Za-z0-9]{48}')->middleware('throttle:600,1,messaging-webhooks');

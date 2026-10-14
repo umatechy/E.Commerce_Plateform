@@ -10,6 +10,8 @@ export type Customer = {
   phone: string | null;
   email_verified: boolean;
   marketing_email_opt_in?: boolean;
+  /** Phase B50: order updates on WhatsApp. */
+  whatsapp_opt_in?: boolean;
   member_since?: string | null;
 };
 

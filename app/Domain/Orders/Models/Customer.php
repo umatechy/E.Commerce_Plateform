@@ -43,6 +43,7 @@ final class Customer extends Model implements AuthenticatableContract
     protected $table = 'customers';
 
     protected $fillable = ['store_id', 'user_id', 'name', 'email', 'phone', 'password', 'marketing_email_opt_in'];
+    // whatsapp_opt_in(_at): Phase B50, set only through the consent paths (profile, checkout), never mass-assigned.
 
     protected $hidden = ['password', 'remember_token'];
 
@@ -50,6 +51,8 @@ final class Customer extends Model implements AuthenticatableContract
     {
         return [
             'marketing_email_opt_in' => 'boolean',
+            'whatsapp_opt_in' => 'boolean',
+            'whatsapp_opt_in_at' => 'datetime',
             'tax_exempt' => 'boolean', // Phase B46: set by staff only (not fillable — a customer cannot exempt themselves)
             'email_verified_at' => 'datetime',
             'password' => 'hashed',

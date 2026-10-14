@@ -103,6 +103,7 @@ final class OrderService
                 'guest_name' => $orderData['guest_name'] ?? null,
                 'guest_email' => $orderData['guest_email'] ?? null,
                 'guest_phone' => $orderData['guest_phone'] ?? null,
+                'whatsapp_opt_in' => (bool) ($orderData['whatsapp_opt_in'] ?? false), // Phase B50
                 'status' => OrderStatus::PendingConfirmation,
                 'source' => $orderData['source'] ?? 'admin',
                 'currency' => $currency,

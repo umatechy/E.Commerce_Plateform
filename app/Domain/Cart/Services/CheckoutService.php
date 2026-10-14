@@ -151,6 +151,7 @@ final class CheckoutService
                     'billing_address' => $checkoutData['billing_address'] ?? $cart->billing_address_snapshot,
                     'shipping_address' => $checkoutData['shipping_address'] ?? $cart->shipping_address_snapshot,
                     'notes' => $checkoutData['notes'] ?? null,
+                    'whatsapp_opt_in' => (bool) ($checkoutData['whatsapp_updates'] ?? false), // Phase B50
                     'source' => 'storefront',
                     'shipping_total_minor' => $shippingTotalMinor,
                     'discount_total_minor' => $discountTotalMinor,
@@ -164,6 +165,10 @@ final class CheckoutService
             // Timing") — never re-consumed on an idempotent replay.
             if ($order->wasRecentlyCreated) {
                 $this->promotions->recordUsage($promotionResult, $order, $cart->customer);
+            }
+            // Phase B50: a signed-in customer's yes to WhatsApp updates is remembered for later orders.
+            if ($order->wasRecentlyCreated && ! empty($checkoutData['whatsapp_updates']) && $cart->customer !== null && ! $cart->customer->whatsapp_opt_in) {
+                $cart->customer->forceFill(['whatsapp_opt_in' => true, 'whatsapp_opt_in_at' => now()])->save();
             }
 
             // Phase B34 (Module 12 §13): a signed-in customer may pay with

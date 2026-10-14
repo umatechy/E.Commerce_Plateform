@@ -14,8 +14,9 @@ final class NotificationChannelResolver
         return match ($channel) {
             NotificationChannel::Email => new EmailChannel(),
             NotificationChannel::InApp => new InAppChannel(),
-            NotificationChannel::Sms => new UnconfiguredChannel('stub_sms'),
-            NotificationChannel::WhatsApp => new UnconfiguredChannel('stub_whatsapp'),
+            // Phase B50 (gap G10): the store's (or Umar Techy's) own SMS and WhatsApp accounts.
+            NotificationChannel::Sms => new MessagingChannel(NotificationChannel::Sms),
+            NotificationChannel::WhatsApp => new MessagingChannel(NotificationChannel::WhatsApp),
             NotificationChannel::Push => new UnconfiguredChannel('stub_push'),
         };
     }

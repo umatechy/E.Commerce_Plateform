@@ -18,4 +18,10 @@ final class NotificationPolicy extends BaseTenantPolicy
     {
         return $this->userHasPermission($user, 'notifications.manage') || $this->isOwner($user);
     }
+
+    /** Phase B50 (Module 21 §59): the store's SMS and WhatsApp accounts — an elevated permission. */
+    public function providers(User $user): bool
+    {
+        return $this->userHasPermission($user, 'messaging.providers') || $this->isOwner($user);
+    }
 }

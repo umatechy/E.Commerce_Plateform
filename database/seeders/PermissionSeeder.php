@@ -50,6 +50,7 @@ final class PermissionSeeder extends Seeder
         ['key' => 'payments.refund', 'group' => 'payments', 'description' => 'Issue refunds — high-risk financial permission (Phase B7)'],
         ['key' => 'payments.provider_config', 'group' => 'payments', 'description' => 'Set up how the store is paid: bank details, cash on delivery and merchant accounts (Phase B48)'],
         ['key' => 'payments.reconcile', 'group' => 'payments', 'description' => 'Resolve payments that reconciliation flagged (Phase B48)'],
+        ['key' => 'messaging.providers', 'group' => 'notifications', 'description' => 'Connect the store\'s SMS and WhatsApp accounts (Phase B50)'],
         ['key' => 'store_credit.manage', 'group' => 'customers', 'description' => 'Give or take back store credit by hand (Module 09 §52 — Phase B34)'],
         ['key' => 'returns.view', 'group' => 'returns', 'description' => 'View return requests (Module 09 — Phase B33)'],
         ['key' => 'returns.manage', 'group' => 'returns', 'description' => 'Create returns for a customer, receive and inspect returned goods, create replacement orders (Phase B33)'],

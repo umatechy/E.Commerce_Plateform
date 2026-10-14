@@ -40,7 +40,7 @@ final class Order extends Model
 
     protected $fillable = [
         'store_id', 'order_number', 'customer_id',
-        'guest_name', 'guest_email', 'guest_phone',
+        'guest_name', 'guest_email', 'guest_phone', 'whatsapp_opt_in',
         'status', 'payment_status', 'fulfillment_status', 'source',
         'currency', 'subtotal_minor', 'discount_total_minor', 'tax_total_minor',
         'shipping_total_minor', 'grand_total_minor',
@@ -67,6 +67,7 @@ final class Order extends Model
             'completed_at' => 'datetime',
             'cancelled_at' => 'datetime',
             'prices_include_tax' => 'boolean',
+            'whatsapp_opt_in' => 'boolean', // Phase B50
             'tax_snapshot' => 'array',
         ];
     }

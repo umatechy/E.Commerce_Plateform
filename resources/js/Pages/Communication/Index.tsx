@@ -13,6 +13,7 @@ import { useForm } from '@/lib/useForm';
 import { adminFetch } from '@/lib/adminApi';
 import { dateTimeOrDash, formatDateTime } from '@/lib/datetime';
 import { options } from '@/lib/labels';
+import StoreMessaging from '@/Components/Messaging/StoreMessaging';
 
 /**
  * Module 21 §51 "Admin Communication Center": the messages the store
@@ -22,8 +23,9 @@ import { options } from '@/lib/labels';
  * The list shows a message's subject and status, not its text: message
  * bodies can hold personal details. Delivery is shown as attempts and
  * their result; queues and retries stay the platform's business. A
- * channel without a provider (the backend has email only) records its
- * messages as failed; nothing here pretends otherwise.
+ * channel without a provider records its messages as failed; nothing here
+ * pretends otherwise. Phase B50: the WhatsApp & SMS tab connects those
+ * providers and chooses the order updates they carry.
  */
 type Message = { id: string; message_type: string; channel: string; subject: string | null; status: string; sent_at: string | null; created_at: string };
 type Attempt = { attempt_number: number; provider: string | null; result: string; failure_code: string | null; occurred_at: string };
@@ -158,14 +160,17 @@ function Templates({ canManage }: { canManage: boolean }) {
   );
 }
 
+const TABS = [{ id: 'messages', label: 'Sent messages' }, { id: 'channels', label: 'WhatsApp & SMS' }, { id: 'templates', label: 'Templates' }];
+
 export default function Index() {
   const access = useAccess();
   const [state, setState] = useUrlState({ tab: 'messages' });
+  const tab = TABS.some((t) => t.id === state.tab) ? state.tab : 'messages';
 
   return (
-    <AdminPage title="Messages" description="What your store sent to customers, and the wording it uses.">
-      <Tabs label="Messages sections" tabs={[{ id: 'messages', label: 'Sent messages' }, { id: 'templates', label: 'Templates' }]} active={state.tab === 'templates' ? 'templates' : 'messages'} onChange={(tab) => setState({ tab })} />
-      <div role="tabpanel">{state.tab === 'templates' ? <Templates canManage={access.can('notifications.manage')} /> : <Messages />}</div>
+    <AdminPage title="Messages" description="What your store sent to customers, how it reaches them, and the wording it uses.">
+      <Tabs label="Messages sections" tabs={TABS} active={tab} onChange={(next) => setState({ tab: next })} />
+      <div role="tabpanel">{tab === 'templates' ? <Templates canManage={access.can('notifications.manage')} /> : tab === 'channels' ? <StoreMessaging /> : <Messages />}</div>
     </AdminPage>
   );
 }

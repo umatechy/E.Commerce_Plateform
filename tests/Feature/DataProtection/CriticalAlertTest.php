@@ -276,6 +276,38 @@ final class CriticalAlertTest extends TestCase
         $this->assertSame(NotificationStatus::Sent, $this->alerts()->where('channel', NotificationChannel::Email)->last()->status);
     }
 
+    public function test_whatsapp_alerts_go_out_through_umar_techys_own_account_with_the_approved_alert_template(): void
+    {
+        Mail::fake();
+        $this->platformStaff(['email' => 'ops@platform.test']);
+        $admin = \App\Domain\Identity\Models\User::factory()->create(['platform_role' => 'super_admin']);
+        $storeOwner = $this->ownerOf(Store::factory()->create());
+        $this->setPlatform('alerts.whatsapp_enabled', true);
+        $this->setPlatform('alerts.whatsapp_recipients', ['+923001234567']);
+
+        // Phase B50: the Super Admin connects the platform's own WhatsApp number (the Test messenger here).
+        $this->actingAs($storeOwner)->putJson('/api/v1/super-admin/messaging/accounts/test_whatsapp', ['environment' => 'sandbox', 'credentials' => ['sender' => 'UMARTECHY', 'secret' => 'alert-secret']])->assertForbidden();
+        $this->actingAs($admin)->putJson('/api/v1/super-admin/messaging/accounts/test_whatsapp', ['environment' => 'sandbox', 'credentials' => ['sender' => 'UMARTECHY', 'secret' => 'alert-secret']])->assertOk();
+        $this->actingAs($admin)->putJson('/api/v1/super-admin/messaging/channels/whatsapp/enabled', ['enabled' => true])->assertOk();
+        $this->actingAs($admin)->putJson('/api/v1/super-admin/messaging/alert-template', ['template_name' => 'critical_alert', 'language_code' => 'en'])->assertOk()->assertJsonPath('data.status', 'approved');
+        $this->actingAs($admin)->getJson('/api/v1/super-admin/messaging')->assertOk()
+            ->assertJsonPath('data.channels.whatsapp.connected', 'test_whatsapp')
+            ->assertJsonPath('data.alert_template.template.status', 'approved')
+            ->assertJsonMissing(['alert-secret']);
+
+        $this->failScheduledBackup();
+        $this->deliverEvents();
+
+        $whatsapp = $this->alerts()->where('channel', NotificationChannel::WhatsApp)->sole();
+        $this->assertNull($whatsapp->store_id);
+        $this->assertSame(NotificationStatus::Sent, $whatsapp->status);
+        $this->assertCount(2, $whatsapp->provider_parameters, 'summary and reference, as the template expects');
+        $this->assertStringStartsWith('TM-', (string) $whatsapp->attempts()->sole()->provider_message_id);
+        // Twilio's real messages stay closed until the Super Admin opens them, with a reason on record.
+        $this->actingAs($admin)->putJson('/api/v1/super-admin/messaging/providers/twilio/live', ['allowed' => true, 'reason' => 'Sender ID checked'])->assertOk()->assertJsonPath('data.live_providers', ['twilio']);
+        $this->actingAs($admin)->putJson('/api/v1/super-admin/messaging/providers/meta_whatsapp/live', ['allowed' => true, 'reason' => 'Not gated'])->assertNotFound();
+    }
+
     public function test_alerts_about_a_stores_backup_stay_out_of_that_stores_records(): void
     {
         $staff = $this->platformStaff(['email' => 'ops@platform.test']);

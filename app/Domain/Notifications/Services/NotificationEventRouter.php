@@ -33,6 +33,14 @@ final class NotificationEventRouter
 
     public function route(string $eventType, array $payload): void
     {
+        // Phase B50 (gap G10): the same order updates by SMS and WhatsApp, where the store switched them on.
+        // A messaging problem never stops the email below.
+        try {
+            app(MessagingNotifier::class)->route($eventType, $payload);
+        } catch (\Throwable $e) {
+            report($e);
+        }
+
         match ($eventType) {
             'order.created' => $this->handleOrderCreated($payload),
             'order.cancelled' => $this->handleOrderCancelled($payload),

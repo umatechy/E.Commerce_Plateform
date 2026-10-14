@@ -13,5 +13,7 @@ final class NotificationSendResult
         public readonly ?string $providerMessageId = null,
         public readonly ?string $failureCode = null,
         public readonly ?string $failureReason = null,
+        // Phase B50: a failure retrying cannot change (bad number, opted out, no template).
+        public readonly bool $permanent = false,
     ) {}
 }

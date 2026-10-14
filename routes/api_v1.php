@@ -285,6 +285,16 @@ Route::middleware(['auth:sanctum', 'staff.principal', 'required.mfa'])->group(fu
     Route::post('/shipments/{shipment}/restock', [ShipmentController::class, 'restock']);
     Route::put('/shipments/{shipment}/tracking', [ShipmentController::class, 'setTracking']);
     Route::get('/shipments/{shipment}/label', [ShipmentController::class, 'label'])->middleware('throttle:60,1,shipment-label');
+    // Phase B50 (gap G10; Module 21): the store's SMS and WhatsApp.
+    $messaging = \App\Domain\Notifications\Http\Controllers\MessagingSettingsController::class;
+    Route::get('/messaging-settings', [$messaging, 'show']);
+    Route::put('/messaging-settings', [$messaging, 'update']);
+    Route::put('/messaging-settings/accounts/{provider}', [$messaging, 'saveAccount'])->where('provider', '[a-z_]{3,32}')->middleware(['step_up', 'throttle:20,10,messaging-account']);
+    Route::put('/messaging-settings/channels/{channel}/enabled', [$messaging, 'setEnabled'])->where('channel', 'sms|whatsapp');
+    Route::delete('/messaging-settings/channels/{channel}', [$messaging, 'disconnect'])->where('channel', 'sms|whatsapp')->middleware('step_up');
+    Route::post('/messaging-settings/channels/{channel}/test', [$messaging, 'test'])->where('channel', 'sms|whatsapp')->middleware('throttle:10,10,messaging-test');
+    Route::put('/messaging-settings/templates/{event}', [$messaging, 'saveTemplate'])->where('event', '[a-z_]{3,40}');
+    Route::post('/messaging-settings/templates/{event}/check', [$messaging, 'checkTemplate'])->where('event', '[a-z_]{3,40}')->middleware('throttle:30,10,messaging-template-check');
     $couriers = \App\Domain\Shipping\Http\Controllers\CourierSettingsController::class;
     Route::get('/courier-settings', [$couriers, 'show']);
     Route::put('/courier-settings', [$couriers, 'update']);
@@ -490,6 +500,15 @@ Route::middleware(['auth:sanctum', 'staff.principal', 'required.mfa'])->group(fu
             Route::delete('/payment-providers/{provider}/account', [$providers, 'disconnectAccount'])->where('provider', '[a-z]{3,20}')->middleware('step_up');
             Route::get('/payment-attempts', [$providers, 'attempts']);
             Route::get('/payment-findings', [$providers, 'findings']);
+            // Phase B50: Umar Techy's own SMS and WhatsApp (critical alerts) and SMS providers' live access.
+            $messagingAdmin = \App\Domain\SuperAdmin\Http\Controllers\SuperAdminMessagingController::class;
+            Route::get('/messaging', [$messagingAdmin, 'index']);
+            Route::put('/messaging/providers/{provider}/live', [$messagingAdmin, 'setLive'])->where('provider', '[a-z_]{3,32}')->middleware('step_up');
+            Route::put('/messaging/accounts/{provider}', [$messagingAdmin, 'saveAccount'])->where('provider', '[a-z_]{3,32}')->middleware('step_up');
+            Route::put('/messaging/channels/{channel}/enabled', [$messagingAdmin, 'setEnabled'])->where('channel', 'sms|whatsapp')->middleware('step_up');
+            Route::delete('/messaging/channels/{channel}', [$messagingAdmin, 'disconnect'])->where('channel', 'sms|whatsapp')->middleware('step_up');
+            Route::post('/messaging/channels/{channel}/test', [$messagingAdmin, 'test'])->where('channel', 'sms|whatsapp')->middleware('throttle:10,10,platform-messaging-test');
+            Route::put('/messaging/alert-template', [$messagingAdmin, 'saveTemplate'])->middleware('step_up');
             Route::get('/notifications/failures', [SuperAdminNotificationController::class, 'failures']);
             Route::get('/domains', [SuperAdminDomainController::class, 'indexAll']);
 

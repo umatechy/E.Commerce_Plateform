@@ -37,7 +37,7 @@ final class NotificationMessage extends Model
 
     protected $fillable = [
         'store_id', 'message_type', 'channel', 'recipient_type', 'recipient_id',
-        'destination', 'notification_template_id', 'subject', 'body', 'sealed_body', 'status',
+        'destination', 'notification_template_id', 'subject', 'body', 'sealed_body', 'provider_parameters', 'status',
         'source_event_type', 'idempotency_key', 'read_at', 'sent_at',
     ];
 
@@ -52,6 +52,7 @@ final class NotificationMessage extends Model
     {
         return [
             'sealed_body' => 'encrypted',
+            'provider_parameters' => 'array', // Phase B50: WhatsApp template values, in order
             'message_type' => NotificationMessageType::class,
             'channel' => NotificationChannel::class,
             'recipient_type' => RecipientType::class,

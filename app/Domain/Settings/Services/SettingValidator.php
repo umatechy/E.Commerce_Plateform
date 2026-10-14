@@ -35,7 +35,7 @@ final class SettingValidator
     private const ZERO_ALLOWED = ['billing.tax_rate_bps', 'billing.approval_threshold_minor', 'payments.cod.min_order_minor', 'payments.cod.max_order_minor'];
 
     /** Phase B48: lists that may be empty (no provider takes real money yet). */
-    private const EMPTY_LIST_ALLOWED = ['payments.live_providers'];
+    private const EMPTY_LIST_ALLOWED = ['payments.live_providers', 'messaging.live_providers', 'messaging.sms_events', 'messaging.whatsapp_events'];
 
     /** Phase B48: integer settings with a bounded range. */
     private const RANGES = [
@@ -43,6 +43,7 @@ final class SettingValidator
         // Stock is held for 15 minutes (InventoryService::reserve()); a longer window would wait on stock that is gone.
         'payments.order_payment_minutes' => [5, 15],
         'shipping.default_weight_grams' => [1, 100000], // Phase B49: up to 100 kg
+        'messaging.daily_limit' => [1, 100000], // Phase B50
     ];
 
     private function validateInteger(mixed $value, SettingDefinition $definition): int
@@ -152,6 +153,24 @@ final class SettingValidator
             foreach ($items as $item) {
                 if (! in_array($item, \App\Domain\Payments\Providers\ProviderRegistry::REAL_PROVIDERS, true)) {
                     throw new InvalidSettingValueException("\"{$item}\" is not a payment provider the platform supports.");
+                }
+            }
+            $items = array_values(array_unique($items));
+        }
+
+        // Phase B50: messaging events and gated providers the platform knows, each once.
+        if (in_array($definition->key, ['messaging.sms_events', 'messaging.whatsapp_events'], true)) {
+            foreach ($items as $item) {
+                if (! in_array($item, \App\Domain\Notifications\Messaging\MessagingEvents::storeKeys(), true)) {
+                    throw new InvalidSettingValueException("\"{$item}\" is not an update the platform can send.");
+                }
+            }
+            $items = array_values(array_unique($items));
+        }
+        if ($definition->key === 'messaging.live_providers') {
+            foreach ($items as $item) {
+                if (! in_array($item, \App\Domain\Notifications\Messaging\MessagingRegistry::GATED, true)) {
+                    throw new InvalidSettingValueException("\"{$item}\" is not a provider that needs opening.");
                 }
             }
             $items = array_values(array_unique($items));

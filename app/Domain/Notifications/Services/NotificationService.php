@@ -39,13 +39,14 @@ final class NotificationService
         string $idempotencyKey,
         ?string $sourceEventType = null,
         array $secretVariables = [],
+        array $providerParameters = [], // Phase B50: the values of an approved WhatsApp template, in its order
     ): ?NotificationMessage {
         if ($existing = NotificationMessage::query()->where('idempotency_key', $idempotencyKey)->first()) {
             return $existing;
         }
 
         $renderer = new NotificationTemplateRenderer();
-        $escape = $channel === NotificationChannel::Email;
+        $escape = $channel === NotificationChannel::Email; // SMS and WhatsApp are plain text
         $renderedSubject = $renderer->render($subject, $variables, escapeHtml: false);
         // Secret values (e.g. a link carrying a token) reach only the
         // encrypted sealed_body; the stored body shows "[hidden]" instead.
@@ -61,6 +62,7 @@ final class NotificationService
             'subject' => $renderedSubject,
             'body' => $renderedBody,
             'sealed_body' => $sealedBody,
+            'provider_parameters' => $providerParameters === [] ? null : array_values($providerParameters),
             'status' => NotificationStatus::Created,
             'source_event_type' => $sourceEventType,
             'idempotency_key' => $idempotencyKey,

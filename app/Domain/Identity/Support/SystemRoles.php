@@ -61,6 +61,7 @@ final class SystemRoles
                 'customers.export', 'customers.import', 'store_credit.manage', // creating store credit by hand is a financial act (Phase B34)
                 'tax.manage', // Phase B46: tax set-up is a financial and legal setting
                 'payments.reconcile', // Phase B48; payments.provider_config (where the money goes) stays with the Owner
+                'messaging.providers', // Phase B50: SMS and WhatsApp accounts (Module 21 §59: elevated)
             ]],
             'manager' => ['name' => 'Manager', 'permissions' => self::MANAGER],
             'staff' => ['name' => 'Staff', 'permissions' => [

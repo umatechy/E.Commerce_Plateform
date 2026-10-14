@@ -84,7 +84,7 @@ final class CheckoutController
                 paymentMethod: PaymentMethod::from($request->string('payment_method')->toString()),
                 checkoutData: $request->only([
                     'guest_name', 'guest_email', 'guest_phone',
-                    'billing_address', 'shipping_address', 'notes', 'shipping_method_id',
+                    'billing_address', 'shipping_address', 'notes', 'shipping_method_id', 'whatsapp_updates',
                     // Only a signed-in customer has store credit; a guest's flag is ignored.
                     ...($customer !== null ? ['use_store_credit'] : []),
                 ]),

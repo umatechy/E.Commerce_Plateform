@@ -59,6 +59,7 @@ final class DeliverNotificationJob implements ShouldQueue
 
         $gateway = $channels->resolve($message->channel);
         $result = $gateway->send($message);
+        // providerName() after send(): a messaging channel knows its provider once it found the account.
         $attemptNumber = $message->attempts()->count() + 1;
 
         NotificationDeliveryAttempt::query()->create([
@@ -89,7 +90,7 @@ final class DeliverNotificationJob implements ShouldQueue
         // A channel_not_configured failure (stub SMS/WhatsApp/Push) is
         // a PERMANENT failure — retrying it can never succeed, so it
         // goes straight to Failed rather than RetryPending.
-        if ($result->failureCode === 'channel_not_configured') {
+        if ($result->failureCode === 'channel_not_configured' || $result->permanent) {
             $this->transitionTo($message, $stateMachine, NotificationStatus::Failed);
 
             return;

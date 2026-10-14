@@ -59,6 +59,9 @@ final class SettingRegistry
             // Which providers may take real (production) money: empty until Umar Techy has
             // checked a provider's integration in its sandbox.
             'payments.live_providers' => new SettingDefinition(key: 'payments.live_providers', scope: SettingScope::Platform, type: SettingType::StringArray, default: []),
+            // Phase B50 (owner decision 3): SMS providers that may send real messages, after Umar Techy's
+            // sender-ID, delivery and pricing checks. Empty until then.
+            'messaging.live_providers' => new SettingDefinition(key: 'messaging.live_providers', scope: SettingScope::Platform, type: SettingType::StringArray, default: []),
             'payments.webhook_tolerance_seconds' => new SettingDefinition(key: 'payments.webhook_tolerance_seconds', scope: SettingScope::Platform, type: SettingType::Integer, default: 300),
             'payments.order_payment_minutes' => new SettingDefinition(key: 'payments.order_payment_minutes', scope: SettingScope::Platform, type: SettingType::Integer, default: 15),
             'platform.trial_days' => new SettingDefinition(
@@ -155,6 +158,11 @@ final class SettingRegistry
             'tax.label' => new SettingDefinition(key: 'tax.label', scope: SettingScope::Store, type: SettingType::String, default: 'Tax'),
             // Phase B48 (gap G9; Module 12 §16, §18–19, §36–37): how shoppers may pay. Changed only on the
             // Payments page (payments.provider_config). Bank transfer is offered once the account is filled in.
+            // Phase B50 (gap G10; Module 21 §11, §23, §46): which order updates go by SMS and by WhatsApp,
+            // and the most messages a store sends per channel per day. Changed on the Messages page only.
+            'messaging.sms_events' => new SettingDefinition(key: 'messaging.sms_events', scope: SettingScope::Store, type: SettingType::StringArray, default: []),
+            'messaging.whatsapp_events' => new SettingDefinition(key: 'messaging.whatsapp_events', scope: SettingScope::Store, type: SettingType::StringArray, default: []),
+            'messaging.daily_limit' => new SettingDefinition(key: 'messaging.daily_limit', scope: SettingScope::Store, type: SettingType::Integer, default: 500),
             // Phase B49 (Module 13 §57, §74): couriers. Changed on the Shipping setup page only.
             'shipping.default_weight_grams' => new SettingDefinition(key: 'shipping.default_weight_grams', scope: SettingScope::Store, type: SettingType::Integer, default: 500),
             // A link customers follow to the courier's own tracking page, with {tracking} for the number. Empty: none.

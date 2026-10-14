@@ -44,7 +44,7 @@ function Message({ notice }: { notice: Notice }) {
 
 function DetailsForm({ storefront, customer, onSaved }: Shared & { customer: Customer; onSaved: (c: Customer) => void }) {
   const t = useT();
-  const [form, setForm] = useState({ name: customer.name, phone: customer.phone ?? '', marketing_email_opt_in: Boolean(customer.marketing_email_opt_in) });
+  const [form, setForm] = useState({ name: customer.name, phone: customer.phone ?? '', marketing_email_opt_in: Boolean(customer.marketing_email_opt_in), whatsapp_opt_in: Boolean(customer.whatsapp_opt_in) });
   const [notice, setNotice] = useState<Notice>(null);
 
   async function submit(event: React.FormEvent) {
@@ -72,6 +72,10 @@ function DetailsForm({ storefront, customer, onSaved }: Shared & { customer: Cus
       <label className="flex items-center gap-2 text-sm">
         <input type="checkbox" checked={form.marketing_email_opt_in} onChange={(e) => setForm({ ...form, marketing_email_opt_in: e.target.checked })} />
         {t('Email me news and offers')}
+      </label>
+      <label className="flex items-center gap-2 text-sm">
+        <input type="checkbox" checked={form.whatsapp_opt_in} onChange={(e) => setForm({ ...form, whatsapp_opt_in: e.target.checked })} />
+        {t('Send my order updates on WhatsApp')}
       </label>
       <button type="submit" className="sf-btn rounded-sf bg-sf-primary px-4 py-2 font-medium text-white">
         {t('Save details')}

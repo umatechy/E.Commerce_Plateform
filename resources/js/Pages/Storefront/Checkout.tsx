@@ -53,13 +53,15 @@ function newIdempotencyKey(): string {
  * the shopper's details. One idempotency key per visit, so a double
  * click or a retry can never place two orders.
  */
-export default function Checkout({ storefront, seo, payment_methods, payment_options }: StorefrontPageProps & { payment_methods: string[]; payment_options?: PaymentOption[] }) {
+export default function Checkout({ storefront, seo, payment_methods, payment_options, whatsapp_updates = false }: StorefrontPageProps & { payment_methods: string[]; payment_options?: PaymentOption[]; whatsapp_updates?: boolean }) {
   const t = useT();
   // Phase B48: the ways to pay this store offers now (package, settings, working accounts) —
   // the server checks the same again when the order is placed.
   const methods: PaymentOption[] = payment_options ?? payment_methods.map((method) => ({ method, kind: method === 'cod' ? 'cod' : 'bank_transfer' }));
   const [cart, setCart] = useState<CartData | null>(null);
   const [form, setForm] = useState({ name: '', email: '', phone: '', line1: '', city: '', province: '', postal_code: '', country: '', notes: '' });
+  // Phase B50: WhatsApp order updates only with the shopper's own yes (unticked by default).
+  const [whatsapp, setWhatsapp] = useState(false);
   const [shipping, setShipping] = useState<ShippingOption[] | null>(null);
   const [shippingId, setShippingId] = useState<number | null>(null);
   const [payment, setPayment] = useState<string>(() => methods[0]?.method ?? '');
@@ -183,6 +185,7 @@ export default function Checkout({ storefront, seo, payment_methods, payment_opt
           shipping_address: address,
           billing_address: address,
           notes: form.notes || null,
+          ...(whatsapp_updates ? { whatsapp_updates: whatsapp && form.phone.trim() !== '' } : {}),
           // A wish only: the server decides how much credit there is and takes it.
           use_store_credit: hasCredit && useCredit,
           idempotency_key: idempotencyKey,
@@ -267,6 +270,17 @@ export default function Checkout({ storefront, seo, payment_methods, payment_opt
               <input {...field('name')} required placeholder={t('Full name')} aria-label={t('Full name')} autoComplete="name" className={input} />
               <input {...field('email')} required type="email" placeholder={t('Email')} aria-label={t('Email')} autoComplete="email" className={input} />
               <input {...field('phone')} placeholder={t('Phone (optional)')} aria-label={t('Phone')} autoComplete="tel" className={input} />
+              {whatsapp_updates && (
+                <label className="flex items-start gap-2 text-sm sm:col-span-2">
+                  <input type="checkbox" checked={whatsapp} onChange={(e) => setWhatsapp(e.target.checked)} className="mt-1" aria-describedby="whatsapp-updates-hint" />
+                  <span>
+                    {t('Send my order updates on WhatsApp')}
+                    <span id="whatsapp-updates-hint" className="block text-xs text-sf-muted">
+                      {form.phone.trim() === '' ? t('Add your phone number above to get them.') : t('Only news about this order, to the number above. Reply STOP to end them.')}
+                    </span>
+                  </span>
+                </label>
+              )}
             </fieldset>
             <fieldset className="grid gap-3 sm:grid-cols-2">
               <legend className="mb-2 font-semibold">{t('Delivery address')}</legend>

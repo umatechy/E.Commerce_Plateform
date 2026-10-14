@@ -107,7 +107,9 @@ final class StepUpTest extends TestCase
             // Phase B48: where a store's money goes (merchant accounts, bank details), and Umar Techy's
             // own accounts and which providers may take real money.
             'DELETE api/v1/courier-settings/couriers/{provider}', // Phase B49: courier accounts
+            'DELETE api/v1/messaging-settings/channels/{channel}', // Phase B50: SMS and WhatsApp accounts
             'DELETE api/v1/payment-settings/providers/{provider}',
+            'DELETE api/v1/super-admin/messaging/channels/{channel}',
             'DELETE api/v1/super-admin/payment-providers/{provider}/account',
             // Phase B45 follow-up: deleting a starter template saved from a store.
             'DELETE api/v1/super-admin/starter-templates/{key}',
@@ -140,9 +142,14 @@ final class StepUpTest extends TestCase
             'POST api/v1/super-admin/users/{user}/deactivate',
             'POST api/v1/super-admin/users/{user}/reactivate',
             'PUT api/v1/courier-settings/couriers/{provider}',
+            'PUT api/v1/messaging-settings/accounts/{provider}',
             'PUT api/v1/payment-settings/bank-transfer',
             'PUT api/v1/payment-settings/providers/{provider}',
             'PUT api/v1/payment-settings/providers/{provider}/enabled',
+            'PUT api/v1/super-admin/messaging/accounts/{provider}',
+            'PUT api/v1/super-admin/messaging/alert-template',
+            'PUT api/v1/super-admin/messaging/channels/{channel}/enabled',
+            'PUT api/v1/super-admin/messaging/providers/{provider}/live',
             'PUT api/v1/super-admin/packages/{package}',
             'PUT api/v1/super-admin/packages/{package}/entitlements',
             'PUT api/v1/super-admin/payment-providers/{provider}/account',

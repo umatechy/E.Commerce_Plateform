@@ -28,6 +28,7 @@ final class CustomerProfileController
         return response()->json(['data' => [
             ...(new CustomerResource($customer))->resolve($request),
             'marketing_email_opt_in' => (bool) $customer->marketing_email_opt_in,
+            'whatsapp_opt_in' => (bool) $customer->whatsapp_opt_in, // Phase B50
             'member_since' => $customer->created_at?->toIso8601String(),
         ]]);
     }
@@ -38,11 +39,16 @@ final class CustomerProfileController
             'name' => ['sometimes', 'string', 'max:255'],
             'phone' => ['nullable', 'string', 'max:32', 'regex:/^[0-9+()\-\s]{4,32}$/'],
             'marketing_email_opt_in' => ['sometimes', 'boolean'],
+            'whatsapp_opt_in' => ['sometimes', 'boolean'], // Phase B50: order updates on WhatsApp
         ]);
 
         /** @var Customer $customer */
         $customer = $request->user();
-        $customer->fill($validated)->save();
+        $customer->fill(\Illuminate\Support\Arr::except($validated, ['whatsapp_opt_in']))->save();
+        if (array_key_exists('whatsapp_opt_in', $validated) && (bool) $validated['whatsapp_opt_in'] !== (bool) $customer->whatsapp_opt_in) {
+            $customer->forceFill(['whatsapp_opt_in' => (bool) $validated['whatsapp_opt_in'], 'whatsapp_opt_in_at' => $validated['whatsapp_opt_in'] ? now() : null])->save();
+            app(AuditLogger::class)->record('customer.whatsapp_consent_changed', ['opt_in' => (bool) $validated['whatsapp_opt_in']], $customer);
+        }
 
         if (array_key_exists('marketing_email_opt_in', $validated)) {
             app(AuditLogger::class)->record('customer.marketing_consent_changed', ['opt_in' => (bool) $validated['marketing_email_opt_in']], $customer);

@@ -53,7 +53,7 @@ export const storeNav: NavGroup[] = [
       { href: '/promotions', label: 'Promotions', description: 'Discounts and coupon codes.', permissions: ['promotions.view'] },
       { href: '/campaigns', label: 'Campaigns', description: 'Email campaigns to your customers.', permissions: ['marketing.view'] },
       { href: '/segments', label: 'Segments', description: 'Groups of customers for campaigns.', permissions: ['marketing.view'] },
-      { href: '/notifications', label: 'Messages', description: 'Sent messages and their templates.', permissions: ['notifications.view'] },
+      { href: '/notifications', label: 'Messages', description: 'Sent messages, WhatsApp & SMS, and templates.', permissions: ['notifications.view'] },
     ],
   },
   {
@@ -104,6 +104,7 @@ export const platformNav: NavGroup = {
     { href: '/super-admin/packages', label: 'Packages', description: 'Packages and what they include.' },
     { href: '/super-admin/billing', label: 'Platform billing', description: 'Prices, invoices and payments received.' },
     { href: '/super-admin/payments', label: 'Payment providers', description: 'JazzCash, Easypaisa: live access, health, lookups and findings.' },
+    { href: '/super-admin/messaging', label: 'WhatsApp & SMS', description: 'Alert account and template, SMS providers’ live access, delivery.' },
     { href: '/super-admin/monitoring', label: 'Monitoring', description: 'Infrastructure, store health and queues.' },
     { href: '/super-admin/audit-log', label: 'Platform audit log', description: 'The audit trail of every store and the platform.' },
     { href: '/super-admin/catalog', label: 'Themes & domains', description: 'Themes, domains and developer applications.' },

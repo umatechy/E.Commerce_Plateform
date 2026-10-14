@@ -45,6 +45,8 @@ final class CheckoutRequest extends FormRequest
             'notes' => ['nullable', 'string', 'max:1000'],
             // Phase B34: "pay with my store credit". A wish, not an amount: the server decides how much.
             'use_store_credit' => ['nullable', 'boolean'],
+            // Phase B50: "send my order updates on WhatsApp" — the customer's own yes (Meta policy, Module 21 §9).
+            'whatsapp_updates' => ['nullable', 'boolean'],
             'idempotency_key' => ['required', 'string', 'max:100'],
         ];
     }

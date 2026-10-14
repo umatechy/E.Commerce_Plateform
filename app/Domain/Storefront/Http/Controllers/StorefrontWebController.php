@@ -107,6 +107,9 @@ final class StorefrontWebController
         return $this->render($request, 'Storefront/Checkout', [
             'payment_methods' => $this->experience->paymentMethods(),
             'payment_options' => $this->experience->paymentOptions(), // Phase B48
+            // Phase B50: offer "order updates on WhatsApp" only when the store sends them.
+            'whatsapp_updates' => (array) app(\App\Domain\Settings\Services\ConfigService::class)->get('messaging.whatsapp_events') !== []
+                && \App\Domain\Notifications\Models\MessagingAccount::query()->where('channel', 'whatsapp')->where('is_enabled', true)->exists(),
         ], $this->privatePageSeo($request, 'Checkout'));
     }
 
