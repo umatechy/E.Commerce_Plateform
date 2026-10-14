@@ -116,6 +116,6 @@ Not built (b51-store-lifecycle.md §7):
 - ownership transfer, store cloning and store import;
 - an Urdu text for the closed-shop page.
 
-CI: pending — to be recorded after the push.
+CI: run on 55da9b8 — success (security, backend, frontend), verified 2026-10-14.
 
 Next (on the owner's word): B52 — security and operations.
