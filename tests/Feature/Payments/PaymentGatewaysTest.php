@@ -51,6 +51,7 @@ final class PaymentGatewaysTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
+        $this->withoutVite(); // storefront pages render without a built asset manifest (CI builds assets in another job)
         [$this->store, $this->owner, $this->product, $this->shippingMethodId] = $this->shop();
     }
 
