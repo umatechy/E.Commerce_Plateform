@@ -27,6 +27,7 @@ final class PaymentResource extends JsonResource
             'id' => $this->public_id,
             'order' => $this->whenLoaded('order', fn () => $this->order === null ? null : ['id' => $this->order->public_id, 'order_number' => $this->order->order_number]),
             'method' => $this->method->value,
+            'provider' => $this->provider, // Phase B48: jazzcash, easypaisa, simulator; null for manual methods
             'status' => $this->status->value,
             'amount_minor' => $this->amount_minor,
             'currency' => $this->currency,

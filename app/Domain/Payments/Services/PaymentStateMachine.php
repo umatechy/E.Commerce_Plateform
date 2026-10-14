@@ -24,9 +24,13 @@ final class PaymentStateMachine
         'authorized' => ['paid', 'failed', 'cancelled'],
         'paid' => ['refund_pending', 'partially_refunded', 'refunded', 'disputed', 'reversed'],
         'partially_paid' => ['paid', 'failed', 'refund_pending'],
+        // Phase B48 (Module 12 §43): an online payment the shopper did not finish in time
+        // expires; if the provider later confirms it, the money did arrive and is recorded
+        // (OnlinePaymentService also flags it for the store: usually a refund is due).
+        'expired' => ['paid'],
         'refund_pending' => ['partially_refunded', 'refunded'],
         'partially_refunded' => ['refund_pending', 'refunded'],
-        // failed/cancelled/expired/refunded/disputed/reversed are
+        // failed/cancelled/refunded/disputed/reversed are
         // terminal — no outgoing transitions registered.
     ];
 

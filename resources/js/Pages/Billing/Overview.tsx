@@ -15,6 +15,7 @@ import { formatUtcDate } from '@/lib/datetime';
 import { FEATURE_LABELS, USAGE_LABELS, labelFor } from '@/lib/labels';
 import PlanChangeDialog from '@/Components/Billing/PlanChangeDialog';
 import PaymentNoticeDialog from '@/Components/Billing/PaymentNoticeDialog';
+import PayOnlineDialog, { type OnlineInvoicePayment } from '@/Components/Billing/PayOnlineDialog';
 import BillingAccountCards from '@/Components/Billing/BillingAccountCards';
 
 /**
@@ -63,8 +64,11 @@ type InvoiceDetail = Invoice & {
   payments?: { id: string; amount_minor: number; currency: string; method: string; reference: string | null; received_at: string }[];
 };
 
-function InvoiceDialog({ invoice, onClose, onPaid }: { invoice: Invoice; onClose: () => void; onPaid?: (invoice: InvoiceDetail) => void }) {
+function InvoiceDialog({ invoice, onClose, onPaid, onPayOnline }: { invoice: Invoice; onClose: () => void; onPaid?: (invoice: InvoiceDetail) => void; onPayOnline?: (invoice: InvoiceDetail) => void }) {
   const state = useApi<{ data: InvoiceDetail }>(`/billing/invoices/${invoice.id}`);
+  // Phase B48: offered only when Umar Techy has a wallet account open for invoices.
+  const online = useApi<{ data: OnlineInvoicePayment }>(onPayOnline && invoice.status === 'open' ? `/billing/invoices/${invoice.id}/online-payment` : null);
+  const canPayOnline = (online.data?.data.options.length ?? 0) > 0 || online.data?.data.attempt != null;
 
   return (
     <Dialog open wide title={`Invoice ${invoice.number}`} onClose={onClose}>
@@ -118,7 +122,8 @@ function InvoiceDialog({ invoice, onClose, onPaid }: { invoice: Invoice; onClose
             {/* Phase B47 (Module 29 §75, §73): the PDF, and telling Umar Techy you paid. */}
             <div className="flex flex-wrap justify-end gap-2">
               <a href={`/api/v1/billing/invoices/${data.id}/pdf`} className="inline-flex items-center rounded-md border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-800 hover:bg-slate-50">Download PDF</a>
-              {onPaid && data.status === 'open' && data.amount_due_minor > 0 && <Button size="sm" variant="primary" onClick={() => onPaid(data)}>I have paid</Button>}
+              {onPayOnline && canPayOnline && data.status === 'open' && data.amount_due_minor > 0 && <Button size="sm" variant="primary" onClick={() => onPayOnline(data)}>Pay online (JazzCash / Easypaisa)</Button>}
+              {onPaid && data.status === 'open' && data.amount_due_minor > 0 && <Button size="sm" variant={canPayOnline ? 'secondary' : 'primary'} onClick={() => onPaid(data)}>I have paid</Button>}
             </div>
           </div>
         )}
@@ -139,6 +144,7 @@ export default function Overview() {
   const [interval, setIntervalChoice] = useState<string | null>(null);
   const [changingPlan, setChangingPlan] = useState(false);
   const [paying, setPaying] = useState<InvoiceDetail | null>(null);
+  const [payingOnline, setPayingOnline] = useState<string | null>(null); // Phase B48
   const [version, setVersion] = useState(0);
   const refresh = () => {
     billing.reload();
@@ -277,8 +283,10 @@ export default function Overview() {
           invoice={openInvoice}
           onClose={() => setOpenInvoice(null)}
           onPaid={canManage ? (detail) => { setOpenInvoice(null); setPaying(detail); } : undefined}
+          onPayOnline={canManage ? (detail) => { setOpenInvoice(null); setPayingOnline(detail.id); } : undefined}
         />
       )}
+      {payingOnline && <PayOnlineDialog invoiceId={payingOnline} onClose={() => { setPayingOnline(null); refresh(); }} onPaid={() => { setPayingOnline(null); refresh(); }} />}
       {paying && <PaymentNoticeDialog invoice={paying} onClose={() => setPaying(null)} onDone={() => { setPaying(null); refresh(); }} />}
       {changingPlan && <PlanChangeDialog onClose={() => setChangingPlan(false)} onDone={() => { setChangingPlan(false); refresh(); }} />}
 

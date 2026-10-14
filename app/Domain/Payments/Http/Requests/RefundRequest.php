@@ -19,6 +19,8 @@ final class RefundRequest extends FormRequest
             'amount_minor' => ['required', 'integer', 'min:1'],
             'reason' => ['nullable', 'string', 'max:500'],
             'idempotency_key' => ['required', 'string', 'max:100'],
+            // Phase B48: the provider's reference for a refund made in its merchant portal.
+            'provider_reference' => ['nullable', 'string', 'max:100'],
         ];
     }
 }

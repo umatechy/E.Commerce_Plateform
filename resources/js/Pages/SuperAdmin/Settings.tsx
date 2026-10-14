@@ -27,6 +27,9 @@ const INFO: Record<string, SettingInfo> = {
   },
   'platform.trial_package': { label: 'Trial package', description: 'The package a new self-service store starts its trial on.', itemHint: 'A package code such as basic.' },
   // Phase B47 (Module 29): Umar Techy's own billing to stores.
+  // Phase B48: online payments.
+  'payments.webhook_tolerance_seconds': { label: 'Payment notification time window (seconds)', description: 'A signed notification older or newer than this is refused, so a captured one cannot be sent again later. 30 to 3600; 300 is usual.' },
+  'payments.order_payment_minutes': { label: 'Time to pay an online order (minutes)', description: 'An order paid by JazzCash or Easypaisa that is not paid within this time is cancelled and its stock released. 5 to 15 (stock is held for 15).' },
   'billing.tax_rate_bps': { label: 'Tax on platform invoices (basis points)', description: '1700 = 17 %. 0 = no tax. Applies to invoices issued from now on; issued invoices keep their tax.' },
   'billing.tax_label': { label: 'Tax name on platform invoices', description: 'For example Tax, GST or Sales tax.' },
   'billing.approval_threshold_minor': { label: 'Credit notes need a second person from (minor units)', description: 'A credit note of this amount or more waits until another team member approves it. 0 = no approval step. In minor units: 500000 = Rs. 5,000.' },

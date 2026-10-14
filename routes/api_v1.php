@@ -143,6 +143,9 @@ Route::middleware(['auth:sanctum', 'staff.principal', 'required.mfa'])->group(fu
     Route::get('/billing/invoices/{invoice}/pdf', [$account, 'invoicePdf'])->middleware('throttle:30,1,billing-pdf');
     Route::get('/billing/payment-notices', [$account, 'notices']);
     Route::post('/billing/invoices/{invoice}/payment-notices', [$account, 'submitNotice'])->middleware('throttle:10,10,payment-notice');
+    // Phase B48: pay an invoice from JazzCash or Easypaisa into Umar Techy's account.
+    Route::get('/billing/invoices/{invoice}/online-payment', [\App\Domain\Billing\Http\Controllers\BillingOnlinePaymentController::class, 'show'])->middleware('throttle:120,1,billing-online-status');
+    Route::post('/billing/invoices/{invoice}/online-payment', [\App\Domain\Billing\Http\Controllers\BillingOnlinePaymentController::class, 'start'])->middleware('throttle:10,10,billing-online-pay');
 
     // --- Catalog (Modules 06-07, Phase B3) ---
     // Phase B40: before the resource, so "export" is not read as a product id.
@@ -254,6 +257,19 @@ Route::middleware(['auth:sanctum', 'staff.principal', 'required.mfa'])->group(fu
     Route::get('/payments/{payment}/transactions', [PaymentController::class, 'transactions']);
     Route::post('/payments/{payment}/manual-confirm', [PaymentController::class, 'manualConfirm']);
     Route::post('/payments/{payment}/refund', [PaymentController::class, 'refund']);
+    // Phase B48 (gap G9): reconciliation findings, and the store's payment settings. Bank details and
+    // merchant accounts decide where the money goes: those changes need a fresh password (step-up).
+    Route::get('/payment-reconciliation', [\App\Domain\Payments\Http\Controllers\PaymentReconciliationController::class, 'index']);
+    Route::post('/payment-reconciliation/{item}/resolve', [\App\Domain\Payments\Http\Controllers\PaymentReconciliationController::class, 'resolve'])->where('item', '[0-9A-Za-z]{26}');
+    $paymentSettings = \App\Domain\Payments\Http\Controllers\PaymentSettingsController::class;
+    Route::get('/payment-settings', [$paymentSettings, 'show']);
+    Route::put('/payment-settings/cod', [$paymentSettings, 'updateCod']);
+    Route::put('/payment-settings/bank-transfer', [$paymentSettings, 'updateBankTransfer'])->middleware('step_up');
+    Route::put('/payment-settings/providers/{provider}', [$paymentSettings, 'saveProvider'])->where('provider', '[a-z]{3,20}')->middleware(['step_up', 'throttle:20,10,payment-provider-save']);
+    Route::put('/payment-settings/providers/{provider}/enabled', [$paymentSettings, 'setEnabled'])->where('provider', '[a-z]{3,20}')->middleware('step_up');
+    Route::delete('/payment-settings/providers/{provider}', [$paymentSettings, 'disconnect'])->where('provider', '[a-z]{3,20}')->middleware('step_up');
+    Route::post('/payment-settings/providers/{provider}/test', [$paymentSettings, 'test'])->where('provider', '[a-z]{3,20}')->middleware('throttle:10,10,payment-provider-test');
+    Route::get('/payment-attempts/{attempt}', [$paymentSettings, 'attempt'])->where('attempt', '[0-9A-Za-z]{26}')->middleware('throttle:120,1,payment-attempt-status');
 
     // --- Shipments (Module 13, Phase B8) ---
     Route::get('/shipments', [ShipmentController::class, 'index']);
@@ -449,6 +465,15 @@ Route::middleware(['auth:sanctum', 'staff.principal', 'required.mfa'])->group(fu
             Route::post('/users/{user}/deactivate', [SuperAdminUserController::class, 'deactivate'])->middleware('step_up');
             Route::post('/users/{user}/reactivate', [SuperAdminUserController::class, 'reactivate'])->middleware('step_up');
             Route::get('/payments/failures', [SuperAdminPaymentController::class, 'failures']);
+            // Phase B48 (Module 30 §26–27): payment providers, Umar Techy's own merchant accounts, lookup, findings.
+            $providers = \App\Domain\SuperAdmin\Http\Controllers\SuperAdminPaymentProviderController::class;
+            Route::get('/payment-providers', [$providers, 'index']);
+            Route::put('/payment-providers/{provider}/live', [$providers, 'setLive'])->where('provider', '[a-z]{3,20}')->middleware('step_up');
+            Route::put('/payment-providers/{provider}/account', [$providers, 'saveAccount'])->where('provider', '[a-z]{3,20}')->middleware('step_up');
+            Route::put('/payment-providers/{provider}/account/enabled', [$providers, 'setAccountEnabled'])->where('provider', '[a-z]{3,20}')->middleware('step_up');
+            Route::delete('/payment-providers/{provider}/account', [$providers, 'disconnectAccount'])->where('provider', '[a-z]{3,20}')->middleware('step_up');
+            Route::get('/payment-attempts', [$providers, 'attempts']);
+            Route::get('/payment-findings', [$providers, 'findings']);
             Route::get('/notifications/failures', [SuperAdminNotificationController::class, 'failures']);
             Route::get('/domains', [SuperAdminDomainController::class, 'indexAll']);
 

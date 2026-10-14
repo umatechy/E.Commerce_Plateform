@@ -27,7 +27,7 @@ final class StorefrontApiController
         return $this->ok([
             'shell' => $this->experience->shell($store),
             'home' => $this->experience->home($store),
-            'checkout' => ['payment_methods' => $this->experience->paymentMethods()],
+            'checkout' => ['payment_methods' => $this->experience->paymentMethods(), 'payment_options' => $this->experience->paymentOptions()],
         ]);
     }
 

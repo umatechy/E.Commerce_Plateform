@@ -55,6 +55,12 @@ final class SettingRegistry
             'billing.upgrade_timing' => new SettingDefinition(key: 'billing.upgrade_timing', scope: SettingScope::Platform, type: SettingType::String, default: 'immediate_prorated', allowedValues: ['immediate_prorated', 'next_period']),
             'billing.issuer_name' => new SettingDefinition(key: 'billing.issuer_name', scope: SettingScope::Platform, type: SettingType::String, default: 'Umar Techy'),
             'billing.issuer_details' => new SettingDefinition(key: 'billing.issuer_details', scope: SettingScope::Platform, type: SettingType::String, default: null),
+            // Phase B48 (Module 12 §29, §61, §43): payment gateways.
+            // Which providers may take real (production) money: empty until Umar Techy has
+            // checked a provider's integration in its sandbox.
+            'payments.live_providers' => new SettingDefinition(key: 'payments.live_providers', scope: SettingScope::Platform, type: SettingType::StringArray, default: []),
+            'payments.webhook_tolerance_seconds' => new SettingDefinition(key: 'payments.webhook_tolerance_seconds', scope: SettingScope::Platform, type: SettingType::Integer, default: 300),
+            'payments.order_payment_minutes' => new SettingDefinition(key: 'payments.order_payment_minutes', scope: SettingScope::Platform, type: SettingType::Integer, default: 15),
             'platform.trial_days' => new SettingDefinition(
                 key: 'platform.trial_days', scope: SettingScope::Platform, type: SettingType::Integer,
                 default: 14,
@@ -147,6 +153,16 @@ final class SettingRegistry
             'tax.discount_basis' => new SettingDefinition(key: 'tax.discount_basis', scope: SettingScope::Store, type: SettingType::String, default: 'before_tax', allowedValues: ['before_tax', 'after_tax']),
             'tax.rounding' => new SettingDefinition(key: 'tax.rounding', scope: SettingScope::Store, type: SettingType::String, default: 'line', allowedValues: ['line', 'order']),
             'tax.label' => new SettingDefinition(key: 'tax.label', scope: SettingScope::Store, type: SettingType::String, default: 'Tax'),
+            // Phase B48 (gap G9; Module 12 §16, §18–19, §36–37): how shoppers may pay. Changed only on the
+            // Payments page (payments.provider_config). Bank transfer is offered once the account is filled in.
+            'payments.cod.enabled' => new SettingDefinition(key: 'payments.cod.enabled', scope: SettingScope::Store, type: SettingType::Boolean, default: true),
+            'payments.cod.min_order_minor' => new SettingDefinition(key: 'payments.cod.min_order_minor', scope: SettingScope::Store, type: SettingType::Integer, default: 0), // 0: no minimum
+            'payments.cod.max_order_minor' => new SettingDefinition(key: 'payments.cod.max_order_minor', scope: SettingScope::Store, type: SettingType::Integer, default: 0), // 0: no maximum
+            'payments.bank_transfer.enabled' => new SettingDefinition(key: 'payments.bank_transfer.enabled', scope: SettingScope::Store, type: SettingType::Boolean, default: true),
+            'payments.bank.account_title' => new SettingDefinition(key: 'payments.bank.account_title', scope: SettingScope::Store, type: SettingType::String, default: null),
+            'payments.bank.bank_name' => new SettingDefinition(key: 'payments.bank.bank_name', scope: SettingScope::Store, type: SettingType::String, default: null),
+            'payments.bank.account_number' => new SettingDefinition(key: 'payments.bank.account_number', scope: SettingScope::Store, type: SettingType::String, default: null), // account number or IBAN
+            'payments.bank.instructions' => new SettingDefinition(key: 'payments.bank.instructions', scope: SettingScope::Store, type: SettingType::String, default: null),
             'api.default_rate_limit_per_minute' => new SettingDefinition(
                 key: 'api.default_rate_limit_per_minute', scope: SettingScope::Platform, type: SettingType::Integer,
                 default: 60, // Module 31 §17/§43 "Rate Limiting / Configuration" — Phase B18's own integration point

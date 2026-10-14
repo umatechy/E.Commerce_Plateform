@@ -100,6 +100,9 @@ Route::middleware(['customer.optional'])->group(function () {
     Route::post('/checkout', [CheckoutController::class, 'store'])->middleware('throttle:10,1');
     // Phase B46: the total with discount, shipping and tax before placing the order (read-only).
     Route::post('/checkout/summary', [CheckoutController::class, 'summary'])->middleware('throttle:60,1,checkout-summary');
+    // Phase B48: follow an online payment and try again (the guest's token or the signed-in owner of the order).
+    Route::get('/checkout/payments/{payment}', [\App\Domain\Payments\Http\Controllers\StorefrontPaymentController::class, 'show'])->where('payment', '[0-9A-Za-z]{26}')->middleware('throttle:120,1,checkout-payment-status');
+    Route::post('/checkout/payments/{payment}/attempts', [\App\Domain\Payments\Http\Controllers\StorefrontPaymentController::class, 'retry'])->where('payment', '[0-9A-Za-z]{26}')->middleware('throttle:10,1,checkout-payment-retry');
 
     // --- Shipping quote (Module 13 §81-82 — guest AND authenticated
     // customer both allowed, same as Cart/Checkout) ---

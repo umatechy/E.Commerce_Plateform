@@ -12,18 +12,21 @@ import { adminFetch, AdminApiError, idempotencyKey } from '@/lib/adminApi';
 import { fromMinor, money, toMinor } from '@/lib/money';
 import { dateTimeOrDash, formatDateTime } from '@/lib/datetime';
 import { PAYMENT_METHOD_LABELS, type Payment, type PaymentBalance, type PaymentTransaction } from '@/lib/orders';
+import { RECONCILIATION_LABELS } from '@/lib/payments';
 
 /**
  * Module 12 §68 "Store Admin Payment View": one payment with its
  * transactions, and the two things staff can do to it: record a manual
  * confirmation (cash or bank transfer received) and refund. Both are
  * decided by the server (PaymentService); this only collects the input.
- * No gateway credentials exist or are asked for here.
+ * Phase B48: online payments also show their attempts, and a refund goes
+ * through the provider where it can (else it is made in the provider's
+ * portal and recorded here). No gateway credentials are asked for here.
  */
 type Action = 'confirm' | 'refund' | null;
 
-function ActionForm({ payment, action, refundable, onClose, onDone }: { payment: Payment; action: 'confirm' | 'refund'; refundable: number; onClose: () => void; onDone: () => void }) {
-  const form = useForm({ amount: action === 'refund' ? fromMinor(refundable, payment.currency) : fromMinor(payment.amount_minor, payment.currency), reference: '', notes: '' });
+function ActionForm({ payment, action, refundable, refundMode, providerLabel, onClose, onDone }: { payment: Payment; action: 'confirm' | 'refund'; refundable: number; refundMode: 'provider' | 'portal' | 'record'; providerLabel: string | null; onClose: () => void; onDone: () => void }) {
+  const form = useForm({ amount: action === 'refund' ? fromMinor(refundable, payment.currency) : fromMinor(payment.amount_minor, payment.currency), reference: '', notes: '', provider_reference: '' });
   // One key per opened form: a double click is one refund.
   const [key] = useState(idempotencyKey);
   const [amountError, setAmountError] = useState<string | null>(null);
@@ -45,7 +48,7 @@ function ActionForm({ payment, action, refundable, onClose, onDone }: { payment:
             method: 'POST',
             body: action === 'confirm'
               ? { amount_minor: minor, reference: form.values.reference, notes: form.values.notes === '' ? null : form.values.notes }
-              : { amount_minor: minor, reason: form.values.notes === '' ? null : form.values.notes, idempotency_key: key },
+              : { amount_minor: minor, reason: form.values.notes === '' ? null : form.values.notes, idempotency_key: key, provider_reference: form.values.provider_reference === '' ? null : form.values.provider_reference },
           },
         );
       } catch (e) {
@@ -67,14 +70,17 @@ function ActionForm({ payment, action, refundable, onClose, onDone }: { payment:
           ? 'Use this when the customer paid outside the system, for example cash on delivery or a bank transfer you have seen arrive.'
           : `Returns money to the customer. A refund cannot be undone. Up to ${money(refundable, payment.currency)} can be refunded.`}
       </p>
+      {action === 'refund' && refundMode === 'provider' && <p className="rounded-md bg-indigo-50 p-2 text-sm text-indigo-900">{providerLabel} sends the money back to the customer’s wallet straight away; it is recorded once {providerLabel} confirms.</p>}
+      {action === 'refund' && refundMode === 'portal' && <p className="rounded-md bg-amber-50 p-2 text-sm text-amber-900">Make the refund in your {providerLabel} merchant portal first, then record it here with the portal’s reference. {providerLabel} refunds cannot be sent from here yet.</p>}
       <FormError message={form.formError} />
       <TextField label={`Amount (${payment.currency})`} inputMode="decimal" value={form.values.amount} onChange={(v) => form.set('amount', v)} error={amountError ?? form.errors.amount_minor} required data-autofocus />
       {action === 'confirm' && <TextField label="Reference" value={form.values.reference} onChange={(v) => form.set('reference', v)} error={form.errors.reference} required maxLength={255} hint="For example the bank transfer reference or receipt number." />}
+      {action === 'refund' && refundMode === 'portal' && <TextField label={`${providerLabel} refund reference`} optional value={form.values.provider_reference} onChange={(v) => form.set('provider_reference', v)} error={form.errors.provider_reference} maxLength={100} />}
       <TextAreaField label={action === 'confirm' ? 'Notes' : 'Reason'} optional rows={2} value={form.values.notes} onChange={(v) => form.set('notes', v)} error={form.errors.notes ?? form.errors.reason} maxLength={500} />
       <div className="flex justify-end gap-2">
         <Button onClick={onClose} disabled={form.busy}>Cancel</Button>
         <Button type="submit" variant={action === 'refund' ? 'danger' : 'primary'} busy={form.busy} busyLabel="Saving…">
-          {action === 'confirm' ? 'Record payment' : 'Refund this amount'}
+          {action === 'confirm' ? 'Record payment' : refundMode === 'provider' ? `Refund through ${providerLabel}` : refundMode === 'portal' ? 'Record the refund' : 'Refund this amount'}
         </Button>
       </div>
     </form>
@@ -134,7 +140,35 @@ export default function PaymentDrawer({ paymentId, onClose, onChanged }: { payme
               )}
             </div>
           ) : (
-            <ActionForm payment={data} action={action} refundable={balance.refundable_amount_minor} onClose={() => setAction(null)} onDone={done} />
+            <ActionForm payment={data} action={action} refundable={balance.refundable_amount_minor} refundMode={balance.refund_mode ?? 'record'} providerLabel={balance.provider_label ?? null} onClose={() => setAction(null)} onDone={done} />
+          )}
+
+          {(balance.reconciliation ?? []).some((item) => item.status === 'open') && (
+            <p role="alert" className="rounded-md border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">
+              Reconciliation flagged this payment: {(balance.reconciliation ?? []).filter((item) => item.status === 'open').map((item) => RECONCILIATION_LABELS[item.kind]?.title ?? item.kind).join(', ')}. See Payments → Needs attention.
+            </p>
+          )}
+
+          {(balance.attempts ?? []).length > 0 && (
+            <div>
+              <h3 className="mb-2 text-sm font-semibold text-slate-900">Online payment attempts</h3>
+              <ol className="space-y-2">
+                {(balance.attempts ?? []).map((attempt) => (
+                  <li key={attempt.id} className="rounded-md border border-slate-200 p-3 text-sm">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <span className="font-medium">{balance.provider_label ?? attempt.provider} · {attempt.payer_hint ?? '—'}</span>
+                      <StatusBadge status={attempt.status} />
+                    </div>
+                    <p className="mt-1 text-xs text-slate-600">
+                      {formatDateTime(attempt.created_at)} · reference <span className="font-mono">{attempt.reference}</span>
+                      {attempt.provider_transaction_reference && <> · provider <span className="font-mono">{attempt.provider_transaction_reference}</span></>}
+                      {attempt.environment === 'sandbox' && ' · sandbox'}
+                    </p>
+                    {attempt.failure_label && <p className="mt-1 text-xs text-slate-700">{attempt.failure_label}{attempt.provider_code ? ` (code ${attempt.provider_code})` : ''}{attempt.provider_message ? ` — ${attempt.provider_message}` : ''}</p>}
+                  </li>
+                ))}
+              </ol>
+            </div>
           )}
 
           <div>

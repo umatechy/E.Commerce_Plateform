@@ -9,6 +9,10 @@ import { formatAddress, useCustomer, type Address } from '@/Storefront/account';
 import type { StorefrontPageProps } from '@/Storefront/types';
 import type { CartData } from './Cart';
 import { useT } from '@/Storefront/i18n';
+import PaymentChoice, { outOfRange, walletName, type Payer, type PaymentOption } from '@/Components/Storefront/PaymentChoice';
+import WalletPayment, { type PaymentView } from '@/Components/Storefront/WalletPayment';
+import BankDetails from '@/Components/Storefront/BankDetails';
+import { normalizeMobile, validCnicLast6 } from '@/lib/payments';
 
 type ShippingOption = { id: number; name: string; type: string; cost_minor: number };
 /** Phase B46: the server's price of the order before it is placed (POST /checkout/summary). */
@@ -23,11 +27,8 @@ type Summary = {
 };
 type PlacedOrder = { order_number: string; grand_total_minor: number; currency: string; store_credit_minor?: number; payable_minor?: number };
 
-const PAYMENT_METHODS = [
-  { value: 'cod', label: 'Cash on delivery' },
-  { value: 'bank_transfer', label: 'Bank transfer' },
-] as const;
-// Labels go through t() at render: t('Cash on delivery'), t('Bank transfer').
+/** Phase B48: what checkout says about the online payment it started (POST /checkout). */
+type OnlinePayment = { token: string; attempt: PaymentView['attempt']; error: { code: string; message: string } | null };
 
 /** A saved address as checkout form fields. */
 function addressFields(address: Address, phone: string) {
@@ -52,15 +53,20 @@ function newIdempotencyKey(): string {
  * the shopper's details. One idempotency key per visit, so a double
  * click or a retry can never place two orders.
  */
-export default function Checkout({ storefront, seo, payment_methods }: StorefrontPageProps & { payment_methods: string[] }) {
+export default function Checkout({ storefront, seo, payment_methods, payment_options }: StorefrontPageProps & { payment_methods: string[]; payment_options?: PaymentOption[] }) {
   const t = useT();
-  // Only methods the store's package includes (the server enforces the same rule at checkout).
-  const methods = PAYMENT_METHODS.filter((method) => payment_methods.includes(method.value));
+  // Phase B48: the ways to pay this store offers now (package, settings, working accounts) —
+  // the server checks the same again when the order is placed.
+  const methods: PaymentOption[] = payment_options ?? payment_methods.map((method) => ({ method, kind: method === 'cod' ? 'cod' : 'bank_transfer' }));
   const [cart, setCart] = useState<CartData | null>(null);
   const [form, setForm] = useState({ name: '', email: '', phone: '', line1: '', city: '', province: '', postal_code: '', country: '', notes: '' });
   const [shipping, setShipping] = useState<ShippingOption[] | null>(null);
   const [shippingId, setShippingId] = useState<number | null>(null);
-  const [payment, setPayment] = useState<string>(() => methods[0]?.value ?? '');
+  const [payment, setPayment] = useState<string>(() => methods[0]?.method ?? '');
+  const [payer, setPayer] = useState<Payer>({ mobile: '', cnic_last6: '' });
+  const [payerErrors, setPayerErrors] = useState<Partial<Record<keyof Payer, string>>>({});
+  const [online, setOnline] = useState<{ paymentId: string; data: OnlinePayment } | null>(null);
+  const [paidOnline, setPaidOnline] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [order, setOrder] = useState<PlacedOrder | null>(null);
@@ -143,16 +149,33 @@ export default function Checkout({ storefront, seo, payment_methods }: Storefron
   // Credit in another currency than the cart's cannot pay for it.
   const hasCredit = credit !== null && credit.balance_minor > 0 && credit.currency === currency;
 
+  const chosenOption = methods.find((m) => m.method === payment && outOfRange(m, summary?.grand_total_minor ?? null) === null);
+  const isWallet = chosenOption?.kind === 'wallet';
+
   async function placeOrder(event: React.FormEvent) {
     event.preventDefault();
+    if (!chosenOption) {
+      setError(t('Choose how you want to pay.'));
+
+      return;
+    }
+    if (isWallet) {
+      const next: typeof payerErrors = {};
+      if (normalizeMobile(payer.mobile) === null) next.mobile = t('Enter the mobile number of the wallet, such as 03001234567.');
+      if (chosenOption.payer_fields?.some((f) => f.key === 'cnic_last6') && !validCnicLast6(payer.cnic_last6)) next.cnic_last6 = t('Enter the last 6 digits of your CNIC.');
+      setPayerErrors(next);
+      if (Object.keys(next).length > 0) return;
+    }
     setBusy(true);
     setError(null);
     const address = { name: form.name, line1: form.line1, city: form.city, province: form.province.trim() || null, postal_code: form.postal_code, country: form.country.trim().toUpperCase() };
     try {
-      const res = await storefrontFetch<{ data: { order: PlacedOrder } }>(storefront, '/checkout', {
+      const res = await storefrontFetch<{ data: { order: PlacedOrder; payment: { id: string }; online_payment: OnlinePayment | null } }>(storefront, '/checkout', {
         method: 'POST',
         body: {
-          payment_method: payment,
+          payment_method: chosenOption.method,
+          // Phase B48: the wallet to ask; checked by the server before the order is created.
+          ...(isWallet ? { payer: { mobile: payer.mobile, ...(chosenOption.payer_fields?.some((f) => f.key === 'cnic_last6') ? { cnic_last6: payer.cnic_last6 } : {}) } } : {}),
           shipping_method_id: shippingId,
           guest_name: form.name,
           guest_email: form.email,
@@ -166,12 +189,27 @@ export default function Checkout({ storefront, seo, payment_methods }: Storefron
         },
       });
       forgetCart(storefront);
+      if (res.data.online_payment) setOnline({ paymentId: res.data.payment.id, data: res.data.online_payment });
       setOrder(res.data.order);
     } catch (e) {
       setError(errorMessage(e));
     } finally {
       setBusy(false);
     }
+  }
+
+  // Phase B48: a wallet order is placed; now the shopper approves the payment on the phone.
+  if (order && online && !paidOnline) {
+    return (
+      <StoreLayout shell={storefront} seo={seo}>
+        <div className="mx-auto max-w-lg">
+          <p className="text-center text-sm text-sf-muted">{t('Order {number} is placed — one last step', { number: order.order_number })}</p>
+          <h1 className="mb-5 mt-1 text-center text-3xl font-bold">{t('Complete your payment')}</h1>
+          <WalletPayment storefront={storefront} paymentId={online.paymentId} token={online.data.token} initial={online.data} defaultPayer={payer} onPaid={() => setPaidOnline(true)} />
+          <p className="mt-4 text-center text-xs text-sf-muted">{t('Prefer to pay another way? Contact the store with your order number.')}</p>
+        </div>
+      </StoreLayout>
+    );
   }
 
   if (order) {
@@ -188,13 +226,19 @@ export default function Checkout({ storefront, seo, payment_methods }: Storefron
               {(order.payable_minor ?? 0) > 0 ? t('Left to pay: {amount}.', { amount: formatMoney(order.payable_minor ?? 0, order.currency) }) : t('Nothing is left to pay.')}
             </p>
           )}
+          {paidOnline && chosenOption && <p className="mt-2 font-medium text-emerald-700">{t('Paid with {provider}.', { provider: walletName(chosenOption, t) })}</p>}
           <p className="mt-2 text-sf-muted">{t('A confirmation has been sent to {email}.', { email: form.email })}</p>
           {customer && (
             <Link href={`${base}/account/orders`} className="mt-2 block text-sf-accent">
               {t('View your orders')}
             </Link>
           )}
-          {payment === 'bank_transfer' && <p className="mt-2 text-sf-muted">{t('Please use your order number as the transfer reference.')}</p>}
+          {chosenOption?.kind === 'bank_transfer' && (
+            <div className="mt-6 text-start">
+              <p className="mb-2 font-semibold">{t('Transfer {amount} to', { amount: formatMoney(order.payable_minor ?? order.grand_total_minor, order.currency) })}</p>
+              {chosenOption.bank ? <BankDetails bank={chosenOption.bank} reference={order.order_number} /> : <p className="text-sf-muted">{t('Please use your order number as the transfer reference.')}</p>}
+            </div>
+          )}
           <Link href={base || '/'} className="sf-btn mt-8 inline-block rounded-sf bg-sf-primary px-5 py-2 font-medium text-white">
             {t('Continue shopping')}
           </Link>
@@ -267,12 +311,16 @@ export default function Checkout({ storefront, seo, payment_methods }: Storefron
             <fieldset>
               <legend className="mb-2 font-semibold">{t('Payment')}</legend>
               {methods.length === 0 && <p className="text-sm text-sf-error">{t('This store is not accepting orders online right now.')}</p>}
-              {methods.map((method) => (
-                <label key={method.value} className="flex items-center gap-2 py-1">
-                  <input type="radio" name="payment" checked={payment === method.value} onChange={() => setPayment(method.value)} />
-                  {t(method.label)}
-                </label>
-              ))}
+              <PaymentChoice
+                options={methods}
+                value={payment}
+                onChange={(method) => { setPayment(method); setPayerErrors({}); }}
+                payer={payer}
+                onPayer={(next) => { setPayer(next); setPayerErrors({}); }}
+                payerErrors={payerErrors}
+                totalMinor={summary?.grand_total_minor ?? null}
+                currency={currency}
+              />
             </fieldset>
             <textarea {...field('notes')} placeholder={t('Order notes (optional)')} aria-label={t('Order notes')} maxLength={1000} className={input} />
           </div>
@@ -326,8 +374,9 @@ export default function Checkout({ storefront, seo, payment_methods }: Storefron
             )}
             <p className="text-xs text-sf-muted">{t('The final total, including any discount and tax, is confirmed when you place the order.')}</p>
             <button type="submit" disabled={busy || cart.has_issues || methods.length === 0} className="sf-btn w-full rounded-sf bg-sf-primary px-4 py-3 font-semibold text-white disabled:opacity-50">
-              {busy ? t('Placing order…') : t('Place order')}
+              {busy ? t('Placing order…') : isWallet && summary && !summary.needs_shipping_method ? t('Place order and pay {amount}', { amount: formatMoney(summary.grand_total_minor, currency) }) : t('Place order')}
             </button>
+            {isWallet && <p className="text-center text-xs text-sf-muted">{t('After you place the order, approve the payment on your phone.')}</p>}
           </aside>
         </form>
       )}

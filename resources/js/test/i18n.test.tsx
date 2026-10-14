@@ -52,7 +52,7 @@ describe('storefront translations (Phase B38)', () => {
       ...Object.values(RESOLUTION_LABELS),
       ...Object.values(REASON_LABELS),
       ...['pending_confirmation', 'confirmed', 'processing', 'ready_to_fulfill', 'fulfilling', 'shipped', 'delivered', 'completed', 'cancelled', 'return_requested', 'refund_pending', 'refunded'].map(orderStatusLabel),
-      ...['cod', 'bank_transfer', 'mock_redirect'].map(paymentMethodLabel),
+      ...['cod', 'bank_transfer', 'mock_redirect', 'jazzcash', 'easypaisa', 'test_wallet'].map(paymentMethodLabel), // B48: wallets
       'Overview', 'Orders', 'Addresses', 'Wishlist', 'Support', 'Profile & security',
     ];
     expect(labels.filter((label) => !(label in ur))).toEqual([]);

@@ -73,6 +73,10 @@ final class CheckoutService
         'cod' => 'payment.cod',
         'bank_transfer' => 'payment.bank_transfer',
         'mock_redirect' => 'payment.online',
+        // Phase B48: mobile wallets are online payments.
+        'jazzcash' => 'payment.online',
+        'easypaisa' => 'payment.online',
+        'test_wallet' => 'payment.online',
     ];
 
     /**
@@ -171,6 +175,17 @@ final class CheckoutService
                 if ($used > 0) {
                     $this->orders->applyStoreCredit($order, $used);
                 }
+            }
+
+            // Phase B48 (Module 12 §36–37): the method must fit this order — the
+            // store offers it, and its limits allow the amount the server computed.
+            if ($order->wasRecentlyCreated && $order->payableMinor() > 0
+                && ($refusal = app(\App\Domain\Payments\Services\PaymentOptions::class)->refusal($paymentMethod, $order->payableMinor(), $order->currency)) !== null) {
+                throw new \App\Domain\Payments\Exceptions\OnlinePaymentRefusedException($refusal, match ($refusal) {
+                    'below_minimum' => 'This way of paying needs a larger order. Please choose another.',
+                    'above_maximum' => 'This order is above the limit for this way of paying. Please choose another.',
+                    default => 'This way of paying is not available for this order. Please choose another.',
+                });
             }
 
             // Payment idempotency key is derived from the order-level

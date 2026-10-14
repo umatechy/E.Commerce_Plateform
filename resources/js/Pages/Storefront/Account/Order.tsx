@@ -4,6 +4,7 @@ import { Link } from '@inertiajs/react';
 import { useEffect, useState } from 'react';
 import AccountLayout from '@/Components/Storefront/AccountLayout';
 import OrderReturns, { customerReturnsApi } from '@/Components/Storefront/OrderReturns';
+import WalletPayment from '@/Components/Storefront/WalletPayment';
 import { formatMoney } from '@/lib/money';
 import { errorMessage, storefrontFetch } from '@/Storefront/api';
 import { formatAddress, useCustomer } from '@/Storefront/account';
@@ -24,6 +25,8 @@ export default function Order({ storefront, seo, order_id }: StorefrontPageProps
   const { customer } = useCustomer(storefront, { required: true });
   const [order, setOrder] = useState<OrderDetail | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [paying, setPaying] = useState(false);
+  const [version, setVersion] = useState(0);
   const base = storefront.base_path;
 
   useEffect(() => {
@@ -31,7 +34,10 @@ export default function Order({ storefront, seo, order_id }: StorefrontPageProps
     storefrontFetch<{ data: OrderDetail }>(storefront, `/customer/orders/${encodeURIComponent(order_id)}`)
       .then((res) => setOrder(res.data))
       .catch((e) => setError(errorMessage(e)));
-  }, [customer, order_id, storefront]);
+  }, [customer, order_id, storefront, version]);
+
+  // Phase B48: an online payment not finished yet can be paid from here.
+  const awaiting = order?.payments.find((payment) => payment.awaiting_payment && payment.id);
 
   const money = (minor: number) => formatMoney(minor, order?.currency ?? storefront.store.currency);
 
@@ -89,11 +95,24 @@ export default function Order({ storefront, seo, order_id }: StorefrontPageProps
               <h2 className="mb-2 font-semibold">{t('Payment')}</h2>
               {order.payments.map((payment, index) => (
                 <p key={index} className="text-sm text-sf-muted">
-                  {t(paymentMethodLabel(payment.method))} · {t(payment.status.replace(/_/g, ' '))} · {money(payment.amount_minor)}
+                  {t(paymentMethodLabel(payment.method))} · {payment.awaiting_payment ? t('Waiting for payment') : t(payment.status.replace(/_/g, ' '))} · {money(payment.amount_minor)}
                 </p>
               ))}
             </div>
           </div>
+
+          {awaiting?.id && (
+            <div className="rounded-sf border border-sf-border p-4">
+              {paying ? (
+                <WalletPayment storefront={storefront} paymentId={awaiting.id} token={null} onPaid={() => window.setTimeout(() => { setPaying(false); setVersion((v) => v + 1); }, 1500)} />
+              ) : (
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <p className="text-sm">{t('This order is waiting for your payment of {amount}.', { amount: money(awaiting.amount_minor) })}</p>
+                  <button type="button" onClick={() => setPaying(true)} className="sf-btn rounded-sf bg-sf-primary px-4 py-2 font-medium text-white">{t('Pay now')}</button>
+                </div>
+              )}
+            </div>
+          )}
 
           {order.shipments.length > 0 && (
             <div>

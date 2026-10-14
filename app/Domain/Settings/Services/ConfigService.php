@@ -128,6 +128,43 @@ final class ConfigService
     }
 
     /**
+     * Phase B48: back to the default (e.g. a bank field the owner emptied).
+     * Recorded like a change: a revision with no value, and the event.
+     *
+     * @throws UnknownSettingKeyException
+     * @throws SettingScopeMismatchException
+     */
+    public function clear(string $key, SettingScope $expectedScope, ?int $actorUserId, ?string $reason = null): void
+    {
+        $definition = $this->requireDefinition($key);
+        if ($definition->scope !== $expectedScope) {
+            throw new SettingScopeMismatchException($key, $definition->scope->value);
+        }
+        $storeId = $definition->scope === SettingScope::Platform ? null : $this->context->storeId();
+
+        DB::transaction(function () use ($definition, $key, $storeId, $actorUserId, $reason) {
+            $deleted = $storeId === null
+                ? PlatformSetting::query()->where('key', $key)->delete()
+                : StoreSetting::query()->where('store_id', $storeId)->where('key', $key)->delete();
+            if ($deleted === 0) {
+                return; // already the default: nothing to record
+            }
+            $revision = SettingRevision::query()->create([
+                'scope' => $definition->scope, 'store_id' => $storeId, 'key' => $key,
+                'value' => [null], 'changed_by_user_id' => $actorUserId, 'reason' => $reason ?? 'cleared',
+            ]);
+            $this->outbox->recordEventFor(
+                $storeId,
+                eventType: 'setting.changed',
+                payload: ['key' => $key, 'scope' => $definition->scope->value, 'store_id' => $storeId, 'sensitive' => $definition->type === SettingType::Secret],
+                idempotencyKey: "setting:revision:{$revision->id}",
+            );
+        });
+
+        Cache::forget($this->cacheKey($definition));
+    }
+
+    /**
      * Module 33 §31 "Change History" — ALWAYS explicitly filtered by
      * the current store for a store-scope key (SettingRevision itself
      * carries no BelongsToTenant global scope, since one ledger

@@ -20,6 +20,8 @@ final class GatewayResolver
             PaymentMethod::CashOnDelivery => new CashOnDeliveryGateway(),
             PaymentMethod::BankTransfer => new BankTransferGateway(),
             PaymentMethod::MockRedirect => new MockRedirectGateway(),
+            // Phase B48: mobile wallets; the provider itself is reached through OnlinePaymentService.
+            PaymentMethod::JazzCash, PaymentMethod::Easypaisa, PaymentMethod::TestWallet => new WalletGateway($method),
         };
     }
 

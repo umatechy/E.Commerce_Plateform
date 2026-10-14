@@ -32,6 +32,10 @@ export const PAYMENT_METHOD_LABELS: Record<string, string> = {
   cod: 'Cash on delivery',
   bank_transfer: 'Bank transfer',
   mock_redirect: 'Test online payment (no real gateway connected)',
+  // Phase B48: mobile wallets.
+  jazzcash: 'JazzCash',
+  easypaisa: 'Easypaisa',
+  test_wallet: 'Test wallet (no real money)',
 };
 
 export type OrderItem = {
@@ -104,6 +108,8 @@ export type Payment = {
   id: string;
   order?: { id: string; order_number: string } | null;
   method: string;
+  /** Phase B48: jazzcash, easypaisa, simulator; null for cash and bank transfer. */
+  provider?: string | null;
   status: string;
   amount_minor: number;
   currency: string;
@@ -112,7 +118,19 @@ export type Payment = {
   created_at: string | null;
 };
 
-export type PaymentBalance = { paid_amount_minor: number; refunded_amount_minor: number; refundable_amount_minor: number };
+export type PaymentBalance = {
+  paid_amount_minor: number;
+  refunded_amount_minor: number;
+  refundable_amount_minor: number;
+  // Phase B48: the online side.
+  provider?: string | null;
+  provider_label?: string | null;
+  /** provider: refunded by the provider's API; portal: made in the provider's portal and recorded here; record: cash or bank. */
+  refund_mode?: 'provider' | 'portal' | 'record';
+  reconciliation_status?: string | null;
+  attempts?: import('./payments').StaffAttempt[];
+  reconciliation?: { id: string; kind: string; status: string; resolution_note: string | null; created_at: string }[];
+};
 
 export type PaymentTransaction = {
   type: string;

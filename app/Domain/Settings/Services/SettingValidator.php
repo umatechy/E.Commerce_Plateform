@@ -26,13 +26,23 @@ final class SettingValidator
             SettingType::Boolean => $this->validateBoolean($value),
             SettingType::Integer => $this->validateInteger($value, $definition),
             SettingType::String => $this->validateString($value, $definition),
-            SettingType::StringArray => $this->validateRecipients($definition, $this->validateStringArray($value)),
+            SettingType::StringArray => $this->validateRecipients($definition, $this->validateStringArray($value, in_array($definition->key, self::EMPTY_LIST_ALLOWED, true))),
             SettingType::Secret => $this->validateString($value, $definition),
         };
     }
 
     /** Phase B47: settings where 0 means "none" (no tax, no approval step). */
-    private const ZERO_ALLOWED = ['billing.tax_rate_bps', 'billing.approval_threshold_minor'];
+    private const ZERO_ALLOWED = ['billing.tax_rate_bps', 'billing.approval_threshold_minor', 'payments.cod.min_order_minor', 'payments.cod.max_order_minor'];
+
+    /** Phase B48: lists that may be empty (no provider takes real money yet). */
+    private const EMPTY_LIST_ALLOWED = ['payments.live_providers'];
+
+    /** Phase B48: integer settings with a bounded range. */
+    private const RANGES = [
+        'payments.webhook_tolerance_seconds' => [30, 3600],
+        // Stock is held for 15 minutes (InventoryService::reserve()); a longer window would wait on stock that is gone.
+        'payments.order_payment_minutes' => [5, 15],
+    ];
 
     private function validateInteger(mixed $value, SettingDefinition $definition): int
     {
@@ -42,6 +52,9 @@ final class SettingValidator
         }
         if ($definition->key === 'billing.tax_rate_bps' && $value > 10000) {
             throw new InvalidSettingValueException('A tax rate is at most 10000 basis points (100 %).');
+        }
+        if (isset(self::RANGES[$definition->key]) && ($value < self::RANGES[$definition->key][0] || $value > self::RANGES[$definition->key][1])) {
+            throw new InvalidSettingValueException('Value must be between '.self::RANGES[$definition->key][0].' and '.self::RANGES[$definition->key][1].'.');
         }
 
         return $value;
@@ -76,7 +89,7 @@ final class SettingValidator
         }
 
         // Phase B44: business information and the trial package.
-        $max = ['store.legal_name' => 200, 'store.contact_email' => 191, 'store.contact_phone' => 32, 'tax.label' => 40, 'billing.tax_label' => 40, 'billing.issuer_name' => 120, 'billing.issuer_details' => 500][$definition->key] ?? null; // tax.label: Phase B46
+        $max = ['payments.bank.account_title' => 120, 'payments.bank.bank_name' => 120, 'payments.bank.account_number' => 40, 'payments.bank.instructions' => 500, 'store.legal_name' => 200, 'store.contact_email' => 191, 'store.contact_phone' => 32, 'tax.label' => 40, 'billing.tax_label' => 40, 'billing.issuer_name' => 120, 'billing.issuer_details' => 500][$definition->key] ?? null; // tax.label: Phase B46
         if ($max !== null && mb_strlen($normalized) > $max) {
             throw new InvalidSettingValueException("At most {$max} characters.");
         }
@@ -129,6 +142,16 @@ final class SettingValidator
             $items = array_values(array_unique($items));
         }
 
+        // Phase B48: only providers the platform has an adapter for, each once.
+        if ($definition->key === 'payments.live_providers') {
+            foreach ($items as $item) {
+                if (! in_array($item, \App\Domain\Payments\Providers\ProviderRegistry::REAL_PROVIDERS, true)) {
+                    throw new InvalidSettingValueException("\"{$item}\" is not a payment provider the platform supports.");
+                }
+            }
+            $items = array_values(array_unique($items));
+        }
+
         // Currencies: three-letter ISO codes, upper case, each once (owner decision 2026-10-03).
         if ($definition->key === 'platform.supported_currencies') {
             $items = array_map('strtoupper', $items);
@@ -144,8 +167,11 @@ final class SettingValidator
     }
 
     /** @return list<string> */
-    private function validateStringArray(mixed $value): array
+    private function validateStringArray(mixed $value, bool $emptyAllowed = false): array
     {
+        if ($emptyAllowed && $value === []) {
+            return [];
+        }
         if (! is_array($value) || $value === [] || array_is_list($value) === false) {
             throw new InvalidSettingValueException('Value must be a non-empty list of strings.');
         }

@@ -106,6 +106,7 @@ final class StorefrontWebController
     {
         return $this->render($request, 'Storefront/Checkout', [
             'payment_methods' => $this->experience->paymentMethods(),
+            'payment_options' => $this->experience->paymentOptions(), // Phase B48
         ], $this->privatePageSeo($request, 'Checkout'));
     }
 

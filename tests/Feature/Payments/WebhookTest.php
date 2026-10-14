@@ -43,14 +43,17 @@ final class WebhookTest extends TestCase
         return [$store, $order, $payment];
     }
 
-    private function signedWebhookRequest(Store $store, array $payload, string $eventId): \Illuminate\Testing\TestResponse
+    private function signedWebhookRequest(Store $store, array $payload, string $eventId, ?int $timestamp = null): \Illuminate\Testing\TestResponse
     {
         $raw = json_encode($payload);
-        $signature = hash_hmac('sha256', $raw, $store->payment_webhook_secret);
+        // Phase B48 (PAY-008): the timestamp is signed with the body.
+        $timestamp ??= now()->getTimestamp();
+        $signature = hash_hmac('sha256', $timestamp.'.'.$raw, $store->payment_webhook_secret);
 
         return $this->call('POST', '/api/v1/payment-webhooks/mock_redirect', [], [], [], [
             'HTTP_X-Mock-Gateway-Signature' => $signature,
             'HTTP_X-Mock-Gateway-Event-Id' => $eventId,
+            'HTTP_X-Mock-Gateway-Timestamp' => (string) $timestamp,
             'CONTENT_TYPE' => 'application/json',
         ], $raw);
     }
@@ -88,6 +91,7 @@ final class WebhookTest extends TestCase
         $response = $this->call('POST', '/api/v1/payment-webhooks/mock_redirect', [], [], [], [
             'HTTP_X-Mock-Gateway-Signature' => 'forged-signature',
             'HTTP_X-Mock-Gateway-Event-Id' => 'evt-forged',
+            'HTTP_X-Mock-Gateway-Timestamp' => (string) now()->getTimestamp(),
             'CONTENT_TYPE' => 'application/json',
         ], $raw);
 
@@ -134,6 +138,31 @@ final class WebhookTest extends TestCase
 
         $this->assertSame(PaymentStatus::Failed, $payment->fresh()->status);
         $this->assertSame('cancelled', $order->fresh()->status->value);
+    }
+
+    /** Phase B48 (Module 12 §29, SRS PAY-008): a correctly signed but old notification is not applied. */
+    public function test_a_replayed_old_webhook_is_rejected_by_the_time_window(): void
+    {
+        [$store, $order, $payment] = $this->entitledOrderWithMockPayment();
+
+        $this->signedWebhookRequest($store, [
+            'outcome' => 'succeeded', 'amount_minor' => 5000, 'provider_payment_reference' => $payment->provider_payment_reference,
+        ], 'evt-old', now()->subMinutes(10)->getTimestamp())->assertOk();
+
+        $this->assertSame(PaymentStatus::RequiresAction, $payment->fresh()->status);
+        $this->assertDatabaseHas('payment_webhook_events', ['external_event_id' => 'evt-old', 'status' => 'failed', 'failure_reason' => 'Outside the allowed time window.']);
+    }
+
+    public function test_a_webhook_without_a_timestamp_is_rejected(): void
+    {
+        [$store, $order, $payment] = $this->entitledOrderWithMockPayment();
+        $raw = json_encode(['outcome' => 'succeeded', 'amount_minor' => 5000, 'provider_payment_reference' => $payment->provider_payment_reference]);
+
+        $this->call('POST', '/api/v1/payment-webhooks/mock_redirect', [], [], [], [
+            'HTTP_X-Mock-Gateway-Signature' => hash_hmac('sha256', $raw, $store->payment_webhook_secret),
+            'HTTP_X-Mock-Gateway-Event-Id' => 'evt-no-time', 'CONTENT_TYPE' => 'application/json',
+        ], $raw)->assertStatus(400);
+        $this->assertSame(PaymentStatus::RequiresAction, $payment->fresh()->status);
     }
 
     public function test_missing_event_id_is_rejected(): void

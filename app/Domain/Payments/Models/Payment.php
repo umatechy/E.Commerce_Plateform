@@ -34,7 +34,7 @@ final class Payment extends Model
     ];
 
     protected $fillable = [
-        'store_id', 'order_id', 'customer_id', 'method', 'status',
+        'store_id', 'order_id', 'customer_id', 'method', 'provider', 'status', 'reconciliation_status', 'client_token_hash',
         'amount_minor', 'currency', 'provider_payment_reference',
         'idempotency_key', 'metadata', 'completed_at', 'failed_at', 'expires_at',
     ];
@@ -61,6 +61,15 @@ final class Payment extends Model
     public function customer(): BelongsTo
     {
         return $this->belongsTo(Customer::class);
+    }
+
+    /** Phase B48: only the hash of a guest's token is kept, and never shown. */
+    protected $hidden = ['client_token_hash'];
+
+    /** @return HasMany<PaymentAttempt, $this> Phase B48 */
+    public function attempts(): HasMany
+    {
+        return $this->hasMany(PaymentAttempt::class);
     }
 
     /** @return HasMany<PaymentTransaction, $this> */

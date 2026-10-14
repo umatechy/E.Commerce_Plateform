@@ -34,6 +34,18 @@ final class PaymentPolicy extends BaseTenantPolicy
             && ($this->userHasPermission($user, 'payments.manage') || $this->isOwner($user));
     }
 
+    /** Phase B48: where the store's money goes (bank details, merchant accounts) — Owner by default. */
+    public function configure(User $user): bool
+    {
+        return $this->userHasPermission($user, 'payments.provider_config') || $this->isOwner($user);
+    }
+
+    /** Phase B48: resolve what reconciliation flagged. */
+    public function reconcile(User $user): bool
+    {
+        return $this->userHasPermission($user, 'payments.reconcile') || $this->isOwner($user);
+    }
+
     public function refund(User $user, Payment $payment): bool
     {
         return $this->belongsToUsersActiveStore($user, $payment)

@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace App\Domain\Payments\Http\Controllers;
 
 use App\Domain\Payments\Models\WebhookEventStatus;
+use App\Domain\Payments\Providers\ProviderRegistry;
+use App\Domain\Payments\Services\OnlinePaymentService;
 use App\Domain\Payments\Services\PaymentService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -30,9 +32,23 @@ final class PaymentWebhookController
 {
     public function __invoke(Request $request, string $provider): JsonResponse
     {
+        // Phase B48: JazzCash, Easypaisa and the test wallet notify the online payment engine,
+        // which treats a notification as a hint and asks the provider itself.
+        if ($adapter = app(ProviderRegistry::class)->find($provider)) {
+            $event = app(OnlinePaymentService::class)->handleNotification($adapter, $request);
+
+            return response()->json(['received' => true, 'status' => $event->status->value]);
+        }
+
         $rawPayload = $request->getContent();
         $signatureHeader = $request->header('X-Mock-Gateway-Signature');
         $externalEventId = $request->header('X-Mock-Gateway-Event-Id') ?? $request->input('event_id');
+        // Phase B48 (Module 12 §29, SRS PAY-008): the time it was sent is signed with the body
+        // and must be recent, so a captured notification cannot be replayed later.
+        $timestamp = $request->header('X-Mock-Gateway-Timestamp');
+        if (! is_string($timestamp) || ! ctype_digit($timestamp)) {
+            return response()->json(['message' => 'Missing timestamp.'], 400);
+        }
 
         if ($externalEventId === null) {
             // Module 12 §28: an event with no identifiable ID cannot be
@@ -41,7 +57,7 @@ final class PaymentWebhookController
             return response()->json(['message' => 'Missing event identifier.'], 400);
         }
 
-        $event = app(PaymentService::class)->handleWebhook($provider, $rawPayload, $signatureHeader, $externalEventId);
+        $event = app(PaymentService::class)->handleWebhook($provider, $rawPayload, $signatureHeader, $externalEventId, (int) $timestamp);
 
         // Always 200 for a structurally-valid, deduplicated request —
         // even a signature failure or unresolvable reference returns

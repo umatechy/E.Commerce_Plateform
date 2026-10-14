@@ -93,6 +93,7 @@ final class PaymentService
             $result = $gateway->initiate($payment);
 
             $payment->update([
+                'provider' => $method->walletProvider(), // Phase B48
                 'provider_payment_reference' => $result->providerPaymentReference,
                 'metadata' => $result->metadata,
             ]);
@@ -152,7 +153,7 @@ final class PaymentService
      * caller (webhook controller) never decides trust on its own
      * (Non-Negotiable Rule #12).
      */
-    public function handleWebhook(string $provider, string $rawPayload, ?string $signatureHeader, string $externalEventId): PaymentWebhookEvent
+    public function handleWebhook(string $provider, string $rawPayload, ?string $signatureHeader, string $externalEventId, ?int $sentAt = null): PaymentWebhookEvent
     {
         // Module 12 §28 "Webhook Idempotency" — dedup BEFORE any
         // signature check or domain processing, so a genuinely
@@ -190,8 +191,16 @@ final class PaymentService
         $gateway = $this->gateways->resolveByProviderName($provider);
         $storeSecret = \App\Domain\Tenancy\Models\Store::query()->find($payment->store_id)->payment_webhook_secret ?? '';
 
-        if (! $gateway->verifyWebhookSignature($rawPayload, $signatureHeader, $storeSecret)) {
+        // Phase B48 (PAY-008): with a timestamp, the signature covers "{timestamp}.{body}".
+        $signed = $sentAt !== null ? "{$sentAt}.{$rawPayload}" : $rawPayload;
+        if (! $gateway->verifyWebhookSignature($signed, $signatureHeader, $storeSecret)) {
             $event->update(['status' => WebhookEventStatus::Failed, 'failure_reason' => 'Signature verification failed.', 'processed_at' => now()]);
+
+            return $event;
+        }
+        $tolerance = (int) app(\App\Domain\Settings\Services\ConfigService::class)->get('payments.webhook_tolerance_seconds');
+        if ($sentAt !== null && abs(now()->getTimestamp() - $sentAt) > $tolerance) {
+            $event->update(['status' => WebhookEventStatus::Failed, 'failure_reason' => 'Outside the allowed time window.', 'processed_at' => now()]);
 
             return $event;
         }
@@ -221,17 +230,87 @@ final class PaymentService
     }
 
     /**
+     * Phase B48: money a provider confirmed for one attempt, recorded once
+     * (idempotent per attempt) — Module 12 §25 steps 6–7: only after the
+     * server verified it. The caller (OnlinePaymentService) has checked
+     * amount and currency against the attempt.
+     */
+    public function recordProviderPayment(Payment $payment, \App\Domain\Payments\Models\PaymentAttempt $attempt): PaymentTransaction
+    {
+        return DB::transaction(function () use ($payment, $attempt) {
+            $payment = Payment::query()->lockForUpdate()->findOrFail($payment->id);
+            $key = "attempt:{$attempt->id}:sale";
+            if ($existing = PaymentTransaction::query()->where('idempotency_key', $key)->first()) {
+                return $existing;
+            }
+
+            $transaction = $this->recordTransaction(
+                $payment, TransactionType::Sale, TransactionStatus::Succeeded, $attempt->confirmed_amount_minor ?? $attempt->amount_minor,
+                $attempt->provider_transaction_reference, null, null, actorId: null, idempotencyKey: $key,
+                metadata: ['attempt' => $attempt->public_id, 'provider' => $attempt->provider, 'environment' => $attempt->environment],
+            );
+            $this->transitionTo($payment, PaymentStatus::Paid);
+
+            $this->outbox->recordEvent(
+                eventType: 'payment.succeeded',
+                payload: ['payment_id' => $payment->id, 'order_id' => $payment->order_id, 'provider' => $attempt->provider, 'amount_minor' => $transaction->amount_minor],
+                idempotencyKey: "payment:{$payment->id}:succeeded:{$attempt->id}",
+            );
+
+            return $transaction;
+        });
+    }
+
+    /**
+     * Phase B48: an online payment the shopper never completed within the
+     * payment window. The payment expires and the order is cancelled, which
+     * gives its stock back (Module 12 §43; PAY-010: no false paid order).
+     */
+    public function expireUnpaid(Payment $payment): void
+    {
+        DB::transaction(function () use ($payment) {
+            $payment = Payment::query()->lockForUpdate()->findOrFail($payment->id);
+            if (! in_array($payment->status, [PaymentStatus::RequiresAction, PaymentStatus::Pending], true)) {
+                return;
+            }
+            $this->transitionTo($payment, PaymentStatus::Expired);
+            $this->releaseReservationAndCancelOrder($payment, CancellationReason::PaymentFailed);
+            $this->outbox->recordEvent(
+                eventType: 'payment.expired',
+                payload: ['payment_id' => $payment->id, 'order_id' => $payment->order_id],
+                idempotencyKey: "payment:{$payment->id}:expired",
+            );
+        });
+    }
+
+    /**
+     * Phase B48: the shopper retries with another wallet (JazzCash ↔
+     * Easypaisa). Only while nothing has been paid; the amount stays the
+     * server's.
+     */
+    public function switchWalletMethod(Payment $payment, PaymentMethod $method): void
+    {
+        if ($payment->method === $method) {
+            return;
+        }
+        if ($method->walletProvider() === null || $payment->method->walletProvider() === null || $payment->paidAmountMinor() > 0) {
+            throw new \LogicException('Only an unpaid wallet payment can move to another wallet.');
+        }
+        $payment->update(['method' => $method, 'provider' => $method->walletProvider()]);
+    }
+
+    /**
      * Module 12 §46-49 "Payment Refunds / Refundable Balance".
      *
      * @throws RefundExceedsRefundableBalanceException
      */
-    public function refund(Payment $payment, int $amountMinor, ?string $reason, int $actorId, string $idempotencyKey): PaymentTransaction
+    public function refund(Payment $payment, int $amountMinor, ?string $reason, int $actorId, string $idempotencyKey, ?string $providerReference = null): PaymentTransaction
     {
         if ($existing = PaymentTransaction::query()->where('idempotency_key', $idempotencyKey)->first()) {
             return $existing;
         }
 
-        return DB::transaction(function () use ($payment, $amountMinor, $reason, $actorId, $idempotencyKey) {
+        return DB::transaction(function () use ($payment, $amountMinor, $reason, $actorId, $idempotencyKey, $providerReference) {
             // The refundable balance is read under a row lock: checked
             // outside the transaction, two concurrent partial refunds could
             // both pass the check and together exceed the captured amount.
@@ -247,7 +326,8 @@ final class PaymentService
             $transaction = $this->recordTransaction(
                 $payment,
                 $isFullRefund ? TransactionType::Refund : TransactionType::PartialRefund,
-                TransactionStatus::Succeeded, $amountMinor, null, null, $reason,
+                // Phase B48: the provider's refund reference (from its API, or from its portal for a refund made there).
+                TransactionStatus::Succeeded, $amountMinor, $providerReference, null, $reason,
                 actorId: $actorId, idempotencyKey: $idempotencyKey,
             );
 

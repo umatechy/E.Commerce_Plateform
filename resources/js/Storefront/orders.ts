@@ -24,7 +24,8 @@ export type OrderDetail = OrderSummary & {
   billing_address: Record<string, string | null> | null;
   notes: string | null;
   items: { name: string; sku: string | null; variant: Record<string, string> | string | null; quantity: number; unit_price_minor: number; line_total_minor: number }[];
-  payments: { method: string; status: string; amount_minor: number }[];
+  /** Phase B48: `awaiting_payment` — an online payment not finished yet, payable from the order page. */
+  payments: { id?: string; online?: boolean; awaiting_payment?: boolean; method: string; status: string; amount_minor: number }[];
   shipments: { id: string; carrier: string | null; status: string; tracking_number: string | null; shipped_at: string | null; delivered_at: string | null; estimated_delivery_at: string | null }[];
 };
 
@@ -50,7 +51,7 @@ export function statusLabel(status: string): string {
 
 /** Payment method codes as shoppers know them. */
 export function paymentMethodLabel(method: string): string {
-  const labels: Record<string, string> = { cod: 'Cash on delivery', bank_transfer: 'Bank transfer', mock_redirect: 'Online payment' };
+  const labels: Record<string, string> = { cod: 'Cash on delivery', bank_transfer: 'Bank transfer', mock_redirect: 'Online payment', jazzcash: 'JazzCash', easypaisa: 'Easypaisa', test_wallet: 'Test wallet (no real money)' };
 
   return labels[method] ?? method.replace(/_/g, ' ');
 }

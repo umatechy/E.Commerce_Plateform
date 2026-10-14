@@ -519,17 +519,25 @@ final class StorefrontExperience
      */
     public function paymentMethods(): array
     {
-        $entitlements = app(\App\Domain\Packages\Services\EntitlementService::class);
+        // Phase B48: one source for what shoppers may use — the package, the store's
+        // Payments settings and its working merchant accounts (PaymentOptions).
+        return app(\App\Domain\Payments\Services\PaymentOptions::class)->methodCodes($this->currency());
+    }
 
-        // Checkout needs ordering itself (OrderService's own gate).
-        if (! $entitlements->hasFeature('orders.basic')) {
-            return [];
-        }
+    /**
+     * Phase B48: the checkout page's payment choices, with what each needs
+     * (bank details, the wallet fields, cash on delivery limits).
+     *
+     * @return list<array<string, mixed>>
+     */
+    public function paymentOptions(): array
+    {
+        return app(\App\Domain\Payments\Services\PaymentOptions::class)->forStorefront($this->currency());
+    }
 
-        return array_values(array_filter(
-            ['cod', 'bank_transfer'],
-            fn (string $method) => $entitlements->hasFeature(\App\Domain\Cart\Services\CheckoutService::FEATURE_KEY_BY_METHOD[$method]),
-        ));
+    private function currency(): string
+    {
+        return (string) app(\App\Domain\Settings\Services\ConfigService::class)->get('store.default_currency');
     }
 
     /** @return list<array<string, mixed>> quick search results (uncached: every keystroke differs) */

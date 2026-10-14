@@ -36,16 +36,18 @@ final class StoreSettingController
      * tax.manage, "a rate before tax is on"); this generic endpoint neither
      * lists nor changes them, so neither check can be gone round.
      */
-    private const OWN_PAGE_PREFIXES = ['tax.'];
+    private const OWN_PAGE_PREFIXES = ['tax.', 'payments.']; // payments.: Phase B48, the Payments page (payments.provider_config)
 
     private function hasOwnPage(string $key): bool
     {
         return \Illuminate\Support\Str::startsWith($key, self::OWN_PAGE_PREFIXES);
     }
 
-    private function ownPageResponse(): JsonResponse
+    private function ownPageResponse(string $key): JsonResponse
     {
-        return response()->json(['message' => 'Tax settings are changed on the Tax page.', 'code' => 'managed_on_tax_page'], 403);
+        return str_starts_with($key, 'payments.')
+            ? response()->json(['message' => 'Payment settings are changed on the Payments settings page.', 'code' => 'managed_on_payments_page'], 403)
+            : response()->json(['message' => 'Tax settings are changed on the Tax page.', 'code' => 'managed_on_tax_page'], 403);
     }
 
     public function index(Request $request, ConfigService $config): JsonResponse
@@ -80,7 +82,7 @@ final class StoreSettingController
     {
         abort_unless(app(SettingPolicy::class)->manageStore($request->user()), 403);
         if ($this->hasOwnPage($key)) {
-            return $this->ownPageResponse();
+            return $this->ownPageResponse($key);
         }
 
         try {
@@ -122,7 +124,7 @@ final class StoreSettingController
         abort_unless(app(SettingPolicy::class)->manageStore($request->user()), 403);
         $revisionKey = \App\Domain\Settings\Models\SettingRevision::query()->whereKey($revisionId)->value('key');
         if (is_string($revisionKey) && $this->hasOwnPage($revisionKey)) {
-            return $this->ownPageResponse();
+            return $this->ownPageResponse($revisionKey);
         }
 
         try {

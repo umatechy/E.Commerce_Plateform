@@ -60,6 +60,7 @@ final class SystemRoles
                 'analytics.financial', 'domains.manage', 'storefront.manage', 'audit.view', 'billing.view',
                 'customers.export', 'customers.import', 'store_credit.manage', // creating store credit by hand is a financial act (Phase B34)
                 'tax.manage', // Phase B46: tax set-up is a financial and legal setting
+                'payments.reconcile', // Phase B48; payments.provider_config (where the money goes) stays with the Owner
             ]],
             'manager' => ['name' => 'Manager', 'permissions' => self::MANAGER],
             'staff' => ['name' => 'Staff', 'permissions' => [

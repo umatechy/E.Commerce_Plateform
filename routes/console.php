@@ -48,6 +48,12 @@ Schedule::command('billing:run')->hourly()->withoutOverlapping();
 // level; close resolved tickets once the reopen window has passed.
 Schedule::command('support:maintain')->hourly()->withoutOverlapping();
 
+// Module 12 §53–55 (Phase B48): online payments — ask providers about waiting payments, expire
+// unfinished ones (the order is cancelled, its stock released) and flag mismatches. Deep re-check
+// of the last two days' confirmed payments every six hours.
+Schedule::command('payments:reconcile')->everyMinute()->withoutOverlapping();
+Schedule::command('payments:reconcile --deep')->cron('15 */6 * * *')->withoutOverlapping();
+
 // Module 09 §52 (Phase B35): store credit that reached its expiry date
 // (only where the store turned expiry on). Idempotent.
 Schedule::command('store-credit:expire')->dailyAt('01:30')->timezone('UTC')->withoutOverlapping();

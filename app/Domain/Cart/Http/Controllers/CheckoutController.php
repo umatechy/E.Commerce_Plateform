@@ -14,7 +14,11 @@ use App\Domain\Orders\Models\Customer;
 use App\Domain\Packages\Exceptions\FeatureNotEntitledException;
 use App\Domain\Packages\Exceptions\SubscriptionInactiveException;
 use App\Domain\Packages\Exceptions\UsageLimitExceededException;
+use App\Domain\Payments\Exceptions\OnlinePaymentRefusedException;
 use App\Domain\Payments\Exceptions\PaymentAlreadyExistsException;
+use App\Domain\Payments\Http\Resources\PaymentAttemptResource;
+use App\Domain\Payments\Models\PaymentStatus;
+use App\Domain\Payments\Services\OnlinePaymentService;
 use App\Domain\Payments\Http\Resources\PaymentResource;
 use App\Domain\Payments\Models\PaymentMethod;
 use App\Domain\Shipping\Exceptions\DestinationNotServiceableException;
@@ -62,7 +66,7 @@ final class CheckoutController
         }
     }
 
-    public function store(CheckoutRequest $request, CartService $carts, CheckoutService $checkout): JsonResponse
+    public function store(CheckoutRequest $request, CartService $carts, CheckoutService $checkout, OnlinePaymentService $onlinePayments): JsonResponse
     {
         [$cart] = $carts->resolveForRequest($request, 'X-Guest-Cart-Token', $carts->storeCurrency());
 
@@ -104,16 +108,35 @@ final class CheckoutController
             ], 422);
         } catch (PaymentAlreadyExistsException $e) {
             return response()->json(['message' => $e->getMessage(), 'code' => 'payment_already_exists'], 409);
+        } catch (OnlinePaymentRefusedException $e) {
+            return response()->json(['message' => $e->getMessage(), 'code' => 'payment_method_unavailable', 'reason' => $e->reason], 422);
         }
 
         $order = $result['order'];
         $statusCode = $order->wasRecentlyCreated ? 201 : 200;
 
+        // Phase B48: a wallet payment starts now, after the order is safely stored. The shopper's
+        // page then follows the payment with the token (a guest has no other key to it).
+        $payment = $result['payment'];
+        $online = null;
+        if ($payment->method->walletProvider() !== null && $payment->status === PaymentStatus::RequiresAction) {
+            $online = ['token' => $onlinePayments->issueClientToken($payment), 'attempt' => null, 'error' => null];
+            if ($order->wasRecentlyCreated) {
+                try {
+                    $online['attempt'] = (new PaymentAttemptResource($onlinePayments->startForOrder($payment, $payment->method, (array) $request->input('payer', []))))->toArray($request);
+                } catch (OnlinePaymentRefusedException $e) {
+                    $online['error'] = ['code' => $e->reason, 'message' => $e->getMessage()];
+                }
+            }
+            $payment->refresh();
+        }
+
         return response()->json([
             'data' => [
                 'order' => (new OrderResource($order->load('items')))->toArray($request),
-                'payment' => (new PaymentResource($result['payment']))->toArray($request),
+                'payment' => (new PaymentResource($payment))->toArray($request),
                 'redirect_url' => $result['redirect_url'],
+                'online_payment' => $online,
             ],
         ], $statusCode);
     }

@@ -45,7 +45,7 @@ export function PageHeader({ title, description, actions, crumbs }: { title: str
   );
 }
 
-export function Card({ title, description, actions, children, className = '' }: { title?: string; description?: ReactNode; actions?: ReactNode; children: ReactNode; className?: string }) {
+export function Card({ title, description, actions, children, className = '' }: { title?: ReactNode; description?: ReactNode; actions?: ReactNode; children: ReactNode; className?: string }) {
   return (
     <section className={`rounded-lg border border-slate-200 bg-white ${className}`}>
       {(title || actions) && (

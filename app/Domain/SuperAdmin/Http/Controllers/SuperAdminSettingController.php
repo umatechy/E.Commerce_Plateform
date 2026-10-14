@@ -25,10 +25,17 @@ use Illuminate\Support\Facades\Log;
  */
 final class SuperAdminSettingController
 {
+    /**
+     * Phase B48: which providers take real money is changed on the Payment
+     * providers page only — closing one there also switches every store's
+     * live account off, which a plain setting change would skip.
+     */
+    private const OWN_PAGE = ['payments.live_providers'];
+
     public function index(ConfigService $config): JsonResponse
     {
         $resources = collect(SettingRegistry::all())
-            ->filter(fn ($definition) => $definition->scope === SettingScope::Platform)
+            ->filter(fn ($definition) => $definition->scope === SettingScope::Platform && ! in_array($definition->key, self::OWN_PAGE, true))
             ->map(fn ($definition) => new SettingResource($definition, $config->get($definition->key)))
             ->values();
 
@@ -49,6 +56,10 @@ final class SuperAdminSettingController
     /** Phase B32: puts an earlier value of a PLATFORM setting back, through the validated write path; audited. */
     public function rollback(Request $request, int $revisionId, ConfigService $config): JsonResponse
     {
+        if (in_array(\App\Domain\Settings\Models\SettingRevision::query()->whereKey($revisionId)->value('key'), self::OWN_PAGE, true)) {
+            return response()->json(['message' => 'Change this on the Payment providers page.', 'code' => 'managed_on_payment_providers_page'], 403);
+        }
+
         try {
             $config->rollbackTo($revisionId, $request->user()->id, SettingScope::Platform);
         } catch (\App\Domain\Settings\Exceptions\SettingRevisionNotFoundException) {
@@ -65,6 +76,9 @@ final class SuperAdminSettingController
     public function update(Request $request, string $key, ConfigService $config): JsonResponse
     {
         $request->validate(['value' => ['required'], 'reason' => ['sometimes', 'nullable', 'string', 'max:500']]);
+        if (in_array($key, self::OWN_PAGE, true)) {
+            return response()->json(['message' => 'Change this on the Payment providers page.', 'code' => 'managed_on_payment_providers_page'], 403);
+        }
 
         try {
             $config->set($key, $request->input('value'), SettingScope::Platform, $request->user()->id, $request->input('reason'));

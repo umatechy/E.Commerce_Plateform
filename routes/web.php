@@ -97,6 +97,7 @@ Route::middleware(['auth', 'required.mfa'])->group(function () {
         '/team/roles' => 'Team/Roles',
         '/backups' => 'Backups/Index',
         '/settings' => 'Settings/Index', '/settings/audit-log' => 'Settings/AuditLog', '/settings/developer' => 'Settings/Developer', '/settings/tax' => 'Settings/Tax', // tax: Phase B46
+        '/settings/payments' => 'Settings/Payments', // Phase B48
     ] as $uri => $page) {
         Route::get($uri, fn () => Inertia::render($page));
     }
@@ -122,7 +123,7 @@ Route::middleware(['auth', 'required.mfa'])->group(function () {
         // Phase B31 (gap G6).
         foreach ([
             '/' => 'SuperAdmin/Dashboard', '/stores' => 'SuperAdmin/Stores', '/users' => 'SuperAdmin/Users',
-            '/packages' => 'SuperAdmin/Packages', '/billing' => 'SuperAdmin/Billing', '/settings' => 'SuperAdmin/Settings',
+            '/packages' => 'SuperAdmin/Packages', '/billing' => 'SuperAdmin/Billing', '/payments' => 'SuperAdmin/Payments', '/settings' => 'SuperAdmin/Settings',
             '/monitoring' => 'SuperAdmin/Monitoring', '/audit-log' => 'SuperAdmin/AuditLog', '/catalog' => 'SuperAdmin/Platform',
             '/starter-templates' => 'SuperAdmin/StarterTemplates', // Phase B45 follow-up
         ] as $uri => $page) {

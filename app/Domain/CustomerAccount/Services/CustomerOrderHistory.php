@@ -78,6 +78,11 @@ final class CustomerOrderHistory
                 'line_total_minor' => $item->line_total_minor,
             ])->values()->all(),
             'payments' => Payment::query()->where('order_id', $order->id)->orderBy('id')->get()->map(fn (Payment $payment) => [
+                // Phase B48: an unpaid wallet payment can be followed and paid from the order page.
+                'id' => $payment->public_id,
+                'online' => $payment->method->walletProvider() !== null,
+                'awaiting_payment' => $payment->method->walletProvider() !== null
+                    && in_array($payment->status, [\App\Domain\Payments\Models\PaymentStatus::RequiresAction, \App\Domain\Payments\Models\PaymentStatus::Pending], true),
                 'method' => $payment->method->value,
                 'status' => $payment->status->value,
                 'amount_minor' => $payment->amount_minor,
