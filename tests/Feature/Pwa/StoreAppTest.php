@@ -141,7 +141,7 @@ final class StoreAppTest extends TestCase
 
         $this->store->update(['status' => StoreStatus::Cancelled]);
         $this->assertTrue($retired($this->store), 'a closed shop still answers sw.js, retiring');
-        $this->get($this->base($this->store).'/')->assertStatus(503);
+        $this->withoutVite()->get($this->base($this->store).'/')->assertStatus(503); // CI has no Vite build
 
         $open = $this->openStore();
         $this->setting($open, 'pwa.enabled', false);
