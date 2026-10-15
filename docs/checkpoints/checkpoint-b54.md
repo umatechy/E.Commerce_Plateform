@@ -117,7 +117,7 @@ Not built (b54-help-center.md §8):
 - AI-assisted support;
 - help pages in the sitemap.
 
-CI: pending.
+CI: run on 6e9995f — success (backend, frontend, security, e2e), verified 2026-10-15.
 
 Next: B55 — PWA (gap G16, Module 25), the next module in the matrix's
 recommended order.
