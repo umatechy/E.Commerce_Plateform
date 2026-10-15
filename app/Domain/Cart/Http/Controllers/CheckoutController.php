@@ -115,6 +115,16 @@ final class CheckoutController
         $order = $result['order'];
         $statusCode = $order->wasRecentlyCreated ? 201 : 200;
 
+        // Phase B57 (Module 28 §16, §60, §87): the affiliate who brought the order. It never
+        // stops the order: any failure is logged and the shopper's checkout goes on.
+        if ($order->wasRecentlyCreated) {
+            try {
+                app(\App\Domain\Affiliates\Services\AffiliateAttribution::class)->attribute($order, $request->input('referral_token'));
+            } catch (\Throwable $e) {
+                report($e);
+            }
+        }
+
         // Phase B48: a wallet payment starts now, after the order is safely stored. The shopper's
         // page then follows the payment with the token (a guest has no other key to it).
         $payment = $result['payment'];

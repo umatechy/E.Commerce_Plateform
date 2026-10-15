@@ -39,6 +39,7 @@ export const FEATURE_LABELS: Record<string, string> = {
   'ai.chatbot': 'AI chatbot',
   'integrations.advanced': 'Advanced integrations',
   'integrations.api': 'Developer API',
+  'affiliate.programs': 'Affiliate program',
   'custom_roles.enabled': 'Custom roles',
   'marketing.advanced': 'Advanced marketing',
   'marketing.basic': 'Campaigns and segments',

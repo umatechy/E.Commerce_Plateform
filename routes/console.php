@@ -66,3 +66,5 @@ Schedule::command('payments:reconcile --deep')->cron('15 */6 * * *')->withoutOve
 Schedule::command('store-credit:expire')->dailyAt('01:30')->timezone('UTC')->withoutOverlapping();
 // Phase B54 (Module 34 §29): help search analytics and handled feedback are not kept forever.
 Schedule::command('help:maintain')->dailyAt('02:45')->timezone('UTC')->withoutOverlapping();
+// Phase B57 (Module 28 §22–24): affiliate commissions follow their orders (delivery, refunds, cancellations).
+Schedule::command('affiliates:follow-up')->hourly()->withoutOverlapping();

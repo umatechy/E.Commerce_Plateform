@@ -6,6 +6,7 @@ import { useT } from '@/Storefront/i18n';
 import { CONTAINER, layoutOf, motionOf, StorefrontThemeContext, themeStyle, type ThemeLayout } from '@/Storefront/theme';
 import type { Seo, Shell } from '@/Storefront/types';
 import AppLayer from '@/Components/Storefront/AppLayer';
+import { rememberReferral } from '@/Storefront/referral';
 
 /**
  * The storefront shell: announcement, header with navigation, search and
@@ -39,6 +40,13 @@ export default function StoreLayout({ shell, seo, children }: PropsWithChildren<
     document.documentElement.lang = locale;
     document.documentElement.dir = dir;
   }, [locale, dir]);
+
+  // Phase B57: arrived through an affiliate's link; kept for the order.
+  const referral = shell.referral?.token;
+  useEffect(() => {
+    rememberReferral(shell);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- only a new referral matters
+  }, [referral]);
 
   return (
     <StorefrontThemeContext.Provider value={context}>
@@ -266,6 +274,13 @@ function HelpLinks({ shell }: { shell: Shell }) {
           {t('Contact us')}
         </Link>
       </li>
+      {shell.affiliate_join && (
+        <li>
+          <Link href={`${base}/affiliates/join`} className="hover:text-sf-text">
+            {t('Become an affiliate')}
+          </Link>
+        </li>
+      )}
     </>
   );
 }

@@ -56,6 +56,9 @@ $storefrontPages = function (): void {
     Route::get('/manifest.webmanifest', [$pwa, 'manifest']);
     Route::get('/sw.js', [$pwa, 'worker'])->defaults('storefront_always', true);
     Route::get('/offline', [$pwa, 'offline']);
+    // Phase B57 (Module 28): applying to the store's affiliate program, and an affiliate's private page.
+    Route::get('/affiliates/join', [StorefrontWebController::class, 'affiliateJoin']);
+    Route::get('/affiliate', [StorefrontWebController::class, 'affiliatePortal']);
     // Phase B54 (Module 34 §43): the store's help center for shoppers.
     Route::get('/help', [StorefrontWebController::class, 'help']);
     Route::get('/help/{articleKey}', [StorefrontWebController::class, 'helpArticle'])->where('articleKey', '[a-z0-9][a-z0-9\-]{2,79}');
@@ -107,6 +110,7 @@ Route::middleware(['auth', 'required.mfa'])->group(function () {
         '/storefront/theme' => 'Storefront/Theme', '/domains' => 'Storefront/Domains',
         '/storefront/app' => 'Storefront/App', // Phase B55: the store's installable app
         '/apps' => 'Apps/Index', // Phase B56: the app marketplace
+        '/affiliates' => 'Marketing/Affiliates', // Phase B57: the store's affiliate program
         '/reports' => 'Analytics/Reports',
         '/notifications' => 'Communication/Index',
         '/team/roles' => 'Team/Roles',

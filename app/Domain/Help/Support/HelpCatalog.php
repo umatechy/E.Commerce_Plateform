@@ -10,7 +10,7 @@ namespace App\Domain\Help\Support;
  * sits in the information architecture.
  *
  * Categories follow Module 34 §5. Areas the platform does not have yet
- * (hosting, PWA, AI, marketplace, affiliates) get no category: the help
+ * (hosting, AI) get no category: the help
  * center documents what exists (§2.1 "accurate").
  */
 final class HelpCatalog

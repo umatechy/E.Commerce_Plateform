@@ -229,6 +229,35 @@ final class StorefrontWebController
     }
 
     /**
+     * Phase B57 (Module 28 §47, §91): the page to apply to the store's
+     * affiliate program, with what affiliates earn in plain words. Only
+     * while the program is running and takes applications.
+     */
+    public function affiliateJoin(Request $request): Response
+    {
+        $attribution = app(\App\Domain\Affiliates\Services\AffiliateAttribution::class);
+        $program = $attribution->program();
+        $version = $program?->currentVersion;
+        if ($program === null || $version === null || ! $attribution->joinOpen()) {
+            throw new NotFoundHttpException();
+        }
+
+        return $this->render($request, 'Storefront/AffiliateJoin', [
+            'program' => [
+                'name' => $program->name,
+                'summary' => \App\Domain\Affiliates\Services\AffiliateProgramService::summary($version->rules, $version->currency),
+                'terms' => $version->terms,
+            ],
+        ], $this->listingSeo($this->store($request), 'Become an affiliate', 'affiliates/join'));
+    }
+
+    /** Phase B57 (Module 28 §43): the affiliate's private page; the token stays in the #fragment. */
+    public function affiliatePortal(Request $request): Response
+    {
+        return $this->render($request, 'Storefront/AffiliatePortal', [], $this->privatePageSeo($request, 'Your affiliate page'));
+    }
+
+    /**
      * A guest's request, opened from the private link in their email. The
      * access token is in the link's #fragment, which browsers never send,
      * so this request (and its logs) never sees it: the page reads it and
@@ -322,6 +351,9 @@ final class StorefrontWebController
                 'preview' => (bool) $request->attributes->get('storefront.preview'),
                 // Module 17 §19 (Phase B32): until when the draft theme is shown, or null.
                 'theme_preview' => $themePreview['expires_at'] ?? null,
+                // Phase B57 (Module 28 §8, §12): arrived through an affiliate link — a token the server signed.
+                'referral' => app(\App\Domain\Affiliates\Services\AffiliateAttribution::class)->fromLanding($request, $store),
+                'affiliate_join' => app(\App\Domain\Affiliates\Services\AffiliateAttribution::class)->joinOpen(),
                 // Phase B55 (Module 25): the store's installable app (worked out per request, not cached).
                 'pwa' => app(\App\Domain\Pwa\Services\PwaConfig::class)->forPage($store, (string) $request->attributes->get('storefront.base_path')),
             ],

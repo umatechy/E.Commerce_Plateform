@@ -116,6 +116,11 @@ final class StepUpTest extends TestCase
             'DELETE api/v1/super-admin/starter-templates/{key}',
             'GET api/v1/super-admin/stores/{store}/impersonate',
             'PATCH api/v1/super-admin/billing/prices/{price}',
+            // Phase B57: paying affiliates — seeing where to send money, recording it, changing balances and accounts.
+            'POST api/v1/affiliates/payouts/{payout}/paid',
+            'POST api/v1/affiliates/payouts/{payout}/pay-to',
+            'POST api/v1/affiliates/{affiliate}/adjustments',
+            'POST api/v1/affiliates/{affiliate}/payouts',
             // Phase B56: giving an app access to the store's data, connecting it again, widening it.
             'POST api/v1/apps/{slug}/connect',
             'POST api/v1/apps/{slug}/install',
@@ -164,6 +169,7 @@ final class StepUpTest extends TestCase
             'POST api/v1/super-admin/users/{user}/deactivate',
             'POST api/v1/super-admin/users/{user}/reactivate',
             'POST api/v1/super-admin/users/{user}/sessions/revoke', // Phase B52: end someone's sessions
+            'PUT api/v1/affiliates/{affiliate}/payout-details', // Phase B57
             'PUT api/v1/courier-settings/couriers/{provider}',
             'PUT api/v1/messaging-settings/accounts/{provider}',
             'PUT api/v1/payment-settings/bank-transfer',

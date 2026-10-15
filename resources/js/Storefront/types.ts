@@ -96,6 +96,10 @@ export type Shell = {
   preview: boolean;
   /** Phase B32 (Module 17 §19): until when this visit shows the draft theme; null for the published one. */
   theme_preview?: string | null;
+  /** Phase B57 (Module 28 §12): arrived through an affiliate link: a token the server signed, kept for the attribution window. */
+  referral?: { token: string; code: string; days: number } | null;
+  /** Phase B57: the store's affiliate program takes applications (the footer links to its page). */
+  affiliate_join?: boolean;
   /** Phase B55 (Module 25): the store's installable app; absent in older test fixtures. */
   pwa?: {
     enabled: boolean;

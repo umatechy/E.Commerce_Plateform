@@ -14,6 +14,7 @@ import WalletPayment, { type PaymentView } from '@/Components/Storefront/WalletP
 import BankDetails from '@/Components/Storefront/BankDetails';
 import { normalizeMobile, validCnicLast6 } from '@/lib/payments';
 import { useApp } from '@/Storefront/pwa';
+import { referralToken } from '@/Storefront/referral';
 
 type ShippingOption = { id: number; name: string; type: string; cost_minor: number };
 /** Phase B46: the server's price of the order before it is placed (POST /checkout/summary). */
@@ -192,6 +193,8 @@ export default function Checkout({ storefront, seo, payment_methods, payment_opt
           // A wish only: the server decides how much credit there is and takes it.
           use_store_credit: hasCredit && useCredit,
           idempotency_key: idempotencyKey,
+          // Phase B57: an affiliate's referral, if this device came through one; the server checks it again.
+          referral_token: referralToken(storefront),
         },
       });
       forgetCart(storefront);

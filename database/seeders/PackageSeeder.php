@@ -87,6 +87,7 @@ final class PackageSeeder extends Seeder
             'animation.premium' => false,
             // Owner decision 15 (2026-10-07): ratings/reviews and units sold on product pages are Business and Premium.
             'reviews.product' => false,
+            'affiliate.programs' => false, // Phase B57 (Module 28 §74): a store's own affiliate program
             'products.units_sold' => false,
         ],
         'business' => [
@@ -132,6 +133,7 @@ final class PackageSeeder extends Seeder
             'animation.premium' => false,
             // Owner decision 15 (2026-10-07): ratings/reviews and units sold on product pages are Business and Premium.
             'reviews.product' => true,
+            'affiliate.programs' => true, // Phase B57
             'products.units_sold' => true,
         ],
         'premium' => [
@@ -177,6 +179,7 @@ final class PackageSeeder extends Seeder
             'animation.premium' => true,
             // Owner decision 15 (2026-10-07): ratings/reviews and units sold on product pages are Business and Premium.
             'reviews.product' => true,
+            'affiliate.programs' => true, // Phase B57
             'products.units_sold' => true,
         ],
     ];

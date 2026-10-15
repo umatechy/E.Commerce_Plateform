@@ -147,6 +147,11 @@ Route::middleware(['customer.optional', 'storefront.store:api', 'throttle:120,1'
         // Module 34 (Phase B26): contact form and a guest's private ticket link.
         $support = \App\Domain\Support\Http\Controllers\GuestSupportController::class;
         Route::post('/support/contact', [$support, 'contact'])->middleware('throttle:3,1,sf-contact');
+        // Phase B57 (Module 28 §43, §91): applying to the store's affiliate program, and the affiliate's private page (X-Affiliate-Token).
+        $affiliates = \App\Domain\Affiliates\Http\Controllers\StorefrontAffiliateController::class;
+        Route::post('/affiliates/apply', [$affiliates, 'apply'])->middleware('throttle:3,10,sf-affiliate-apply');
+        Route::get('/affiliate', [$affiliates, 'portal'])->middleware('throttle:60,1,sf-affiliate-portal');
+        Route::put('/affiliate/payout-details', [$affiliates, 'payoutDetails'])->middleware('throttle:10,10,sf-affiliate-payout');
         // Phase B55 (Module 25 §51–54, §68): the store app's push choice (signed-in shoppers) and its counters.
         $app = \App\Domain\Pwa\Http\Controllers\StorefrontAppApiController::class;
         Route::post('/app/push', [$app, 'subscribe'])->middleware(['auth:customer', 'customer.principal', 'throttle:10,10,sf-app-push']);

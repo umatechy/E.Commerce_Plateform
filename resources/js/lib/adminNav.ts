@@ -54,6 +54,7 @@ export const storeNav: NavGroup[] = [
     items: [
       { href: '/promotions', label: 'Promotions', description: 'Discounts and coupon codes.', permissions: ['promotions.view'] },
       { href: '/campaigns', label: 'Campaigns', description: 'Email campaigns to your customers.', permissions: ['marketing.view'] },
+      { href: '/affiliates', label: 'Affiliates', description: 'People who promote your store and earn commission.', permissions: ['affiliates.view'], feature: 'affiliate.programs' },
       { href: '/segments', label: 'Segments', description: 'Groups of customers for campaigns.', permissions: ['marketing.view'] },
       { href: '/notifications', label: 'Messages', description: 'Sent messages, WhatsApp & SMS, and templates.', permissions: ['notifications.view'] },
     ],

@@ -130,6 +130,31 @@ Route::middleware(['auth:sanctum', 'session.track', 'staff.principal', 'required
     Route::post('/platform-support/tickets/{ticket}/resolve', [\App\Domain\Support\Http\Controllers\MerchantPlatformSupportController::class, 'resolve']);
     Route::post('/platform-support/tickets/{ticket}/rating', [\App\Domain\Support\Http\Controllers\MerchantPlatformSupportController::class, 'rate']);
 
+    // --- Affiliate program (Module 28, Phase B57): affiliates.view / .manage / .payouts (AffiliatePolicy) ---
+    $aff = \App\Domain\Affiliates\Http\Controllers\AffiliateAdminController::class;
+    Route::get('/affiliates/overview', [$aff, 'overview']);
+    Route::put('/affiliates/program', [$aff, 'saveProgram'])->middleware('throttle:30,1,affiliate-program');
+    Route::post('/affiliates/program/activate', [$aff, 'activate']);
+    Route::post('/affiliates/program/pause', [$aff, 'pause']);
+    Route::get('/affiliates/commissions', [$aff, 'commissions']);
+    Route::post('/affiliates/commissions/{commission}/decide', [$aff, 'decide']);
+    Route::get('/affiliates/payouts', [$aff, 'payouts']);
+    Route::post('/affiliates/payouts/{payout}/paid', [$aff, 'markPaid'])->middleware(['step_up', 'idempotent']);
+    Route::post('/affiliates/payouts/{payout}/pay-to', [$aff, 'payTo'])->middleware('step_up');
+    Route::post('/affiliates/payouts/{payout}/cancel', [$aff, 'cancelPayout']);
+    Route::get('/affiliates', [$aff, 'affiliates']);
+    Route::post('/affiliates', [$aff, 'store'])->middleware('throttle:60,10,affiliate-add');
+    Route::put('/affiliates/{affiliate}', [$aff, 'update']);
+    Route::post('/affiliates/{affiliate}/approve', [$aff, 'approve']);
+    Route::post('/affiliates/{affiliate}/reject', [$aff, 'reject']);
+    Route::post('/affiliates/{affiliate}/pause', [$aff, 'pauseAffiliate']);
+    Route::post('/affiliates/{affiliate}/resume', [$aff, 'resumeAffiliate']);
+    Route::post('/affiliates/{affiliate}/portal-link', [$aff, 'portalLink']);
+    Route::put('/affiliates/{affiliate}/payout-details', [$aff, 'payoutDetails'])->middleware('step_up');
+    Route::post('/affiliates/{affiliate}/payouts', [$aff, 'createPayout'])->middleware(['step_up', 'idempotent']);
+    Route::get('/affiliates/{affiliate}/adjustments', [$aff, 'adjustments']);
+    Route::post('/affiliates/{affiliate}/adjustments', [$aff, 'adjust'])->middleware(['step_up', 'idempotent']);
+
     // --- Apps from the marketplace (Module 27, Phase B56): developer_platform.view to look, the Owner to change ---
     $apps = \App\Domain\Marketplace\Http\Controllers\StoreAppsController::class;
     Route::get('/apps', [$apps, 'index']);
