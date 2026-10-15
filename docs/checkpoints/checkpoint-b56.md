@@ -120,7 +120,7 @@ Not built (b56-marketplace.md §8):
 - app reviews and logos;
 - an uninstall notice to apps.
 
-CI: pending.
+CI: run on 9c6e1c7 — success (backend, frontend, security, e2e), verified 2026-10-15.
 
 Next (on the owner's word): G20 Affiliate and Reseller (Module 28), the
 next module in the matrix order; or G22 feature flags. G18 AI waits for
