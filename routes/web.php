@@ -50,6 +50,9 @@ $storefrontPages = function (): void {
     Route::get('/contact', [StorefrontWebController::class, 'contact']);
     // Phase B34 (Module 09 §8–9): returns for a guest, by the link sent to the order's email.
     Route::get('/returns', [StorefrontWebController::class, 'returns']);
+    // Phase B54 (Module 34 §43): the store's help center for shoppers.
+    Route::get('/help', [StorefrontWebController::class, 'help']);
+    Route::get('/help/{articleKey}', [StorefrontWebController::class, 'helpArticle'])->where('articleKey', '[a-z0-9][a-z0-9\-]{2,79}');
     Route::get('/support/tickets/{ticketId}', [StorefrontWebController::class, 'supportTicket'])->where('ticketId', '[0-9A-Za-z]{26}');
 };
 
@@ -80,6 +83,10 @@ Route::middleware(['auth', 'required.mfa'])->group(function () {
     // Module 34 (Phase B26): the store's inbox, and its own requests to the platform.
     Route::get('/support', fn () => Inertia::render('Support/Index'));
     Route::get('/support/platform', fn () => Inertia::render('Support/Platform'));
+    // Module 34 (Phase B54): the help center, one article, and the release notes.
+    Route::get('/help', fn () => Inertia::render('Help/Index'));
+    Route::get('/help/whats-new', fn () => Inertia::render('Help/WhatsNew'));
+    Route::get('/help/articles/{key}', fn (string $key) => Inertia::render('Help/Article', ['articleKey' => $key]))->where('key', '[a-z0-9][a-z0-9\-]{2,79}');
 
     // Phase B31 (gap G6): the Store Admin pages. Each one only renders the
     // page; its data comes from /api/v1, where the policy for that data
@@ -129,6 +136,7 @@ Route::middleware(['auth', 'required.mfa'])->group(function () {
             '/starter-templates' => 'SuperAdmin/StarterTemplates', // Phase B45 follow-up
             '/messaging' => 'SuperAdmin/Messaging', // Phase B50
             '/security' => 'SuperAdmin/Security', // Phase B52
+            '/help' => 'SuperAdmin/Help', // Phase B54
         ] as $uri => $page) {
             Route::get($uri, fn () => Inertia::render($page));
         }

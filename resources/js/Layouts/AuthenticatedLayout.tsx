@@ -6,6 +6,7 @@ import { activeHref, navigationFor, type NavEntry, type ResolvedGroup } from '@/
 import { FOCUS_RING } from '@/Components/ui/Button';
 import { toast, Toaster } from '@/Components/ui/toast';
 import StepUpDialog from '@/Components/StepUpDialog';
+import { HelpButton } from '@/Components/Help/HelpPanel';
 import { setDisplayTimezone } from '@/lib/datetime';
 
 /**
@@ -280,7 +281,10 @@ export default function AuthenticatedLayout({ children }: PropsWithChildren) {
               </a>
             )}
           </div>
-          <AccountMenu auth={auth} onLogout={logout} />
+          <div className="flex items-center gap-1">
+            {auth.user && !locked && <HelpButton path={path} unseenRelease={auth.help_unseen_release ?? null} canAskPlatform={access.hasStore && access.can('support.platform')} />}
+            <AccountMenu auth={auth} onLogout={logout} />
+          </div>
         </header>
 
         {locked && (

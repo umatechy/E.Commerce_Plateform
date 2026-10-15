@@ -25,6 +25,8 @@ export type AuthProps = {
   /** Phase B52: the platform role's name and what it may do (Super Admin). */
   platform_role?: string | null;
   platform_capabilities?: string[];
+  /** Phase B54: a release newer than the user has seen ("What's new"). */
+  help_unseen_release?: string | null;
 };
 
 export type Access = {

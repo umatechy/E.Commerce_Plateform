@@ -28,7 +28,8 @@ use Symfony\Component\HttpFoundation\Response;
 final class EnsureStoreOperational
 {
     /** Paths (under /api/v1/) that stay open for a store that is not operational. */
-    private const ALWAYS_OPEN = ['auth/', 'store/switch', 'store-lifecycle', 'billing', 'platform-support/', 'subscription'];
+    /** Phase B54: help is platform content, open to every signed-in store user. */
+    private const ALWAYS_OPEN = ['auth/', 'store/switch', 'store-lifecycle', 'billing', 'platform-support/', 'subscription', 'help/'];
 
     /** Also open for reading while suspended or closed: the data export. */
     private const READ_ONLY_STATES = [StoreStatus::Suspended, StoreStatus::Cancelled];

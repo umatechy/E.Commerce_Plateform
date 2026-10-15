@@ -116,6 +116,7 @@ export const platformNav: NavGroup = {
     { href: '/super-admin/settings', label: 'Platform settings', description: 'Platform-wide configuration.' },
     { href: '/super-admin/backups', label: 'Platform backups', description: 'Backups, restore rehearsals and restore requests.' },
     { href: '/super-admin/support', label: 'Platform support', description: 'Requests from every store to the platform.' },
+    { href: '/super-admin/help', label: 'Help center', description: 'Help articles, their review, feedback, searches and release notes.' },
   ],
 };
 

@@ -185,6 +185,50 @@ final class StorefrontWebController
     }
 
     /**
+     * Phase B54 (Module 34 §43) — the store's help center: shopper help in
+     * the visitor's language (English where no translation exists), search,
+     * and the way to the store's own policies and contact form. Only
+     * customer articles exist here; admin and developer help never do.
+     */
+    public function help(Request $request): Response
+    {
+        $store = $this->store($request);
+        $locale = app(\App\Domain\Storefront\Services\StorefrontLocale::class)->current();
+        $library = app(\App\Domain\Help\Services\HelpLibrary::class);
+        $query = trim(mb_substr((string) $request->query('q', ''), 0, 200));
+        $articles = $library->readable(['customer'], $locale);
+        $categories = [];
+        foreach (\App\Domain\Help\Support\HelpCatalog::CATEGORIES as $key => $entry) {
+            $inCategory = $articles->where('category', $key)->values();
+            if ($inCategory->isNotEmpty()) {
+                $categories[] = ['key' => $key, 'label' => \App\Domain\Help\Support\HelpCatalog::categoryLabel($key, $locale), 'articles' => $inCategory->map(fn ($a) => $library->summary($a, $locale))->all()];
+            }
+        }
+        $seo = $this->listingSeo($store, 'Help', 'help');
+        if ($query !== '') {
+            $seo['robots'] = 'noindex, follow'; // search results are not pages of their own
+        }
+
+        return $this->render($request, 'Storefront/Help', [
+            'categories' => $categories,
+            'query' => $query,
+            'results' => $query === '' ? null : $library->search($query, ['customer'], $locale, 'storefront'),
+        ], $seo);
+    }
+
+    public function helpArticle(Request $request, string $articleKey): Response
+    {
+        $store = $this->store($request);
+        $locale = app(\App\Domain\Storefront\Services\StorefrontLocale::class)->current();
+        $base = (string) $request->attributes->get('storefront.base_path');
+        $article = app(\App\Domain\Help\Services\HelpLibrary::class)->article($articleKey, ['customer'], $locale, $base.'/help', $base) ?? throw new NotFoundHttpException();
+        $seo = $this->listingSeo($store, $article['title'], 'help/'.$article['key']);
+        $seo['description'] = $seo['og_description'] = $article['summary'];
+
+        return $this->render($request, 'Storefront/HelpArticle', ['article' => $article], $seo);
+    }
+
+    /**
      * A guest's request, opened from the private link in their email. The
      * access token is in the link's #fragment, which browsers never send,
      * so this request (and its logs) never sees it: the page reads it and

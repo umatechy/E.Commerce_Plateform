@@ -250,6 +250,11 @@ function HelpLinks({ shell }: { shell: Shell }) {
         </li>
       ))}
       <li>
+        <Link href={`${base}/help`} className="hover:text-sf-text">
+          {t('Help center')}
+        </Link>
+      </li>
+      <li>
         <Link href={`${base}/returns`} className="hover:text-sf-text">
           {t('Returns')}
         </Link>

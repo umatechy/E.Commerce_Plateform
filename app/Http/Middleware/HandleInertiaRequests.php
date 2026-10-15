@@ -48,8 +48,17 @@ final class HandleInertiaRequests extends Middleware
                 // Phase B31 (G6): what the navigation needs to show only what this
                 // user may open and what the package includes. Display only.
                 ...app(AdminShellProps::class)->for($user, $activeStoreId),
+                // Phase B54: newer release notes than this user has seen (the "What's new" mark).
+                'help_unseen_release' => $user === null ? null : $this->unseenRelease($user->help_seen_release),
             ],
         ];
+    }
+
+    private function unseenRelease(?string $seen): ?string
+    {
+        $latest = app(\App\Domain\Help\Services\HelpLibrary::class)->latestRelease();
+
+        return $latest !== null && $latest['version'] !== $seen ? $latest['version'] : null;
     }
 
     /** @return array{id: int, name: string, slug: string, status: string, retention_ends_at: ?string}|null */

@@ -64,3 +64,5 @@ Schedule::command('payments:reconcile --deep')->cron('15 */6 * * *')->withoutOve
 // Module 09 §52 (Phase B35): store credit that reached its expiry date
 // (only where the store turned expiry on). Idempotent.
 Schedule::command('store-credit:expire')->dailyAt('01:30')->timezone('UTC')->withoutOverlapping();
+// Phase B54 (Module 34 §29): help search analytics and handled feedback are not kept forever.
+Schedule::command('help:maintain')->dailyAt('02:45')->timezone('UTC')->withoutOverlapping();

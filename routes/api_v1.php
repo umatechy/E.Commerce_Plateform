@@ -130,6 +130,17 @@ Route::middleware(['auth:sanctum', 'session.track', 'staff.principal', 'required
     Route::post('/platform-support/tickets/{ticket}/resolve', [\App\Domain\Support\Http\Controllers\MerchantPlatformSupportController::class, 'resolve']);
     Route::post('/platform-support/tickets/{ticket}/rating', [\App\Domain\Support\Http\Controllers\MerchantPlatformSupportController::class, 'rate']);
 
+    // --- Help center (Module 34, Phase B54): what each reader may open is decided by HelpAudiencePolicy ---
+    $help = \App\Domain\Help\Http\Controllers\HelpController::class;
+    Route::get('/help', [$help, 'home']);
+    Route::get('/help/search', [$help, 'search'])->middleware('throttle:60,1,help-search');
+    Route::get('/help/page', [$help, 'page']);
+    Route::get('/help/categories/{category}', [$help, 'category'])->where('category', '[a-z_]{2,30}');
+    Route::get('/help/articles/{key}', [$help, 'show'])->where('key', '[a-z0-9][a-z0-9\-]{2,79}');
+    Route::post('/help/articles/{key}/feedback', [$help, 'feedback'])->where('key', '[a-z0-9][a-z0-9\-]{2,79}')->middleware('throttle:20,10,help-feedback');
+    Route::get('/help/releases', [$help, 'releases']);
+    Route::post('/help/releases/seen', [$help, 'seen']);
+
     // --- Storefront setup & launch (Module 05, Phase B24) ---
     Route::get('/storefront/setup', [\App\Domain\Storefront\Http\Controllers\StorefrontSetupController::class, 'show']);
     Route::post('/storefront/launch', [\App\Domain\Storefront\Http\Controllers\StorefrontSetupController::class, 'launch']);
@@ -506,6 +517,22 @@ Route::middleware(['auth:sanctum', 'session.track', 'staff.principal', 'required
             Route::put('/starter-templates/{key}', [$templates, 'update'])->where('key', '[a-z0-9_]{1,40}')->middleware('step_up');
             Route::delete('/starter-templates/{key}', [$templates, 'destroy'])->where('key', '[a-z0-9_]{1,40}')->middleware('step_up');
             Route::post('/stores/{store}/starter-template', [$templates, 'saveFromStore'])->middleware(['step_up', 'throttle:20,10,starter-template-save']);
+            // Phase B54 (Module 34): help articles, their review, feedback, searches and release notes.
+            $helpAdmin = \App\Domain\Help\Http\Controllers\SuperAdminHelpController::class;
+            Route::get('/help/articles', [$helpAdmin, 'index']);
+            Route::post('/help/articles', [$helpAdmin, 'store']);
+            Route::get('/help/articles/{article}', [$helpAdmin, 'show'])->whereNumber('article');
+            Route::put('/help/articles/{article}/draft', [$helpAdmin, 'saveDraft'])->whereNumber('article');
+            foreach (['submit', 'approve', 'reject', 'deprecate', 'archive', 'reinstate'] as $step) {
+                Route::post("/help/articles/{article}/{$step}", [$helpAdmin, $step])->whereNumber('article');
+            }
+            Route::post('/help/articles/{article}/bundle-draft', [$helpAdmin, 'bundleDraft'])->whereNumber('article');
+            Route::post('/help/preview', [$helpAdmin, 'preview'])->middleware('throttle:60,1,help-preview');
+            Route::get('/help/insights', [$helpAdmin, 'insights']);
+            Route::post('/help/feedback/{feedback}/resolve', [$helpAdmin, 'resolveFeedback'])->whereNumber('feedback');
+            Route::get('/help/releases', [$helpAdmin, 'releases']);
+            Route::post('/help/releases/{version}/publish', [$helpAdmin, 'publishRelease'])->where('version', '[0-9.]{1,20}');
+
             Route::get('/users', [SuperAdminUserController::class, 'index']);
             Route::get('/users/{user}', [SuperAdminUserController::class, 'show']);
             Route::post('/users/{user}/deactivate', [SuperAdminUserController::class, 'deactivate'])->middleware('step_up');

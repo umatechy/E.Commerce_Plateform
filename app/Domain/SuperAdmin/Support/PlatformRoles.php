@@ -35,15 +35,16 @@ final class PlatformRoles
         'users' => 'Deactivate and reactivate user accounts',
         'developer' => 'Suspend developer applications',
         'security' => 'Platform staff roles, sessions, incidents and emergency controls',
+        'help' => 'Write, review and publish help articles; publish release notes', // Phase B54
     ];
 
     /** role => [label, what it is for, capabilities] */
     public const ROLES = [
         'super_admin' => ['Super admin', 'Everything, including staff roles and permanent deletion. Keep this to very few people.', ['*']],
         'platform_admin' => ['Platform admin', 'Runs the platform day to day: stores, packages, billing, providers, settings, backups, support.',
-            ['view', 'stores', 'impersonate', 'catalog', 'billing', 'providers', 'settings', 'backups', 'support', 'users', 'developer']],
+            ['view', 'stores', 'impersonate', 'catalog', 'billing', 'providers', 'settings', 'backups', 'support', 'users', 'developer', 'help']],
         'operations_admin' => ['Operations admin', 'Stores, backups and support.', ['view', 'stores', 'impersonate', 'backups', 'support', 'developer']],
-        'support_admin' => ['Support admin', 'Answers stores and opens a store to help. Changes nothing else.', ['view', 'impersonate', 'support']],
+        'support_admin' => ['Support admin', 'Answers stores, opens a store to help and writes help articles. Changes nothing else.', ['view', 'impersonate', 'support', 'help']],
         'billing_admin' => ['Billing admin', 'Invoices, payments, credit notes and prices.', ['view', 'billing']],
         'security_admin' => ['Security admin', 'Staff roles, sessions, incidents, emergency controls and user accounts.', ['view', 'security', 'users', 'developer']],
         'read_only_auditor' => ['Read-only auditor', 'Sees everything, changes nothing.', ['view']],
@@ -81,6 +82,7 @@ final class PlatformRoles
         ['users', 'users'],
         ['developer', 'developer'],
         ['security', 'security'],
+        ['help', 'help'], // Phase B54
     ];
 
     public static function normalize(?string $role): ?string

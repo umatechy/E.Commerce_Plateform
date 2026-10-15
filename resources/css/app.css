@@ -157,3 +157,82 @@
     transform: none !important;
   }
 }
+
+/*
+ * Phase B54: help article text (rendered Markdown). Logical properties, so
+ * Urdu (right to left) lists and quotes indent on the correct side.
+ */
+.help-article {
+  line-height: 1.7;
+}
+.help-article > * + * {
+  margin-top: 0.85em;
+}
+.help-article h2 {
+  margin-top: 1.6em;
+  font-size: 1.15rem;
+  font-weight: 600;
+}
+.help-article h3 {
+  margin-top: 1.3em;
+  font-weight: 600;
+}
+.help-article ul,
+.help-article ol {
+  padding-inline-start: 1.4em;
+}
+.help-article ul {
+  list-style: disc;
+}
+.help-article ol {
+  list-style: decimal;
+}
+.help-article li + li {
+  margin-top: 0.35em;
+}
+.help-article a {
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.help-article code {
+  border-radius: 0.25rem;
+  background: rgb(0 0 0 / 0.06);
+  padding: 0.1em 0.35em;
+  font-size: 0.9em;
+}
+.help-article pre {
+  overflow-x: auto;
+  border-radius: 0.5rem;
+  background: rgb(15 23 42);
+  color: rgb(226 232 240);
+  padding: 0.9em 1em;
+  font-size: 0.85rem;
+  direction: ltr;
+  text-align: left;
+}
+.help-article pre code {
+  background: none;
+  padding: 0;
+}
+.help-article table {
+  display: block;
+  max-width: 100%;
+  overflow-x: auto;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+.help-article th,
+.help-article td {
+  border: 1px solid rgb(0 0 0 / 0.12);
+  padding: 0.4em 0.7em;
+  text-align: start;
+  vertical-align: top;
+}
+.help-article th {
+  background: rgb(0 0 0 / 0.04);
+  font-weight: 600;
+}
+.help-article blockquote {
+  border-inline-start: 3px solid rgb(0 0 0 / 0.15);
+  padding-inline-start: 1em;
+}

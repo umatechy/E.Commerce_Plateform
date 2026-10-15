@@ -67,6 +67,23 @@ const SETUP_LINK: Record<string, string> = {
   domain: '/domains',
 };
 
+/** Phase B54 (Module 34 §13–14): the help article for each setup step. */
+const SETUP_HELP: Record<string, string> = {
+  business_info: 'store-settings',
+  products: 'add-a-product',
+  categories: 'organise-your-catalog',
+  subscription: 'billing-invoices',
+  payment: 'billing-invoices',
+  payment_methods: 'payment-methods',
+  policies: 'pages-and-seo',
+  test_order: 'create-an-order',
+  seo: 'pages-and-seo',
+  warehouse: 'manage-stock',
+  shipping: 'shipping-setup',
+  branding: 'storefront-theme',
+  domain: 'connect-a-domain',
+};
+
 function change(percent: number | null | undefined): string | undefined {
   if (percent === null || percent === undefined) return undefined;
 
@@ -175,6 +192,12 @@ function SetupSection() {
                     <span className="sr-only">{check.done ? 'Done: ' : 'To do: '}</span>
                     {check.message} {check.required ? <span className="text-xs text-slate-500">(required)</span> : <span className="text-xs text-slate-500">(optional)</span>}
                   </span>
+                  <span className="flex items-center gap-3">
+                  {!check.done && SETUP_HELP[check.key] && (
+                    <Link href={`/help/articles/${SETUP_HELP[check.key]}`} className={`rounded text-sm text-slate-600 hover:underline ${FOCUS_RING}`}>
+                      How?<span className="sr-only"> Help with: {check.message}</span>
+                    </Link>
+                  )}
                   {!check.done && check.key === 'payment' ? (
                     <Button
                       size="sm"
@@ -194,6 +217,7 @@ function SetupSection() {
                       </Link>
                     )
                   )}
+                  </span>
                 </li>
               ))}
             </ul>

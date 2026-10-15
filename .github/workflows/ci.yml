@@ -48,6 +48,11 @@ jobs:
       - name: OpenAPI description is up to date
         run: php artisan api:openapi --check
 
+      # Phase B54 (Module 34 §57): help articles and release notes — metadata, links to
+      # articles, pages and API paths, troubleshooting structure, secret and personal-data scan.
+      - name: Help content checks
+        run: php artisan help:check
+
       - name: Run migrations (test DB)
         run: php artisan migrate --force
         env:

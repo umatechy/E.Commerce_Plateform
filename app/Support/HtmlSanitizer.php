@@ -34,6 +34,12 @@ final class HtmlSanitizer
         'textarea', 'select', 'option', 'svg', 'math', 'template', 'noscript', 'title', 'head', 'link', 'meta', 'base',
     ];
 
+    /**
+     * @param array<string, list<string>> $extra more elements (with their attributes) a caller allows,
+     *        e.g. code and tables in help articles (Phase B54); never anything with behaviour
+     */
+    public function __construct(private readonly array $extra = []) {}
+
     public function sanitize(string $html): string
     {
         if (trim($html) === '') {
@@ -86,7 +92,7 @@ final class HtmlSanitizer
 
             $this->cleanChildren($child);
 
-            if (! array_key_exists($name, self::ALLOWED)) {
+            if (! array_key_exists($name, self::ALLOWED) && ! array_key_exists($name, $this->extra)) {
                 while ($child->firstChild !== null) {
                     $node->insertBefore($child->firstChild, $child);
                 }
@@ -103,7 +109,7 @@ final class HtmlSanitizer
         foreach (iterator_to_array($element->attributes) as $attribute) {
             $attr = strtolower($attribute->name);
             $value = $attribute->value;
-            $keep = in_array($attr, self::ALLOWED[$name], true) && match ($attr) {
+            $keep = in_array($attr, self::ALLOWED[$name] ?? $this->extra[$name], true) && match ($attr) {
                 'href' => $this->isSafeUrl($value, allowInsecure: true),
                 'src' => $this->isSafeUrl($value, allowInsecure: false),
                 'width', 'height' => preg_match('/^\d{1,4}$/', $value) === 1,
