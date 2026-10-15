@@ -87,6 +87,7 @@ export const storeNav: NavGroup[] = [
       { href: '/settings/payments', label: 'Payments setup', description: 'Cash on delivery, bank transfer, JazzCash and Easypaisa.', permissions: ['payments.view', 'payments.provider_config'] },
       { href: '/settings/tax', label: 'Tax', description: 'Tax classes, rates and how tax is charged.', permissions: ['tax.manage', 'settings.view'] },
       { href: '/settings/audit-log', label: 'Audit log', description: 'Who did what in your store.', permissions: ['audit.view'] },
+      { href: '/apps', label: 'Apps', description: 'Connect your store to other services from the marketplace.', permissions: ['developer_platform.view'] },
       { href: '/settings/developer', label: 'Developer', description: 'API keys and webhooks.', permissions: ['developer_platform.view'] },
       { href: '/backups', label: 'Backups', description: 'Backups of your store data.', permissions: ['backups.view'] },
       { href: '/settings/close-store', label: 'Close store', description: 'Download your data, close or reopen the store.', ownerOnly: true },
@@ -117,6 +118,7 @@ export const platformNav: NavGroup = {
     { href: '/super-admin/settings', label: 'Platform settings', description: 'Platform-wide configuration.' },
     { href: '/super-admin/backups', label: 'Platform backups', description: 'Backups, restore rehearsals and restore requests.' },
     { href: '/super-admin/support', label: 'Platform support', description: 'Requests from every store to the platform.' },
+    { href: '/super-admin/marketplace', label: 'Marketplace', description: 'Apps stores can install: review, publish and the kill switch.' },
     { href: '/super-admin/help', label: 'Help center', description: 'Help articles, their review, feedback, searches and release notes.' },
   ],
 };

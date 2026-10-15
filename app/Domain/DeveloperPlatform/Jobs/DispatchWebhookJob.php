@@ -47,6 +47,11 @@ final class DispatchWebhookJob implements ShouldQueue
         if ($subscription === null || $subscription->status !== WebhookSubscriptionStatus::Active) {
             return; // subscription was disabled/deleted since this job was queued — nothing to deliver
         }
+        // Phase B56: nor when its application was suspended or revoked since (Module 27 §86 kill switch).
+        $application = \App\Domain\DeveloperPlatform\Models\DeveloperApplication::query()->withoutTenantScope()->find($subscription->developer_application_id);
+        if ($application?->status !== \App\Domain\DeveloperPlatform\Models\ApplicationStatus::Active) {
+            return;
+        }
 
         $context->resolveToStore($subscription->store_id);
 

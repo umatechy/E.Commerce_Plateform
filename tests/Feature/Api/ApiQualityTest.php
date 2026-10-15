@@ -80,9 +80,12 @@ final class ApiQualityTest extends TestCase
         $spec = DeveloperApiSpec::build(); // throws for an undocumented route
         $this->assertSame('3.1.0', $spec['openapi']);
         $operations = collect($spec['paths'])->flatMap(fn (array $ops, string $path) => array_map(fn ($m) => strtoupper($m).' '.$path, array_keys($ops)))->sort()->values()->all();
-        $this->assertSame(collect(array_keys(DeveloperApiSpec::ENDPOINTS))->sort()->values()->all(), $operations);
-        foreach ($spec['paths'] as $ops) {
-            foreach ($ops as $op) {
+        $this->assertSame(collect([...array_keys(DeveloperApiSpec::ENDPOINTS), ...array_keys(DeveloperApiSpec::APP_ENDPOINTS)])->sort()->values()->all(), $operations);
+        foreach ($spec['paths'] as $path => $ops) {
+            foreach ($ops as $method => $op) {
+                if (isset(DeveloperApiSpec::APP_ENDPOINTS[strtoupper($method).' '.$path])) {
+                    continue; // B56: the marketplace connection calls have no scope
+                }
                 $this->assertArrayHasKey('x-scope', $op);
                 $this->assertArrayHasKey('401', $op['responses']);
                 $this->assertArrayHasKey('429', $op['responses']);

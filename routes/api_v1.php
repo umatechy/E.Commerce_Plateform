@@ -130,6 +130,18 @@ Route::middleware(['auth:sanctum', 'session.track', 'staff.principal', 'required
     Route::post('/platform-support/tickets/{ticket}/resolve', [\App\Domain\Support\Http\Controllers\MerchantPlatformSupportController::class, 'resolve']);
     Route::post('/platform-support/tickets/{ticket}/rating', [\App\Domain\Support\Http\Controllers\MerchantPlatformSupportController::class, 'rate']);
 
+    // --- Apps from the marketplace (Module 27, Phase B56): developer_platform.view to look, the Owner to change ---
+    $apps = \App\Domain\Marketplace\Http\Controllers\StoreAppsController::class;
+    Route::get('/apps', [$apps, 'index']);
+    Route::get('/apps/{slug}', [$apps, 'show'])->where('slug', '[a-z0-9][a-z0-9\-]{2,59}');
+    Route::post('/apps/{slug}/install', [$apps, 'install'])->where('slug', '[a-z0-9][a-z0-9\-]{2,59}')->middleware(['step_up', 'throttle:10,10,app-install']);
+    Route::post('/apps/{slug}/connect', [$apps, 'connect'])->where('slug', '[a-z0-9][a-z0-9\-]{2,59}')->middleware(['step_up', 'throttle:10,10,app-connect']);
+    Route::put('/apps/{slug}/settings', [$apps, 'settings'])->where('slug', '[a-z0-9][a-z0-9\-]{2,59}')->middleware('throttle:30,1,app-settings');
+    Route::post('/apps/{slug}/disable', [$apps, 'disable'])->where('slug', '[a-z0-9][a-z0-9\-]{2,59}');
+    Route::post('/apps/{slug}/enable', [$apps, 'enable'])->where('slug', '[a-z0-9][a-z0-9\-]{2,59}');
+    Route::post('/apps/{slug}/update', [$apps, 'update'])->where('slug', '[a-z0-9][a-z0-9\-]{2,59}')->middleware('step_up');
+    Route::delete('/apps/{slug}', [$apps, 'uninstall'])->where('slug', '[a-z0-9][a-z0-9\-]{2,59}')->middleware('step_up');
+
     // --- The store's installable app (Module 25, Phase B55): theme.view to read, theme.manage to change ---
     Route::get('/pwa/settings', [\App\Domain\Pwa\Http\Controllers\PwaSettingsController::class, 'show']);
     Route::put('/pwa/settings', [\App\Domain\Pwa\Http\Controllers\PwaSettingsController::class, 'update'])->middleware('throttle:30,1,pwa-settings');
@@ -522,6 +534,20 @@ Route::middleware(['auth:sanctum', 'session.track', 'staff.principal', 'required
             Route::put('/starter-templates/{key}', [$templates, 'update'])->where('key', '[a-z0-9_]{1,40}')->middleware('step_up');
             Route::delete('/starter-templates/{key}', [$templates, 'destroy'])->where('key', '[a-z0-9_]{1,40}')->middleware('step_up');
             Route::post('/stores/{store}/starter-template', [$templates, 'saveFromStore'])->middleware(['step_up', 'throttle:20,10,starter-template-save']);
+            // Phase B56 (Module 27): the app marketplace — registry, versions, review, kill switch.
+            $market = \App\Domain\Marketplace\Http\Controllers\SuperAdminMarketplaceController::class;
+            Route::get('/marketplace/apps', [$market, 'index']);
+            Route::post('/marketplace/apps', [$market, 'store']);
+            Route::get('/marketplace/apps/{app}', [$market, 'show']);
+            Route::put('/marketplace/apps/{app}', [$market, 'update']);
+            Route::post('/marketplace/apps/{app}/secret', [$market, 'rotateSecret'])->middleware('step_up');
+            Route::put('/marketplace/apps/{app}/version', [$market, 'saveVersion']);
+            Route::post('/marketplace/apps/{app}/submit', [$market, 'submit']);
+            Route::post('/marketplace/apps/{app}/publish', [$market, 'publish']);
+            Route::post('/marketplace/apps/{app}/suspend', [$market, 'suspend'])->middleware('step_up');
+            Route::post('/marketplace/apps/{app}/resume', [$market, 'resume'])->middleware('step_up');
+            Route::post('/marketplace/apps/{app}/deprecate', [$market, 'deprecate']);
+
             // Phase B54 (Module 34): help articles, their review, feedback, searches and release notes.
             $helpAdmin = \App\Domain\Help\Http\Controllers\SuperAdminHelpController::class;
             Route::get('/help/articles', [$helpAdmin, 'index']);

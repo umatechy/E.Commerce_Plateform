@@ -36,13 +36,14 @@ final class PlatformRoles
         'developer' => 'Suspend developer applications',
         'security' => 'Platform staff roles, sessions, incidents and emergency controls',
         'help' => 'Write, review and publish help articles; publish release notes', // Phase B54
+        'marketplace' => 'Marketplace apps: list, review and publish, suspend (kill switch)', // Phase B56
     ];
 
     /** role => [label, what it is for, capabilities] */
     public const ROLES = [
         'super_admin' => ['Super admin', 'Everything, including staff roles and permanent deletion. Keep this to very few people.', ['*']],
         'platform_admin' => ['Platform admin', 'Runs the platform day to day: stores, packages, billing, providers, settings, backups, support.',
-            ['view', 'stores', 'impersonate', 'catalog', 'billing', 'providers', 'settings', 'backups', 'support', 'users', 'developer', 'help']],
+            ['view', 'stores', 'impersonate', 'catalog', 'billing', 'providers', 'settings', 'backups', 'support', 'users', 'developer', 'help', 'marketplace']],
         'operations_admin' => ['Operations admin', 'Stores, backups and support.', ['view', 'stores', 'impersonate', 'backups', 'support', 'developer']],
         'support_admin' => ['Support admin', 'Answers stores, opens a store to help and writes help articles. Changes nothing else.', ['view', 'impersonate', 'support', 'help']],
         'billing_admin' => ['Billing admin', 'Invoices, payments, credit notes and prices.', ['view', 'billing']],
@@ -83,6 +84,7 @@ final class PlatformRoles
         ['developer', 'developer'],
         ['security', 'security'],
         ['help', 'help'], // Phase B54
+        ['marketplace', 'marketplace'], // Phase B56
     ];
 
     public static function normalize(?string $role): ?string

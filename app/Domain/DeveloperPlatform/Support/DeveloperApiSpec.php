@@ -32,6 +32,15 @@ final class DeveloperApiSpec
         'GET /inventory' => ['List stock levels', 'Stock per product and warehouse, ordered by id. `available` is on hand minus reserved for open orders.', 'inventory:read', 'Inventory', true],
     ];
 
+    /**
+     * Phase B56 (Module 27 §34): the calls a marketplace app's server makes to
+     * connect and to read its own installation. "METHOD /path" => [summary, description].
+     */
+    public const APP_ENDPOINTS = [
+        'POST /oauth/token' => ['Exchange a connection code', 'When a store installs your marketplace app, its browser is sent to your redirect address with `code`, `store` and `installation`. Within 10 minutes, exchange the code from your server, with your client id and secret. The answer holds the store’s API key for your app (only the scopes the store granted) and your webhook signing secret. Both are shown once: keep them on your server. A code works once. Every failure answers 400 `invalid_grant`.'],
+        'GET /installation' => ['Get your installation', 'Your app’s installation on the key’s store: the granted scopes and events, and the store’s settings for your app (as defined by your settings form). Any key of the installation works; no scope is needed.'],
+    ];
+
     /** schema => property => [type, description, example, nullable] */
     public const SCHEMAS = [
         'Product' => [
@@ -65,6 +74,10 @@ final class DeveloperApiSpec
             $path = '/'.substr($route->uri(), strlen(self::PREFIX) + 1);
             foreach (array_diff($route->methods(), ['HEAD']) as $method) {
                 $key = "{$method} {$path}";
+                if (isset(self::APP_ENDPOINTS[$key])) {
+                    $paths[$path][strtolower($method)] = self::appOperation($key);
+                    continue;
+                }
                 if (! isset(self::ENDPOINTS[$key])) {
                     throw new \LogicException("{$key} is a developer API route without documentation in DeveloperApiSpec::ENDPOINTS.");
                 }
@@ -86,6 +99,7 @@ final class DeveloperApiSpec
                     '**Retries.** Do not retry 4xx answers unchanged. Retry 429, 503 and network failures with back-off.',
                     '**Versioning.** The version is in the path. Fields may be added within v1; nothing is removed or renamed without a new version.',
                     '**Availability.** Keys stop working when their store is suspended or closed (423) and when Umar Techy switches the developer API off during an incident (503).',
+                    '**Marketplace apps.** An app listed in the Umar Techy marketplace gets its keys when a store installs it: the store’s browser brings a one-time code to the app’s redirect address, and the app exchanges it at `POST /oauth/token`. Uninstalling, or Umar Techy suspending the app, stops its keys and webhooks at once.',
                 ]),
             ],
             'servers' => [['url' => '/api/dev/v1', 'description' => 'Relative to the platform address']],
@@ -152,6 +166,50 @@ final class DeveloperApiSpec
             ]),
             'x-scope' => $scope,
         ], fn ($v) => $v !== null);
+    }
+
+    /** @return array<string, mixed> */
+    private static function appOperation(string $key): array
+    {
+        [$summary, $description] = self::APP_ENDPOINTS[$key];
+        $error = ['$ref' => '#/components/schemas/Error'];
+        $text = ['type' => 'string'];
+        if ($key === 'POST /oauth/token') {
+            return [
+                'operationId' => 'exchangeConnectionCode', 'summary' => $summary, 'description' => $description, 'tags' => ['Marketplace apps'], 'security' => [],
+                'requestBody' => ['required' => true, 'content' => ['application/json' => ['schema' => ['type' => 'object', 'required' => ['grant_type', 'code', 'client_id', 'client_secret', 'redirect_uri'], 'properties' => [
+                    'grant_type' => ['type' => 'string', 'enum' => ['authorization_code']], 'code' => $text, 'client_id' => $text, 'client_secret' => $text,
+                    'redirect_uri' => ['type' => 'string', 'description' => 'The registered redirect address the code was sent to.'],
+                ]]]]],
+                'responses' => [
+                    '200' => ['description' => 'Connected', 'content' => ['application/json' => ['schema' => ['type' => 'object', 'required' => ['token_type', 'scope', 'installation', 'store'], 'properties' => [
+                        'access_token' => ['type' => ['string', 'null'], 'description' => 'The store’s API key for your app; null when it asked for no scope.'],
+                        'token_type' => ['type' => 'string', 'examples' => ['Bearer']], 'scope' => ['type' => 'string', 'description' => 'Granted scopes, space-separated.'],
+                        'webhook_signing_secret' => ['type' => ['string', 'null'], 'description' => 'Signs the webhooks sent to your webhook address; null without events.'],
+                        'installation' => $text, 'store' => ['type' => 'object', 'properties' => ['id' => $text, 'name' => $text, 'slug' => $text]],
+                    ]]]]],
+                    '400' => ['description' => 'invalid_grant', 'content' => ['application/json' => ['schema' => $error]]],
+                    '422' => ['description' => 'A field is missing or malformed.', 'content' => ['application/json' => ['schema' => $error]]],
+                    '429' => ['$ref' => '#/components/responses/TooManyRequests'],
+                ],
+            ];
+        }
+
+        return [
+            'operationId' => 'getInstallation', 'summary' => $summary, 'description' => $description, 'tags' => ['Marketplace apps'],
+            'responses' => [
+                '200' => ['description' => 'OK', 'content' => ['application/json' => ['schema' => ['type' => 'object', 'required' => ['data'], 'properties' => ['data' => ['type' => 'object', 'properties' => [
+                    'installation' => $text, 'app' => ['type' => 'object'], 'store' => ['type' => 'object'],
+                    'scopes' => ['type' => 'array', 'items' => $text], 'events' => ['type' => 'array', 'items' => $text],
+                    'settings' => ['type' => 'object', 'description' => 'The store’s values for your settings form.'],
+                ]]]]]]],
+                '401' => ['$ref' => '#/components/responses/Unauthenticated'],
+                '404' => ['$ref' => '#/components/responses/NotFound'],
+                '423' => ['$ref' => '#/components/responses/Locked'],
+                '429' => ['$ref' => '#/components/responses/TooManyRequests'],
+                '503' => ['$ref' => '#/components/responses/Unavailable'],
+            ],
+        ];
     }
 
     /** @return array<string, mixed> */

@@ -41,7 +41,7 @@ final class StoreDataMap
     ];
 
     public const PURGE = [
-        'api_keys', 'api_request_logs', 'attribute_sets', 'attributes', 'badges', 'brands',
+        'api_keys', 'api_request_logs', 'app_authorization_codes', 'app_installations', 'attribute_sets', 'attributes', 'badges', 'brands',
         'campaign_recipients', 'campaigns', 'cart_items', 'carts', 'categories', 'category_attributes',
         'collections', 'content_pages', 'content_translations', 'coupons', 'courier_accounts',
         'customer_addresses', 'customer_email_verifications', 'customer_groups', 'customer_merges',

@@ -129,6 +129,12 @@ final class ApiKeyService
         if ($key === null || ! hash_equals($key->key_hash, hash('sha256', $secret)) || ! $key->isUsable()) {
             return null;
         }
+        // Phase B56 (found in the B56 audit): a key of a suspended or revoked application
+        // stops working too; until then suspending an application left its keys usable.
+        $application = \App\Domain\DeveloperPlatform\Models\DeveloperApplication::query()->withoutTenantScope()->find($key->developer_application_id);
+        if ($application?->status !== \App\Domain\DeveloperPlatform\Models\ApplicationStatus::Active) {
+            return null;
+        }
 
         $key->update(['last_used_at' => now()]);
 

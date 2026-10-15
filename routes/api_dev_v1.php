@@ -25,7 +25,13 @@ use Illuminate\Support\Facades\Route;
 Route::get('/openapi.json', fn () => response(\App\Domain\DeveloperPlatform\Support\DeveloperApiSpec::json(), 200, ['Content-Type' => 'application/json', 'Cache-Control' => 'public, max-age=300']))
     ->middleware('throttle:60,1');
 
+// Phase B56 (Module 27 §34): a marketplace app's server exchanges a store's one-time connection code.
+Route::post('/oauth/token', [\App\Domain\Marketplace\Http\Controllers\AppConnectionController::class, 'token'])->middleware('throttle:20,1,app-oauth-token');
+
 Route::middleware(['api_key.authenticate', 'throttle:developer_api', 'api_key.log', SubstituteBindings::class])->group(function () {
+    // Phase B56: an app reads its own installation on the key's store (no scope needed).
+    Route::get('/installation', [\App\Domain\Marketplace\Http\Controllers\AppConnectionController::class, 'installation']);
+
     Route::middleware('api_key.scope:products:read')->group(function () {
         Route::get('/products', [DevProductController::class, 'index']);
         Route::get('/products/{product}', [DevProductController::class, 'show']);

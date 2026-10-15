@@ -27,6 +27,8 @@ final class WebhookEventRouter
         $subscriptions = WebhookSubscription::query()
             ->where('store_id', $storeId)
             ->where('status', WebhookSubscriptionStatus::Active)
+            // Phase B56: a suspended or revoked application receives nothing (Module 31 §39, Module 27 §86).
+            ->whereHas('application', fn ($q) => $q->where('status', \App\Domain\DeveloperPlatform\Models\ApplicationStatus::Active))
             ->get()
             ->filter(fn (WebhookSubscription $s) => $s->isSubscribedTo($eventType));
 

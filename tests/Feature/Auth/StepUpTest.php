@@ -106,6 +106,7 @@ final class StepUpTest extends TestCase
         $this->assertSame([
             // Phase B48: where a store's money goes (merchant accounts, bank details), and Umar Techy's
             // own accounts and which providers may take real money.
+            'DELETE api/v1/apps/{slug}', // Phase B56: removing an app (it had the store's data)
             'DELETE api/v1/courier-settings/couriers/{provider}', // Phase B49: courier accounts
             'DELETE api/v1/messaging-settings/channels/{channel}', // Phase B50: SMS and WhatsApp accounts
             'DELETE api/v1/payment-settings/providers/{provider}',
@@ -115,6 +116,10 @@ final class StepUpTest extends TestCase
             'DELETE api/v1/super-admin/starter-templates/{key}',
             'GET api/v1/super-admin/stores/{store}/impersonate',
             'PATCH api/v1/super-admin/billing/prices/{price}',
+            // Phase B56: giving an app access to the store's data, connecting it again, widening it.
+            'POST api/v1/apps/{slug}/connect',
+            'POST api/v1/apps/{slug}/install',
+            'POST api/v1/apps/{slug}/update',
             'POST api/v1/backups/{backup}/restore-request',
             // Phase B32: erasing a customer's personal data cannot be undone.
             'POST api/v1/customers/{customer}/erase',
@@ -135,6 +140,10 @@ final class StepUpTest extends TestCase
             'POST api/v1/super-admin/billing/payment-notices/{notice}/reject',
             'POST api/v1/super-admin/billing/prices',
             'POST api/v1/super-admin/developer/applications/{application}/suspend',
+            // Phase B56: the marketplace kill switch, and a new client secret for an app.
+            'POST api/v1/super-admin/marketplace/apps/{app}/resume',
+            'POST api/v1/super-admin/marketplace/apps/{app}/secret',
+            'POST api/v1/super-admin/marketplace/apps/{app}/suspend',
             'POST api/v1/super-admin/packages',
             'POST api/v1/super-admin/restore-jobs/{backupRestoreJob}/authorize',
             'POST api/v1/super-admin/settings/revisions/{revisionId}/rollback',

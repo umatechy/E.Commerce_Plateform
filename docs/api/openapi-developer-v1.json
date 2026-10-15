@@ -3,7 +3,7 @@
     "info": {
         "title": "Umar Techy Developer API",
         "version": "v1",
-        "description": "Read a store’s products, orders, customers and stock, and receive its events by webhook.\n\n**Authentication.** Create an application and an API key under Settings → Developer. Send it as `Authorization: Bearer <key>`. A key belongs to one store and carries scopes; a call outside its scopes gets 403.\n\n**Rate limits.** 60 requests a minute per key by default (Umar Techy may set another limit). Over the limit you get 429 with `Retry-After`.\n\n**Errors.** Every error has the same body: `code` (stable), `message`, `details` and `requestId`. Validation errors list the fields in `details.fields`. Send the `requestId` (also in the `X-Request-Id` header) when you contact support.\n\n**Retries.** Do not retry 4xx answers unchanged. Retry 429, 503 and network failures with back-off.\n\n**Versioning.** The version is in the path. Fields may be added within v1; nothing is removed or renamed without a new version.\n\n**Availability.** Keys stop working when their store is suspended or closed (423) and when Umar Techy switches the developer API off during an incident (503)."
+        "description": "Read a store’s products, orders, customers and stock, and receive its events by webhook.\n\n**Authentication.** Create an application and an API key under Settings → Developer. Send it as `Authorization: Bearer <key>`. A key belongs to one store and carries scopes; a call outside its scopes gets 403.\n\n**Rate limits.** 60 requests a minute per key by default (Umar Techy may set another limit). Over the limit you get 429 with `Retry-After`.\n\n**Errors.** Every error has the same body: `code` (stable), `message`, `details` and `requestId`. Validation errors list the fields in `details.fields`. Send the `requestId` (also in the `X-Request-Id` header) when you contact support.\n\n**Retries.** Do not retry 4xx answers unchanged. Retry 429, 503 and network failures with back-off.\n\n**Versioning.** The version is in the path. Fields may be added within v1; nothing is removed or renamed without a new version.\n\n**Availability.** Keys stop working when their store is suspended or closed (423) and when Umar Techy switches the developer API off during an incident (503).\n\n**Marketplace apps.** An app listed in the Umar Techy marketplace gets its keys when a store installs it: the store’s browser brings a one-time code to the app’s redirect address, and the app exchanges it at `POST /oauth/token`. Uninstalling, or Umar Techy suspending the app, stops its keys and webhooks at once."
     },
     "servers": [
         {
@@ -169,6 +169,78 @@
                 "x-scope": "customers:read"
             }
         },
+        "/installation": {
+            "get": {
+                "operationId": "getInstallation",
+                "summary": "Get your installation",
+                "description": "Your app’s installation on the key’s store: the granted scopes and events, and the store’s settings for your app (as defined by your settings form). Any key of the installation works; no scope is needed.",
+                "tags": [
+                    "Marketplace apps"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "required": [
+                                        "data"
+                                    ],
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "installation": {
+                                                    "type": "string"
+                                                },
+                                                "app": {
+                                                    "type": "object"
+                                                },
+                                                "store": {
+                                                    "type": "object"
+                                                },
+                                                "scopes": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "string"
+                                                    }
+                                                },
+                                                "events": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "string"
+                                                    }
+                                                },
+                                                "settings": {
+                                                    "type": "object",
+                                                    "description": "The store’s values for your settings form."
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthenticated"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/NotFound"
+                    },
+                    "423": {
+                        "$ref": "#/components/responses/Locked"
+                    },
+                    "429": {
+                        "$ref": "#/components/responses/TooManyRequests"
+                    },
+                    "503": {
+                        "$ref": "#/components/responses/Unavailable"
+                    }
+                }
+            }
+        },
         "/inventory": {
             "get": {
                 "operationId": "listStockLevels",
@@ -252,6 +324,139 @@
                     }
                 },
                 "x-scope": "inventory:read"
+            }
+        },
+        "/oauth/token": {
+            "post": {
+                "operationId": "exchangeConnectionCode",
+                "summary": "Exchange a connection code",
+                "description": "When a store installs your marketplace app, its browser is sent to your redirect address with `code`, `store` and `installation`. Within 10 minutes, exchange the code from your server, with your client id and secret. The answer holds the store’s API key for your app (only the scopes the store granted) and your webhook signing secret. Both are shown once: keep them on your server. A code works once. Every failure answers 400 `invalid_grant`.",
+                "tags": [
+                    "Marketplace apps"
+                ],
+                "security": [],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "required": [
+                                    "grant_type",
+                                    "code",
+                                    "client_id",
+                                    "client_secret",
+                                    "redirect_uri"
+                                ],
+                                "properties": {
+                                    "grant_type": {
+                                        "type": "string",
+                                        "enum": [
+                                            "authorization_code"
+                                        ]
+                                    },
+                                    "code": {
+                                        "type": "string"
+                                    },
+                                    "client_id": {
+                                        "type": "string"
+                                    },
+                                    "client_secret": {
+                                        "type": "string"
+                                    },
+                                    "redirect_uri": {
+                                        "type": "string",
+                                        "description": "The registered redirect address the code was sent to."
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Connected",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "required": [
+                                        "token_type",
+                                        "scope",
+                                        "installation",
+                                        "store"
+                                    ],
+                                    "properties": {
+                                        "access_token": {
+                                            "type": [
+                                                "string",
+                                                "null"
+                                            ],
+                                            "description": "The store’s API key for your app; null when it asked for no scope."
+                                        },
+                                        "token_type": {
+                                            "type": "string",
+                                            "examples": [
+                                                "Bearer"
+                                            ]
+                                        },
+                                        "scope": {
+                                            "type": "string",
+                                            "description": "Granted scopes, space-separated."
+                                        },
+                                        "webhook_signing_secret": {
+                                            "type": [
+                                                "string",
+                                                "null"
+                                            ],
+                                            "description": "Signs the webhooks sent to your webhook address; null without events."
+                                        },
+                                        "installation": {
+                                            "type": "string"
+                                        },
+                                        "store": {
+                                            "type": "object",
+                                            "properties": {
+                                                "id": {
+                                                    "type": "string"
+                                                },
+                                                "name": {
+                                                    "type": "string"
+                                                },
+                                                "slug": {
+                                                    "type": "string"
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "invalid_grant",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "A field is missing or malformed.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error"
+                                }
+                            }
+                        }
+                    },
+                    "429": {
+                        "$ref": "#/components/responses/TooManyRequests"
+                    }
+                }
             }
         },
         "/orders": {

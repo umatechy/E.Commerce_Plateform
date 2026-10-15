@@ -106,6 +106,7 @@ Route::middleware(['auth', 'required.mfa'])->group(function () {
         '/content/pages' => 'Content/Pages', '/content/redirects' => 'Content/Redirects', '/content/seo' => 'Content/Seo',
         '/storefront/theme' => 'Storefront/Theme', '/domains' => 'Storefront/Domains',
         '/storefront/app' => 'Storefront/App', // Phase B55: the store's installable app
+        '/apps' => 'Apps/Index', // Phase B56: the app marketplace
         '/reports' => 'Analytics/Reports',
         '/notifications' => 'Communication/Index',
         '/team/roles' => 'Team/Roles',
@@ -144,6 +145,7 @@ Route::middleware(['auth', 'required.mfa'])->group(function () {
             '/messaging' => 'SuperAdmin/Messaging', // Phase B50
             '/security' => 'SuperAdmin/Security', // Phase B52
             '/help' => 'SuperAdmin/Help', // Phase B54
+            '/marketplace' => 'SuperAdmin/Marketplace', // Phase B56
         ] as $uri => $page) {
             Route::get($uri, fn () => Inertia::render($page));
         }
