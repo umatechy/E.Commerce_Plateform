@@ -5,6 +5,7 @@ import { loadFont } from '@/Storefront/fonts';
 import { useT } from '@/Storefront/i18n';
 import { CONTAINER, layoutOf, motionOf, StorefrontThemeContext, themeStyle, type ThemeLayout } from '@/Storefront/theme';
 import type { Seo, Shell } from '@/Storefront/types';
+import AppLayer from '@/Components/Storefront/AppLayer';
 
 /**
  * The storefront shell: announcement, header with navigation, search and
@@ -66,6 +67,7 @@ export default function StoreLayout({ shell, seo, children }: PropsWithChildren<
           </div>
         )}
         {shell.announcement && <div className="bg-sf-primary px-4 py-2 text-center text-sm text-white">{shell.announcement}</div>}
+        <AppLayer shell={shell} />
 
         <Header shell={shell} layout={layout} container={container} />
 

@@ -322,6 +322,8 @@ final class StorefrontWebController
                 'preview' => (bool) $request->attributes->get('storefront.preview'),
                 // Module 17 §19 (Phase B32): until when the draft theme is shown, or null.
                 'theme_preview' => $themePreview['expires_at'] ?? null,
+                // Phase B55 (Module 25): the store's installable app (worked out per request, not cached).
+                'pwa' => app(\App\Domain\Pwa\Services\PwaConfig::class)->forPage($store, (string) $request->attributes->get('storefront.base_path')),
             ],
             // A preview is never indexed.
             'seo' => $this->localizedSeo($themePreview !== null ? [...$seo, 'robots' => 'noindex, nofollow'] : $seo),

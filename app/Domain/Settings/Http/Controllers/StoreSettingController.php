@@ -36,7 +36,7 @@ final class StoreSettingController
      * tax.manage, "a rate before tax is on"); this generic endpoint neither
      * lists nor changes them, so neither check can be gone round.
      */
-    private const OWN_PAGE_PREFIXES = ['tax.', 'payments.', 'shipping.', 'messaging.']; // messaging.: Phase B50 (Messages page) // payments.: Phase B48; shipping.: Phase B49 (Shipping setup)
+    private const OWN_PAGE_PREFIXES = ['tax.', 'payments.', 'shipping.', 'messaging.', 'pwa.']; // pwa.: Phase B55 (Mobile app page) // messaging.: Phase B50 (Messages page) // payments.: Phase B48; shipping.: Phase B49 (Shipping setup)
 
     private function hasOwnPage(string $key): bool
     {
@@ -49,6 +49,7 @@ final class StoreSettingController
             str_starts_with($key, 'payments.') => response()->json(['message' => 'Payment settings are changed on the Payments settings page.', 'code' => 'managed_on_payments_page'], 403),
             str_starts_with($key, 'shipping.') => response()->json(['message' => 'Shipping settings are changed on the Shipping setup page.', 'code' => 'managed_on_shipping_page'], 403),
             str_starts_with($key, 'messaging.') => response()->json(['message' => 'SMS and WhatsApp settings are changed on the Messages page.', 'code' => 'managed_on_messages_page'], 403),
+            str_starts_with($key, 'pwa.') => response()->json(['message' => 'App settings are changed on the Mobile app page.', 'code' => 'managed_on_app_page'], 403),
             default => response()->json(['message' => 'Tax settings are changed on the Tax page.', 'code' => 'managed_on_tax_page'], 403),
         };
     }

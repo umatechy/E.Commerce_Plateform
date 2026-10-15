@@ -96,6 +96,20 @@ export type Shell = {
   preview: boolean;
   /** Phase B32 (Module 17 §19): until when this visit shows the draft theme; null for the published one. */
   theme_preview?: string | null;
+  /** Phase B55 (Module 25): the store's installable app; absent in older test fixtures. */
+  pwa?: {
+    enabled: boolean;
+    manifest_url: string;
+    worker_url: string;
+    scope: string;
+    cache_prefix?: string;
+    theme_color: string;
+    icon: string | null;
+    install_prompt: boolean;
+    mobile_nav: 'installed' | 'always' | 'off';
+    /** The platform's push key when the store offers push; delivery (Module 21) is not built yet. */
+    push_key: string | null;
+  };
 };
 
 export type Seo = {

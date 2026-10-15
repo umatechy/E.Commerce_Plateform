@@ -66,6 +66,7 @@ export const storeNav: NavGroup[] = [
       { href: '/content/seo', label: 'SEO', description: 'Search engine titles and descriptions.', permissions: ['seo.view'] },
       { href: '/content/redirects', label: 'Redirects', description: 'Send old addresses to new ones.', permissions: ['seo.view'] },
       { href: '/domains', label: 'Domains', description: 'Your store addresses.', permissions: ['domains.view'] },
+      { href: '/storefront/app', label: 'Mobile app', description: 'Your shop on customers’ home screens, like an app.', permissions: ['theme.view'], feature: 'pwa.enabled' },
       { href: '/shipping', label: 'Shipping setup', description: 'Zones, methods and rates.', permissions: ['shipping_config.manage'] },
     ],
   },

@@ -73,11 +73,22 @@ final class ResolveStorefrontStore
         $preview = $availability === StorefrontAvailability::NotLaunched && $mode !== 'api' && $this->isStaffOf($request, $store);
         $request->attributes->set('storefront.preview', $preview);
 
-        if ($availability !== StorefrontAvailability::Open && ! $preview) {
+        // Phase B55 (Module 25 §83): the app's service worker is answered whatever the
+        // shop's state, so a closed or suspended shop's worker can retire itself and
+        // stop showing saved pages.
+        $always = (bool) ($request->route()?->defaults['storefront_always'] ?? false);
+        if ($availability !== StorefrontAvailability::Open && ! $preview && ! $always) {
             return $this->refuse($request, $mode, 503, "storefront_{$availability->value}", $availability->message(), $store);
         }
 
-        return $next($request);
+        $response = $next($request);
+        // Phase B55 (Module 25 §14, §66): a page seen by signed-in staff carries their
+        // account in its data; the app never keeps such a page for offline use.
+        if ($mode !== 'api' && $request->user() !== null) {
+            $response->headers->set('X-Ut-Private', '1');
+        }
+
+        return $response;
     }
 
     private function fromApiRequest(Request $request): ?Store

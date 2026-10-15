@@ -41,6 +41,7 @@ return Application::configure(basePath: dirname(__DIR__))
         app_path('Domain/Security/Console'), // Phase B52: security:prune
         app_path('Domain/DeveloperPlatform/Console'), // Phase B53: api:openapi
         app_path('Domain/Help/Console'), // Phase B54: help:sync, help:check, help:maintain
+        app_path('Domain/Pwa/Console'), // Phase B55: pwa:vapid-keys
     ])
     ->withRouting(
         web: __DIR__.'/../routes/web.php',

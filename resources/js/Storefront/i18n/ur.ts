@@ -577,4 +577,17 @@ export const ur: Record<string, string> = {
   'Thank you for your feedback.': 'آپ کی رائے کا شکریہ۔',
   'Was this helpful?': 'کیا اس سے مدد ملی؟',
   'Could not send. Please try again.': 'بھیجا نہیں جا سکا۔ دوبارہ کوشش کریں۔',
+  // Phase B55: the store's installable app.
+  'You are offline. Pages you saw before may be out of date; prices and stock are checked again when you order.':
+    'آپ آف لائن ہیں۔ پہلے دیکھے گئے صفحات پرانے ہو سکتے ہیں؛ آرڈر دیتے وقت قیمت اور اسٹاک دوبارہ دیکھے جاتے ہیں۔',
+  'A new version of this store is ready.': 'اس اسٹور کا نیا ورژن تیار ہے۔',
+  Refresh: 'تازہ کریں',
+  'Install the app': 'ایپ انسٹال کریں',
+  'Get the {store} app': '{store} کی ایپ حاصل کریں',
+  'Open the shop from your home screen, like an app. No download from a store.': 'دکان کو اپنی ہوم اسکرین سے ایپ کی طرح کھولیں۔ کسی ایپ اسٹور سے ڈاؤن لوڈ کی ضرورت نہیں۔',
+  'On iPhone: tap Share, then “Add to Home Screen”.': 'آئی فون پر: Share دبائیں، پھر “Add to Home Screen”۔',
+  Install: 'انسٹال کریں',
+  'Not now': 'ابھی نہیں',
+  'App navigation': 'ایپ کی نیویگیشن',
+  'You are offline. Your cart is kept; connect to the internet to place the order.': 'آپ آف لائن ہیں۔ آپ کا کارٹ محفوظ ہے؛ آرڈر دینے کے لیے انٹرنیٹ سے جڑیں۔',
 };

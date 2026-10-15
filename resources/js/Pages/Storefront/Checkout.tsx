@@ -13,6 +13,7 @@ import PaymentChoice, { outOfRange, walletName, type Payer, type PaymentOption }
 import WalletPayment, { type PaymentView } from '@/Components/Storefront/WalletPayment';
 import BankDetails from '@/Components/Storefront/BankDetails';
 import { normalizeMobile, validCnicLast6 } from '@/lib/payments';
+import { useApp } from '@/Storefront/pwa';
 
 type ShippingOption = { id: number; name: string; type: string; cost_minor: number };
 /** Phase B46: the server's price of the order before it is placed (POST /checkout/summary). */
@@ -55,6 +56,8 @@ function newIdempotencyKey(): string {
  */
 export default function Checkout({ storefront, seo, payment_methods, payment_options, whatsapp_updates = false }: StorefrontPageProps & { payment_methods: string[]; payment_options?: PaymentOption[]; whatsapp_updates?: boolean }) {
   const t = useT();
+  // Phase B55 (Module 25 §17): an order is only ever placed online, checked by the server.
+  const { online: connected } = useApp();
   // Phase B48: the ways to pay this store offers now (package, settings, working accounts) —
   // the server checks the same again when the order is placed.
   const methods: PaymentOption[] = payment_options ?? payment_methods.map((method) => ({ method, kind: method === 'cod' ? 'cod' : 'bank_transfer' }));
@@ -387,7 +390,12 @@ export default function Checkout({ storefront, seo, payment_methods, payment_opt
               </label>
             )}
             <p className="text-xs text-sf-muted">{t('The final total, including any discount and tax, is confirmed when you place the order.')}</p>
-            <button type="submit" disabled={busy || cart.has_issues || methods.length === 0} className="sf-btn w-full rounded-sf bg-sf-primary px-4 py-3 font-semibold text-white disabled:opacity-50">
+            {!connected && (
+              <p role="alert" className="rounded-sf bg-sf-surface p-2 text-center text-sm">
+                {t('You are offline. Your cart is kept; connect to the internet to place the order.')}
+              </p>
+            )}
+            <button type="submit" disabled={busy || !connected || cart.has_issues || methods.length === 0} className="sf-btn w-full rounded-sf bg-sf-primary px-4 py-3 font-semibold text-white disabled:opacity-50">
               {busy ? t('Placing order…') : isWallet && summary && !summary.needs_shipping_method ? t('Place order and pay {amount}', { amount: formatMoney(summary.grand_total_minor, currency) }) : t('Place order')}
             </button>
             {isWallet && <p className="text-center text-xs text-sf-muted">{t('After you place the order, approve the payment on your phone.')}</p>}

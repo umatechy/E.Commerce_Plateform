@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { router } from '@inertiajs/react';
 import { forgetCart, StorefrontApiError, storefrontFetch } from './api';
 import type { Shell } from './types';
+import { forgetPages } from './pwa';
 
 export type Customer = {
   id: string;
@@ -66,6 +67,7 @@ export async function signOut(shell: Shell): Promise<void> {
     await storefrontFetch(shell, '/storefront/session', { method: 'DELETE' });
   } finally {
     forgetCart(shell);
+    forgetPages(); // Phase B55 (Module 25 §66): no page of the session stays in the app
     router.visit(shell.base_path || '/');
   }
 }

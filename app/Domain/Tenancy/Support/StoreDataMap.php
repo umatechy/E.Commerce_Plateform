@@ -53,7 +53,7 @@ final class StoreDataMap
         'payment_provider_accounts', 'payment_reconciliation_items', 'payment_transactions',
         'payment_webhook_events', 'payments', 'pickup_locations', 'product_attribute_values', 'product_images',
         'product_relations', 'product_reviews', 'product_variants', 'products', 'promotion_targets',
-        'promotion_usages', 'promotions', 'redirects', 'report_exports', 'return_guest_links',
+        'promotion_usages', 'promotions', 'pwa_daily_stats', 'pwa_push_subscriptions','redirects', 'report_exports', 'return_guest_links',
         'return_request_items', 'return_request_photos', 'return_requests', 'roles', 'seo_settings',
         'setting_revisions', 'shipment_items', 'shipment_tracking_events', 'shipment_webhook_events',
         'shipments', 'shipping_methods', 'shipping_rates', 'shipping_zones', 'starter_template_applications',

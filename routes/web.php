@@ -50,6 +50,12 @@ $storefrontPages = function (): void {
     Route::get('/contact', [StorefrontWebController::class, 'contact']);
     // Phase B34 (Module 09 §8–9): returns for a guest, by the link sent to the order's email.
     Route::get('/returns', [StorefrontWebController::class, 'returns']);
+    // Phase B55 (Module 25): the store's app files. The worker is answered whatever the
+    // shop's state (storefront_always), so it can retire itself when the shop is closed.
+    $pwa = \App\Domain\Pwa\Http\Controllers\StorefrontPwaController::class;
+    Route::get('/manifest.webmanifest', [$pwa, 'manifest']);
+    Route::get('/sw.js', [$pwa, 'worker'])->defaults('storefront_always', true);
+    Route::get('/offline', [$pwa, 'offline']);
     // Phase B54 (Module 34 §43): the store's help center for shoppers.
     Route::get('/help', [StorefrontWebController::class, 'help']);
     Route::get('/help/{articleKey}', [StorefrontWebController::class, 'helpArticle'])->where('articleKey', '[a-z0-9][a-z0-9\-]{2,79}');
@@ -99,6 +105,7 @@ Route::middleware(['auth', 'required.mfa'])->group(function () {
         '/promotions' => 'Marketing/Promotions', '/campaigns' => 'Marketing/Campaigns', '/segments' => 'Marketing/Segments',
         '/content/pages' => 'Content/Pages', '/content/redirects' => 'Content/Redirects', '/content/seo' => 'Content/Seo',
         '/storefront/theme' => 'Storefront/Theme', '/domains' => 'Storefront/Domains',
+        '/storefront/app' => 'Storefront/App', // Phase B55: the store's installable app
         '/reports' => 'Analytics/Reports',
         '/notifications' => 'Communication/Index',
         '/team/roles' => 'Team/Roles',

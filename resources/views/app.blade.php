@@ -32,6 +32,17 @@
         @if (! empty($seo['og_image']))
             <meta property="og:image" content="{{ $seo['og_image'] }}" inertia="og:image">
         @endif
+        {{-- Phase B55 (Module 25 §5–8): the store's installable app. --}}
+        @php($pwa = $page['props']['storefront']['pwa'] ?? null)
+        @if (is_array($pwa) && ($pwa['enabled'] ?? false))
+            <link rel="manifest" href="{{ $pwa['manifest_url'] }}">
+            <meta name="theme-color" content="{{ $pwa['theme_color'] }}">
+            <meta name="mobile-web-app-capable" content="yes">
+            <meta name="apple-mobile-web-app-capable" content="yes">
+            @if (! empty($pwa['icon']))
+                <link rel="apple-touch-icon" href="{{ $pwa['icon'] }}">
+            @endif
+        @endif
         @if (! empty($page['props']['storefront']['store']['favicon_url']))
             <link rel="icon" href="{{ $page['props']['storefront']['store']['favicon_url'] }}">
         @endif

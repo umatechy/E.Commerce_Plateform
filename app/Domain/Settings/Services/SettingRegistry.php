@@ -171,6 +171,18 @@ final class SettingRegistry
             'messaging.sms_events' => new SettingDefinition(key: 'messaging.sms_events', scope: SettingScope::Store, type: SettingType::StringArray, default: []),
             'messaging.whatsapp_events' => new SettingDefinition(key: 'messaging.whatsapp_events', scope: SettingScope::Store, type: SettingType::StringArray, default: []),
             'messaging.daily_limit' => new SettingDefinition(key: 'messaging.daily_limit', scope: SettingScope::Store, type: SettingType::Integer, default: 500),
+            // Phase B55 (gap G16; Module 25 §5–8, §55–59): the store's installable app. Changed on the Mobile app page only.
+            'pwa.enabled' => new SettingDefinition(key: 'pwa.enabled', scope: SettingScope::Store, type: SettingType::Boolean, default: true),
+            'pwa.name' => new SettingDefinition(key: 'pwa.name', scope: SettingScope::Store, type: SettingType::String, default: null),
+            'pwa.short_name' => new SettingDefinition(key: 'pwa.short_name', scope: SettingScope::Store, type: SettingType::String, default: null),
+            'pwa.theme_color' => new SettingDefinition(key: 'pwa.theme_color', scope: SettingScope::Store, type: SettingType::String, default: null),
+            'pwa.background_color' => new SettingDefinition(key: 'pwa.background_color', scope: SettingScope::Store, type: SettingType::String, default: null),
+            'pwa.display' => new SettingDefinition(key: 'pwa.display', scope: SettingScope::Store, type: SettingType::String, default: 'standalone', allowedValues: ['standalone', 'minimal-ui', 'browser']),
+            'pwa.icon' => new SettingDefinition(key: 'pwa.icon', scope: SettingScope::Store, type: SettingType::String, default: null),
+            'pwa.install_prompt' => new SettingDefinition(key: 'pwa.install_prompt', scope: SettingScope::Store, type: SettingType::Boolean, default: true),
+            'pwa.mobile_nav' => new SettingDefinition(key: 'pwa.mobile_nav', scope: SettingScope::Store, type: SettingType::String, default: 'installed', allowedValues: ['installed', 'always', 'off']),
+            'pwa.push' => new SettingDefinition(key: 'pwa.push', scope: SettingScope::Store, type: SettingType::Boolean, default: false),
+            'pwa.version' => new SettingDefinition(key: 'pwa.version', scope: SettingScope::Store, type: SettingType::Integer, default: 1),
             // Phase B49 (Module 13 §57, §74): couriers. Changed on the Shipping setup page only.
             'shipping.default_weight_grams' => new SettingDefinition(key: 'shipping.default_weight_grams', scope: SettingScope::Store, type: SettingType::Integer, default: 500),
             // A link customers follow to the courier's own tracking page, with {tracking} for the number. Empty: none.

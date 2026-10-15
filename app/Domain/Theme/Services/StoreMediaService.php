@@ -27,7 +27,7 @@ use Illuminate\Validation\ValidationException;
 final class StoreMediaService
 {
     /** purpose => [smallest side, largest side] in pixels */
-    public const PURPOSES = ['logo' => [32, 4000], 'favicon' => [16, 1024], 'banner' => [200, 6000], 'social' => [200, 6000]];
+    public const PURPOSES = ['logo' => [32, 4000], 'favicon' => [16, 1024], 'banner' => [200, 6000], 'social' => [200, 6000], 'app_icon' => [512, 4000]]; // app_icon: Phase B55 (PwaIcons)
 
     public const MAX_KILOBYTES = 5120;
 

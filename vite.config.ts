@@ -26,5 +26,8 @@ export default defineConfig({
   test: {
     environment: 'jsdom',
     include: ['resources/js/**/*.test.{ts,tsx}'],
+    // Some page tests render a whole admin page in jsdom (2–3 s alone); on a busy
+    // machine they passed 5 s and failed for time, not for behaviour (seen in B54/B55).
+    testTimeout: 15000,
   },
 });

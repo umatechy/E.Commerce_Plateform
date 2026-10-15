@@ -147,6 +147,11 @@ Route::middleware(['customer.optional', 'storefront.store:api', 'throttle:120,1'
         // Module 34 (Phase B26): contact form and a guest's private ticket link.
         $support = \App\Domain\Support\Http\Controllers\GuestSupportController::class;
         Route::post('/support/contact', [$support, 'contact'])->middleware('throttle:3,1,sf-contact');
+        // Phase B55 (Module 25 §51–54, §68): the store app's push choice (signed-in shoppers) and its counters.
+        $app = \App\Domain\Pwa\Http\Controllers\StorefrontAppApiController::class;
+        Route::post('/app/push', [$app, 'subscribe'])->middleware(['auth:customer', 'customer.principal', 'throttle:10,10,sf-app-push']);
+        Route::delete('/app/push', [$app, 'unsubscribe'])->middleware(['auth:customer', 'customer.principal', 'throttle:10,10,sf-app-push']);
+        Route::post('/app/events', [$app, 'event'])->middleware('throttle:30,10,sf-app-events');
         // Phase B54 (Module 34 §28): "Was this helpful?" on the store's help articles.
         Route::post('/help/{key}/feedback', [\App\Domain\Help\Http\Controllers\StorefrontHelpController::class, 'feedback'])->where('key', '[a-z0-9][a-z0-9\-]{2,79}')->middleware('throttle:10,10,sf-help-feedback');
 

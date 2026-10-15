@@ -130,6 +130,11 @@ Route::middleware(['auth:sanctum', 'session.track', 'staff.principal', 'required
     Route::post('/platform-support/tickets/{ticket}/resolve', [\App\Domain\Support\Http\Controllers\MerchantPlatformSupportController::class, 'resolve']);
     Route::post('/platform-support/tickets/{ticket}/rating', [\App\Domain\Support\Http\Controllers\MerchantPlatformSupportController::class, 'rate']);
 
+    // --- The store's installable app (Module 25, Phase B55): theme.view to read, theme.manage to change ---
+    Route::get('/pwa/settings', [\App\Domain\Pwa\Http\Controllers\PwaSettingsController::class, 'show']);
+    Route::put('/pwa/settings', [\App\Domain\Pwa\Http\Controllers\PwaSettingsController::class, 'update'])->middleware('throttle:30,1,pwa-settings');
+    Route::post('/pwa/icon', [\App\Domain\Pwa\Http\Controllers\PwaSettingsController::class, 'icon'])->middleware('throttle:10,1,pwa-icon');
+
     // --- Help center (Module 34, Phase B54): what each reader may open is decided by HelpAudiencePolicy ---
     $help = \App\Domain\Help\Http\Controllers\HelpController::class;
     Route::get('/help', [$help, 'home']);

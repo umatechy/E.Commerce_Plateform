@@ -121,7 +121,7 @@ Architecture v1.0 arrived after this review was written and are now in
 | 22 | Reports, Analytics & Dashboard | B12 | 🟡 | Store dashboard, reports, async CSV exports | Funnel/conversion analytics (§21–22), scheduled/saved reports (§41–42), attribution/sessions (§51–52), analytics for modules not yet built |
 | 23 | Backup, Restore & Data Protection | B19 | 🟡 | Backups, verification, expiry, protected restore jobs | Scheduled automatic backups, media/file backup, off-site/S3 adapter, restore rehearsal, RPO/RTO (business decision) |
 | 24 | Store Health, Monitoring & Resource Usage | B21 | 🟡 | Per-store health snapshots, platform outbox/API monitoring | Alert delivery (HEALTH-005), storage/bandwidth usage, host metrics (out of scope) |
-| 25 | PWA / Mobile Experience | — | ❌ | Responsive storefront only | Manifest, service worker, installability, offline-safe caching, push |
+| 25 | PWA / Mobile Experience | B55 | 🟡 | Per-store manifest, scoped service worker (versioned, store-isolated caches; live data and private pages never cached; retires when the app is off or the shop not open), branded offline page, offline notice and online-only checkout, install offer (Android) and iPhone guidance, update prompt, phone tab bar, app icon in 192/512, Mobile app admin page with checks and counters, push subscription foundation (encrypted, store-scoped) and VAPID key command — docs/architecture/b55-pwa.md | Push delivery (Module 21 web push channel), app shortcuts beyond the manifest, offline wishlist, performance budget and web-vitals monitoring (§45–46), configuration versions with drafts (§80–81) |
 | 26 | AI Features | — | ❌ | `ai.recommendations`/`ai.chatbot` entitlement flags only (unused) | Whole module |
 | 27 | App / Plugin Marketplace & Integrations | — | ❌ | B18 developer apps/API keys/webhooks are a base | Extension registry, installation lifecycle, permissions, billing, review pipeline |
 | 28 | Affiliate & Reseller Program | — | ❌ | Nothing | Whole module (3,500-line blueprint) |
@@ -311,9 +311,9 @@ Architecture v1.0 arrived after this review was written and are now in
 
 | ID | Status | Evidence / gap | Pri |
 |---|---|---|---|
-| PWA-001, 003 | ❌ | No manifest/service worker | P2 |
+| PWA-001, 003 | ✅ | B55: installable where the package and the store allow it; cache policy per resource type | P2 |
 | PWA-002 | ✅ | Responsive storefront | P1 |
-| PWA-004–005 | ➖ | No offline mode yet | P0 when built |
+| PWA-004–005 | ✅ | B55: offline never places orders or changes stock; checkout and cart need the server; API and Inertia data are never cached | P0 |
 | AI-001–002, 007–008 | ❌ | Module 26 not built | P2 |
 | AI-003–006 | ➖ | Constraints; must hold once AI exists | P0 when built |
 | APP-001–004, 006–007 | ✅ | B18 developer applications, scopes, revocation, request log | P2 |
@@ -419,7 +419,7 @@ existing pattern: feature tests plus tenant-isolation tests for every endpoint.
 | G13 | ✅ **Closed in B53** (checkpoint-b53; docs/architecture/b53-api-quality.md): one error shape, OpenAPI + contract tests + CI checks, webhook event catalog, Idempotency-Key, deterministic pages, Playwright E2E in CI. Left: portal/sandbox/SDKs, spec for first-party APIs. API contract quality: error shape, OpenAPI, E2E tests | API-010/012, TEST-009, Master Prompt §15 | Integrators break; regressions reach users | Standard error envelope, OpenAPI generation, Playwright journeys in CI | P1 | G2 (request IDs) |
 | G14 | ✅ **Closed in B51** (checkpoint-b51; docs/architecture/b51-store-lifecycle.md): owner closure and reopening, platform suspension with reasons, 90-day retention (owner decision 5), reminders and automatic archiving, restore, legal hold, permanent deletion (cooling period, verified backup, purge of classified tables, final check, records kept), read-only admin, closed storefront, data export. Store lifecycle states + closure/retention workflow | STORE-003/009, MT-017, M03 §7–8, §35–37 | Undefined behavior on cancellation/deletion | Add missing states and a retention-safe deletion workflow | P1 | Retention period decision |
 | G15 | 🟡 **Part 1 done in B39** (checkpoint-b39; docs/architecture/b39-collections-merchandising.md): collections, tags, featured, related products, duplication, bulk changes, promotions on a collection. B40 added CSV import/export (checkpoint-b40); B41 attribute sets, specifications and faceted category filters (checkpoint-b41). B42 attribute translations and attributes in the CSV (checkpoint-b42). B43 badges and featured ranking (checkpoint-b43). Still open: category templates, per-category manual order. Catalog/taxonomy depth: collections, import/export, bulk ops, tags, attribute sets, filters | M05 §16, M06 §34–51, M07 §18–19, §44–47 | Onboarding existing merchants is slow | Collections first (also unblocks M14 §9), then import/export | P1 | — |
-| G16 | Module 25 PWA | PWA-001/003, M25 | Mobile install/offline missing | Build per blueprint (after G11 and G6 theme) | P2 | G11 |
+| G16 | 🟡 **Built in B55** (checkpoint-b55; docs/architecture/b55-pwa.md): installable store apps, offline-safe caching, install and update experience, phone navigation. Left: push delivery (needs Module 21 web push and the platform's VAPID keys), web-vitals monitoring. Module 25 PWA | PWA-001/003, M25 | Mobile install/offline missing | Build per blueprint (after G11 and G6 theme) | P2 | G11 |
 | G17 | ✅ **Core built in B36** (checkpoint-b36; open items in docs/development/b36-inspection-findings.md). Module 18 Animation | ANIM-001–004, M18 | Visual polish only | Build per blueprint | P2 | M17 |
 | G18 | Module 26 AI | AI-001–008, M26 | Premium feature missing (M04 §8) | Provider choice, then build with M26 safety layers | P2 | Owner decision on provider |
 | G19 | Module 27 Marketplace | APP-005, M27 | No extension ecosystem | Build on B18 | P2 | G13 |
