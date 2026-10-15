@@ -118,7 +118,7 @@ Not built (b55-pwa.md §8):
 - PWA health in Store health;
 - iPhone splash images.
 
-CI: pending.
+CI: 1e45b80 failed in backend (StoreAppTest rendered the 503 page with Vite, which CI does not build); fixed in 34e52f6 — run success (backend, frontend, security, e2e), verified 2026-10-15.
 
 Next (on the owner's word): B56 — G19 Marketplace (Module 27), the next
 module in the matrix order that needs no owner input; G18 AI waits for the
