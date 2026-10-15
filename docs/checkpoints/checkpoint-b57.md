@@ -118,7 +118,10 @@ Not built (b57-affiliates.md §9):
 - automatic payouts; tax on commissions;
 - translated rule summaries.
 
-CI: not yet run for this commit.
+CI: run 38703771292 on b71b7a8 — success (backend, frontend, security, e2e),
+verified 2026-10-15. The security job shows an "exit code 1" annotation from
+the report-only build-tooling audit step (continue-on-error; the Tailwind 3
+advisories listed in b52-security-review.md). It did not fail the job.
 
 Next (on the owner's word): B58 — G20 part 2, the platform reseller
 program (Module 28 §2.5, §46, §56–60; AFF-004).
