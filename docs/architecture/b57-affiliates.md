@@ -3,8 +3,9 @@
 Sources: Module 28 (Affiliate & Reseller Program), SRS AFF-001–005, Module 04
 (entitlements), Module 30 (step-up), Module 32 (audit). Phase B57 builds the
 **program engine** and the **store affiliate program** end to end. The
-**platform reseller program** (Umar Techy packages sold by resellers, §2.5,
-§46, §56–60) is the proposed next phase (B58).
+**platform reseller program** (Umar Techy packages sold by resellers, §3.3,
+§17, §25–31, §44, §72, §92, §96) is the next phase (B58; built, see
+b58-resellers.md).
 
 ## 1. Scope
 
@@ -23,7 +24,7 @@ Sources: Module 28 (Affiliate & Reseller Program), SRS AFF-001–005, Module 04
 | Affiliate dashboard (§43, §76, §135) | ✅ private page on the storefront, no customer data |
 | Store owner dashboard (§45) | ✅ Marketing → Affiliates |
 | Notifications (§47) | ✅ welcome (private link), application received (applicant and owner) |
-| Reseller program, reseller pricing, provisioning (§2.5, §46, §56–60, AFF-004) | ❌ B58 |
+| Reseller program, reseller pricing, provisioning (§3.3, §17, §25–31, §44, §92, §96, AFF-004) | ❌ here; built in B58 |
 | Platform referral of packages, recurring commissions (§852) | ❌ B58 |
 | Multi-level / tiered commissions, product-specific rates (§18–19) | ❌ later |
 | Automated payouts through a provider (§36) | ❌ no provider; owner decision on adapters applies |

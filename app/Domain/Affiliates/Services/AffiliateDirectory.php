@@ -7,6 +7,7 @@ namespace App\Domain\Affiliates\Services;
 use App\Domain\Affiliates\Models\Affiliate;
 use App\Domain\Affiliates\Models\AffiliateProgram;
 use App\Domain\Affiliates\Support\AffiliateRules;
+use App\Domain\Affiliates\Support\PayoutAccount;
 use App\Domain\Compliance\Services\AuditLogger;
 use App\Domain\Identity\Models\User;
 use App\Domain\Orders\Models\Customer;
@@ -157,24 +158,14 @@ final class AffiliateDirectory
      */
     public function setPayoutDetails(Affiliate $affiliate, string $method, array $details, ?User $by): void
     {
-        $affiliate->update(['payout_method' => $method, 'payout_details' => [
-            'account_title' => trim($details['account_title']), 'account_number' => preg_replace('/\s+/', '', $details['account_number']), 'bank' => $details['bank'] ?? null,
-        ]]);
+        $affiliate->update(['payout_method' => $method, 'payout_details' => PayoutAccount::normalize($details)]);
         $this->audit->record('affiliates.affiliate.payout_details_changed', ['method' => $method, 'by' => $by === null ? 'affiliate' : 'store'], $affiliate, $affiliate->store_id, $by);
     }
 
     /** @return array{method: ?string, account_title: ?string, account: ?string, bank: ?string} */
     public static function maskedPayout(Affiliate $affiliate): array
     {
-        $details = (array) $affiliate->payout_details;
-        $number = (string) ($details['account_number'] ?? '');
-
-        return [
-            'method' => $affiliate->payout_method,
-            'account_title' => $details['account_title'] ?? null,
-            'account' => $number === '' ? null : str_repeat('•', max(0, strlen($number) - 4)).substr($number, -4),
-            'bank' => $details['bank'] ?? null,
-        ];
+        return PayoutAccount::masked($affiliate->payout_method, $affiliate->payout_details);
     }
 
     /**
@@ -185,15 +176,9 @@ final class AffiliateDirectory
      */
     public function revealPayout(User $by, Affiliate $affiliate, string $why): array
     {
-        $details = (array) $affiliate->payout_details;
         $this->audit->record('affiliates.payout_details.revealed', ['why' => $why], $affiliate, actor: $by);
 
-        return [
-            'method' => $affiliate->payout_method,
-            'account_title' => $details['account_title'] ?? null,
-            'account_number' => $details['account_number'] ?? null,
-            'bank' => $details['bank'] ?? null,
-        ];
+        return PayoutAccount::full($affiliate->payout_method, $affiliate->payout_details);
     }
 
     private function issueToken(Affiliate $affiliate): string

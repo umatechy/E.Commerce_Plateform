@@ -47,6 +47,7 @@ final class StoreProvisioningService
 {
     public const VIA_SELF_SERVICE = 'self_service';
     public const VIA_PLATFORM = 'platform';
+    public const VIA_RESELLER = 'reseller'; // Phase B58: a platform reseller created it for a client
 
     public function __construct(
         private readonly SubscriptionLifecycleService $subscriptions,
@@ -110,6 +111,31 @@ final class StoreProvisioningService
         }
 
         return $store;
+    }
+
+    /**
+     * Phase B58 (Module 28 §28–29, §96): a platform reseller creates a store
+     * for a client. Like a store Umar Techy creates: the client is invited as
+     * the owner (the reseller never owns it), on the chosen package's trial.
+     * $within runs inside the same transaction (the reseller attribution), so
+     * a store never exists without it.
+     *
+     * @param array{store_name: string, business_category: string, package: Package, owner_email: string, starter_template?: bool} $data
+     * @param callable(Store): void $within
+     */
+    public function forReseller(User $resellerUser, array $data, callable $within): Store
+    {
+        return DB::transaction(function () use ($resellerUser, $data, $within) {
+            $email = Str::lower(trim($data['owner_email']));
+            $store = $this->createStore($data['store_name'], $data['business_category'], self::VIA_RESELLER, $resellerUser->id);
+            $this->subscriptions->startTrial($store, $data['package']);
+            $this->tenant->asStore($store->id, fn () => app(StoreTeamService::class)->inviteOwner($store, $email, $resellerUser));
+            $template = ($data['starter_template'] ?? true) ? $this->applyStarterTemplate($store, $resellerUser, byStoreStaff: false) : null;
+            $within($store);
+            $this->record($store, $resellerUser, ['via' => self::VIA_RESELLER, 'package' => $data['package']->code, 'owner_email' => $email, 'starter_template' => $template]);
+
+            return $store;
+        });
     }
 
     private function createStore(string $name, ?string $businessCategory, string $via, ?int $createdBy, ?string $slugBase = null): Store

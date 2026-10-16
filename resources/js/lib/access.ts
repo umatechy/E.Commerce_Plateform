@@ -27,6 +27,8 @@ export type AuthProps = {
   platform_capabilities?: string[];
   /** Phase B54: a release newer than the user has seen ("What's new"). */
   help_unseen_release?: string | null;
+  /** Phase B58: this account runs an Umar Techy partner (reseller) account. */
+  is_reseller?: boolean;
 };
 
 export type Access = {
@@ -46,6 +48,8 @@ export type Access = {
   /** The currencies a store may choose, the store currency first. */
   currencies: string[];
   timezone: string;
+  /** Phase B58: show the partner portal. */
+  isReseller: boolean;
 };
 
 export function accessFrom(auth: AuthProps): Access {
@@ -66,6 +70,7 @@ export function accessFrom(auth: AuthProps): Access {
     currency: auth.currency ?? DEFAULT_CURRENCY,
     currencies: (auth.currencies?.length ? auth.currencies : [...SUPPORTED_CURRENCIES]),
     timezone: auth.timezone ?? 'UTC',
+    isReseller: auth.is_reseller === true,
   };
 }
 

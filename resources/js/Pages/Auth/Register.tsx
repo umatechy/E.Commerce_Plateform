@@ -10,9 +10,10 @@ import { useApiForm } from '@/lib/useApiForm';
  * Phase B44 (owner decision 13): what the store sells is chosen here; when
  * Umar Techy has closed public sign-up, the page says whom to contact.
  */
-type Props = { signupOpen?: boolean; businessCategories?: { value: string; label: string }[] };
+/** Phase B58: `partner` — the Umar Techy partner whose sign-up link brought this visitor. */
+type Props = { signupOpen?: boolean; businessCategories?: { value: string; label: string }[]; partner?: string | null };
 
-export default function Register({ signupOpen = true, businessCategories = [] }: Props) {
+export default function Register({ signupOpen = true, businessCategories = [], partner = null }: Props) {
   const { data, setData, post, processing, errors } = useApiForm({
     name: '',
     email: '',
@@ -43,6 +44,11 @@ export default function Register({ signupOpen = true, businessCategories = [] }:
   return (
     <div className="mx-auto mt-24 max-w-sm">
       <h1 className="text-xl font-semibold">Create your store</h1>
+      {partner && (
+        <p className="mt-3 rounded-md border border-indigo-200 bg-indigo-50 px-3 py-2 text-sm text-indigo-900" role="status">
+          Recommended by <strong>{partner}</strong>, an Umar Techy partner. Your store gets their partner price.
+        </p>
+      )}
 
       <form onSubmit={submit} className="mt-6 space-y-4">
         {(

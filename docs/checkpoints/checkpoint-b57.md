@@ -125,3 +125,5 @@ advisories listed in b52-security-review.md). It did not fail the job.
 
 Next (on the owner's word): B58 — G20 part 2, the platform reseller
 program (Module 28 §2.5, §46, §56–60; AFF-004).
+[Correction in B58: the reseller sections are §3.3, §17, §25–31, §44, §72,
+§92, §96 — the numbers above were wrong.]

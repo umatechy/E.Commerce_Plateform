@@ -43,6 +43,7 @@ return Application::configure(basePath: dirname(__DIR__))
         app_path('Domain/Help/Console'), // Phase B54: help:sync, help:check, help:maintain
         app_path('Domain/Pwa/Console'), // Phase B55: pwa:vapid-keys
         app_path('Domain/Affiliates/Console'), // Phase B57: affiliates:follow-up
+        app_path('Domain/Resellers/Console'), // Phase B58: resellers:follow-up
     ])
     ->withRouting(
         web: __DIR__.'/../routes/web.php',
@@ -156,6 +157,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'privileged.mfa' => \App\Http\Middleware\EnsurePrivilegedMfa::class,
             'required.mfa' => \App\Http\Middleware\EnsureRequiredMfa::class,
             'step_up' => \App\Http\Middleware\RequireStepUp::class,
+            'reseller' => \App\Http\Middleware\EnsureActiveReseller::class, // Phase B58: the partner portal
             'store.operational' => \App\Http\Middleware\EnsureStoreOperational::class, // Phase B51
             'platform.capability' => \App\Http\Middleware\EnsurePlatformCapability::class, // Phase B52
             'session.track' => \App\Http\Middleware\TrackUserSession::class, // Phase B52

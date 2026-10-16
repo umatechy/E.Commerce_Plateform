@@ -34,6 +34,8 @@ final class StoreDataMap
         'invoice_payments',
         'invoices',
         'payment_notices',
+        'reseller_commissions', // Phase B58: financial records of the reseller program
+        'reseller_stores',      // Phase B58: which reseller brought the store, and on what terms
         'security_events', // Phase B52: security monitoring; removed by its own retention (security:prune)
         'store_deletions',
         'store_lifecycle_events',

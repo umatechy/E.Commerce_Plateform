@@ -100,6 +100,9 @@ export const storeNav: NavGroup[] = [
 /** The signed-in user's own account. Always reachable, also while the admin is closed for two-step sign-in. */
 export const accountNav: NavItem = { href: '/security', label: 'Security', description: 'Two-step sign-in for your account.' };
 
+/** Phase B58: a reseller's own portal — its clients' stores, commissions and payouts. */
+export const partnerNav: NavItem = { href: '/partner', label: 'Partner portal', description: 'Your clients’ stores, your commissions and payouts.' };
+
 /** Umar Techy Super Admin: pages for platform staff only. The server refuses everyone else, whatever the menu shows. */
 export const platformNav: NavGroup = {
   label: 'Platform administration',
@@ -120,6 +123,7 @@ export const platformNav: NavGroup = {
     { href: '/super-admin/backups', label: 'Platform backups', description: 'Backups, restore rehearsals and restore requests.' },
     { href: '/super-admin/support', label: 'Platform support', description: 'Requests from every store to the platform.' },
     { href: '/super-admin/marketplace', label: 'Marketplace', description: 'Apps stores can install: review, publish and the kill switch.' },
+    { href: '/super-admin/resellers', label: 'Resellers', description: 'Partners who sell Umar Techy: tiers, their stores, commissions and payouts.' },
     { href: '/super-admin/help', label: 'Help center', description: 'Help articles, their review, feedback, searches and release notes.' },
   ],
 };
@@ -160,7 +164,7 @@ export function navigationFor(access: Access, store: NavGroup[] = storeNav): Res
   if (access.isPlatformStaff) {
     groups.push({ label: platformNav.label, platform: true, items: platformNav.items.map((item) => resolve(item, access)) });
   }
-  groups.push({ label: 'Account', platform: false, items: [resolve(accountNav, access, true)] });
+  groups.push({ label: 'Account', platform: false, items: [...(access.isReseller ? [resolve(partnerNav, access, true)] : []), resolve(accountNav, access, true)] });
 
   return groups;
 }

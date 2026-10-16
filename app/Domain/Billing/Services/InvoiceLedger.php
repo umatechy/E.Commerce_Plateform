@@ -39,6 +39,16 @@ final class InvoiceLedger
             ->first();
     }
 
+    /**
+     * Phase B58 (Module 28 §26): what this store pays for a price: the public
+     * price, or the partner price when a reseller brought the store. Worked
+     * out on the server for every invoice and plan change.
+     */
+    public function amountFor(Subscription $subscription, PackagePrice $price): int
+    {
+        return app(\App\Domain\Resellers\Services\ResellerPricing::class)->price($subscription->store_id, $price->amount_minor);
+    }
+
     /** @param ?int $packageId Phase B47: another package (a plan change); default the subscription's */
     public function priceFor(Subscription $subscription, ?BillingInterval $interval = null, ?int $packageId = null): ?PackagePrice
     {
@@ -53,7 +63,7 @@ final class InvoiceLedger
     /**
      * What the next period will cost, without issuing anything.
      *
-     * @return ?array{period_start: CarbonImmutable, period_end: CarbonImmutable, currency: string, subtotal_minor: int, tax_rate_bps: int, tax_minor: int, total_minor: int}
+     * @return ?array{period_start: CarbonImmutable, period_end: CarbonImmutable, currency: string, subtotal_minor: int, list_minor: int, tax_rate_bps: int, tax_minor: int, total_minor: int}
      */
     public function quoteNextPeriod(Subscription $subscription): ?array
     {
@@ -65,17 +75,19 @@ final class InvoiceLedger
         }
 
         $periodStart = CarbonImmutable::instance($subscription->current_period_ends_at);
+        $amount = $this->amountFor($subscription, $price);
         $taxRate = $this->taxRateBps();
-        $tax = $this->taxOn($price->amount_minor, $taxRate);
+        $tax = $this->taxOn($amount, $taxRate);
 
         return [
             'period_start' => $periodStart,
             'period_end' => $this->intervalOf($subscription)->periodEnd($periodStart, $this->anchorOf($subscription, $periodStart)),
             'currency' => $price->currency,
-            'subtotal_minor' => $price->amount_minor,
+            'subtotal_minor' => $amount,
+            'list_minor' => $price->amount_minor,
             'tax_rate_bps' => $taxRate,
             'tax_minor' => $tax,
-            'total_minor' => $price->amount_minor + $tax,
+            'total_minor' => $amount + $tax,
         ];
     }
 
@@ -134,7 +146,9 @@ final class InvoiceLedger
 
         $invoice->lines()->create([
             'description' => sprintf('%s plan (%s), %s to %s', $package->name, $this->intervalOf($subscription)->value,
-                $quote['period_start']->toDateString(), $quote['period_end']->toDateString()),
+                $quote['period_start']->toDateString(), $quote['period_end']->toDateString())
+                // Phase B58: a store a reseller brought pays the partner price.
+                .($quote['subtotal_minor'] < $quote['list_minor'] ? ', partner price' : ''),
             'quantity' => 1,
             'unit_amount_minor' => $quote['subtotal_minor'],
             'amount_minor' => $quote['subtotal_minor'],

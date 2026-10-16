@@ -1,6 +1,6 @@
 import { FormEvent, useEffect, useState } from 'react';
 import { AdminApiError, adminErrorMessage, adminFetch } from '@/lib/adminApi';
-import { tokenFromHash } from '@/lib/team';
+import { forgetHash, tokenFromHash } from '@/lib/team';
 
 type Invitation = { store: string; role: string; email: string; has_account: boolean; signed_in_as: string | null; expires_at: string };
 
@@ -22,16 +22,16 @@ export default function AcceptInvitation({ invitationId }: { invitationId: strin
   const [working, setWorking] = useState(false);
 
   useEffect(() => {
-    if (typeof window !== 'undefined' && window.location.hash) {
-      window.history.replaceState(null, '', window.location.pathname);
-    }
+    const stop = forgetHash();
     if (!token) {
       setFatal('This invitation link is incomplete. Open it again from your email.');
-      return;
+      return stop;
     }
     adminFetch<{ data: Invitation }>(`/public/invitations/${invitationId}/lookup`, { method: 'POST', body: { token } })
       .then((r) => setInvitation(r.data))
       .catch((e) => setFatal(adminErrorMessage(e, 'This invitation link is invalid or has expired.')));
+
+    return stop;
   }, [invitationId, token]);
 
   function fail(error: unknown) {

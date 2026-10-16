@@ -46,6 +46,21 @@ export function seatsFull(seats: TeamSummary['seats']): boolean {
 }
 
 /** Reads the invitation token from the URL fragment, which the browser never sends to the server. */
+/**
+ * Removes a token from the address bar (and so from the history entry).
+ * Inertia puts the #fragment back when it starts, after the page's first
+ * effects run, so this runs now and once more just after (Phase B58).
+ */
+export function forgetHash(): () => void {
+  const forget = () => {
+    if (window.location.hash) window.history.replaceState(window.history.state, '', window.location.pathname + window.location.search);
+  };
+  forget();
+  const timer = window.setTimeout(forget, 50);
+
+  return () => window.clearTimeout(timer);
+}
+
 export function tokenFromHash(hash: string): string | null {
   const match = /(?:^#|&)token=([A-Za-z0-9]{64})(?:&|$)/.exec(hash);
 

@@ -351,12 +351,7 @@ final class AffiliateAdminController
     /** @return array<string, mixed> */
     public static function payoutRules(): array
     {
-        return [
-            'method' => ['required', Rule::in(['bank_transfer', 'jazzcash', 'easypaisa'])],
-            'account_title' => ['required', 'string', 'max:120'],
-            'account_number' => ['required', 'string', 'max:40', 'regex:/^[A-Za-z0-9 \-]+$/'],
-            'bank' => ['nullable', 'required_if:method,bank_transfer', 'string', 'max:80'],
-        ];
+        return \App\Domain\Affiliates\Support\PayoutAccount::rules();
     }
 
     /** @return array<string, mixed> */

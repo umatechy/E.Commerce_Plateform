@@ -63,6 +63,11 @@ use Illuminate\Support\Facades\Route;
 // --- Authentication (ADR-002 Surface A — Sanctum SPA session) ---
 Route::post('/auth/register', [AuthController::class, 'register'])->middleware('throttle:5,1');
 Route::post('/auth/login', [AuthController::class, 'login'])->middleware('throttle:10,1');
+// Phase B58 (Module 28 §92): becoming an Umar Techy partner — apply, look up an invitation, join with a new account.
+$partnerJoin = \App\Domain\Resellers\Http\Controllers\PartnerJoinController::class;
+Route::post('/partner/applications', [$partnerJoin, 'apply'])->middleware('throttle:3,10,partner-apply');
+Route::post('/partner/invitations/lookup', [$partnerJoin, 'invitation'])->middleware('throttle:20,1,partner-invitation');
+Route::post('/partner/invitations/register', [$partnerJoin, 'register'])->middleware('throttle:5,1,partner-register');
 // The second step of a sign-in for accounts with MFA (Module 32 §8 — Phase B29).
 Route::post('/auth/login/mfa', [AuthController::class, 'loginMfa'])->middleware('throttle:10,1');
 // Phase B52 (Module 32 §7.5–7.6): "forgot password" for staff accounts.
@@ -154,6 +159,19 @@ Route::middleware(['auth:sanctum', 'session.track', 'staff.principal', 'required
     Route::post('/affiliates/{affiliate}/payouts', [$aff, 'createPayout'])->middleware(['step_up', 'idempotent']);
     Route::get('/affiliates/{affiliate}/adjustments', [$aff, 'adjustments']);
     Route::post('/affiliates/{affiliate}/adjustments', [$aff, 'adjust'])->middleware(['step_up', 'idempotent']);
+
+    // --- The partner portal (Module 28, Phase B58): the reseller of the signed-in account, with two-step sign-in ---
+    Route::post('/partner/invitations/accept', [\App\Domain\Resellers\Http\Controllers\PartnerJoinController::class, 'accept'])->middleware('throttle:10,1,partner-accept');
+    Route::middleware('reseller')->prefix('partner')->group(function () {
+        $partner = \App\Domain\Resellers\Http\Controllers\PartnerController::class;
+        Route::get('/overview', [$partner, 'overview']);
+        Route::get('/stores', [$partner, 'stores']);
+        Route::post('/stores', [$partner, 'provision'])->middleware('throttle:20,10,partner-provision');
+        Route::get('/commissions', [$partner, 'commissions']);
+        Route::get('/payouts', [$partner, 'payouts']);
+        Route::get('/packages', [$partner, 'packages']);
+        Route::put('/payout-details', [$partner, 'payoutDetails'])->middleware('step_up');
+    });
 
     // --- Apps from the marketplace (Module 27, Phase B56): developer_platform.view to look, the Owner to change ---
     $apps = \App\Domain\Marketplace\Http\Controllers\StoreAppsController::class;
@@ -572,6 +590,32 @@ Route::middleware(['auth:sanctum', 'session.track', 'staff.principal', 'required
             Route::post('/marketplace/apps/{app}/suspend', [$market, 'suspend'])->middleware('step_up');
             Route::post('/marketplace/apps/{app}/resume', [$market, 'resume'])->middleware('step_up');
             Route::post('/marketplace/apps/{app}/deprecate', [$market, 'deprecate']);
+
+            // Phase B58 (Module 28 §46): the reseller program — tiers, resellers, stores, commissions, payouts.
+            $resellers = \App\Domain\Resellers\Http\Controllers\SuperAdminResellerController::class;
+            Route::get('/resellers/overview', [$resellers, 'overview']);
+            Route::post('/resellers/tiers', [$resellers, 'storeTier'])->middleware('step_up');
+            Route::put('/resellers/tiers/{tier}', [$resellers, 'updateTier'])->middleware('step_up');
+            Route::get('/resellers/commissions', [$resellers, 'commissions']);
+            Route::post('/resellers/commissions/{commission}/reject', [$resellers, 'rejectCommission']);
+            Route::get('/resellers/payouts', [$resellers, 'payouts']);
+            Route::post('/resellers/payouts/{payout}/pay-to', [$resellers, 'payTo'])->middleware('step_up');
+            Route::post('/resellers/payouts/{payout}/paid', [$resellers, 'markPaid'])->middleware(['step_up', 'idempotent']);
+            Route::post('/resellers/payouts/{payout}/cancel', [$resellers, 'cancelPayout']);
+            Route::post('/resellers/attributions/{attribution}/end', [$resellers, 'endAttribution'])->middleware('step_up');
+            Route::get('/resellers', [$resellers, 'index']);
+            Route::post('/resellers', [$resellers, 'store'])->middleware('throttle:60,10,reseller-invite');
+            Route::get('/resellers/{reseller}', [$resellers, 'show']);
+            Route::put('/resellers/{reseller}', [$resellers, 'update']);
+            foreach (['approve', 'reject', 'pause', 'resume'] as $step) {
+                Route::post("/resellers/{reseller}/{$step}", [$resellers, $step]);
+            }
+            Route::post('/resellers/{reseller}/invitation', [$resellers, 'reinvite']);
+            Route::post('/resellers/{reseller}/terminate', [$resellers, 'terminate'])->middleware('step_up');
+            Route::put('/resellers/{reseller}/payout-details', [$resellers, 'payoutDetails'])->middleware('step_up');
+            Route::post('/resellers/{reseller}/payouts', [$resellers, 'createPayout'])->middleware(['step_up', 'idempotent']);
+            Route::post('/resellers/{reseller}/adjustments', [$resellers, 'adjust'])->middleware(['step_up', 'idempotent']);
+            Route::post('/resellers/{reseller}/stores', [$resellers, 'assignStore'])->middleware('step_up');
 
             // Phase B54 (Module 34): help articles, their review, feedback, searches and release notes.
             $helpAdmin = \App\Domain\Help\Http\Controllers\SuperAdminHelpController::class;

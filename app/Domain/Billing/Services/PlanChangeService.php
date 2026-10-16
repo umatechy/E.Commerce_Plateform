@@ -64,11 +64,14 @@ final class PlanChangeService
         $interval = $this->ledger->intervalOf($subscription);
         $currentPrice = $this->ledger->priceFor($subscription, null, $current->id);
         $targetPrice = $this->ledger->priceFor($subscription, null, $target->id);
+        // Phase B58: what this store pays — the partner price when a reseller brought it.
+        $currentAmount = $currentPrice === null ? null : $this->ledger->amountFor($subscription, $currentPrice);
+        $targetAmount = $targetPrice === null ? null : $this->ledger->amountFor($subscription, $targetPrice);
         $store = Store::query()->withTrashed()->findOrFail($subscription->store_id);
 
         $base = [
-            'from' => ['code' => $current->code, 'name' => $current->name, 'price_minor' => $currentPrice?->amount_minor],
-            'to' => ['code' => $target->code, 'name' => $target->name, 'price_minor' => $targetPrice?->amount_minor],
+            'from' => ['code' => $current->code, 'name' => $current->name, 'price_minor' => $currentAmount],
+            'to' => ['code' => $target->code, 'name' => $target->name, 'price_minor' => $targetAmount],
             'interval' => $interval->value,
             'currency' => ($targetPrice ?? $currentPrice)?->currency,
             'features_lost' => $this->featureDiff($current, $target),
@@ -88,6 +91,7 @@ final class PlanChangeService
 
         $direction = $currentPrice === null || $targetPrice->amount_minor > $currentPrice->amount_minor ? 'upgrade'
             : ($targetPrice->amount_minor < $currentPrice->amount_minor ? 'downgrade' : 'lateral');
+        $targetAmount = (int) $targetAmount;
 
         if ($subscription->status === SubscriptionStatus::Trialing) {
             return [...$base, 'direction' => $direction, 'timing' => 'now', 'effective_at' => now()->toIso8601String(), 'reason' => 'trial'];
@@ -111,7 +115,7 @@ final class PlanChangeService
         }
 
         return [...$base, 'direction' => $direction, 'timing' => 'now', 'effective_at' => now()->toIso8601String(),
-            'proration' => $this->proration($subscription, (int) $currentPrice?->amount_minor, $targetPrice->amount_minor, $currentInvoice, $next !== null && $next->status !== InvoiceStatus::Void ? $next : null)];
+            'proration' => $this->proration($subscription, (int) $currentAmount, $targetAmount, $currentInvoice, $next !== null && $next->status !== InvoiceStatus::Void ? $next : null)];
     }
 
     /**

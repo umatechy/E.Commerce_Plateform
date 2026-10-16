@@ -37,16 +37,17 @@ final class PlatformRoles
         'security' => 'Platform staff roles, sessions, incidents and emergency controls',
         'help' => 'Write, review and publish help articles; publish release notes', // Phase B54
         'marketplace' => 'Marketplace apps: list, review and publish, suspend (kill switch)', // Phase B56
+        'resellers' => 'Reseller program: tiers and terms, resellers, their stores, commissions and payouts', // Phase B58
     ];
 
     /** role => [label, what it is for, capabilities] */
     public const ROLES = [
         'super_admin' => ['Super admin', 'Everything, including staff roles and permanent deletion. Keep this to very few people.', ['*']],
         'platform_admin' => ['Platform admin', 'Runs the platform day to day: stores, packages, billing, providers, settings, backups, support.',
-            ['view', 'stores', 'impersonate', 'catalog', 'billing', 'providers', 'settings', 'backups', 'support', 'users', 'developer', 'help', 'marketplace']],
+            ['view', 'stores', 'impersonate', 'catalog', 'billing', 'providers', 'settings', 'backups', 'support', 'users', 'developer', 'help', 'marketplace', 'resellers']],
         'operations_admin' => ['Operations admin', 'Stores, backups and support.', ['view', 'stores', 'impersonate', 'backups', 'support', 'developer']],
         'support_admin' => ['Support admin', 'Answers stores, opens a store to help and writes help articles. Changes nothing else.', ['view', 'impersonate', 'support', 'help']],
-        'billing_admin' => ['Billing admin', 'Invoices, payments, credit notes and prices.', ['view', 'billing']],
+        'billing_admin' => ['Billing admin', 'Invoices, payments, credit notes and prices; reseller commissions and payouts.', ['view', 'billing', 'resellers']],
         'security_admin' => ['Security admin', 'Staff roles, sessions, incidents, emergency controls and user accounts.', ['view', 'security', 'users', 'developer']],
         'read_only_auditor' => ['Read-only auditor', 'Sees everything, changes nothing.', ['view']],
     ];
@@ -85,6 +86,7 @@ final class PlatformRoles
         ['security', 'security'],
         ['help', 'help'], // Phase B54
         ['marketplace', 'marketplace'], // Phase B56
+        ['resellers', 'resellers'], // Phase B58
     ];
 
     public static function normalize(?string $role): ?string

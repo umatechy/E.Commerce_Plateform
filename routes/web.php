@@ -111,6 +111,7 @@ Route::middleware(['auth', 'required.mfa'])->group(function () {
         '/storefront/app' => 'Storefront/App', // Phase B55: the store's installable app
         '/apps' => 'Apps/Index', // Phase B56: the app marketplace
         '/affiliates' => 'Marketing/Affiliates', // Phase B57: the store's affiliate program
+        '/partner' => 'Partner/Portal', // Phase B58: a reseller's partner portal (its API checks the reseller and two-step sign-in)
         '/reports' => 'Analytics/Reports',
         '/notifications' => 'Communication/Index',
         '/team/roles' => 'Team/Roles',
@@ -150,6 +151,7 @@ Route::middleware(['auth', 'required.mfa'])->group(function () {
             '/security' => 'SuperAdmin/Security', // Phase B52
             '/help' => 'SuperAdmin/Help', // Phase B54
             '/marketplace' => 'SuperAdmin/Marketplace', // Phase B56
+            '/resellers' => 'SuperAdmin/Resellers', // Phase B58
         ] as $uri => $page) {
             Route::get($uri, fn () => Inertia::render($page));
         }
@@ -176,6 +178,11 @@ $intendedPath = function (Request $request): ?string {
 Route::get('/invitations/{invitation}', fn (string $invitation) => Inertia::render('Auth/AcceptInvitation', ['invitationId' => $invitation]))
     ->where('invitation', '[0-9A-Za-z]{26}');
 
+// Phase B58 (Module 28 §92): the public partner page, and the invitation to
+// the partner portal (signed in or not; the token is in the #fragment).
+Route::get('/partners', fn () => Inertia::render('Partners/Apply'));
+Route::get('/partner/join', fn () => Inertia::render('Partner/Join'));
+
 Route::middleware('guest')->group(function () use ($intendedPath) {
     // Named: the auth middleware sends signed-out visitors of admin pages
     // here (without the name they got a 500, "Route [login] not defined").
@@ -184,7 +191,9 @@ Route::middleware('guest')->group(function () use ($intendedPath) {
     Route::get('/forgot-password', fn () => Inertia::render('Auth/ForgotPassword'));
     Route::get('/reset-password', fn () => Inertia::render('Auth/ResetPassword'));
     // Phase B44 (owner decision 13): sign-up may be closed; the page then says whom to contact.
-    Route::get('/register', fn () => Inertia::render('Auth/Register', [
+    // Phase B58: `?partner=CODE` — a reseller's sign-up link; remembered in this session until the store is created.
+    Route::get('/register', fn (Request $request) => Inertia::render('Auth/Register', [
+        'partner' => app(\App\Domain\Resellers\Services\ResellerAttribution::class)->rememberFromSignup($request)?->business_name,
         'signupOpen' => app(\App\Domain\Settings\Services\ConfigService::class)->get('platform.self_signup_enabled') !== false,
         'businessCategories' => collect(\App\Domain\Tenancy\Support\BusinessCategories::ALL)->map(fn ($label, $key) => ['value' => $key, 'label' => $label])->values(),
     ]));

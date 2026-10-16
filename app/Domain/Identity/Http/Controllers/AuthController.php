@@ -47,7 +47,13 @@ final class AuthController
             ]);
 
             // Phase B45: the business category's starter template, unless the customer chose to start empty.
-            $provisioning->selfService($user, $request->string('store_name')->toString(), $request->input('business_category'), starterTemplate: $request->boolean('starter_template'));
+            $store = $provisioning->selfService($user, $request->string('store_name')->toString(), $request->input('business_category'), starterTemplate: $request->boolean('starter_template'));
+            // Phase B58 (Module 28 §17): signed up through a reseller's link — the store counts for them.
+            try {
+                app(\App\Domain\Resellers\Services\ResellerAttribution::class)->attachFromSession($request, $store, $user);
+            } catch (\App\Domain\Resellers\Services\ResellerRefused $e) {
+                report($e); // never stands in the way of a sign-up
+            }
 
             return $user;
         });

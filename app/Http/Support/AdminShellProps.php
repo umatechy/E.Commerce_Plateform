@@ -33,7 +33,7 @@ final class AdminShellProps
     public function for(?User $user, ?int $activeStoreId): array
     {
         if ($user === null) {
-            return ['permissions' => [], 'is_owner' => false, 'features' => [], 'package' => null, 'stores' => [], 'currency' => null, 'currencies' => []];
+            return ['permissions' => [], 'is_owner' => false, 'features' => [], 'package' => null, 'stores' => [], 'currency' => null, 'currencies' => [], 'is_reseller' => false];
         }
 
         $stores = $user->stores()->wherePivot('status', 'active')->orderBy('stores.name')->get(['stores.id', 'stores.name']);
@@ -50,6 +50,8 @@ final class AdminShellProps
             // Phase B52: what this person may do on the platform (display only; the server checks each call).
             'platform_role' => $user->isPlatformStaff() ? \App\Domain\SuperAdmin\Support\PlatformRoles::label($user->platform_role) : null,
             'platform_capabilities' => \App\Domain\SuperAdmin\Support\PlatformRoles::capabilitiesOf($user->platform_role),
+            // Phase B58: this account runs an Umar Techy partner account (display only; the partner API checks each call).
+            'is_reseller' => \App\Domain\Resellers\Models\Reseller::query()->where('user_id', $user->id)->whereIn('status', ['active', 'paused'])->exists(),
         ];
     }
 

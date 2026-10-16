@@ -150,6 +150,15 @@ final class StepUpTest extends TestCase
             'POST api/v1/super-admin/marketplace/apps/{app}/secret',
             'POST api/v1/super-admin/marketplace/apps/{app}/suspend',
             'POST api/v1/super-admin/packages',
+            // Phase B58: the reseller program — its terms, which stores count, termination, payouts and balances.
+            'POST api/v1/super-admin/resellers/attributions/{attribution}/end',
+            'POST api/v1/super-admin/resellers/payouts/{payout}/paid',
+            'POST api/v1/super-admin/resellers/payouts/{payout}/pay-to',
+            'POST api/v1/super-admin/resellers/tiers',
+            'POST api/v1/super-admin/resellers/{reseller}/adjustments',
+            'POST api/v1/super-admin/resellers/{reseller}/payouts',
+            'POST api/v1/super-admin/resellers/{reseller}/stores',
+            'POST api/v1/super-admin/resellers/{reseller}/terminate',
             'POST api/v1/super-admin/restore-jobs/{backupRestoreJob}/authorize',
             'POST api/v1/super-admin/settings/revisions/{revisionId}/rollback',
             // Phase B44: creating a store for a customer, and inviting its owner.
@@ -172,6 +181,7 @@ final class StepUpTest extends TestCase
             'PUT api/v1/affiliates/{affiliate}/payout-details', // Phase B57
             'PUT api/v1/courier-settings/couriers/{provider}',
             'PUT api/v1/messaging-settings/accounts/{provider}',
+            'PUT api/v1/partner/payout-details', // Phase B58: where Umar Techy pays a reseller
             'PUT api/v1/payment-settings/bank-transfer',
             'PUT api/v1/payment-settings/providers/{provider}',
             'PUT api/v1/payment-settings/providers/{provider}/enabled',
@@ -184,6 +194,8 @@ final class StepUpTest extends TestCase
             'PUT api/v1/super-admin/payment-providers/{provider}/account',
             'PUT api/v1/super-admin/payment-providers/{provider}/account/enabled',
             'PUT api/v1/super-admin/payment-providers/{provider}/live',
+            'PUT api/v1/super-admin/resellers/tiers/{tier}', // Phase B58
+            'PUT api/v1/super-admin/resellers/{reseller}/payout-details', // Phase B58
             'PUT api/v1/super-admin/security/emergency/{key}', // Phase B52: emergency controls
             'PUT api/v1/super-admin/settings/{key}',
             'PUT api/v1/super-admin/starter-templates/{key}',
