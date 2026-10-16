@@ -115,7 +115,10 @@ Local data note:
 - Test resellers "Pixel Agency …", tiers "Silver …", stores "Rida Boutique …"
   and "Client Shop …" from the browser check.
 
-CI: not yet run for this commit.
+CI: run 38876726739 on 5ede27b — success (backend, frontend, security, e2e),
+verified 2026-10-16. The security job again shows the "exit code 1"
+annotation of the report-only build-tooling audit step (continue-on-error;
+the Tailwind 3 advisories of b52-security-review.md); the job passed.
 
 Next (on the owner's word): G22 feature flags (Module 35 foundation), the
 next gap in the matrix order; G18 AI waits for the OpenAI key.
