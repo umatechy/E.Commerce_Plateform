@@ -30,6 +30,11 @@ final class HandleInertiaRequests extends Middleware
 
         return [
             ...parent::share($request),
+            // UI-1: the platform's name and logo (Super Admin → Platform settings), for every page.
+            'brand' => fn () => [
+                'name' => (string) (app(\App\Domain\Settings\Services\ConfigService::class)->get('platform.brand_name') ?? 'Umar Techy'),
+                'logo_url' => app(\App\Domain\Settings\Services\ConfigService::class)->get('platform.logo_url'),
+            ],
             'auth' => [
                 'user' => $user ? (new UserResource($user))->resolve($request) : null,
                 // Phase B51: with its lifecycle status, so the admin can say why it is read-only.

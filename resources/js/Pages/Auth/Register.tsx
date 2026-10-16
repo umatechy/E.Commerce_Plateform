@@ -1,5 +1,8 @@
 import { FormEvent } from 'react';
 import { useApiForm } from '@/lib/useApiForm';
+import AuthShell, { FieldError, FormAlert, Spinner, authButton, authInput, authLink } from '@/Components/Auth/AuthShell';
+import PasswordField from '@/Components/Auth/PasswordField';
+import Icon from '@/Components/ui/Icon';
 
 /**
  * Store-owner self-registration. Submits to AuthController::register,
@@ -9,9 +12,21 @@ import { useApiForm } from '@/lib/useApiForm';
  *
  * Phase B44 (owner decision 13): what the store sells is chosen here; when
  * Umar Techy has closed public sign-up, the page says whom to contact.
+ *
+ * UI-1: one page in two parts (your account, your store), so a mistake the
+ * server finds is always shown next to its field.
  */
 /** Phase B58: `partner` — the Umar Techy partner whose sign-up link brought this visitor. */
 type Props = { signupOpen?: boolean; businessCategories?: { value: string; label: string }[]; partner?: string | null };
+
+function Step({ n, title }: { n: number; title: string }) {
+  return (
+    <h2 className="flex items-center gap-2.5 text-sm font-semibold uppercase tracking-wide text-slate-500">
+      <span className="flex h-6 w-6 items-center justify-center rounded-full bg-indigo-600 text-xs font-bold text-white">{n}</span>
+      {title}
+    </h2>
+  );
+}
 
 export default function Register({ signupOpen = true, businessCategories = [], partner = null }: Props) {
   const { data, setData, post, processing, errors } = useApiForm({
@@ -31,93 +46,87 @@ export default function Register({ signupOpen = true, businessCategories = [], p
 
   if (!signupOpen) {
     return (
-      <div className="mx-auto mt-24 max-w-sm">
-        <h1 className="text-xl font-semibold">Get your online store</h1>
-        <p className="mt-4 text-sm text-gray-700">
+      <AuthShell title="Get your online store" footer={<>Already have a store? <a href="/login" className={authLink}>Sign in</a></>}>
+        <p className="text-sm text-slate-700">
           New stores are set up by the Umar Techy team. Contact us with what you sell and your budget, and we will create your store and send you an email to take it over.
         </p>
-        <a href="/login" className="mt-6 inline-block text-sm font-medium text-indigo-700 underline">Already have a store? Sign in</a>
-      </div>
+      </AuthShell>
     );
   }
 
+  const field = (id: 'name' | 'email' | 'store_name', label: string, type: string, autoComplete: string, placeholder?: string) => (
+    <div>
+      <label htmlFor={id} className="block text-sm font-medium text-slate-700">{label}</label>
+      <input id={id} type={type} value={data[id]} onChange={(e) => setData(id, e.target.value)} autoComplete={autoComplete} placeholder={placeholder}
+        aria-invalid={errors[id] ? true : undefined} aria-describedby={errors[id] ? `${id}-error` : undefined} className={authInput} />
+      <FieldError id={`${id}-error`} message={errors[id]} />
+    </div>
+  );
+
   return (
-    <div className="mx-auto mt-24 max-w-sm">
-      <h1 className="text-xl font-semibold">Create your store</h1>
+    <AuthShell
+      wide
+      title="Create your store"
+      subtitle="Start with a free trial. No card needed; you choose a package when you are ready."
+      footer={<>Already have a store? <a href="/login" className={authLink}>Sign in</a></>}
+    >
       {partner && (
-        <p className="mt-3 rounded-md border border-indigo-200 bg-indigo-50 px-3 py-2 text-sm text-indigo-900" role="status">
-          Recommended by <strong>{partner}</strong>, an Umar Techy partner. Your store gets their partner price.
+        <p className="mb-5 flex items-start gap-2 rounded-lg border border-indigo-200 bg-indigo-50 px-3.5 py-2.5 text-sm text-indigo-900" role="status">
+          <Icon name="handshake" size={18} className="mt-0.5" />
+          <span>Recommended by <strong>{partner}</strong>, an Umar Techy partner. Your store gets their partner price.</span>
         </p>
       )}
 
-      <form onSubmit={submit} className="mt-6 space-y-4">
-        {(
-          [
-            ['name', 'Your name', 'text', 'name'],
-            ['email', 'Email', 'email', 'username'],
-            ['password', 'Password', 'password', 'new-password'],
-            ['password_confirmation', 'Confirm password', 'password', 'new-password'],
-            ['store_name', 'Store name', 'text', 'organization'],
-          ] as const
-        ).map(([field, label, type, autoComplete]) => (
-          <div key={field}>
-            <label htmlFor={field} className="block text-sm font-medium text-gray-700">
-              {label}
-            </label>
-            <input
-              id={field}
-              type={type}
-              value={data[field]}
-              onChange={(e) => setData(field, e.target.value)}
-              className="mt-1 block w-full rounded border border-gray-300 px-3 py-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-600"
-              autoComplete={autoComplete}
-            />
-            {errors[field] && <p className="mt-1 text-sm text-red-600">{errors[field]}</p>}
+      <form onSubmit={submit} className="space-y-6" noValidate>
+        <fieldset className="space-y-4">
+          <legend className="sr-only">Your account</legend>
+          <Step n={1} title="Your account" />
+          {field('name', 'Your name', 'text', 'name')}
+          {field('email', 'Email', 'email', 'username', 'you@example.com')}
+          <div className="grid gap-4 sm:grid-cols-2">
+            <PasswordField id="password" label="Password" value={data.password} onChange={(v) => setData('password', v)} error={errors.password} autoComplete="new-password" strength />
+            <PasswordField id="password_confirmation" label="Confirm password" value={data.password_confirmation} onChange={(v) => setData('password_confirmation', v)} error={errors.password_confirmation} autoComplete="new-password" />
           </div>
-        ))}
+        </fieldset>
 
-        {businessCategories.length > 0 && (
-          <div>
-            <label htmlFor="business_category" className="block text-sm font-medium text-gray-700">
-              What will you sell?
-            </label>
-            <select
-              id="business_category"
-              value={data.business_category}
-              onChange={(e) => setData('business_category', e.target.value)}
-              className="mt-1 block w-full rounded border border-gray-300 px-3 py-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-600"
-            >
-              <option value="">Choose…</option>
-              {businessCategories.map((c) => (
-                <option key={c.value} value={c.value}>{c.label}</option>
-              ))}
-            </select>
-            {errors.business_category && <p className="mt-1 text-sm text-red-600">{errors.business_category}</p>}
-            {/* Phase B45 (Module 07 §105): start from the category's ready-made structure, or empty. */}
-            {data.business_category !== '' && (
-              <label className="mt-2 flex items-start gap-2 text-sm text-gray-700">
-                <input
-                  type="checkbox"
-                  checked={data.starter_template === '1'}
-                  onChange={(e) => setData('starter_template', e.target.checked ? '1' : '0')}
-                  className="mt-0.5 h-4 w-4 rounded border-gray-300 focus-visible:ring-2 focus-visible:ring-indigo-600"
-                />
-                <span>Set up categories and filters for what I sell (you can change everything later)</span>
-              </label>
-            )}
-          </div>
-        )}
+        <fieldset className="space-y-4 border-t border-slate-200 pt-6">
+          <legend className="sr-only">Your store</legend>
+          <Step n={2} title="Your store" />
+          {field('store_name', 'Store name', 'text', 'organization', 'For example: Lahore Fashion House')}
+          {businessCategories.length > 0 && (
+            <div>
+              <label htmlFor="business_category" className="block text-sm font-medium text-slate-700">What will you sell?</label>
+              <select id="business_category" value={data.business_category} onChange={(e) => setData('business_category', e.target.value)}
+                aria-invalid={errors.business_category ? true : undefined} className={authInput}>
+                <option value="">Choose…</option>
+                {businessCategories.map((c) => (
+                  <option key={c.value} value={c.value}>{c.label}</option>
+                ))}
+              </select>
+              <FieldError message={errors.business_category} />
+              {/* Phase B45 (Module 07 §105): start from the category's ready-made structure, or empty. */}
+              {data.business_category !== '' && (
+                <label className="mt-3 flex items-start gap-2.5 rounded-lg bg-slate-50 p-3 text-sm text-slate-700">
+                  <input
+                    type="checkbox"
+                    checked={data.starter_template === '1'}
+                    onChange={(e) => setData('starter_template', e.target.checked ? '1' : '0')}
+                    className="mt-0.5 h-4 w-4 rounded border-slate-300 text-indigo-600 focus-visible:ring-2 focus-visible:ring-indigo-600"
+                  />
+                  <span>Set up categories and filters for what I sell (you can change everything later)</span>
+                </label>
+              )}
+            </div>
+          )}
+        </fieldset>
 
-        {errors.form && <p className="text-sm text-red-600">{errors.form}</p>}
+        {errors.form && <FormAlert>{errors.form}</FormAlert>}
 
-        <button
-          type="submit"
-          disabled={processing}
-          className="w-full rounded bg-gray-900 py-2 text-white disabled:opacity-50"
-        >
-          {processing ? 'Creating your store…' : 'Create store'}
+        <button type="submit" disabled={processing} className={authButton}>
+          {processing ? <><Spinner />Creating your store…</> : <>Create store<Icon name="arrowRight" size={18} /></>}
         </button>
+        <p className="text-center text-xs text-slate-500">You become the owner of the store. You can invite your team later.</p>
       </form>
-    </div>
+    </AuthShell>
   );
 }

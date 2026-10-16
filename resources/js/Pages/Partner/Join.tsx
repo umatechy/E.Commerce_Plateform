@@ -1,6 +1,7 @@
 import { FormEvent, useEffect, useState } from 'react';
 import { AdminApiError, adminErrorMessage, adminFetch } from '@/lib/adminApi';
 import { forgetHash } from '@/lib/team';
+import AuthShell, { authButton, authInput } from '@/Components/Auth/AuthShell';
 
 type Invitation = { business_name: string; email: string; tier: string | null; account_exists: boolean; signed_in_as: string | null; signed_in_matches: boolean };
 
@@ -11,8 +12,8 @@ export function invitationToken(hash: string): string | null {
   return match ? match[1] : null;
 }
 
-const input = 'mt-1 block w-full rounded border border-gray-300 px-3 py-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-600';
-const button = 'w-full rounded bg-indigo-700 py-2.5 font-medium text-white hover:bg-indigo-800 disabled:opacity-50';
+const input = authInput;
+const button = authButton;
 
 /**
  * Phase B58 (Module 28 §92) — opened from the partner invitation email.
@@ -86,16 +87,14 @@ export default function Join() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50">
-      <div className="mx-auto max-w-md px-4 pt-20 pb-12">
-        <p className="text-sm font-semibold uppercase tracking-wider text-indigo-700">Umar Techy partner program</p>
-        <h1 className="mt-2 text-2xl font-semibold text-slate-900">Join as a partner</h1>
+    <AuthShell title="Join as a partner" subtitle="Umar Techy partner program">
+      <div>
 
         {fatal && <p className="mt-6 rounded border border-red-200 bg-red-50 p-3 text-sm text-red-700" role="alert">{fatal}</p>}
         {!fatal && !invitation && <p className="mt-6 text-slate-500" role="status">Checking your invitation…</p>}
 
         {invitation && (
-          <div className="mt-6 rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
+          <div>
             <p className="text-slate-700">
               <strong>{invitation.business_name}</strong> is invited to sell Umar Techy{invitation.tier ? <> as a <strong>{invitation.tier}</strong> partner</> : null}. Accept with the account of <strong>{invitation.email}</strong>.
             </p>
@@ -147,6 +146,6 @@ export default function Join() {
           </div>
         )}
       </div>
-    </div>
+    </AuthShell>
   );
 }

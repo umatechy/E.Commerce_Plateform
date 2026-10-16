@@ -15,6 +15,8 @@ const INFO: Record<string, SettingInfo> = {
     itemHint: 'One three-letter code per line, such as PKR or USD.',
     warning: 'A store keeps its currency even if you remove it here; only new choices are limited.',
   },
+  'platform.brand_name': { label: 'Platform name', description: 'Shown next to the logo on the home, sign-in and admin pages.' },
+  'platform.logo_url': { label: 'Platform logo', description: 'An https:// address or a path on this site (such as /brand/logo.svg) of an SVG, PNG, JPG or WEBP picture, about 40 pixels high. Empty: the built-in Umar Techy mark.' },
   'platform.default_locale': { label: 'Default language', description: 'Used by a store that has not chosen its own.', itemHint: 'A language code such as en.' },
   // Phase B44 (owner decision 13, Module 04 §14).
   'platform.self_signup_enabled': {

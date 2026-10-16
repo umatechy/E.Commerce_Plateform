@@ -1,5 +1,8 @@
 import { FormEvent, useState } from 'react';
 import { AdminApiError, adminErrorMessage, adminFetch } from '@/lib/adminApi';
+import AuthShell, { FormAlert, Spinner, authButton, authLink } from '@/Components/Auth/AuthShell';
+import PasswordField from '@/Components/Auth/PasswordField';
+import Icon from '@/Components/ui/Icon';
 
 /**
  * Phase B52 (Module 32 §7.5): choose a new password from the emailed link.
@@ -39,43 +42,37 @@ export default function ResetPassword() {
     }
   }
 
-  const input = 'mt-1 block w-full rounded border border-gray-300 px-3 py-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-600';
-
   return (
-    <div className="mx-auto mt-24 max-w-sm px-4">
-      <h1 className="text-xl font-semibold">Choose a new password</h1>
+    <AuthShell
+      title={done ? 'Password changed' : 'Choose a new password'}
+      subtitle={!done && !broken ? <>For <strong className="break-all text-slate-800">{email}</strong>. At least 10 characters, with letters.</> : undefined}
+      footer={<a href="/login" className={authLink}>Back to sign in</a>}
+    >
       {done ? (
-        <div role="status" className="mt-4 space-y-3 text-sm text-gray-700">
+        <div role="status" className="space-y-4 text-sm text-slate-700">
+          <span className="flex h-12 w-12 items-center justify-center rounded-full bg-emerald-50 text-emerald-600"><Icon name="checkCircle" size={26} /></span>
           <p>Your password was changed and you were signed out everywhere.</p>
-          <p><a href="/login?ended=reset" className="font-medium text-indigo-700 underline">Sign in</a></p>
+          <a href="/login?ended=reset" className={authButton}>Sign in</a>
         </div>
       ) : broken ? (
-        <div role="alert" className="mt-4 space-y-3 text-sm text-gray-700">
+        <div role="alert" className="space-y-3 text-sm text-slate-700">
           <p>This link is not complete. Open the link from the email again, or ask for a new one.</p>
-          <p><a href="/forgot-password" className="text-indigo-700 underline">Ask for a new link</a></p>
+          <p><a href="/forgot-password" className={authLink}>Ask for a new link</a></p>
         </div>
       ) : (
-        <form onSubmit={submit} className="mt-6 space-y-4" noValidate>
-          <p className="text-sm text-gray-600">For <strong className="break-all">{email}</strong>. At least 10 characters, with letters.</p>
-          <div>
-            <label htmlFor="password" className="block text-sm font-medium text-gray-700">New password</label>
-            <input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} autoComplete="new-password" autoFocus className={input} />
-            {errors.password && <p role="alert" className="mt-1 text-sm text-red-600">{errors.password}</p>}
-          </div>
-          <div>
-            <label htmlFor="password_confirmation" className="block text-sm font-medium text-gray-700">New password again</label>
-            <input id="password_confirmation" type="password" value={confirmation} onChange={(e) => setConfirmation(e.target.value)} autoComplete="new-password" className={input} />
-          </div>
+        <form onSubmit={submit} className="space-y-5" noValidate>
+          <PasswordField id="password" label="New password" value={password} onChange={setPassword} error={errors.password} autoComplete="new-password" strength autoFocus />
+          <PasswordField id="password_confirmation" label="New password again" value={confirmation} onChange={setConfirmation} error={errors.password_confirmation} autoComplete="new-password" />
           {errors.form && (
-            <p role="alert" className="text-sm text-red-600">
+            <FormAlert>
               {errors.form} <a href="/forgot-password" className="underline">Ask for a new link</a>
-            </p>
+            </FormAlert>
           )}
-          <button type="submit" disabled={processing || password === '' || confirmation === ''} className="w-full rounded bg-gray-900 py-2 text-white disabled:opacity-50">
-            {processing ? 'Saving…' : 'Save new password'}
+          <button type="submit" disabled={processing || password === '' || confirmation === ''} className={authButton}>
+            {processing ? <><Spinner />Saving…</> : 'Save new password'}
           </button>
         </form>
       )}
-    </div>
+    </AuthShell>
   );
 }

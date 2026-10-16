@@ -1,10 +1,11 @@
 import { FormEvent, useEffect, useState } from 'react';
 import { AdminApiError, adminErrorMessage, adminFetch } from '@/lib/adminApi';
 import { forgetHash, tokenFromHash } from '@/lib/team';
+import AuthShell, { authButton, authInput } from '@/Components/Auth/AuthShell';
 
 type Invitation = { store: string; role: string; email: string; has_account: boolean; signed_in_as: string | null; expires_at: string };
 
-const input = 'mt-1 block w-full rounded border border-gray-300 px-3 py-2';
+const input = authInput;
 
 /**
  * Phase G1 (Module 02 §18) — opened from the invitation email. The token
@@ -82,15 +83,14 @@ export default function AcceptInvitation({ invitationId }: { invitationId: strin
   }
 
   return (
-    <div className="mx-auto mt-24 max-w-md px-4">
-      <h1 className="text-xl font-semibold">Join a team</h1>
+    <AuthShell title="Join a team">
 
       {fatal && <p className="mt-4 rounded border border-red-200 bg-red-50 p-3 text-sm text-red-700" role="alert">{fatal}</p>}
       {!fatal && !invitation && <p className="mt-4 text-gray-500">Checking your invitation…</p>}
 
       {invitation && (
         <>
-          <p className="mt-4 text-gray-700">
+          <p className="text-slate-700">
             You are invited to join <strong>{invitation.store}</strong> as <strong>{invitation.role}</strong> ({invitation.email}).
           </p>
 
@@ -99,7 +99,7 @@ export default function AcceptInvitation({ invitationId }: { invitationId: strin
               You are signed in as {invitation.signed_in_as}. This invitation is for {invitation.email}. Sign out, then open the link again.
             </p>
           ) : invitation.signed_in_as ? (
-            <button type="button" disabled={working} onClick={() => void acceptSignedIn()} className="mt-6 w-full rounded bg-gray-900 py-2 text-white disabled:opacity-50">
+            <button type="button" disabled={working} onClick={() => void acceptSignedIn()} className={`mt-6 ${authButton}`}>
               {working ? 'Joining…' : `Join ${invitation.store}`}
             </button>
           ) : invitation.has_account ? (
@@ -110,7 +110,7 @@ export default function AcceptInvitation({ invitationId }: { invitationId: strin
                 <input type="password" required autoComplete="current-password" value={fields.password} onChange={(e) => setFields({ ...fields, password: e.target.value })} className={input} />
                 {errors.email && <span className="mt-1 block text-sm text-red-600">{errors.email}</span>}
               </label>
-              <button type="submit" disabled={working} className="w-full rounded bg-gray-900 py-2 text-white disabled:opacity-50">
+              <button type="submit" disabled={working} className={authButton}>
                 {working ? 'Signing in…' : 'Sign in and join'}
               </button>
             </form>
@@ -130,7 +130,7 @@ export default function AcceptInvitation({ invitationId }: { invitationId: strin
                 <span className="text-sm text-gray-700">Repeat the password</span>
                 <input type="password" required autoComplete="new-password" value={fields.password_confirmation} onChange={(e) => setFields({ ...fields, password_confirmation: e.target.value })} className={input} />
               </label>
-              <button type="submit" disabled={working} className="w-full rounded bg-gray-900 py-2 text-white disabled:opacity-50">
+              <button type="submit" disabled={working} className={authButton}>
                 {working ? 'Creating your account…' : 'Create account and join'}
               </button>
             </form>
@@ -139,6 +139,6 @@ export default function AcceptInvitation({ invitationId }: { invitationId: strin
           {errors.form && <p className="mt-4 text-sm text-red-600" role="alert">{errors.form}</p>}
         </>
       )}
-    </div>
+    </AuthShell>
   );
 }

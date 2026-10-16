@@ -30,6 +30,10 @@ final class SettingRegistry
                 key: 'platform.supported_currencies', scope: SettingScope::Platform, type: SettingType::StringArray,
                 default: Currencies::SUPPORTED, // owner decision 2026-10-03: PKR first, then USD, EUR, GBP, AED, SAR
             ),
+            // UI-1 (owner, 2026-10-16): the platform's name and logo on the public, sign-in and admin pages.
+            // No logo address: the built-in Umar Techy mark is shown.
+            'platform.brand_name' => new SettingDefinition(key: 'platform.brand_name', scope: SettingScope::Platform, type: SettingType::String, default: 'Umar Techy'),
+            'platform.logo_url' => new SettingDefinition(key: 'platform.logo_url', scope: SettingScope::Platform, type: SettingType::String, default: null),
             'platform.default_locale' => new SettingDefinition(
                 key: 'platform.default_locale', scope: SettingScope::Platform, type: SettingType::String,
                 default: 'en',

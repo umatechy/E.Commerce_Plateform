@@ -1,5 +1,9 @@
 import { FormEvent, useState } from 'react';
 import { AdminApiError, adminErrorMessage, adminFetch } from '@/lib/adminApi';
+import AuthShell, { FieldError, FormAlert, Spinner, authButton, authInput, authLink } from '@/Components/Auth/AuthShell';
+import PasswordField from '@/Components/Auth/PasswordField';
+import CodeField from '@/Components/Auth/CodeField';
+import Icon from '@/Components/ui/Icon';
 
 /**
  * ADR-002 Surface A: submits to the Sanctum SPA session-login endpoint.
@@ -12,6 +16,9 @@ import { AdminApiError, adminErrorMessage, adminFetch } from '@/lib/adminApi';
  * An account with two-step sign-in (Module 32 §8) answers the password
  * with "mfa_required"; the form then asks for the code. The server
  * remembers who is half-way through — nothing about it is kept here.
+ *
+ * UI-1: the sign-in frame, show/hide password, the code as six boxes (a
+ * pasted code is sent at once) and a recovery code as a fallback.
  */
 type Errors = Partial<Record<'email' | 'password' | 'code' | 'form', string>>;
 
@@ -30,6 +37,7 @@ export default function Login({ intended }: { intended?: string | null }) {
   const [password, setPassword] = useState('');
   const [code, setCode] = useState('');
   const [needsCode, setNeedsCode] = useState(false);
+  const [recovery, setRecovery] = useState(false);
   const [processing, setProcessing] = useState(false);
   const [errors, setErrors] = useState<Errors>({});
 
@@ -61,12 +69,12 @@ export default function Login({ intended }: { intended?: string | null }) {
     }
   }
 
-  async function submitCode(e: FormEvent) {
-    e.preventDefault();
+  async function sendCode(value: string) {
+    if (processing) return;
     setProcessing(true);
     setErrors({});
     try {
-      await adminFetch('/auth/login/mfa', { method: 'POST', body: { code } });
+      await adminFetch('/auth/login/mfa', { method: 'POST', body: { code: value } });
       enter();
     } catch (error) {
       // The challenge timed out: start again from the password.
@@ -77,6 +85,7 @@ export default function Login({ intended }: { intended?: string | null }) {
         setErrors({ form: 'That took too long. Sign in again.' });
         setProcessing(false);
       } else {
+        setCode('');
         fail(error);
       }
     }
@@ -84,85 +93,71 @@ export default function Login({ intended }: { intended?: string | null }) {
 
   if (needsCode) {
     return (
-      <div className="mx-auto mt-24 max-w-sm">
-        <h1 className="text-xl font-semibold">Enter your code</h1>
-        <p className="mt-2 text-sm text-gray-600">Open your authenticator app and enter the 6-digit code. You can also use a recovery code.</p>
-
-        <form onSubmit={submitCode} className="mt-6 space-y-4">
+      <AuthShell
+        title="Two-step sign-in"
+        subtitle={recovery ? 'Enter one of the recovery codes you saved when you turned on two-step sign-in. Each works once.' : 'Open your authenticator app and enter the 6-digit code for this account. The code changes every 30 seconds.'}
+        footer={
+          <button type="button" className={authLink} onClick={() => { setNeedsCode(false); setCode(''); setErrors({}); setRecovery(false); }}>
+            <span className="inline-flex items-center gap-1"><Icon name="arrowLeft" size={16} />Use another account</span>
+          </button>
+        }
+      >
+        <form onSubmit={(e) => { e.preventDefault(); void sendCode(code); }} className="space-y-5" noValidate>
           <div>
-            <label htmlFor="code" className="block text-sm font-medium text-gray-700">
-              Code
-            </label>
-            <input
-              id="code"
-              type="text"
-              inputMode="numeric"
-              value={code}
-              onChange={(e) => setCode(e.target.value)}
-              className="mt-1 block w-full rounded border border-gray-300 px-3 py-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-600"
-              autoComplete="one-time-code"
-              autoFocus
-            />
-            {errors.code && <p className="mt-1 text-sm text-red-600">{errors.code}</p>}
+            <label htmlFor="code" className={recovery ? 'block text-sm font-medium text-slate-700' : 'sr-only'}>{recovery ? 'Recovery code' : 'Code'}</label>
+            {recovery ? (
+              <input id="code" type="text" value={code} onChange={(e) => setCode(e.target.value)} autoComplete="off" autoFocus spellCheck={false}
+                aria-invalid={errors.code ? true : undefined} aria-describedby={errors.code ? 'code-error' : undefined} className={`${authInput} font-mono tracking-wider`} />
+            ) : (
+              <CodeField id="code" value={code} onChange={setCode} onComplete={(v) => void sendCode(v)} invalid={!!errors.code} describedBy={errors.code ? 'code-error' : undefined} />
+            )}
+            <FieldError id="code-error" message={errors.code} />
           </div>
 
-          {errors.form && <p className="text-sm text-red-600">{errors.form}</p>}
+          {errors.form && <FormAlert>{errors.form}</FormAlert>}
 
-          <button type="submit" disabled={processing} className="w-full rounded bg-gray-900 py-2 text-white disabled:opacity-50">
-            {processing ? 'Checking…' : 'Continue'}
+          <button type="submit" disabled={processing || code.trim() === ''} className={authButton}>
+            {processing ? <><Spinner />Checking…</> : 'Continue'}
           </button>
+          <p className="text-center text-sm">
+            <button type="button" className={authLink} onClick={() => { setRecovery((r) => !r); setCode(''); setErrors({}); }}>
+              {recovery ? 'Use the code from my app' : 'Lost your phone? Use a recovery code'}
+            </button>
+          </p>
         </form>
-      </div>
+      </AuthShell>
     );
   }
 
   return (
-    <div className="mx-auto mt-24 max-w-sm">
-      <h1 className="text-xl font-semibold">Sign in</h1>
-      {ended && (
-        <p role="status" className="mt-3 rounded border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">{ENDED[ended] ?? ENDED.revoked}</p>
-      )}
-
-      <form onSubmit={submitPassword} className="mt-6 space-y-4">
+    <AuthShell
+      title="Welcome back"
+      subtitle="Sign in to manage your store."
+      footer={<>New here? <a href="/register" className={authLink}>Create your store</a></>}
+    >
+      <form onSubmit={submitPassword} className="space-y-5" noValidate>
+        {ended && <FormAlert tone="info">{ENDED[ended] ?? ENDED.revoked}</FormAlert>}
         <div>
-          <label htmlFor="email" className="block text-sm font-medium text-gray-700">
-            Email
-          </label>
-          <input
-            id="email"
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className="mt-1 block w-full rounded border border-gray-300 px-3 py-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-600"
-            autoComplete="username"
-          />
-          {errors.email && <p className="mt-1 text-sm text-red-600">{errors.email}</p>}
+          <label htmlFor="email" className="block text-sm font-medium text-slate-700">Email</label>
+          <input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} autoComplete="username" autoFocus
+            aria-invalid={errors.email ? true : undefined} aria-describedby={errors.email ? 'email-error' : undefined} className={authInput} placeholder="you@example.com" />
+          <FieldError id="email-error" message={errors.email} />
         </div>
 
         <div>
-          <label htmlFor="password" className="block text-sm font-medium text-gray-700">
-            Password
-          </label>
-          <input
-            id="password"
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            className="mt-1 block w-full rounded border border-gray-300 px-3 py-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-600"
-            autoComplete="current-password"
-          />
-          {errors.password && <p className="mt-1 text-sm text-red-600">{errors.password}</p>}
+          <PasswordField id="password" label="Password" value={password} onChange={setPassword} error={errors.password} autoComplete="current-password" />
+          <p className="mt-2 text-right text-sm"><a href="/forgot-password" className={authLink}>Forgot your password?</a></p>
         </div>
 
-        {errors.form && <p className="text-sm text-red-600">{errors.form}</p>}
+        {errors.form && <FormAlert>{errors.form}</FormAlert>}
 
-        <button type="submit" disabled={processing} className="w-full rounded bg-gray-900 py-2 text-white disabled:opacity-50">
-          {processing ? 'Signing in…' : 'Sign in'}
+        <button type="submit" disabled={processing} className={authButton}>
+          {processing ? <><Spinner />Signing in…</> : 'Sign in'}
         </button>
-        <p className="text-center text-sm">
-          <a href="/forgot-password" className="text-indigo-700 underline">Forgot your password?</a>
+        <p className="flex items-center justify-center gap-1.5 text-xs text-slate-500">
+          <Icon name="lock" size={14} />Protected with two-step sign-in for store owners
         </p>
       </form>
-    </div>
+    </AuthShell>
   );
 }

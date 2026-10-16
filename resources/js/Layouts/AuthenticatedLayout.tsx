@@ -1,3 +1,4 @@
+import BrandLogo from '@/Components/Brand';
 import { PropsWithChildren, useEffect, useMemo, useRef, useState } from 'react';
 import { Link, usePage } from '@inertiajs/react';
 import { adminErrorMessage, adminFetch } from '@/lib/adminApi';
@@ -228,8 +229,8 @@ export default function AuthenticatedLayout({ children }: PropsWithChildren) {
 
   const brand = (
     <div className="flex h-14 items-center border-b border-slate-200 px-5">
-      <Link href="/" className={`rounded font-semibold text-slate-900 ${FOCUS_RING}`}>
-        Umar Techy
+      <Link href="/" className={`rounded ${FOCUS_RING}`}>
+        <BrandLogo size={30} />
       </Link>
     </div>
   );
@@ -270,8 +271,8 @@ export default function AuthenticatedLayout({ children }: PropsWithChildren) {
               </button>
             )}
             {(collapsed || !auth.user) && (
-              <Link href="/" className={`hidden rounded font-semibold sm:inline ${FOCUS_RING}`}>
-                Umar Techy
+              <Link href="/" className={`hidden rounded sm:inline ${FOCUS_RING}`}>
+                <BrandLogo size={28} />
               </Link>
             )}
             <StoreSwitcher auth={auth} />

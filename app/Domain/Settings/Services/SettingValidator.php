@@ -95,13 +95,21 @@ final class SettingValidator
         }
 
         // Phase B44: business information and the trial package.
-        $max = ['shipping.tracking_url_template' => 255, 'payments.bank.account_title' => 120, 'payments.bank.bank_name' => 120, 'payments.bank.account_number' => 40, 'payments.bank.instructions' => 500, 'store.legal_name' => 200, 'store.contact_email' => 191, 'store.contact_phone' => 32, 'tax.label' => 40, 'billing.tax_label' => 40, 'billing.issuer_name' => 120, 'billing.issuer_details' => 500][$definition->key] ?? null; // tax.label: Phase B46
+        $max = ['shipping.tracking_url_template' => 255, 'payments.bank.account_title' => 120, 'payments.bank.bank_name' => 120, 'payments.bank.account_number' => 40, 'payments.bank.instructions' => 500, 'store.legal_name' => 200, 'store.contact_email' => 191, 'store.contact_phone' => 32, 'tax.label' => 40, 'billing.tax_label' => 40, 'billing.issuer_name' => 120, 'billing.issuer_details' => 500, 'platform.brand_name' => 60, 'platform.logo_url' => 500][$definition->key] ?? null; // tax.label: Phase B46
         if ($max !== null && mb_strlen($normalized) > $max) {
             throw new InvalidSettingValueException("At most {$max} characters.");
         }
         // Phase B49: a courier tracking link — HTTPS, with the place for the number.
         if ($definition->key === 'shipping.tracking_url_template' && (! str_starts_with($normalized, 'https://') || ! str_contains($normalized, '{tracking}') || filter_var(str_replace('{tracking}', 'X', $normalized), FILTER_VALIDATE_URL) === false)) {
             throw new InvalidSettingValueException('Enter an https:// address with {tracking} where the tracking number goes.');
+        }
+        // UI-1: a logo is an https:// address or a path on this site, of a picture.
+        if ($definition->key === 'platform.logo_url') {
+            $isPath = str_starts_with($normalized, '/') && ! str_starts_with($normalized, '//');
+            $isHttps = str_starts_with($normalized, 'https://') && filter_var($normalized, FILTER_VALIDATE_URL) !== false;
+            if ((! $isPath && ! $isHttps) || preg_match('/\.(svg|png|jpe?g|webp)(\?.*)?$/i', $normalized) !== 1) {
+                throw new InvalidSettingValueException('Enter an https:// address or a path such as /brand/logo.svg, of an SVG, PNG, JPG or WEBP picture.');
+            }
         }
         if ($definition->key === 'store.contact_email' && filter_var($normalized, FILTER_VALIDATE_EMAIL) === false) {
             throw new InvalidSettingValueException('Value must be an email address.');

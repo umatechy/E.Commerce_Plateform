@@ -78,7 +78,16 @@ Route::prefix('shop/{storeSlug}')
 // Signed in: the admin home with links to every built admin page.
 // Signed out: the landing page with sign-in and registration links.
 Route::get('/', function (Request $request) {
-    return Inertia::render($request->user() ? 'Dashboard' : 'Welcome');
+    if ($request->user()) {
+        return Inertia::render('Dashboard');
+    }
+
+    // UI-1: the public home page — the packages as Umar Techy priced them, and whether sign-up is open.
+    return Inertia::render('Welcome', [
+        'plans' => \App\Domain\Packages\Support\PublicPlans::all(),
+        'trialDays' => (int) app(\App\Domain\Settings\Services\ConfigService::class)->get('platform.trial_days'),
+        'signupOpen' => app(\App\Domain\Settings\Services\ConfigService::class)->get('platform.self_signup_enabled') !== false,
+    ]);
 })->middleware('required.mfa');
 
 // 'required.mfa': a Store Owner without MFA is sent to /security to enrol.
