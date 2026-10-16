@@ -11,9 +11,10 @@ import { useApi, usePagedApi } from '@/lib/useApi';
 import { useAction } from '@/lib/useForm';
 import { adminFetch } from '@/lib/adminApi';
 import { money } from '@/lib/money';
-import { formatDateTime } from '@/lib/datetime';
+import { displayTimezoneName, formatDateTime } from '@/lib/datetime';
 import { DATE_FILTERS, USAGE_LABELS, labelFor } from '@/lib/labels';
-import { navigationFor } from '@/lib/adminNav';
+import Icon, { type IconName } from '@/Components/ui/Icon';
+import BarChart from '@/Components/ui/BarChart';
 
 /**
  * The Store Admin home (Module 22 §10 "Store Dashboard").
@@ -47,7 +48,7 @@ type Setup = { launched: boolean; availability: string; checks: SetupCheck[]; pr
 
 const SETUP_GROUPS: Record<string, string> = { essentials: 'Essentials', operations: 'Running your store', growth: 'Growing it' };
 
-type OrderRow = { id: string; order_number: string; status: string; grand_total_minor: number; currency: string; created_at: string };
+type OrderRow = { id: string; order_number: string; status: string; grand_total_minor: number; currency: string; created_at: string; guest_name?: string | null; customer?: { name: string } | null };
 type Health = { status: HealthStatus; checked_at: string; checks: HealthCheck[] };
 type Usage = Record<string, { limit: number | null; current: number; unlimited: boolean }>;
 
@@ -90,14 +91,93 @@ function change(percent: number | null | undefined): string | undefined {
   return `${percent > 0 ? '+' : ''}${percent}% against the period before`;
 }
 
-function SalesSection({ currency }: { currency: string }) {
+/** A small figure in the second row: what needs doing, at a glance. */
+function MiniStat({ label, value, href, icon, tone = 'slate' }: { label: string; value: string | number; href?: string; icon: IconName; tone?: 'slate' | 'amber' | 'emerald' }) {
+  const colour = { slate: 'bg-slate-100 text-slate-600', amber: 'bg-amber-50 text-amber-700', emerald: 'bg-emerald-50 text-emerald-700' }[tone];
+  const body = (
+    <>
+      <span className={`flex h-9 w-9 flex-none items-center justify-center rounded-lg ${colour}`}><Icon name={icon} size={18} /></span>
+      <span className="min-w-0">
+        <span className="block truncate text-xs text-slate-500">{label}</span>
+        <span className="block text-lg font-semibold text-slate-900">{value}</span>
+      </span>
+    </>
+  );
+  const box = 'flex items-center gap-3 rounded-xl border border-slate-200 bg-white px-4 py-3 shadow-sm';
+
+  return href ? <Link href={href} className={`${box} hover:border-indigo-300 ${FOCUS_RING}`}>{body}</Link> : <div className={box}>{body}</div>;
+}
+
+type SalesDay = { date: string; order_count: number; revenue_minor: number };
+
+/** A moment as the store's calendar day (YYYY-MM-DD), in the store's timezone. */
+function storeDay(iso: string): string | null {
+  const moment = new Date(iso);
+  if (Number.isNaN(moment.getTime())) return null;
+
+  return new Intl.DateTimeFormat('en-CA', { timeZone: displayTimezoneName(), year: 'numeric', month: '2-digit', day: '2-digit' }).format(moment);
+}
+
+/**
+ * Every day of the period up to today (or, without a period, from the first
+ * to the last day with sales). A day without orders is a real zero.
+ */
+function fillDays(days: SalesDay[], period?: { start: string; end: string }): SalesDay[] {
+  const today = storeDay(new Date().toISOString()) ?? '9999-12-31';
+  const start = period ? storeDay(period.start) : null;
+  const end = period ? storeDay(period.end) : null;
+  // Without a usable period: from the first to the last day with sales.
+  const from = start ?? days[0]?.date;
+  const to = end ? [end, today].sort()[0] : days[days.length - 1]?.date;
+  if (!from || !to) return [];
+  const byDate = new Map(days.map((d) => [d.date, d]));
+  const out: SalesDay[] = [];
+  const cursor = new Date(`${from}T00:00:00Z`);
+  const last = new Date(`${to}T00:00:00Z`);
+  while (cursor <= last && out.length < 400) {
+    const key = cursor.toISOString().slice(0, 10);
+    out.push(byDate.get(key) ?? { date: key, order_count: 0, revenue_minor: 0 });
+    cursor.setUTCDate(cursor.getUTCDate() + 1);
+  }
+
+  return out;
+}
+
+function SalesChart({ range, currency, period }: { range: string; currency: string; period?: { start: string; end: string } }) {
+  const state = useApi<{ data: SalesDay[] }>('/reports/sales', { date_filter: range });
+  // Revenue figures need the financial reports permission; without it the chart is left out.
+  if (state.errorStatus === 403) return null;
+
+  return (
+    <Card title="Revenue by day" actions={<ButtonLink href="/reports" size="sm">Reports</ButtonLink>}>
+      {state.error ? (
+        <ErrorPanel message={state.error} onRetry={state.reload} />
+      ) : state.data === null ? (
+        <Skeleton lines={4} />
+      ) : state.data.data.length === 0 ? (
+        <p className="py-8 text-center text-sm text-slate-500">No sales in this period yet.</p>
+      ) : (
+        <BarChart
+          title="Revenue by day"
+          points={fillDays(state.data.data, period).map((d) => ({
+            label: new Date(`${d.date}T00:00:00Z`).toLocaleDateString(undefined, { day: 'numeric', month: 'short', timeZone: 'UTC' }),
+            value: d.revenue_minor,
+            display: `${money(d.revenue_minor, currency)} · ${d.order_count} order${d.order_count === 1 ? '' : 's'}`,
+          }))}
+        />
+      )}
+    </Card>
+  );
+}
+
+function SalesSection({ currency, financial }: { currency: string; financial: boolean }) {
   const [range, setRange] = useState('this_month');
   const state = useApi<{ data: Comparison }>('/dashboard', { date_filter: range, compare: 1 });
 
   return (
-    <section aria-labelledby="sales-heading">
-      <div className="mb-3 flex flex-wrap items-end justify-between gap-3">
-        <h2 id="sales-heading" className="text-sm font-semibold text-slate-900">
+    <section aria-labelledby="sales-heading" className="space-y-4">
+      <div className="flex flex-wrap items-end justify-between gap-3">
+        <h2 id="sales-heading" className="text-base font-semibold text-slate-900">
           Sales
         </h2>
         <div className="w-44">
@@ -109,38 +189,105 @@ function SalesSection({ currency }: { currency: string }) {
           const now = data.current;
 
           return (
-            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-              {now.revenue_minor !== undefined && <StatCard label="Revenue" value={money(now.revenue_minor, currency)} hint={change(data.revenue_change_percent)} href="/reports" />}
-              <StatCard label="Orders" value={now.order_count} hint={change(data.order_count_change_percent)} href="/orders" />
-              {now.average_order_value_minor !== undefined && (
-                <StatCard label="Average order" value={now.average_order_value_minor === null ? null : money(now.average_order_value_minor, currency)} />
-              )}
-              <StatCard label="New customers" value={now.new_customers} href="/customers" />
-              <StatCard label="Waiting for confirmation" value={now.pending_orders} href="/orders?status=pending_confirmation" />
-              <StatCard label="Completed orders" value={now.completed_orders} />
-              {now.collected_amount_minor !== undefined && <StatCard label="Payments collected" value={money(now.collected_amount_minor, currency)} href="/payments" />}
-              <StatCard label="Low on stock" value={now.low_stock_products} hint="Stock records at or under their reorder point, now." href="/inventory?stock=low" />
+            <div className="space-y-3">
+              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                {now.revenue_minor !== undefined && <StatCard icon="wallet" label="Revenue" value={money(now.revenue_minor, currency)} trend={data.revenue_change_percent} hint={change(data.revenue_change_percent)} href="/reports" />}
+                <StatCard icon="cart" label="Orders" value={now.order_count} trend={data.order_count_change_percent} hint={change(data.order_count_change_percent)} href="/orders" />
+                {now.average_order_value_minor !== undefined && (
+                  <StatCard icon="chart" label="Average order" value={now.average_order_value_minor === null ? null : money(now.average_order_value_minor, currency)} />
+                )}
+                <StatCard icon="users" label="New customers" value={now.new_customers} href="/customers" />
+              </div>
+              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                <MiniStat icon="refresh" tone={now.pending_orders > 0 ? 'amber' : 'slate'} label="Waiting for confirmation" value={now.pending_orders} href="/orders?status=pending_confirmation" />
+                <MiniStat icon="checkCircle" tone="emerald" label="Completed orders" value={now.completed_orders} />
+                {now.collected_amount_minor !== undefined && <MiniStat icon="cash" label="Payments collected" value={money(now.collected_amount_minor, currency)} href="/payments" />}
+                <MiniStat icon="box" tone={now.low_stock_products > 0 ? 'amber' : 'slate'} label="Low on stock now" value={now.low_stock_products} href="/inventory?stock=low" />
+              </div>
             </div>
           );
         }}
       </QueryState>
-      <p className="mt-2 text-xs text-slate-500">Amounts are shown in your store currency ({currency}). Days follow your store's timezone.</p>
+      {financial && <SalesChart range={range} currency={currency} period={state.data?.data.current.period} />}
+      <p className="text-xs text-slate-500">Amounts are shown in your store currency ({currency}). Days follow your store's timezone.</p>
     </section>
+  );
+}
+
+/** UI-2: progress as a ring (the same figure the server sent). */
+function ProgressRing({ percent }: { percent: number }) {
+  const r = 26;
+  const c = 2 * Math.PI * r;
+
+  return (
+    <div className="relative h-16 w-16 flex-none" role="progressbar" aria-valuenow={percent} aria-valuemin={0} aria-valuemax={100} aria-label="Setup progress">
+      <svg viewBox="0 0 64 64" className="h-16 w-16 -rotate-90" aria-hidden="true">
+        <circle cx="32" cy="32" r={r} fill="none" stroke="#e0e7ff" strokeWidth="7" />
+        <circle cx="32" cy="32" r={r} fill="none" stroke="#4f46e5" strokeWidth="7" strokeLinecap="round" strokeDasharray={c} strokeDashoffset={c * (1 - percent / 100)} />
+      </svg>
+      <span className="absolute inset-0 flex items-center justify-center text-sm font-bold text-slate-900">{percent}%</span>
+    </div>
   );
 }
 
 function SetupSection() {
   const state = useApi<{ data: Setup }>('/storefront/setup');
   const { busy, run } = useAction();
+  const [showDone, setShowDone] = useState(false);
 
   if (state.error) return state.errorStatus === 403 ? null : <ErrorPanel message={state.error} onRetry={state.reload} />;
   if (state.data === null) return <Skeleton lines={3} />;
 
   const setup = state.data.data;
   const open = setup.checks.filter((check) => !check.done);
+  const done = setup.checks.filter((check) => check.done);
   if (setup.launched && open.length === 0) return null;
 
   const blocked = setup.checks.some((check) => check.required && !check.done);
+  const blocking = setup.blocking ?? [];
+
+  const row = (check: SetupCheck) => (
+    <li key={check.key} className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1 py-2.5">
+      <span className="flex min-w-0 items-start gap-2.5">
+        <span className={`mt-0.5 flex h-5 w-5 flex-none items-center justify-center rounded-full ${check.done ? 'bg-emerald-500 text-white' : 'border-2 border-slate-300'}`} aria-hidden="true">
+          {check.done && <Icon name="check" size={12} strokeWidth={3} />}
+        </span>
+        <span className={check.done ? 'text-slate-500' : 'text-slate-800'}>
+          <span className="sr-only">{check.done ? 'Done: ' : 'To do: '}</span>
+          {check.message}{' '}
+          {check.required ? <span className="text-xs font-medium text-amber-700">(required)</span> : <span className="text-xs text-slate-500">(optional)</span>}
+        </span>
+      </span>
+      {!check.done && (
+        <span className="ml-7 flex items-center gap-3">
+          {SETUP_HELP[check.key] && (
+            <Link href={`/help/articles/${SETUP_HELP[check.key]}`} className={`rounded text-sm text-slate-500 hover:text-slate-800 hover:underline ${FOCUS_RING}`}>
+              How?<span className="sr-only"> Help with: {check.message}</span>
+            </Link>
+          )}
+          {check.key === 'payment' ? (
+            <Button
+              size="sm"
+              busy={busy === 'first-invoice'}
+              onClick={() =>
+                run('first-invoice', () => adminFetch('/billing/first-invoice', { method: 'POST' }), { success: 'Your first invoice is ready under Billing.' }).then(
+                  (result) => result && router.visit('/billing'),
+                )
+              }
+            >
+              Get my first invoice
+            </Button>
+          ) : (
+            SETUP_LINK[check.key] && (
+              <Link href={SETUP_LINK[check.key]} className={`inline-flex items-center gap-1 rounded-md border border-slate-300 px-2.5 py-1 text-sm font-medium text-slate-700 hover:bg-slate-50 ${FOCUS_RING}`}>
+                Open<Icon name="arrowRight" size={14} />
+              </Link>
+            )
+          )}
+        </span>
+      )}
+    </li>
+  );
 
   return (
     <Card
@@ -161,69 +308,42 @@ function SetupSection() {
         )
       }
     >
-      {setup.progress && (
-        <div className="mb-4">
-          <div className="flex justify-between text-sm">
-            <span className="font-medium">{setup.progress.percent}% done</span>
-            <span className="text-slate-600">{setup.progress.done} of {setup.progress.total} steps</span>
+      <div className="flex flex-col gap-5 sm:flex-row sm:items-start">
+        {setup.progress && (
+          <div className="flex items-center gap-4 sm:w-52 sm:flex-col sm:items-start">
+            <ProgressRing percent={setup.progress.percent} />
+            <div className="text-sm">
+              <p className="font-semibold text-slate-900">{setup.progress.done} of {setup.progress.total} steps done</p>
+              {!setup.launched && blocking.length > 0 ? (
+                <p className="mt-1 text-amber-800">Still needed before you can launch: {blocking.length} required step{blocking.length === 1 ? '' : 's'}.</p>
+              ) : (
+                <p className="mt-1 text-slate-500">{open.length} step{open.length === 1 ? '' : 's'} left</p>
+              )}
+            </div>
           </div>
-          <div className="mt-1 h-2 rounded-full bg-slate-100" role="progressbar" aria-valuenow={setup.progress.percent} aria-valuemin={0} aria-valuemax={100} aria-label="Setup progress">
-            <div className="h-2 rounded-full bg-indigo-600" style={{ width: `${setup.progress.percent}%` }} />
-          </div>
-          {!setup.launched && (setup.blocking ?? []).length > 0 && (
-            <p className="mt-2 text-sm text-amber-800">Still needed before you can launch: {(setup.blocking ?? []).length} required step{(setup.blocking ?? []).length === 1 ? '' : 's'}.</p>
+        )}
+        <div className="min-w-0 flex-1">
+          {Object.entries(SETUP_GROUPS).map(([group, title]) => {
+            const checks = open.filter((check) => (check.group ?? 'essentials') === group);
+            if (checks.length === 0) return null;
+
+            return (
+              <div key={group} className="mb-3 last:mb-0">
+                <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-500">{title}</h3>
+                <ul className="divide-y divide-slate-100 text-sm">{checks.map(row)}</ul>
+              </div>
+            );
+          })}
+          {done.length > 0 && (
+            <div className="mt-2 border-t border-slate-100 pt-2">
+              <button type="button" onClick={() => setShowDone((s) => !s)} aria-expanded={showDone} className={`rounded text-sm font-medium text-slate-600 hover:text-slate-900 ${FOCUS_RING}`}>
+                {showDone ? 'Hide' : 'Show'} the {done.length} completed step{done.length === 1 ? '' : 's'}
+              </button>
+              {showDone && <ul className="divide-y divide-slate-100 text-sm">{done.map(row)}</ul>}
+            </div>
           )}
         </div>
-      )}
-      {Object.entries(SETUP_GROUPS).map(([group, title]) => {
-        const checks = setup.checks.filter((check) => (check.group ?? 'essentials') === group);
-        if (checks.length === 0) return null;
-
-        return (
-          <div key={group} className="mb-4 last:mb-0">
-            <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">{title}</h3>
-            <ul className="space-y-2 text-sm">
-              {checks.map((check) => (
-                <li key={check.key} className="flex flex-wrap items-center justify-between gap-2">
-                  <span>
-                    <span className={check.done ? 'text-green-700' : 'text-slate-500'} aria-hidden="true">
-                      {check.done ? '✓' : '○'}
-                    </span>{' '}
-                    <span className="sr-only">{check.done ? 'Done: ' : 'To do: '}</span>
-                    {check.message} {check.required ? <span className="text-xs text-slate-500">(required)</span> : <span className="text-xs text-slate-500">(optional)</span>}
-                  </span>
-                  <span className="flex items-center gap-3">
-                  {!check.done && SETUP_HELP[check.key] && (
-                    <Link href={`/help/articles/${SETUP_HELP[check.key]}`} className={`rounded text-sm text-slate-600 hover:underline ${FOCUS_RING}`}>
-                      How?<span className="sr-only"> Help with: {check.message}</span>
-                    </Link>
-                  )}
-                  {!check.done && check.key === 'payment' ? (
-                    <Button
-                      size="sm"
-                      busy={busy === 'first-invoice'}
-                      onClick={() =>
-                        run('first-invoice', () => adminFetch('/billing/first-invoice', { method: 'POST' }), { success: 'Your first invoice is ready under Billing.' }).then(
-                          (result) => result && router.visit('/billing'),
-                        )
-                      }
-                    >
-                      Get my first invoice
-                    </Button>
-                  ) : (
-                    !check.done && SETUP_LINK[check.key] && (
-                      <Link href={SETUP_LINK[check.key]} className={`rounded text-indigo-700 hover:underline ${FOCUS_RING}`}>
-                        Open
-                      </Link>
-                    )
-                  )}
-                  </span>
-                </li>
-              ))}
-            </ul>
-          </div>
-        );
-      })}
+      </div>
     </Card>
   );
 }
@@ -240,17 +360,26 @@ function RecentOrders() {
       ) : state.rows.length === 0 ? (
         <p className="text-sm text-slate-600">No orders yet. They appear here as customers buy.</p>
       ) : (
-        <ul className="divide-y divide-slate-100 text-sm">
-          {state.rows.slice(0, 6).map((order) => (
-            <li key={order.id} className="flex flex-wrap items-center justify-between gap-2 py-2">
-              <Link href={`/orders/${order.id}`} className={`rounded font-mono text-indigo-700 hover:underline ${FOCUS_RING}`}>
-                {order.order_number}
-              </Link>
-              <span className="text-xs text-slate-500">{formatDateTime(order.created_at)}</span>
-              <StatusBadge status={order.status} />
-              <span className="font-medium">{money(order.grand_total_minor, order.currency)}</span>
-            </li>
-          ))}
+        <ul className="-mx-4 -my-2 divide-y divide-slate-100 text-sm">
+          {state.rows.slice(0, 6).map((order) => {
+            const who = order.customer?.name ?? order.guest_name ?? null;
+
+            return (
+              <li key={order.id}>
+                <Link href={`/orders/${order.id}`} className={`flex items-center gap-3 px-4 py-2.5 hover:bg-slate-50 ${FOCUS_RING}`}>
+                  <span className="flex h-9 w-9 flex-none items-center justify-center rounded-full bg-slate-100 text-xs font-semibold text-slate-600" aria-hidden="true">
+                    {(who ?? '#').trim().slice(0, 1).toUpperCase()}
+                  </span>
+                  <span className="min-w-0 flex-1">
+                    <span className="block font-mono text-indigo-700">{order.order_number}</span>
+                    <span className="block truncate text-xs text-slate-500">{who ? `${who} · ` : ''}{formatDateTime(order.created_at)}</span>
+                  </span>
+                  <StatusBadge status={order.status} />
+                  <span className="w-24 text-right font-semibold tabular-nums">{money(order.grand_total_minor, order.currency)}</span>
+                </Link>
+              </li>
+            );
+          })}
         </ul>
       )}
     </Card>
@@ -310,13 +439,17 @@ function UsageSection({ packageName }: { packageName: string | null }) {
   );
 }
 
+/** Good morning / afternoon / evening, by the time on this device. */
+function greeting(): string {
+  const hour = new Date().getHours();
+
+  return hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
+}
+
 export default function Dashboard() {
   const auth = useAuth();
   const access = useAccess();
-  const quick = navigationFor(access)
-    .filter((group) => !group.platform)
-    .flatMap((group) => group.items)
-    .filter((item) => item.state === 'open' && ['/products', '/orders', '/inventory', '/promotions', '/storefront/theme', '/settings'].includes(item.href));
+  const firstName = auth.user?.name.split(' ')[0] ?? '';
 
   if (!access.hasStore) {
     return (
@@ -327,6 +460,12 @@ export default function Dashboard() {
             title="Platform administration"
             description="Your account manages the platform, not a store. Use the platform section of the menu."
             action={<ButtonLink href="/super-admin" variant="primary">Open platform overview</ButtonLink>}
+          />
+        ) : access.isReseller ? (
+          <EmptyPanel
+            title="Your partner portal"
+            description="Your account sells Umar Techy as a partner. Your clients’ stores, commissions and payouts are in the partner portal."
+            action={<ButtonLink href="/partner" variant="primary">Open the partner portal</ButtonLink>}
           />
         ) : (auth.stores ?? []).length > 1 ? (
           <EmptyPanel title="Choose a store" description="You belong to more than one store. Pick the one to manage from the Store list at the top of the page." />
@@ -340,38 +479,31 @@ export default function Dashboard() {
   return (
     <AuthenticatedLayout>
       <PageHeader
-        title={auth.activeStore?.name ?? 'Dashboard'}
-        description={auth.user ? `Signed in as ${auth.user.name}.` : undefined}
-        actions={access.can('products.create') && <ButtonLink href="/products/new" variant="primary">Add product</ButtonLink>}
+        title={`${greeting()}${firstName ? `, ${firstName}` : ''}`}
+        description={<>Here is how <strong className="font-semibold text-slate-800">{auth.activeStore?.name}</strong> is doing.</>}
+        actions={
+          <>
+            {auth.activeStore && (
+              <a href={`/shop/${auth.activeStore.slug}`} target="_blank" rel="noreferrer" className={`inline-flex items-center gap-1.5 rounded-md border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 ${FOCUS_RING}`}>
+                <Icon name="store" size={16} />View shop<span className="sr-only"> (opens in a new tab)</span>
+              </a>
+            )}
+            {access.can('products.create') && <ButtonLink href="/products/new" variant="primary">Add product</ButtonLink>}
+          </>
+        }
       />
 
       <div className="space-y-6">
         {access.can('storefront.manage') && <SetupSection />}
-        {access.can('analytics.view') && <SalesSection currency={access.currency} />}
+        {access.can('analytics.view') && <SalesSection currency={access.currency} financial={access.isOwner || access.can('analytics.financial')} />}
 
-        <div className="grid gap-4 lg:grid-cols-2">
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
           {access.can('orders.view') && <RecentOrders />}
           <div className="space-y-4">
             {access.can('store_health.view') && <HealthSection />}
             <UsageSection packageName={access.packageName} />
           </div>
         </div>
-
-        {quick.length > 0 && (
-          <section aria-labelledby="quick-heading">
-            <h2 id="quick-heading" className="mb-3 text-sm font-semibold text-slate-900">
-              Go to
-            </h2>
-            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-              {quick.map((item) => (
-                <Link key={item.href} href={item.href} className={`rounded-lg border border-slate-200 bg-white p-4 hover:border-slate-400 ${FOCUS_RING}`}>
-                  <span className="font-medium text-slate-900">{item.label}</span>
-                  <span className="mt-1 block text-sm text-slate-600">{item.description}</span>
-                </Link>
-              ))}
-            </div>
-          </section>
-        )}
       </div>
     </AuthenticatedLayout>
   );

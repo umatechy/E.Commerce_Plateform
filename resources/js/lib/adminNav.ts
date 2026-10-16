@@ -1,3 +1,4 @@
+import type { IconName } from '@/Components/ui/Icon';
 import type { Access } from './access';
 
 /**
@@ -190,3 +191,20 @@ export function breadcrumbsFor(groups: ResolvedGroup[], path: string): { label: 
 
   return [{ label: 'Dashboard', href: '/' }, { label: group.label }, { label: item.label, href: path === href ? undefined : href }];
 }
+
+/** UI-2: the icon of each menu entry (by its address); an entry without one shows none. */
+export const NAV_ICONS: Record<string, IconName> = {
+  '/': 'grid',
+  '/orders': 'cart', '/payments': 'creditCard', '/returns': 'undo', '/shipments': 'truck', '/customers': 'users',
+  '/products': 'box', '/collections': 'layers', '/badges': 'award', '/reviews': 'star', '/categories': 'folder', '/brands': 'tag', '/attributes': 'sliders', '/inventory': 'database', '/warehouses': 'warehouse',
+  '/promotions': 'percent', '/campaigns': 'megaphone', '/affiliates': 'handshake', '/segments': 'users', '/notifications': 'bell',
+  '/storefront/theme': 'palette', '/content/pages': 'file', '/content/seo': 'search', '/content/redirects': 'link', '/domains': 'globe', '/storefront/app': 'phone', '/shipping': 'truck',
+  '/reports': 'chart', '/store-health': 'activity',
+  '/team': 'users', '/team/roles': 'key', '/billing': 'receipt', '/settings': 'settings', '/settings/payments': 'wallet', '/settings/tax': 'percent', '/settings/audit-log': 'clock',
+  '/apps': 'puzzle', '/settings/developer': 'code', '/backups': 'database', '/settings/close-store': 'lock', '/support': 'lifebuoy',
+  '/partner': 'handshake', '/security': 'shieldCheck',
+  '/super-admin': 'grid', '/super-admin/stores': 'store', '/super-admin/users': 'users', '/super-admin/packages': 'box', '/super-admin/billing': 'receipt',
+  '/super-admin/payments': 'wallet', '/super-admin/messaging': 'bell', '/super-admin/security': 'shield', '/super-admin/monitoring': 'activity', '/super-admin/audit-log': 'clock',
+  '/super-admin/catalog': 'palette', '/super-admin/starter-templates': 'layers', '/super-admin/settings': 'settings', '/super-admin/backups': 'database', '/super-admin/support': 'lifebuoy',
+  '/super-admin/marketplace': 'puzzle', '/super-admin/resellers': 'handshake', '/super-admin/help': 'question',
+};

@@ -1,6 +1,7 @@
 import { KeyboardEvent, ReactNode, useId } from 'react';
 import { Link } from '@inertiajs/react';
 import Button, { FOCUS_RING } from './Button';
+import Icon, { type IconName } from './Icon';
 
 /** Page building blocks of the admin (Phase B31 design system): heading, cards, figures, tabs, and the load states of a page. */
 
@@ -62,19 +63,40 @@ export function Card({ title, description, actions, children, className = '' }: 
   );
 }
 
-/** One figure. `value` null means the server gave none: shown as "Not available", never as a made-up zero. */
-export function StatCard({ label, value, hint, href }: { label: string; value: ReactNode | null; hint?: ReactNode; href?: string }) {
+/**
+ * One figure. `value` null means the server gave none: shown as "Not available", never as a made-up zero.
+ * UI-2: an optional icon, and `trend` (a percentage the server sent) as a coloured arrow before the hint.
+ */
+export function StatCard({ label, value, hint, href, icon, trend }: { label: string; value: ReactNode | null; hint?: ReactNode; href?: string; icon?: IconName; trend?: number | null }) {
+  const hasTrend = trend !== undefined && trend !== null;
   const body = (
     <>
-      <p className="text-xs font-medium uppercase tracking-wide text-slate-500">{label}</p>
-      <p className="mt-1 text-2xl font-semibold text-slate-900">{value ?? <span className="text-base font-normal text-slate-500">Not available</span>}</p>
-      {hint && <p className="mt-1 text-xs text-slate-600">{hint}</p>}
+      {icon && (
+        <span className="absolute right-4 top-4 flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-50 text-indigo-600">
+          <Icon name={icon} size={18} />
+        </span>
+      )}
+      <p className={`text-xs font-medium uppercase tracking-wide text-slate-500 ${icon ? 'pr-10' : ''}`}>{label}</p>
+      <p className="mt-1 text-2xl font-semibold tracking-tight text-slate-900">{value ?? <span className="text-base font-normal text-slate-500">Not available</span>}</p>
+      {(hint || hasTrend) && (
+        <p className="mt-1 flex flex-wrap items-center gap-1.5 text-xs text-slate-600">
+          {hasTrend && (
+            <span
+              aria-hidden="true"
+              className={`inline-flex items-center rounded-full px-1.5 py-0.5 font-semibold ${trend > 0 ? 'bg-emerald-50 text-emerald-700' : trend < 0 ? 'bg-red-50 text-red-700' : 'bg-slate-100 text-slate-600'}`}
+            >
+              {trend > 0 ? '↑' : trend < 0 ? '↓' : '→'} {Math.abs(trend)}%
+            </span>
+          )}
+          {hint && <span>{hint}</span>}
+        </p>
+      )}
     </>
   );
-  const box = 'block rounded-lg border border-slate-200 bg-white p-4';
+  const box = 'relative block rounded-xl border border-slate-200 bg-white p-4 shadow-sm';
 
   return href ? (
-    <Link href={href} className={`${box} hover:border-slate-400 ${FOCUS_RING}`}>
+    <Link href={href} className={`${box} transition-colors hover:border-indigo-300 hover:shadow motion-reduce:transition-none ${FOCUS_RING}`}>
       {body}
     </Link>
   ) : (

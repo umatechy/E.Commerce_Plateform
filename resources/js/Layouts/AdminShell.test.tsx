@@ -319,6 +319,7 @@ describe('dashboard', () => {
     '/orders': () => json(200, { data: [], meta: { current_page: 1, last_page: 1, total: 0, per_page: 25 } }),
     '/store/health': () => json(200, { data: { status: 'ok', checked_at: '2026-10-01T10:00:00Z', checks: [{ key: 'setup', status: 'ok', message: 'Fine.' }] } }),
     '/subscription/usage': () => json(200, { data: {} }),
+    '/reports/sales': () => json(200, { data: [{ date: '2026-10-01', order_count: 2, revenue_minor: 50000, discounts_minor: 0 }, { date: '2026-10-03', order_count: 1, revenue_minor: 75000, discounts_minor: 0 }] }),
   };
 
   it('shows the server figures as they are, and "Not available" for one it did not send', async () => {
@@ -331,6 +332,9 @@ describe('dashboard', () => {
     expect(screen.getByText('Your store is not open to customers yet')).toBeTruthy();
     expect((screen.getByRole('button', { name: 'Launch store' }) as HTMLButtonElement).disabled).toBe(true); // a required step is open
     expect(await screen.findByText(/All 1 checks passed/)).toBeTruthy();
+    // UI-2: revenue by day, with the day without orders as a real zero (also in the table for screen readers).
+    expect(await screen.findByRole('img', { name: 'Revenue by day' })).toBeTruthy();
+    expect(screen.getAllByRole('row')).toHaveLength(3);
   });
 
   it('asks only for what the role may see', async () => {
