@@ -41,7 +41,7 @@ export default function InvoiceTable({ invoices, onOpen }: { invoices: Invoice[]
   }
 
   return (
-    <div className="overflow-x-auto">
+    <div className="relative overflow-x-auto">
     <table className="w-full min-w-[32rem] text-left text-sm">
       <caption className="sr-only">Invoices</caption>
       <thead className="text-slate-500">

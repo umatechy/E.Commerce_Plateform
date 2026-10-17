@@ -161,7 +161,7 @@ export default function Backups() {
           {backups.length === 0 ? (
             <div className="mt-3"><EmptyState title="No backups yet" description="The first scheduled backup, or “Back up now”, will appear here." /></div>
           ) : (
-            <div className="mt-3 overflow-x-auto rounded-2xl border border-slate-200/80 bg-white shadow-[0_1px_2px_rgba(15,23,42,0.04)]">
+            <div className="relative mt-3 overflow-x-auto rounded-2xl border border-slate-200/80 bg-white shadow-[0_1px_2px_rgba(15,23,42,0.04)]">
               <table className="w-full min-w-[760px] text-left text-sm">
                 <thead className="border-b border-slate-200 bg-slate-50 text-[11px] uppercase tracking-wider text-slate-500">
                   <tr>

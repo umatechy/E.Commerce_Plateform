@@ -65,7 +65,7 @@ export default function Index() {
       description="Every order of your store. Open one to see its items, payments and deliveries."
       actions={access.can('orders.create') && <ButtonLink href="/orders/new" variant="primary">Create order</ButtonLink>}
     >
-      <nav aria-label="Order status" className="-mx-1 mb-3 flex gap-1 overflow-x-auto px-1 pb-1">
+      <nav aria-label="Order status" className="relative -mx-1 mb-3 flex gap-1 overflow-x-auto px-1 pb-1">
         {QUICK.map((q) => {
           const active = filters.status === q.status;
 

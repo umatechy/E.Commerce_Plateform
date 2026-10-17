@@ -44,6 +44,8 @@ export default {
         'sf-body': 'var(--sf-font-body, system-ui)',
       },
       // UI-6: light motion for the admin; used with motion-safe: so reduced motion turns it off.
+      // Fill mode 'backwards', never 'both': a transform left on a wrapper after the animation would
+      // make it the containing block of fixed and absolute children (dialogs, sticky bars, sr-only labels).
       keyframes: {
         'fade-in': { from: { opacity: '0' }, to: { opacity: '1' } },
         'fade-in-up': { from: { opacity: '0', transform: 'translateY(6px)' }, to: { opacity: '1', transform: 'translateY(0)' } },
@@ -51,10 +53,10 @@ export default {
         'slide-in-right': { from: { opacity: '0', transform: 'translateX(24px)' }, to: { opacity: '1', transform: 'translateX(0)' } },
       },
       animation: {
-        'fade-in': 'fade-in 200ms ease-out both',
-        'fade-in-up': 'fade-in-up 280ms cubic-bezier(0.2, 0.8, 0.2, 1) both',
-        'scale-in': 'scale-in 180ms cubic-bezier(0.2, 0.8, 0.2, 1) both',
-        'slide-in-right': 'slide-in-right 240ms cubic-bezier(0.2, 0.8, 0.2, 1) both',
+        'fade-in': 'fade-in 200ms ease-out backwards',
+        'fade-in-up': 'fade-in-up 280ms cubic-bezier(0.2, 0.8, 0.2, 1) backwards',
+        'scale-in': 'scale-in 180ms cubic-bezier(0.2, 0.8, 0.2, 1) backwards',
+        'slide-in-right': 'slide-in-right 240ms cubic-bezier(0.2, 0.8, 0.2, 1) backwards',
       },
       boxShadow: {
         sf: 'var(--sf-shadow, none)',

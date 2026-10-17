@@ -121,7 +121,7 @@ export function Tabs({ tabs, active, onChange, label }: { tabs: TabItem[]; activ
   }
 
   return (
-    <div role="tablist" aria-label={label} onKeyDown={onKeyDown} className="mb-4 flex gap-1 overflow-x-auto border-b border-slate-200">
+    <div role="tablist" aria-label={label} onKeyDown={onKeyDown} className="relative mb-4 flex gap-1 overflow-x-auto border-b border-slate-200">
       {tabs.map((tab) => (
         <button
           key={tab.id}

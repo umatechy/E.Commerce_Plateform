@@ -57,7 +57,7 @@ export default function DataTable<T>({ caption, columns, rows, rowKey, loading =
   if (rows !== null && rows.length === 0 && !loading) return <>{empty}</>;
 
   return (
-    <div className="overflow-x-auto rounded-2xl border border-slate-200/80 bg-white shadow-[0_1px_2px_rgba(15,23,42,0.04)]" aria-busy={loading || undefined}>
+    <div className="relative overflow-x-auto rounded-2xl border border-slate-200/80 bg-white shadow-[0_1px_2px_rgba(15,23,42,0.04)]" aria-busy={loading || undefined}>
       <table className="w-full text-left text-sm">
         <caption className="sr-only">{caption}</caption>
         <thead className="border-b border-slate-200 bg-slate-50 text-[11px] uppercase tracking-wider text-slate-500">

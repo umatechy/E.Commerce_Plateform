@@ -92,7 +92,7 @@ export default function Index() {
 
       <section className="mt-6 rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
         <h2 className="mb-2 font-semibold text-slate-900">Members</h2>
-        <div className="-mx-4 overflow-x-auto px-4">
+        <div className="relative -mx-4 overflow-x-auto px-4">
         <MemberList
           members={members}
           roles={summary.roles}

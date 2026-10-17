@@ -365,7 +365,7 @@ export default function Show({ returnId }: { returnId: string }) {
         <div className="grid gap-4 lg:grid-cols-3">
           <div className="space-y-4 lg:col-span-2">
             <Card title="Items">
-              <div className="overflow-x-auto">
+              <div className="relative overflow-x-auto">
                 <table className="w-full text-left text-sm">
                   <caption className="sr-only">Items of this return</caption>
                   <thead className="text-xs uppercase tracking-wide text-slate-500">

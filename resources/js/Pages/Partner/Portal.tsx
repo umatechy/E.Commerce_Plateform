@@ -156,7 +156,7 @@ function StoresTab({ o, onCreate }: { o: Overview; onCreate: () => void }) {
   }
 
   return (
-    <div className="overflow-x-auto rounded-lg border border-slate-200 bg-white">
+    <div className="relative overflow-x-auto rounded-2xl border border-slate-200/80 bg-white shadow-[0_1px_2px_rgba(15,23,42,0.04)]">
       <table className="min-w-full divide-y divide-slate-200 text-sm">
         <caption className="sr-only">Your clients’ stores</caption>
         <thead className="bg-slate-50 text-left text-xs font-semibold uppercase tracking-wide text-slate-600">
@@ -208,7 +208,7 @@ function CommissionsTab() {
   if (rows.length === 0) return <EmptyPanel title="No commissions yet" description="When a client pays an Umar Techy invoice, your commission appears here." />;
 
   return (
-    <div className="overflow-x-auto rounded-lg border border-slate-200 bg-white">
+    <div className="relative overflow-x-auto rounded-2xl border border-slate-200/80 bg-white shadow-[0_1px_2px_rgba(15,23,42,0.04)]">
       <table className="min-w-full divide-y divide-slate-200 text-sm">
         <caption className="sr-only">Your commissions</caption>
         <thead className="bg-slate-50 text-left text-xs font-semibold uppercase tracking-wide text-slate-600">

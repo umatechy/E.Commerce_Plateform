@@ -126,7 +126,7 @@ function ResellersTab({ o, canManage, onChanged, goTiers }: { o: Overview; canMa
       ) : rows.length === 0 ? (
         <EmptyPanel title={status || q ? 'No resellers match' : 'No resellers yet'} description={status || q ? 'Try another search or status.' : 'Invite agencies you work with, or let them apply on the public partner page (/partners).'} />
       ) : (
-        <div className="overflow-x-auto rounded-lg border border-slate-200 bg-white">
+        <div className="relative overflow-x-auto rounded-2xl border border-slate-200/80 bg-white shadow-[0_1px_2px_rgba(15,23,42,0.04)]">
           <table className="min-w-full divide-y divide-slate-200 text-sm">
             <caption className="sr-only">Resellers</caption>
             <thead className="bg-slate-50 text-left text-xs font-semibold uppercase tracking-wide text-slate-600">
@@ -637,7 +637,7 @@ function CommissionsTab({ canManage, onChanged }: { canManage: boolean; onChange
       ) : rows.length === 0 ? (
         <EmptyPanel title="No commissions" description="They are made every hour from paid Umar Techy invoices of stores resellers brought." />
       ) : (
-        <div className="overflow-x-auto rounded-lg border border-slate-200 bg-white">
+        <div className="relative overflow-x-auto rounded-2xl border border-slate-200/80 bg-white shadow-[0_1px_2px_rgba(15,23,42,0.04)]">
           <table className="min-w-full divide-y divide-slate-200 text-sm">
             <caption className="sr-only">Reseller commissions</caption>
             <thead className="bg-slate-50 text-left text-xs font-semibold uppercase tracking-wide text-slate-600">
@@ -719,7 +719,7 @@ function PayoutsTab({ canManage, onChanged }: { canManage: boolean; onChanged: (
       ) : rows.length === 0 ? (
         <EmptyPanel title="No payouts yet" />
       ) : (
-        <div className="overflow-x-auto rounded-lg border border-slate-200 bg-white">
+        <div className="relative overflow-x-auto rounded-2xl border border-slate-200/80 bg-white shadow-[0_1px_2px_rgba(15,23,42,0.04)]">
           <table className="min-w-full divide-y divide-slate-200 text-sm">
             <caption className="sr-only">Reseller payouts</caption>
             <thead className="bg-slate-50 text-left text-xs font-semibold uppercase tracking-wide text-slate-600">

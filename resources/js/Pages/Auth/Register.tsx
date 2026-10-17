@@ -125,7 +125,7 @@ export default function Register({ signupOpen = true, businessCategories = [], p
         <button type="submit" disabled={processing} className={authButton}>
           {processing ? <><Spinner />Creating your store…</> : <>Create store<Icon name="arrowRight" size={18} /></>}
         </button>
-        <p className="text-center text-xs text-slate-500">You become the owner of the store. You can invite your team later.</p>
+        <p className="text-center text-xs text-slate-500">You become the owner of the store. Next you turn on two-step sign-in with an authenticator app on your phone (about a minute), then your dashboard opens.</p>
       </form>
     </AuthShell>
   );

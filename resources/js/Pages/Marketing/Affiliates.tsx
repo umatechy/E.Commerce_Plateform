@@ -262,7 +262,7 @@ function AffiliatesTab({ o, onChanged }: { o: Overview; onChanged: () => void })
           action={o.can_manage && !status && !q ? <Button variant="primary" onClick={() => setAdding(true)}>Add affiliate</Button> : undefined}
         />
       ) : (
-        <div className="overflow-x-auto rounded-lg border border-slate-200 bg-white">
+        <div className="relative overflow-x-auto rounded-2xl border border-slate-200/80 bg-white shadow-[0_1px_2px_rgba(15,23,42,0.04)]">
           <table className="min-w-full divide-y divide-slate-200 text-sm">
             <caption className="sr-only">Affiliates</caption>
             <thead className="bg-slate-50 text-left text-xs font-semibold uppercase tracking-wide text-slate-600">
@@ -804,7 +804,7 @@ function PayoutsTab({ o, onChanged }: { o: Overview; onChanged: () => void }) {
       ) : rows.length === 0 ? (
         <EmptyPanel title="No payouts yet" description="When affiliates have approved commissions, prepare a payout from the Affiliates tab." />
       ) : (
-        <div className="overflow-x-auto rounded-lg border border-slate-200 bg-white">
+        <div className="relative overflow-x-auto rounded-2xl border border-slate-200/80 bg-white shadow-[0_1px_2px_rgba(15,23,42,0.04)]">
           <table className="min-w-full divide-y divide-slate-200 text-sm">
             <caption className="sr-only">Payouts</caption>
             <thead className="bg-slate-50 text-left text-xs font-semibold uppercase tracking-wide text-slate-600">

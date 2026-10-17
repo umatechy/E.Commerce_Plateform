@@ -1,6 +1,7 @@
 import { FormEvent, useState } from 'react';
 import AdminPage from '@/Components/AdminPage';
 import Button, { ButtonLink } from '@/Components/ui/Button';
+import RowMenu from '@/Components/ui/RowMenu';
 import DataTable, { Pagination, type Column } from '@/Components/ui/DataTable';
 import Dialog from '@/Components/ui/Dialog';
 import { FormError, SelectField, TextField } from '@/Components/ui/Form';
@@ -248,13 +249,28 @@ export default function Index() {
     {
       key: 'actions', header: 'Actions', srOnlyHeader: true, align: 'right', priority: true,
       render: (row) => (
-        <span className="flex flex-wrap justify-end gap-1">
+        <>
+        {/* UI-10: on phones the actions fold into a "⋯" menu, so the row is not cut off. */}
+        <span className="sm:hidden">
+          <RowMenu
+            label={`Actions for ${itemName(row)}`}
+            actions={[
+              ...(canAdjust ? [{ label: 'Adjust', icon: 'sliders' as const, onSelect: () => setDialog({ row, mode: 'adjust' }) }] : []),
+              ...(canAdjust && row.on_hand === 0 ? [{ label: 'Opening stock', icon: 'box' as const, onSelect: () => setDialog({ row, mode: 'opening' }) }] : []),
+              ...(canAdjust && row.available > 0 ? [{ label: 'Mark damaged', icon: 'alert' as const, onSelect: () => setDialog({ row, mode: 'damage' }) }] : []),
+              ...(canAdjust && (row.damaged ?? 0) > 0 ? [{ label: 'Write off damaged', icon: 'undo' as const, onSelect: () => setDialog({ row, mode: 'writeoff' }) }] : []),
+              { label: 'History', icon: 'clock' as const, onSelect: () => setDialog({ row, mode: 'movements' }) },
+            ]}
+          />
+        </span>
+        <span className="hidden flex-wrap justify-end gap-1 sm:flex">
           {canAdjust && <Button size="sm" variant="ghost" onClick={() => setDialog({ row, mode: 'adjust' })}>Adjust<span className="sr-only"> {itemName(row)}</span></Button>}
           {canAdjust && row.on_hand === 0 && <Button size="sm" variant="ghost" onClick={() => setDialog({ row, mode: 'opening' })}>Opening stock</Button>}
           {canAdjust && row.available > 0 && <Button size="sm" variant="ghost" onClick={() => setDialog({ row, mode: 'damage' })}>Mark damaged<span className="sr-only"> {itemName(row)}</span></Button>}
           {canAdjust && (row.damaged ?? 0) > 0 && <Button size="sm" variant="ghost" onClick={() => setDialog({ row, mode: 'writeoff' })}>Write off<span className="sr-only"> damaged {itemName(row)}</span></Button>}
           <Button size="sm" variant="ghost" onClick={() => setDialog({ row, mode: 'movements' })}>History<span className="sr-only"> of {itemName(row)}</span></Button>
         </span>
+        </>
       ),
     },
   ];
