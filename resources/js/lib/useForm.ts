@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { adminErrorMessage, fieldErrors, wasCancelled } from './adminApi';
 import { toast } from '@/Components/ui/toast';
+import { registerDirty } from './leaveGuard';
 
 /**
  * Form state for a page that saves through the JSON API (Phase B31).
@@ -77,7 +78,11 @@ export function useForm<T extends Record<string, unknown>>(initial: T) {
   return { values, set, reset, errors, formError, setFormError, busy, dirty, submit };
 }
 
-/** Asks before leaving the page with unsaved changes (browser close, reload, typed address). */
+/**
+ * Asks before leaving the page with unsaved changes: the browser's question
+ * for closing, reloading or a typed address, and (UI-13, lib/leaveGuard)
+ * the admin's "Leave without saving?" dialog for links inside the admin.
+ */
 export function useUnsavedWarning(dirty: boolean): void {
   useEffect(() => {
     if (!dirty) return;
@@ -86,8 +91,12 @@ export function useUnsavedWarning(dirty: boolean): void {
       event.returnValue = '';
     };
     window.addEventListener('beforeunload', warn);
+    const unregister = registerDirty();
 
-    return () => window.removeEventListener('beforeunload', warn);
+    return () => {
+      window.removeEventListener('beforeunload', warn);
+      unregister();
+    };
   }, [dirty]);
 }
 

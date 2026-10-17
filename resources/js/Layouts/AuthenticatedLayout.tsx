@@ -12,6 +12,8 @@ import StepUpDialog from '@/Components/StepUpDialog';
 import { HelpButton } from '@/Components/Help/HelpPanel';
 import { setDisplayTimezone } from '@/lib/datetime';
 import { onThemeChange, setTheme, storedTheme, THEMES, type ThemeId } from '@/lib/adminTheme';
+import { leave, stay, useLeaveGuard, usePendingLeave } from '@/lib/leaveGuard';
+import { ConfirmDialog } from '@/Components/ui/Dialog';
 
 /**
  * The admin shell (Phase B31, gap G6): sidebar navigation, top bar with
@@ -281,6 +283,17 @@ function ThemePicker() {
   );
 }
 
+/** UI-13: the question shown when a link would leave a page with unsaved changes (lib/leaveGuard). */
+function LeaveDialog() {
+  const pending = usePendingLeave();
+
+  return (
+    <ConfirmDialog open={pending !== null} title="Leave without saving?" confirmLabel="Leave page" cancelLabel="Stay on this page" onConfirm={leave} onClose={stay}>
+      <p>Your changes on this page are not saved yet. If you leave now, they are lost.</p>
+    </ConfirmDialog>
+  );
+}
+
 export default function AuthenticatedLayout({ children }: PropsWithChildren) {
   const page = usePage<{ auth: AuthProps }>();
   const { auth } = page.props;
@@ -318,6 +331,7 @@ export default function AuthenticatedLayout({ children }: PropsWithChildren) {
   }, [auth.user, locked]);
 
   useEffect(() => setCollapsed(readCollapsed()), []);
+  useLeaveGuard();
   // A changed store timezone reaches the page through the shared props.
   useEffect(() => setDisplayTimezone(auth.timezone ?? undefined), [auth.timezone]);
 
@@ -436,6 +450,7 @@ export default function AuthenticatedLayout({ children }: PropsWithChildren) {
       </div>
 
       <Toaster />
+      <LeaveDialog />
       <CommandPalette entries={entries} open={palette} onClose={() => setPalette(false)} />
       {auth.user && <StepUpDialog mfaEnabled={auth.user.mfa_enabled === true} />}
     </div>

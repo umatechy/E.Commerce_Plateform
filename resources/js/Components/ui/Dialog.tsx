@@ -9,6 +9,10 @@ import Icon from './Icon';
  * stays inside, Escape and the backdrop close it (unless it is busy).
  * `side` shows the same dialog as a drawer from the right, for details
  * next to a list.
+ *
+ * UI-13: once something was typed or chosen in it, Escape, the backdrop and
+ * the close button ask "Discard your changes?" first, inside the dialog.
+ * The dialog's own Cancel button (the caller's onClose) still closes at once.
  */
 type DialogProps = {
   open: boolean;
@@ -21,6 +25,8 @@ type DialogProps = {
   /** While true the dialog cannot be dismissed (a request is in flight). */
   busy?: boolean;
   wide?: boolean;
+  /** Ask before closing a dialog with changes (default true; off for confirmations). */
+  guard?: boolean;
 };
 
 /** The open dialogs, the top one last. Only the top one answers the keyboard. */
@@ -28,13 +34,25 @@ const openDialogs: symbol[] = [];
 
 const FOCUSABLE = 'a[href], button:not([disabled]), textarea:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])';
 
-export default function Dialog({ open, title, description, onClose, children, footer, side = false, busy = false, wide = false }: DialogProps) {
+export default function Dialog({ open, title, description, onClose, children, footer, side = false, busy = false, wide = false, guard = true }: DialogProps) {
   const titleId = useId();
   const descriptionId = useId();
   const panel = useRef<HTMLDivElement>(null);
   const returnTo = useRef<Element | null>(null);
-  const latest = useRef({ busy, onClose });
-  latest.current = { busy, onClose };
+  const [touched, setTouched] = useState(false);
+  const [asking, setAsking] = useState(false);
+  useEffect(() => {
+    setTouched(false);
+    setAsking(false);
+  }, [open]);
+  // Escape, the backdrop and ✕: ask first when the form inside was changed.
+  const requestClose = () => {
+    if (busy) return;
+    if (guard && touched) setAsking(true);
+    else onClose();
+  };
+  const latest = useRef({ busy, requestClose });
+  latest.current = { busy, requestClose };
 
   useEffect(() => {
     if (!open) return;
@@ -61,7 +79,7 @@ export default function Dialog({ open, title, description, onClose, children, fo
       if (event.key === 'Escape') {
         if (!latest.current.busy) {
           event.stopPropagation();
-          latest.current.onClose();
+          latest.current.requestClose();
         }
 
         return;
@@ -97,7 +115,7 @@ export default function Dialog({ open, title, description, onClose, children, fo
   if (!open) return null;
 
   return (
-    <div className={`fixed inset-0 z-50 flex ${side ? 'justify-end' : 'items-end justify-center sm:items-center'} bg-slate-950/40 p-0 backdrop-blur-[2px] motion-safe:animate-fade-in sm:p-4`} onMouseDown={(e) => e.target === e.currentTarget && !busy && onClose()}>
+    <div className={`fixed inset-0 z-50 flex ${side ? 'justify-end' : 'items-end justify-center sm:items-center'} bg-slate-950/40 p-0 backdrop-blur-[2px] motion-safe:animate-fade-in sm:p-4`} onMouseDown={(e) => e.target === e.currentTarget && requestClose()}>
       <div
         ref={panel}
         role="dialog"
@@ -105,6 +123,8 @@ export default function Dialog({ open, title, description, onClose, children, fo
         aria-labelledby={titleId}
         aria-describedby={description ? descriptionId : undefined}
         tabIndex={-1}
+        onInput={() => setTouched(true)}
+        onChange={() => setTouched(true)}
         className={
           side
             ? 'flex h-full w-full max-w-xl flex-col bg-white shadow-2xl focus:outline-none motion-safe:animate-slide-in-right'
@@ -122,10 +142,19 @@ export default function Dialog({ open, title, description, onClose, children, fo
               </div>
             )}
           </div>
-          <Button variant="ghost" size="sm" onClick={onClose} disabled={busy} aria-label="Close" className="-mr-2 !px-2">
+          <Button variant="ghost" size="sm" onClick={requestClose} disabled={busy} aria-label="Close" className="-mr-2 !px-2">
             <Icon name="x" size={18} />
           </Button>
         </div>
+        {asking && (
+          <div role="alert" className="flex flex-wrap items-center justify-between gap-3 border-b border-amber-200 bg-amber-50 px-6 py-3 text-sm text-amber-900 motion-safe:animate-fade-in">
+            <span className="font-medium">Discard your changes in this form?</span>
+            <span className="flex gap-2">
+              <Button size="sm" onClick={() => setAsking(false)} data-autofocus>Keep editing</Button>
+              <Button size="sm" variant="danger" onClick={onClose}>Discard changes</Button>
+            </span>
+          </div>
+        )}
         {children !== undefined && <div className="flex-1 overflow-y-auto px-6 py-5">{children}</div>}
         {footer && <div className="flex flex-wrap justify-end gap-2 rounded-b-2xl border-t border-slate-100 bg-slate-50/60 px-6 py-3.5">{footer}</div>}
       </div>
@@ -150,11 +179,13 @@ type ConfirmProps = {
   confirmText?: string;
   busy?: boolean;
   error?: string | null;
+  /** The label of the button that keeps things as they are (default Cancel). */
+  cancelLabel?: string;
   onConfirm: () => void;
   onClose: () => void;
 };
 
-export function ConfirmDialog({ open, title, children, confirmLabel, variant = 'danger', confirmText, busy = false, error, onConfirm, onClose }: ConfirmProps) {
+export function ConfirmDialog({ open, title, children, confirmLabel, variant = 'danger', confirmText, busy = false, error, cancelLabel = 'Cancel', onConfirm, onClose }: ConfirmProps) {
   const [typed, setTyped] = useState('');
 
   useEffect(() => {
@@ -169,10 +200,11 @@ export function ConfirmDialog({ open, title, children, confirmLabel, variant = '
       title={title}
       onClose={onClose}
       busy={busy}
+      guard={false}
       footer={
         <>
           <Button onClick={onClose} disabled={busy} data-autofocus>
-            Cancel
+            {cancelLabel}
           </Button>
           <Button variant={variant} onClick={onConfirm} busy={busy} disabled={!ready}>
             {confirmLabel}
