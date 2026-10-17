@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, router } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
+import QuickStart from '@/Components/Dashboard/QuickStart';
 import { PageHeader, Card, StatCard, QueryState, EmptyPanel, UsageMeter, ErrorPanel, Skeleton } from '@/Components/ui/Page';
 import Button, { ButtonLink, FOCUS_RING } from '@/Components/ui/Button';
 import { SelectField } from '@/Components/ui/Form';
@@ -234,11 +235,38 @@ function ProgressRing({ percent }: { percent: number }) {
   );
 }
 
-function SetupSection() {
+/** UI-16: the quick start opens by itself once per store on this browser, while the store is new. */
+function quickStartSeen(storeId: number | undefined): boolean {
+  try {
+    return window.localStorage.getItem(`ut.quickstart.${storeId}`) === '1';
+  } catch {
+    return true;
+  }
+}
+
+function markQuickStartSeen(storeId: number | undefined): void {
+  try {
+    window.localStorage.setItem(`ut.quickstart.${storeId}`, '1');
+  } catch {
+    // Not remembered: it may open again next time.
+  }
+}
+
+function SetupSection({ onChanged }: { onChanged?: () => void }) {
   const state = useApi<{ data: Setup }>('/storefront/setup');
   const { busy, run } = useAction();
   const [showDone, setShowDone] = useState(false);
-
+  const auth = useAuth();
+  const access = useAccess();
+  const storeId = auth.activeStore?.id;
+  const [quick, setQuick] = useState(false);
+  const fresh = state.data !== null && !state.data.data.launched && state.data.data.checks.some((c) => !c.done && ['business_info', 'products'].includes(c.key));
+  useEffect(() => {
+    if (fresh && !quickStartSeen(storeId)) {
+      markQuickStartSeen(storeId);
+      setQuick(true);
+    }
+  }, [fresh, storeId]);
   if (state.error) return state.errorStatus === 403 ? null : <ErrorPanel message={state.error} onRetry={state.reload} />;
   if (state.data === null) return <Skeleton lines={3} />;
 
@@ -299,6 +327,12 @@ function SetupSection() {
       description={setup.launched ? 'These optional steps are still open.' : 'Complete the required steps, then launch.'}
       actions={
         !setup.launched && (
+          <>
+          {fresh && (
+            <Button size="sm" variant="soft" onClick={() => setQuick(true)}>
+              <Icon name="zap" size={15} />Quick start
+            </Button>
+          )}
           <Button
             variant="primary"
             size="sm"
@@ -309,6 +343,7 @@ function SetupSection() {
           >
             Launch store
           </Button>
+          </>
         )
       }
     >
@@ -348,6 +383,7 @@ function SetupSection() {
           )}
         </div>
       </div>
+      {quick && <QuickStart checks={setup.checks} launched={setup.launched} currency={access.currency} onChanged={() => { state.reload(); onChanged?.(); }} onClose={() => setQuick(false)} />}
     </Card>
   );
 }
@@ -453,6 +489,8 @@ function greeting(): string {
 export default function Dashboard() {
   const auth = useAuth();
   const access = useAccess();
+  // UI-16: bumped when the quick start changes something, so the figures below load again.
+  const [version, setVersion] = useState(0);
   const firstName = auth.user?.name.split(' ')[0] ?? '';
 
   if (!access.hasStore) {
@@ -513,14 +551,14 @@ export default function Dashboard() {
       </section>
 
       <div className="space-y-6">
-        {access.can('storefront.manage') && <SetupSection />}
-        {access.can('analytics.view') && <SalesSection currency={access.currency} financial={access.isOwner || access.can('analytics.financial')} />}
+        {access.can('storefront.manage') && <SetupSection onChanged={() => setVersion((v) => v + 1)} />}
+        {access.can('analytics.view') && <SalesSection key={`sales-${version}`} currency={access.currency} financial={access.isOwner || access.can('analytics.financial')} />}
 
         <div className="grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
-          {access.can('orders.view') && <RecentOrders />}
+          {access.can('orders.view') && <RecentOrders key={`orders-${version}`} />}
           <div className="space-y-4">
-            {access.can('store_health.view') && <HealthSection />}
-            <UsageSection packageName={access.packageName} />
+            {access.can('store_health.view') && <HealthSection key={`health-${version}`} />}
+            <UsageSection key={`usage-${version}`} packageName={access.packageName} />
           </div>
         </div>
       </div>
