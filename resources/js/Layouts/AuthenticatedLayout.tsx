@@ -451,7 +451,12 @@ export default function AuthenticatedLayout({ children }: PropsWithChildren) {
 
       <Toaster />
       <LeaveDialog />
-      <CommandPalette entries={entries} open={palette} onClose={() => setPalette(false)} />
+      <CommandPalette
+        entries={entries}
+        open={palette}
+        onClose={() => setPalette(false)}
+        search={{ orders: access.hasStore && access.can('orders.view'), products: access.hasStore && access.can('products.view'), customers: access.hasStore && access.can('customers.view') }}
+      />
       {auth.user && <StepUpDialog mfaEnabled={auth.user.mfa_enabled === true} />}
     </div>
   );
