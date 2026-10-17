@@ -87,7 +87,7 @@ export default function PayOnlineDialog({ invoiceId, onClose, onPaid }: { invoic
                       <legend className="text-sm font-medium text-slate-700">Pay with</legend>
                       <div className="mt-2 flex flex-wrap gap-2">
                         {d.options.map((o) => (
-                          <label key={o.provider} className={`flex cursor-pointer items-center gap-2 rounded-md border px-3 py-2 text-sm ${option.provider === o.provider ? 'border-indigo-500 ring-1 ring-indigo-500' : 'border-slate-300'}`}>
+                          <label key={o.provider} className={`flex cursor-pointer items-center gap-2 rounded-md border px-3 py-2 text-sm ${option.provider === o.provider ? 'border-brand-500 ring-1 ring-brand-500' : 'border-slate-300'}`}>
                             <input type="radio" name="provider" checked={option.provider === o.provider} onChange={() => setProvider(o.provider)} />
                             {o.label}
                           </label>

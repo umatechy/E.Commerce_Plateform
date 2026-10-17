@@ -1,5 +1,6 @@
 import { ReactNode, useEffect, useId, useRef, useState } from 'react';
 import { FOCUS_RING } from './Button';
+import Icon from './Icon';
 
 /**
  * A search box that asks the server, not the page: it reports what was
@@ -33,19 +34,22 @@ export function SearchField({ label, value, onChange, placeholder }: { label: st
       <label htmlFor={id} className="block text-sm font-medium text-slate-700">
         {label}
       </label>
-      <input
-        id={id}
-        type="search"
-        value={text}
-        placeholder={placeholder}
-        onChange={(e) => setText(e.target.value)}
-        className={`mt-1 block w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm ${FOCUS_RING}`}
-      />
+      <div className="relative mt-1">
+        <Icon name="search" size={16} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+        <input
+          id={id}
+          type="search"
+          value={text}
+          placeholder={placeholder}
+          onChange={(e) => setText(e.target.value)}
+          className={`block min-h-10 w-full rounded-lg border border-slate-300 bg-white py-2 pl-9 pr-3 text-sm shadow-sm shadow-slate-900/5 transition-colors placeholder:text-slate-400 hover:border-slate-400 focus-visible:border-brand-500 motion-reduce:transition-none ${FOCUS_RING}`}
+        />
+      </div>
     </div>
   );
 }
 
 /** The row of filters above a list. */
 export function FilterBar({ children }: { children: ReactNode }) {
-  return <div className="mb-4 flex flex-wrap items-end gap-3 rounded-xl border border-slate-200 bg-white p-3 shadow-sm">{children}</div>;
+  return <div className="mb-4 flex flex-wrap items-end gap-3 rounded-2xl border border-slate-200/80 bg-white p-4 shadow-[0_1px_2px_rgba(15,23,42,0.04)]">{children}</div>;
 }

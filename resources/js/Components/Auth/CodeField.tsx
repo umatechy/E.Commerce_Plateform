@@ -20,7 +20,7 @@ export default function CodeField({ id, value, onChange, onComplete, invalid, de
           <span
             key={i}
             className={`flex h-14 items-center justify-center rounded-xl border bg-white text-2xl font-semibold tabular-nums text-slate-900 shadow-sm transition-colors motion-reduce:transition-none ${
-              invalid ? 'border-red-400' : focused && i === active ? 'border-indigo-500 ring-2 ring-indigo-500/30' : 'border-slate-300'
+              invalid ? 'border-red-400' : focused && i === active ? 'border-brand-500 ring-2 ring-brand-500/30' : 'border-slate-300'
             }`}
           >
             {d.trim()}

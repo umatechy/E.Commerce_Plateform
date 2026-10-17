@@ -58,7 +58,7 @@ export default function MemberList({ members, roles, canManage, busy, onRoleChan
                       value={member.role.slug}
                       disabled={working}
                       onChange={(e) => onRoleChange(member, e.target.value)}
-                      className="rounded-lg border border-slate-300 bg-white px-2 py-1 text-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-600"
+                      className="rounded-lg border border-slate-300 bg-white px-2 py-1 text-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-600"
                     >
                       {!grantable.some((role) => role.slug === member.role?.slug) && <option value={member.role.slug}>{member.role.name}</option>}
                       {grantable.map((role) => (

@@ -98,7 +98,7 @@ export default function HelpIndex() {
                     description={home.data.data.latest_release.released_on ? `Released ${formatDate(home.data.data.latest_release.released_on)}` : undefined}
                   >
                     <p className="text-sm text-slate-700">{home.data.data.latest_release.summary}</p>
-                    <Link href="/help/whats-new" className={`mt-2 inline-block rounded text-sm font-medium text-indigo-700 hover:underline ${FOCUS_RING}`}>
+                    <Link href="/help/whats-new" className={`mt-2 inline-block rounded text-sm font-medium text-brand-700 hover:underline ${FOCUS_RING}`}>
                       Read the release notes
                     </Link>
                   </Card>
@@ -111,7 +111,7 @@ export default function HelpIndex() {
                 {access.hasStore && (
                   <Card title="Still need help?">
                     <p className="text-sm text-slate-700">Our team answers questions about your plan, billing and technical problems.</p>
-                    <Link href="/support/platform" className={`mt-2 inline-block rounded text-sm font-medium text-indigo-700 hover:underline ${FOCUS_RING}`}>
+                    <Link href="/support/platform" className={`mt-2 inline-block rounded text-sm font-medium text-brand-700 hover:underline ${FOCUS_RING}`}>
                       Ask Umar Techy support
                     </Link>
                   </Card>
@@ -133,7 +133,7 @@ function NothingFound({ canAsk }: { canAsk: boolean }) {
       {canAsk && (
         <p className="mt-2">
           Still stuck?{' '}
-          <Link href="/support/platform" className="text-indigo-700 underline">
+          <Link href="/support/platform" className="text-brand-700 underline">
             Ask Umar Techy support
           </Link>
           . We note what people search for and could not find, and write the missing articles.

@@ -108,7 +108,7 @@ export default function ReturnsCard({ order }: { order: Order }) {
         <ul className="divide-y divide-slate-100 text-sm">
           {returns.rows.map((record) => (
             <li key={record.id} className="flex flex-wrap items-center justify-between gap-2 py-2">
-              <Link href={`/returns/${record.id}`} className={`rounded font-mono text-indigo-700 hover:underline ${FOCUS_RING}`}>{record.return_number}</Link>
+              <Link href={`/returns/${record.id}`} className={`rounded font-mono text-brand-700 hover:underline ${FOCUS_RING}`}>{record.return_number}</Link>
               <span className="text-slate-700">{(record.items ?? []).reduce((sum, item) => sum + item.quantity, 0)} unit(s) · {RESOLUTION_LABELS[record.resolution]?.split(' (')[0]}</span>
               <StatusBadge status={record.status} label={RETURN_STATUS_LABELS[record.status]} />
             </li>

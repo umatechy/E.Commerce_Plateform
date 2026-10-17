@@ -132,7 +132,7 @@ export function CreditNotes() {
             <Button size="sm" onClick={() => setRejecting(n)}>Reject<span className="sr-only"> credit note for {n.invoice}</span></Button>
           </span>
         )
-      ) : n.status === 'issued' ? <a href={`/api/v1/super-admin/billing/credit-notes/${n.id}/pdf`} className="text-sm text-indigo-700 underline">PDF<span className="sr-only"> of {n.number}</span></a> : null,
+      ) : n.status === 'issued' ? <a href={`/api/v1/super-admin/billing/credit-notes/${n.id}/pdf`} className="text-sm text-brand-700 underline">PDF<span className="sr-only"> of {n.number}</span></a> : null,
     },
   ];
 

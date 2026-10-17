@@ -31,7 +31,7 @@ export default function Index() {
       key: 'number',
       header: 'Return',
       render: (record) => (
-        <Link href={`/returns/${record.id}`} className={`rounded font-mono text-indigo-700 hover:underline ${FOCUS_RING}`}>{record.return_number}</Link>
+        <Link href={`/returns/${record.id}`} className={`rounded font-mono text-brand-700 hover:underline ${FOCUS_RING}`}>{record.return_number}</Link>
       ),
     },
     {
@@ -39,7 +39,7 @@ export default function Index() {
       header: 'Order',
       render: (record) => record.order ? (
         <div>
-          <Link href={`/orders/${record.order.id}`} className={`rounded font-mono text-indigo-700 hover:underline ${FOCUS_RING}`}>{record.order.order_number}</Link>
+          <Link href={`/orders/${record.order.id}`} className={`rounded font-mono text-brand-700 hover:underline ${FOCUS_RING}`}>{record.order.order_number}</Link>
           {record.order.customer_name && <p className="text-xs text-slate-600">{record.order.customer_name}</p>}
         </div>
       ) : '—',

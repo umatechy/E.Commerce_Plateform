@@ -125,7 +125,7 @@ function Applications() {
       key: 'store',
       header: 'Store',
       render: (application) => (
-        <Link href={`/super-admin/stores/${application.store_id}`} className={`rounded text-indigo-700 hover:underline ${FOCUS_RING}`}>
+        <Link href={`/super-admin/stores/${application.store_id}`} className={`rounded text-brand-700 hover:underline ${FOCUS_RING}`}>
           Store #{application.store_id}
         </Link>
       ),

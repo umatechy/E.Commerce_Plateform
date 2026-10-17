@@ -39,7 +39,7 @@ function Photo({ returnId, photo }: { returnId: string; photo: ReturnPhoto }) {
   if (failed) return <span className="flex h-28 w-28 items-center justify-center rounded-md border border-slate-200 text-xs text-slate-500">Could not load</span>;
 
   return url ? (
-    <a href={url} target="_blank" rel="noreferrer" className="block rounded-md focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500">
+    <a href={url} target="_blank" rel="noreferrer" className="block rounded-md focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500">
       <img src={url} alt={`Photo added by ${WHO[photo.uploaded_by]?.toLowerCase() ?? 'someone'} (opens full size)`} className="h-28 w-28 rounded-md border border-slate-200 object-cover" />
     </a>
   ) : (

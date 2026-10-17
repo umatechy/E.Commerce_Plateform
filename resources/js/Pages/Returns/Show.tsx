@@ -398,7 +398,7 @@ export default function Show({ returnId }: { returnId: string }) {
             <Card title="Request">
               <Details
                 items={[
-                  { label: 'Order', value: record.order ? <Link href={`/orders/${record.order.id}`} className={`rounded font-mono text-indigo-700 hover:underline ${FOCUS_RING}`}>{record.order.order_number}</Link> : '—' },
+                  { label: 'Order', value: record.order ? <Link href={`/orders/${record.order.id}`} className={`rounded font-mono text-brand-700 hover:underline ${FOCUS_RING}`}>{record.order.order_number}</Link> : '—' },
                   { label: 'Customer', value: record.order?.customer_name ?? '—' },
                   { label: 'Asked by', value: record.requested_by === 'customer' ? 'The customer' : record.requested_by === 'guest' ? 'The customer, by the link sent to the order\x27s email' : 'Your team, for the customer' },
                   { label: 'Wants', value: RESOLUTION_LABELS[record.resolution] ?? record.resolution },
@@ -432,7 +432,7 @@ export default function Show({ returnId }: { returnId: string }) {
               {record.replacement_order && (
                 <p className="mt-3 text-sm">
                   New order:{' '}
-                  <Link href={`/orders/${record.replacement_order.id}`} className={`rounded font-mono text-indigo-700 hover:underline ${FOCUS_RING}`}>{record.replacement_order.order_number}</Link>
+                  <Link href={`/orders/${record.replacement_order.id}`} className={`rounded font-mono text-brand-700 hover:underline ${FOCUS_RING}`}>{record.replacement_order.order_number}</Link>
                   {' '}({record.replacement_order.grand_total_minor === 0 ? 'free of charge' : `${money(record.replacement_order.grand_total_minor, record.currency)} to pay`})
                 </p>
               )}

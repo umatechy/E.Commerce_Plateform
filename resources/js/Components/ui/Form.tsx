@@ -12,7 +12,7 @@ import { FOCUS_RING } from './Button';
  * decides what is valid; its 422 messages are shown under each field.
  */
 const CONTROL =
-  'block w-full rounded-md border bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 disabled:bg-slate-100 disabled:text-slate-500';
+  'block min-h-10 w-full rounded-lg border bg-white px-3 py-2 text-sm text-slate-900 shadow-sm shadow-slate-900/5 transition-colors placeholder:text-slate-400 hover:border-slate-400 focus-visible:border-brand-500 disabled:bg-slate-100 disabled:text-slate-500 motion-reduce:transition-none';
 
 function controlClass(hasError: boolean, extra = ''): string {
   return `${CONTROL} ${hasError ? 'border-red-500' : 'border-slate-300'} ${FOCUS_RING} ${extra}`;
@@ -134,7 +134,7 @@ export function CheckboxField({ label, hint, checked, onChange, disabled, error 
         disabled={disabled}
         onChange={(e) => onChange(e.target.checked)}
         aria-describedby={describedBy(id, hint, error)}
-        className={`mt-0.5 h-4 w-4 rounded border-slate-300 text-indigo-600 ${FOCUS_RING}`}
+        className={`mt-0.5 h-4 w-4 rounded border-slate-300 text-brand-600 ${FOCUS_RING}`}
       />
       <div>
         <label htmlFor={id} className="text-sm font-medium text-slate-700">
@@ -180,11 +180,11 @@ export function SwitchField({ label, hint, checked, onChange, disabled }: CheckP
           disabled={disabled}
           onChange={(e) => onChange(e.target.checked)}
           aria-describedby={hint ? `${id}-hint` : undefined}
-          className={`peer h-6 w-11 cursor-pointer appearance-none rounded-full bg-slate-300 transition-colors checked:bg-indigo-600 disabled:cursor-not-allowed disabled:opacity-50 motion-reduce:transition-none ${FOCUS_RING}`}
+          className={`peer h-6 w-11 cursor-pointer appearance-none rounded-full bg-slate-300 transition-colors duration-200 checked:bg-brand-600 disabled:cursor-not-allowed disabled:opacity-50 motion-reduce:transition-none ${FOCUS_RING}`}
         />
         <span
           aria-hidden="true"
-          className="pointer-events-none absolute left-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform peer-checked:translate-x-5 motion-reduce:transition-none"
+          className="pointer-events-none absolute left-0.5 h-5 w-5 rounded-full bg-white shadow-md transition-transform duration-200 ease-out peer-checked:translate-x-5 motion-reduce:transition-none"
         />
         <span className="ml-2 w-6 text-xs text-slate-600">{checked ? 'On' : 'Off'}</span>
       </span>

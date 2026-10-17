@@ -97,7 +97,7 @@ function AlertsCard({ data, onSaved }: { data: Overview; onSaved: () => void }) 
           </li>
         ))}
       </ul>
-      <p className="mt-2 text-xs text-slate-500">Numbers and the on/off switch are under <Link href="/super-admin/settings" className="font-medium text-indigo-700 underline">Platform settings</Link> → Alerts.</p>
+      <p className="mt-2 text-xs text-slate-500">Numbers and the on/off switch are under <Link href="/super-admin/settings" className="font-medium text-brand-700 underline">Platform settings</Link> → Alerts.</p>
       <div className="mt-4 flex flex-wrap items-center justify-between gap-2 border-t border-slate-100 pt-3">
         <p className="text-sm text-slate-700">
           Template: {template ? <><span className="font-mono">{template.name}</span> · {template.language}{template.checked_at && <span className="text-xs text-slate-500"> · checked {formatDateTime(template.checked_at)}</span>}</> : 'none yet'}

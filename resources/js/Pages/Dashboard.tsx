@@ -105,7 +105,7 @@ function MiniStat({ label, value, href, icon, tone = 'slate' }: { label: string;
   );
   const box = 'flex items-center gap-3 rounded-xl border border-slate-200 bg-white px-4 py-3 shadow-sm';
 
-  return href ? <Link href={href} className={`${box} hover:border-indigo-300 ${FOCUS_RING}`}>{body}</Link> : <div className={box}>{body}</div>;
+  return href ? <Link href={href} className={`${box} hover:border-brand-300 ${FOCUS_RING}`}>{body}</Link> : <div className={box}>{body}</div>;
 }
 
 type SalesDay = { date: string; order_count: number; revenue_minor: number };
@@ -222,8 +222,8 @@ function ProgressRing({ percent }: { percent: number }) {
   return (
     <div className="relative h-16 w-16 flex-none" role="progressbar" aria-valuenow={percent} aria-valuemin={0} aria-valuemax={100} aria-label="Setup progress">
       <svg viewBox="0 0 64 64" className="h-16 w-16 -rotate-90" aria-hidden="true">
-        <circle cx="32" cy="32" r={r} fill="none" stroke="#e0e7ff" strokeWidth="7" />
-        <circle cx="32" cy="32" r={r} fill="none" stroke="#4f46e5" strokeWidth="7" strokeLinecap="round" strokeDasharray={c} strokeDashoffset={c * (1 - percent / 100)} />
+        <circle cx="32" cy="32" r={r} fill="none" stroke="rgb(var(--brand-100))" strokeWidth="7" />
+        <circle cx="32" cy="32" r={r} fill="none" stroke="rgb(var(--brand-600))" strokeWidth="7" strokeLinecap="round" strokeDasharray={c} strokeDashoffset={c * (1 - percent / 100)} />
       </svg>
       <span className="absolute inset-0 flex items-center justify-center text-sm font-bold text-slate-900">{percent}%</span>
     </div>
@@ -371,7 +371,7 @@ function RecentOrders() {
                     {(who ?? '#').trim().slice(0, 1).toUpperCase()}
                   </span>
                   <span className="min-w-0 flex-1">
-                    <span className="block font-mono text-indigo-700">{order.order_number}</span>
+                    <span className="block font-mono text-brand-700">{order.order_number}</span>
                     <span className="block truncate text-xs text-slate-500">{who ? `${who} · ` : ''}{formatDateTime(order.created_at)}</span>
                   </span>
                   <StatusBadge status={order.status} />

@@ -36,7 +36,7 @@ export default function BarChart({ points, title, height = 180 }: { points: Char
           return (
             <g key={p.label} onMouseEnter={() => setHover(i)}>
               <rect x={x} y={0} width={barWidth + gap} height={height} fill="transparent" />
-              <rect x={x} y={height - h} width={barWidth} height={h} rx={Math.min(3, barWidth / 3)} className={hover === i ? 'fill-indigo-700' : 'fill-indigo-500'} />
+              <rect x={x} y={height - h} width={barWidth} height={h} rx={Math.min(3, barWidth / 3)} className={hover === i ? 'fill-brand-700' : 'fill-brand-500'} />
             </g>
           );
         })}

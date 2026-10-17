@@ -81,7 +81,7 @@ function Providers({ state }: { state: ReturnType<typeof useApi<{ data: Overview
       {({ data }) => (
         <div className="space-y-6">
           {data.simulator_enabled && (
-            <p role="note" className="rounded-md border border-indigo-200 bg-indigo-50 p-3 text-sm text-indigo-900">
+            <p role="note" className="rounded-md border border-brand-200 bg-brand-50 p-3 text-sm text-brand-900">
               This system has the Test wallet: a provider that moves no money, for trying the payment flow. It never exists in production.
             </p>
           )}

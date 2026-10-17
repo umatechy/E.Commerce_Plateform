@@ -228,7 +228,7 @@ function ArticleDrawer({ id, meta, canWrite, onClose, onChanged }: { id: number;
 
           {d.live && (
             <Card title="What readers see now">
-              <div className="help-article text-slate-800 [&_a]:text-indigo-700" dangerouslySetInnerHTML={{ __html: d.live.html }} />
+              <div className="help-article text-slate-800 [&_a]:text-brand-700" dangerouslySetInnerHTML={{ __html: d.live.html }} />
             </Card>
           )}
 

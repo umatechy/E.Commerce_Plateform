@@ -87,7 +87,7 @@ export default function Pages() {
       render: (row) => (
         <span className="flex flex-wrap justify-end gap-1">
           {row.status === 'published' && auth.activeStore && (
-            <a href={`/shop/${auth.activeStore.slug}/pages/${row.slug}`} target="_blank" rel="noreferrer" className="rounded px-2.5 py-1 text-sm text-indigo-700 hover:underline">
+            <a href={`/shop/${auth.activeStore.slug}/pages/${row.slug}`} target="_blank" rel="noreferrer" className="rounded px-2.5 py-1 text-sm text-brand-700 hover:underline">
               View<span className="sr-only"> {row.title} (opens in a new tab)</span>
             </a>
           )}

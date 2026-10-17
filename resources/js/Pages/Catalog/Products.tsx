@@ -65,7 +65,7 @@ export default function Products() {
                 const checked = e.target.checked;
                 setSelected((current) => (checked ? [...current, product.id] : current.filter((id) => id !== product.id)));
               }}
-              className={`h-4 w-4 rounded border-slate-300 text-indigo-600 ${FOCUS_RING}`}
+              className={`h-4 w-4 rounded border-slate-300 text-brand-600 ${FOCUS_RING}`}
             />
           ),
         } satisfies Column<Product>]
@@ -84,7 +84,7 @@ export default function Products() {
             </span>
           )}
           <div className="min-w-0">
-            <Link href={`/products/${product.id}`} className={`rounded font-medium text-slate-900 hover:text-indigo-700 hover:underline ${FOCUS_RING}`}>
+            <Link href={`/products/${product.id}`} className={`rounded font-medium text-slate-900 hover:text-brand-700 hover:underline ${FOCUS_RING}`}>
               {product.name}
             </Link>
             {product.sku && <p className="font-mono text-xs text-slate-500">{product.sku}</p>}

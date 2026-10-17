@@ -272,10 +272,10 @@ function ProductForm({ product, onSaved }: { product: Product | null; onSaved: (
                 setDragging(false);
                 addPictures(Array.from(e.dataTransfer.files));
               }}
-              className={`flex cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed px-4 py-8 text-center transition-colors motion-reduce:transition-none ${dragging ? 'border-indigo-500 bg-indigo-50' : 'border-slate-300 bg-slate-50 hover:border-indigo-400 hover:bg-indigo-50/50'}`}
+              className={`flex cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed px-4 py-8 text-center transition-colors motion-reduce:transition-none ${dragging ? 'border-brand-500 bg-brand-50' : 'border-slate-300 bg-slate-50 hover:border-brand-400 hover:bg-brand-50/50'}`}
             >
-              <span className="flex h-12 w-12 items-center justify-center rounded-full bg-white text-indigo-600 shadow-sm"><Icon name="box" size={22} /></span>
-              <span className="text-sm font-medium text-slate-800">Drag pictures here, or <span className="text-indigo-700 underline">choose files</span></span>
+              <span className="flex h-12 w-12 items-center justify-center rounded-full bg-white text-brand-600 shadow-sm"><Icon name="box" size={22} /></span>
+              <span className="text-sm font-medium text-slate-800">Drag pictures here, or <span className="text-brand-700 underline">choose files</span></span>
               <span className="text-xs text-slate-500">JPG or PNG · up to 12 pictures, 5 MB each</span>
             </label>
             <input
@@ -294,7 +294,7 @@ function ProductForm({ product, onSaved }: { product: Product | null; onSaved: (
               <ul className="mt-4 grid grid-cols-3 gap-3 sm:grid-cols-6">
                 {pictures.map((file, index) => (
                   <li key={`${file.name}-${index}`} className="relative rounded-xl border border-slate-200 p-1">
-                    {index === 0 && <span className="absolute left-2 top-2 rounded-full bg-indigo-600 px-2 py-0.5 text-[10px] font-semibold text-white">Main</span>}
+                    {index === 0 && <span className="absolute left-2 top-2 rounded-full bg-brand-600 px-2 py-0.5 text-[10px] font-semibold text-white">Main</span>}
                     <img src={previews[index]} alt={`Picture ${index + 1}: ${file.name}`} className="aspect-square w-full rounded-lg object-cover" />
                     <Button size="sm" variant="ghost" className="mt-1 w-full" onClick={() => setPictures((current) => current.filter((_, i) => i !== index))}>
                       Remove<span className="sr-only"> {file.name}</span>

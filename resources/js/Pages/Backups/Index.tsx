@@ -75,7 +75,7 @@ export default function Index() {
       }
     >
       {filed && (
-        <div role="status" className="mb-4 rounded-md border border-indigo-200 bg-indigo-50 p-4 text-sm text-indigo-900">
+        <div role="status" className="mb-4 rounded-md border border-brand-200 bg-brand-50 p-4 text-sm text-brand-900">
           <p className="font-medium">{filed.status === 'requested' ? 'Restore request filed' : `Restore request: ${filed.status.replace(/_/g, ' ')}`}</p>
           <p className="mt-1">
             {filed.failure_reason ?? 'The platform team has been asked. Nothing is restored until they authorize it. Contact support with an explanation of what went wrong so they can act on it.'}

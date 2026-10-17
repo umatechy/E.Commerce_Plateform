@@ -105,7 +105,7 @@ function UpdatesCard({ settings, onSaved }: { settings: Settings; onSaved: () =>
                         checked={(channel === 'sms' ? v.sms : v.whatsapp).includes(event.key)}
                         disabled={readOnly}
                         onChange={(e) => toggle(channel, event.key, e.target.checked)}
-                        className="h-4 w-4 rounded border-slate-300 text-indigo-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
+                        className="h-4 w-4 rounded border-slate-300 text-brand-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
                       />
                     </td>
                   ))}

@@ -58,7 +58,7 @@ export default function InvoiceTable({ invoices, onOpen }: { invoices: Invoice[]
           <tr key={invoice.id} className="border-t">
             <td className="py-2 font-medium">
               {onOpen ? (
-                <button type="button" onClick={() => onOpen(invoice)} className="rounded text-indigo-700 underline focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-600">
+                <button type="button" onClick={() => onOpen(invoice)} className="rounded text-brand-700 underline focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-600">
                   {invoice.number}
                 </button>
               ) : (

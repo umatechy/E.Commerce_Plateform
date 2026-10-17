@@ -56,7 +56,7 @@ function Stepper({ stage }: { stage: Stage }) {
     <ol className="flex items-center gap-2 text-xs font-medium sm:gap-3 sm:text-sm">
       {steps.map((s, i) => (
         <li key={s.id} className="flex min-w-0 flex-1 items-center gap-2" aria-current={i === at ? 'step' : undefined}>
-          <span className={`flex h-7 w-7 flex-none items-center justify-center rounded-full text-xs font-bold transition-colors motion-reduce:transition-none ${i < at ? 'bg-emerald-500 text-white' : i === at ? 'bg-indigo-600 text-white ring-4 ring-indigo-100' : 'bg-slate-100 text-slate-500'}`}>
+          <span className={`flex h-7 w-7 flex-none items-center justify-center rounded-full text-xs font-bold transition-colors motion-reduce:transition-none ${i < at ? 'bg-emerald-500 text-white' : i === at ? 'bg-brand-600 text-white ring-4 ring-brand-100' : 'bg-slate-100 text-slate-500'}`}>
             {i < at ? <Icon name="check" size={14} strokeWidth={3} /> : i + 1}
           </span>
           <span className={`hidden truncate sm:block ${i === at ? 'text-slate-900' : 'text-slate-500'}`}>{s.label}</span>
@@ -68,7 +68,7 @@ function Stepper({ stage }: { stage: Stage }) {
 }
 
 function Panel({ icon, tone = 'indigo', title, description, aside, children }: { icon: IconName; tone?: 'indigo' | 'emerald' | 'amber'; title: ReactNode; description?: ReactNode; aside?: ReactNode; children?: ReactNode }) {
-  const tones = { indigo: 'bg-indigo-50 text-indigo-600', emerald: 'bg-emerald-50 text-emerald-600', amber: 'bg-amber-50 text-amber-600' };
+  const tones = { indigo: 'bg-brand-50 text-brand-600', emerald: 'bg-emerald-50 text-emerald-600', amber: 'bg-amber-50 text-amber-600' };
 
   return (
     <section className="rounded-2xl border border-slate-200 bg-white shadow-sm">

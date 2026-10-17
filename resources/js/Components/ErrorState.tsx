@@ -6,7 +6,7 @@ export default function ErrorState({ message, onRetry }: Props) {
     <div role="alert" className="rounded border border-red-200 bg-red-50 p-4 text-sm text-red-700">
       <p>{message}</p>
       {onRetry && (
-        <button type="button" onClick={onRetry} className="mt-3 rounded border border-red-300 bg-white px-3 py-1 text-sm font-medium text-red-800 hover:bg-red-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-600">
+        <button type="button" onClick={onRetry} className="mt-3 rounded border border-red-300 bg-white px-3 py-1 text-sm font-medium text-red-800 hover:bg-red-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-600">
           Try again
         </button>
       )}

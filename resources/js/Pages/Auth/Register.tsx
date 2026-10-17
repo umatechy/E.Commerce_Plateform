@@ -22,7 +22,7 @@ type Props = { signupOpen?: boolean; businessCategories?: { value: string; label
 function Step({ n, title }: { n: number; title: string }) {
   return (
     <h2 className="flex items-center gap-2.5 text-sm font-semibold uppercase tracking-wide text-slate-500">
-      <span className="flex h-6 w-6 items-center justify-center rounded-full bg-indigo-600 text-xs font-bold text-white">{n}</span>
+      <span className="flex h-6 w-6 items-center justify-center rounded-full bg-brand-600 text-xs font-bold text-white">{n}</span>
       {title}
     </h2>
   );
@@ -71,7 +71,7 @@ export default function Register({ signupOpen = true, businessCategories = [], p
       footer={<>Already have a store? <a href="/login" className={authLink}>Sign in</a></>}
     >
       {partner && (
-        <p className="mb-5 flex items-start gap-2 rounded-lg border border-indigo-200 bg-indigo-50 px-3.5 py-2.5 text-sm text-indigo-900" role="status">
+        <p className="mb-5 flex items-start gap-2 rounded-lg border border-brand-200 bg-brand-50 px-3.5 py-2.5 text-sm text-brand-900" role="status">
           <Icon name="handshake" size={18} className="mt-0.5" />
           <span>Recommended by <strong>{partner}</strong>, an Umar Techy partner. Your store gets their partner price.</span>
         </p>
@@ -111,7 +111,7 @@ export default function Register({ signupOpen = true, businessCategories = [], p
                     type="checkbox"
                     checked={data.starter_template === '1'}
                     onChange={(e) => setData('starter_template', e.target.checked ? '1' : '0')}
-                    className="mt-0.5 h-4 w-4 rounded border-slate-300 text-indigo-600 focus-visible:ring-2 focus-visible:ring-indigo-600"
+                    className="mt-0.5 h-4 w-4 rounded border-slate-300 text-brand-600 focus-visible:ring-2 focus-visible:ring-brand-600"
                   />
                   <span>Set up categories and filters for what I sell (you can change everything later)</span>
                 </label>

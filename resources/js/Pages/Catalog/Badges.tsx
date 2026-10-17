@@ -26,7 +26,7 @@ type Values = { label: string; tone: string; priority: string; is_active: boolea
 const BLANK: Values = { label: '', tone: 'accent', priority: '50', is_active: true };
 
 const TONE_LABEL: Record<string, string> = { accent: 'Theme accent', success: 'Green (success)', warning: 'Amber (warning)', danger: 'Red (danger)', neutral: 'Dark (neutral)' };
-const SWATCH: Record<string, string> = { accent: 'bg-indigo-600', success: 'bg-green-700', warning: 'bg-amber-700', danger: 'bg-red-700', neutral: 'bg-gray-900' };
+const SWATCH: Record<string, string> = { accent: 'bg-brand-600', success: 'bg-green-700', warning: 'bg-amber-700', danger: 'bg-red-700', neutral: 'bg-gray-900' };
 
 const AUTOMATIC = [
   ['Sold out', 100, 'when nothing can be bought'],
@@ -100,7 +100,7 @@ export default function Badges() {
           </ul>
           <p className="mt-3 text-sm text-slate-700">
             Switch them on or off, set the days and thresholds and how many badges a card shows in{' '}
-            <Link href="/settings" className={`rounded text-indigo-700 underline ${FOCUS_RING}`}>Settings</Link>.
+            <Link href="/settings" className={`rounded text-brand-700 underline ${FOCUS_RING}`}>Settings</Link>.
           </p>
         </Card>
       </div>

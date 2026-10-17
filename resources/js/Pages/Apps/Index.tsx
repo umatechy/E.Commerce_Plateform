@@ -131,7 +131,7 @@ export default function Apps() {
 
 function AppMark({ name, big = false }: { name: string; big?: boolean }) {
   return (
-    <span aria-hidden="true" className={`flex flex-none items-center justify-center rounded-lg bg-indigo-600 font-bold text-white ${big ? 'h-14 w-14 text-2xl' : 'h-11 w-11 text-lg'}`}>
+    <span aria-hidden="true" className={`flex flex-none items-center justify-center rounded-lg bg-brand-600 font-bold text-white ${big ? 'h-14 w-14 text-2xl' : 'h-11 w-11 text-lg'}`}>
       {name.slice(0, 1).toUpperCase()}
     </span>
   );
@@ -285,9 +285,9 @@ function AppDrawer({ slug, onClose, onChanged }: { slug: string; onClose: () => 
           <Card title="Publisher">
             <ul className="space-y-1">
               <li>{publisher?.name}</li>
-              {publisher?.website && <li><a className="text-indigo-700 underline" href={publisher.website} target="_blank" rel="noopener noreferrer">Website</a></li>}
+              {publisher?.website && <li><a className="text-brand-700 underline" href={publisher.website} target="_blank" rel="noopener noreferrer">Website</a></li>}
               {publisher?.support_email && <li>Support: {publisher.support_email}</li>}
-              <li><a className="text-indigo-700 underline" href={d.privacy_url} target="_blank" rel="noopener noreferrer">Privacy policy</a>{d.terms_url && <> · <a className="text-indigo-700 underline" href={d.terms_url} target="_blank" rel="noopener noreferrer">Terms</a></>}</li>
+              <li><a className="text-brand-700 underline" href={d.privacy_url} target="_blank" rel="noopener noreferrer">Privacy policy</a>{d.terms_url && <> · <a className="text-brand-700 underline" href={d.terms_url} target="_blank" rel="noopener noreferrer">Terms</a></>}</li>
             </ul>
           </Card>
         </div>
@@ -340,9 +340,9 @@ function InstalledPanel({ slug, detail, onChanged, busy, onSimple, onConnect, on
       </div>
 
       {inst.update && (
-        <div className="rounded-md border border-indigo-200 bg-indigo-50 p-3">
-          <p className="font-medium text-indigo-900">Version {inst.update.version} is available.</p>
-          {inst.update.release_notes && <p className="mt-1 whitespace-pre-line text-indigo-900">{inst.update.release_notes}</p>}
+        <div className="rounded-md border border-brand-200 bg-brand-50 p-3">
+          <p className="font-medium text-brand-900">Version {inst.update.version} is available.</p>
+          {inst.update.release_notes && <p className="mt-1 whitespace-pre-line text-brand-900">{inst.update.release_notes}</p>}
           {detail.can_manage && (
             <Button size="sm" className="mt-2" busy={busy === 'update'} onClick={onUpdate}>
               {inst.update.new_permissions.length > 0 || inst.update.new_events.length > 0 ? 'Review and update' : 'Update'}

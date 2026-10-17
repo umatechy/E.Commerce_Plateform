@@ -716,7 +716,7 @@ function CommissionsTab({ o, onChanged }: { o: Overview; onChanged: () => void }
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div className="min-w-0">
                     <p className="flex flex-wrap items-center gap-2">
-                      <a href={`/orders/${c.order.id}`} className="font-medium text-indigo-700 underline-offset-2 hover:underline">Order {c.order.number}</a>
+                      <a href={`/orders/${c.order.id}`} className="font-medium text-brand-700 underline-offset-2 hover:underline">Order {c.order.number}</a>
                       <Badge tone={tone}>{label}</Badge>
                       <span className="text-xs text-slate-500">via {c.source === 'coupon' ? 'coupon' : 'link'} · {c.affiliate.name} ({c.affiliate.code})</span>
                     </p>

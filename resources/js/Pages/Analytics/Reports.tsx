@@ -67,7 +67,7 @@ function SalesReport({ range, currency }: { range: Range; currency: string }) {
             header: 'Share of the best day',
             render: (day) => (
               <span className="block h-2 w-40 rounded bg-slate-100" aria-hidden="true">
-                <span className="block h-2 rounded bg-indigo-600" style={{ width: `${Math.round((day.revenue_minor / highest) * 100)}%` }} />
+                <span className="block h-2 rounded bg-brand-600" style={{ width: `${Math.round((day.revenue_minor / highest) * 100)}%` }} />
               </span>
             ),
           },
@@ -226,7 +226,7 @@ function ExportButton({ report, range }: { report: ReportId; range: Range }) {
       )}
       {state.phase === 'error' && <span role="alert" className="text-red-700">{state.message}</span>}
       {state.phase === 'idle' && state.file?.download_url && (
-        <a href={state.file.download_url} className="font-medium text-indigo-700 underline">
+        <a href={state.file.download_url} className="font-medium text-brand-700 underline">
           Download ({state.file.row_count ?? 0} rows{state.file.expires_at ? `, link valid until ${formatDateTime(state.file.expires_at)}` : ''})
         </a>
       )}

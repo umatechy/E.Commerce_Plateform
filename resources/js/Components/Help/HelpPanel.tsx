@@ -34,7 +34,7 @@ export function HelpButton({ path, unseenRelease, canAskPlatform }: { path: stri
         <span className="hidden sm:inline">Help</span>
         {unseenRelease && (
           <>
-            <span aria-hidden="true" className="absolute right-1 top-1 h-2 w-2 rounded-full bg-indigo-600" />
+            <span aria-hidden="true" className="absolute right-1 top-1 h-2 w-2 rounded-full bg-brand-600" />
             <span className="sr-only">. New: what changed in version {unseenRelease}</span>
           </>
         )}
@@ -70,7 +70,7 @@ function HelpPanel({ path, unseenRelease, canAskPlatform, onClose }: { path: str
                 {canAskPlatform ? (
                   <>
                     , or{' '}
-                    <Link href="/support/platform" onClick={onClose} className="text-indigo-700 underline">
+                    <Link href="/support/platform" onClick={onClose} className="text-brand-700 underline">
                       ask Umar Techy
                     </Link>
                   </>
@@ -110,9 +110,9 @@ function HelpPanel({ path, unseenRelease, canAskPlatform, onClose }: { path: str
 
 function PanelLink({ href, label, onClose, badge = false }: { href: string; label: string; onClose: () => void; badge?: boolean }) {
   return (
-    <Link href={href} onClick={onClose} className={`flex items-center justify-between rounded-md px-2 py-1.5 text-indigo-700 hover:bg-slate-50 ${FOCUS_RING}`}>
+    <Link href={href} onClick={onClose} className={`flex items-center justify-between rounded-md px-2 py-1.5 text-brand-700 hover:bg-slate-50 ${FOCUS_RING}`}>
       <span>{label}</span>
-      {badge && <span className="rounded-full bg-indigo-600 px-2 py-0.5 text-[10px] font-semibold uppercase text-white">New</span>}
+      {badge && <span className="rounded-full bg-brand-600 px-2 py-0.5 text-[10px] font-semibold uppercase text-white">New</span>}
     </Link>
   );
 }

@@ -70,7 +70,7 @@ function ActionForm({ payment, action, refundable, refundMode, providerLabel, on
           ? 'Use this when the customer paid outside the system, for example cash on delivery or a bank transfer you have seen arrive.'
           : `Returns money to the customer. A refund cannot be undone. Up to ${money(refundable, payment.currency)} can be refunded.`}
       </p>
-      {action === 'refund' && refundMode === 'provider' && <p className="rounded-md bg-indigo-50 p-2 text-sm text-indigo-900">{providerLabel} sends the money back to the customer’s wallet straight away; it is recorded once {providerLabel} confirms.</p>}
+      {action === 'refund' && refundMode === 'provider' && <p className="rounded-md bg-brand-50 p-2 text-sm text-brand-900">{providerLabel} sends the money back to the customer’s wallet straight away; it is recorded once {providerLabel} confirms.</p>}
       {action === 'refund' && refundMode === 'portal' && <p className="rounded-md bg-amber-50 p-2 text-sm text-amber-900">Make the refund in your {providerLabel} merchant portal first, then record it here with the portal’s reference. {providerLabel} refunds cannot be sent from here yet.</p>}
       <FormError message={form.formError} />
       <TextField label={`Amount (${payment.currency})`} inputMode="decimal" value={form.values.amount} onChange={(v) => form.set('amount', v)} error={amountError ?? form.errors.amount_minor} required data-autofocus />

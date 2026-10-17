@@ -1,6 +1,7 @@
 import { ReactNode, useEffect, useId, useRef, useState } from 'react';
 import Button, { ButtonVariant } from './Button';
 import { TextField } from './Form';
+import Icon from './Icon';
 
 /**
  * A modal dialog (Phase B31 design system): role="dialog", labelled by
@@ -96,7 +97,7 @@ export default function Dialog({ open, title, description, onClose, children, fo
   if (!open) return null;
 
   return (
-    <div className={`fixed inset-0 z-50 flex ${side ? 'justify-end' : 'items-end justify-center sm:items-center'} bg-slate-900/50 p-0 sm:p-4`} onMouseDown={(e) => e.target === e.currentTarget && !busy && onClose()}>
+    <div className={`fixed inset-0 z-50 flex ${side ? 'justify-end' : 'items-end justify-center sm:items-center'} bg-slate-950/40 p-0 backdrop-blur-[2px] motion-safe:animate-fade-in sm:p-4`} onMouseDown={(e) => e.target === e.currentTarget && !busy && onClose()}>
       <div
         ref={panel}
         role="dialog"
@@ -106,11 +107,11 @@ export default function Dialog({ open, title, description, onClose, children, fo
         tabIndex={-1}
         className={
           side
-            ? 'flex h-full w-full max-w-xl flex-col bg-white shadow-xl focus:outline-none'
-            : `flex max-h-[92vh] w-full flex-col rounded-t-lg bg-white shadow-xl focus:outline-none sm:rounded-lg ${wide ? 'sm:max-w-2xl' : 'sm:max-w-lg'}`
+            ? 'flex h-full w-full max-w-xl flex-col bg-white shadow-2xl focus:outline-none motion-safe:animate-slide-in-right'
+            : `flex max-h-[92vh] w-full flex-col rounded-t-2xl bg-white shadow-2xl ring-1 ring-slate-900/5 focus:outline-none motion-safe:animate-scale-in sm:rounded-2xl ${wide ? 'sm:max-w-2xl' : 'sm:max-w-lg'}`
         }
       >
-        <div className="flex items-start justify-between gap-4 border-b border-slate-200 px-5 py-4">
+        <div className="flex items-start justify-between gap-4 border-b border-slate-100 px-6 py-4">
           <div>
             <h2 id={titleId} className="text-base font-semibold text-slate-900">
               {title}
@@ -121,12 +122,12 @@ export default function Dialog({ open, title, description, onClose, children, fo
               </div>
             )}
           </div>
-          <Button variant="ghost" size="sm" onClick={onClose} disabled={busy} aria-label="Close">
-            ✕
+          <Button variant="ghost" size="sm" onClick={onClose} disabled={busy} aria-label="Close" className="-mr-2 !px-2">
+            <Icon name="x" size={18} />
           </Button>
         </div>
-        {children !== undefined && <div className="flex-1 overflow-y-auto px-5 py-4">{children}</div>}
-        {footer && <div className="flex flex-wrap justify-end gap-2 border-t border-slate-200 px-5 py-3">{footer}</div>}
+        {children !== undefined && <div className="flex-1 overflow-y-auto px-6 py-5">{children}</div>}
+        {footer && <div className="flex flex-wrap justify-end gap-2 rounded-b-2xl border-t border-slate-100 bg-slate-50/60 px-6 py-3.5">{footer}</div>}
       </div>
     </div>
   );
@@ -183,7 +184,7 @@ export function ConfirmDialog({ open, title, children, confirmLabel, variant = '
         {children}
         {confirmText !== undefined && <TextField label={`Type ${confirmText} to confirm`} value={typed} onChange={setTyped} autoComplete="off" />}
         {error && (
-          <p role="alert" className="rounded-md border border-red-200 bg-red-50 p-2 text-red-800">
+          <p role="alert" className="rounded-lg border border-red-200 bg-red-50 p-2.5 text-red-800">
             {error}
           </p>
         )}

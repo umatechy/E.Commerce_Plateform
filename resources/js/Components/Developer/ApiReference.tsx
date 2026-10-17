@@ -55,7 +55,7 @@ export default function ApiReference() {
     <Card
       title="API reference"
       description="Read-only, one store per key. Errors always carry a code, a message and a request ID; lists are paged (per_page up to 100)."
-      actions={<a href={SPEC_URL} target="_blank" rel="noreferrer" className="text-sm font-medium text-indigo-700 underline">OpenAPI file<span className="sr-only"> (opens in a new tab)</span></a>}
+      actions={<a href={SPEC_URL} target="_blank" rel="noreferrer" className="text-sm font-medium text-brand-700 underline">OpenAPI file<span className="sr-only"> (opens in a new tab)</span></a>}
     >
       {error && <p className="text-sm text-amber-800">The reference could not be loaded. The OpenAPI file link still works.</p>}
       {!spec && !error && <Skeleton lines={4} />}

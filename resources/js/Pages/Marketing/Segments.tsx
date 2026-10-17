@@ -134,7 +134,7 @@ function PreviewDrawer({ segment, onClose }: { segment: Segment; onClose: () => 
       header: 'Customer',
       render: (customer) =>
         canOpen ? (
-          <Link href={`/customers/${customer.id}`} className={`rounded font-medium text-indigo-700 hover:underline ${FOCUS_RING}`}>{customer.name}</Link>
+          <Link href={`/customers/${customer.id}`} className={`rounded font-medium text-brand-700 hover:underline ${FOCUS_RING}`}>{customer.name}</Link>
         ) : (
           <span className="font-medium">{customer.name}</span>
         ),

@@ -32,7 +32,7 @@ export default function ThemeLibrary({
   return (
     <ul className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
       {themes.map((theme) => (
-        <li key={theme.key} className={`flex flex-col overflow-hidden rounded-lg border ${theme.in_draft ? 'border-indigo-500 ring-2 ring-indigo-200' : 'border-slate-200'} bg-white`}>
+        <li key={theme.key} className={`flex flex-col overflow-hidden rounded-lg border ${theme.in_draft ? 'border-brand-500 ring-2 ring-brand-200' : 'border-slate-200'} bg-white`}>
           <Swatch theme={theme} />
           <div className="flex flex-1 flex-col gap-2 p-4">
             <div className="flex flex-wrap items-center gap-2">

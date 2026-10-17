@@ -11,17 +11,17 @@ export function Breadcrumbs({ items }: { items: Crumb[] }) {
   if (items.length === 0) return null;
 
   return (
-    <nav aria-label="Breadcrumb" className="mb-2 text-xs text-slate-500">
+    <nav aria-label="Breadcrumb" className="mb-2 text-xs font-medium text-slate-500">
       <ol className="flex flex-wrap items-center gap-1">
         {items.map((item, index) => (
           <li key={`${item.label}-${index}`} className="flex items-center gap-1">
-            {index > 0 && <span aria-hidden="true">/</span>}
+            {index > 0 && <Icon name="chevronDown" size={12} className="-rotate-90 text-slate-300" />}
             {item.href ? (
-              <Link href={item.href} className={`rounded hover:text-slate-900 hover:underline ${FOCUS_RING}`}>
+              <Link href={item.href} className={`rounded transition-colors hover:text-brand-700 ${FOCUS_RING}`}>
                 {item.label}
               </Link>
             ) : (
-              <span aria-current={index === items.length - 1 ? 'page' : undefined}>{item.label}</span>
+              <span aria-current={index === items.length - 1 ? 'page' : undefined} className="text-slate-700">{item.label}</span>
             )}
           </li>
         ))}
@@ -33,12 +33,12 @@ export function Breadcrumbs({ items }: { items: Crumb[] }) {
 /** The one <h1> of a page, with what the page is for and its main actions. */
 export function PageHeader({ title, description, actions, crumbs }: { title: string; description?: ReactNode; actions?: ReactNode; crumbs?: Crumb[] }) {
   return (
-    <div className="mb-5">
+    <div className="mb-6">
       {crumbs && <Breadcrumbs items={crumbs} />}
-      <div className="flex flex-wrap items-start justify-between gap-3">
+      <div className="flex flex-wrap items-end justify-between gap-3">
         <div className="min-w-0">
-          <h1 className="text-xl font-semibold text-slate-900">{title}</h1>
-          {description && <p className="mt-1 text-sm text-slate-600">{description}</p>}
+          <h1 className="text-2xl font-semibold tracking-tight text-slate-900">{title}</h1>
+          {description && <p className="mt-1 max-w-3xl text-sm text-slate-600">{description}</p>}
         </div>
         {actions && <div className="flex flex-wrap items-center gap-2">{actions}</div>}
       </div>
@@ -48,17 +48,17 @@ export function PageHeader({ title, description, actions, crumbs }: { title: str
 
 export function Card({ title, description, actions, children, className = '' }: { title?: ReactNode; description?: ReactNode; actions?: ReactNode; children: ReactNode; className?: string }) {
   return (
-    <section className={`rounded-xl border border-slate-200 bg-white shadow-sm ${className}`}>
+    <section className={`rounded-2xl border border-slate-200/80 bg-white shadow-[0_1px_2px_rgba(15,23,42,0.04),0_1px_3px_rgba(15,23,42,0.04)] ${className}`}>
       {(title || actions) && (
-        <div className="flex flex-wrap items-start justify-between gap-2 border-b border-slate-100 px-4 py-3">
-          <div>
-            {title && <h2 className="text-sm font-semibold text-slate-900">{title}</h2>}
-            {description && <p className="mt-0.5 text-xs text-slate-600">{description}</p>}
+        <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 px-5 py-3.5">
+          <div className="min-w-0">
+            {title && <h2 className="text-[15px] font-semibold text-slate-900">{title}</h2>}
+            {description && <p className="mt-0.5 text-xs text-slate-500">{description}</p>}
           </div>
           {actions && <div className="flex flex-wrap gap-2">{actions}</div>}
         </div>
       )}
-      <div className="p-4">{children}</div>
+      <div className="p-5">{children}</div>
     </section>
   );
 }
@@ -72,7 +72,7 @@ export function StatCard({ label, value, hint, href, icon, trend }: { label: str
   const body = (
     <>
       {icon && (
-        <span className="absolute right-4 top-4 flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-50 text-indigo-600">
+        <span className="absolute right-4 top-4 flex h-9 w-9 items-center justify-center rounded-xl bg-brand-50 text-brand-600 ring-1 ring-brand-100 transition-transform duration-200 group-hover:scale-110 motion-reduce:transform-none">
           <Icon name={icon} size={18} />
         </span>
       )}
@@ -93,10 +93,10 @@ export function StatCard({ label, value, hint, href, icon, trend }: { label: str
       )}
     </>
   );
-  const box = 'relative block rounded-xl border border-slate-200 bg-white p-4 shadow-sm';
+  const box = 'group relative block rounded-2xl border border-slate-200/80 bg-white p-5 shadow-[0_1px_2px_rgba(15,23,42,0.04)]';
 
   return href ? (
-    <Link href={href} className={`${box} transition-colors hover:border-indigo-300 hover:shadow motion-reduce:transition-none ${FOCUS_RING}`}>
+    <Link href={href} className={`${box} transition duration-200 hover:-translate-y-0.5 hover:border-brand-200 hover:shadow-lg hover:shadow-slate-900/5 motion-reduce:transform-none motion-reduce:transition-none ${FOCUS_RING}`}>
       {body}
     </Link>
   ) : (
@@ -131,8 +131,8 @@ export function Tabs({ tabs, active, onChange, label }: { tabs: TabItem[]; activ
           aria-selected={tab.id === active}
           tabIndex={tab.id === active ? 0 : -1}
           onClick={() => onChange(tab.id)}
-          className={`whitespace-nowrap border-b-2 px-3 py-2 text-sm font-medium ${FOCUS_RING} ${
-            tab.id === active ? 'border-indigo-600 text-indigo-700' : 'border-transparent text-slate-600 hover:text-slate-900'
+          className={`-mb-px whitespace-nowrap border-b-2 px-3 py-2.5 text-sm font-medium transition-colors motion-reduce:transition-none ${FOCUS_RING} ${
+            tab.id === active ? 'border-brand-600 text-brand-700' : 'border-transparent text-slate-500 hover:border-slate-300 hover:text-slate-900'
           }`}
         >
           {tab.label}
@@ -144,10 +144,10 @@ export function Tabs({ tabs, active, onChange, label }: { tabs: TabItem[]; activ
 
 export function Skeleton({ lines = 3 }: { lines?: number }) {
   return (
-    <div role="status" className="space-y-3 rounded-lg border border-slate-200 bg-white p-4">
+    <div role="status" className="space-y-3 rounded-2xl border border-slate-200/80 bg-white p-5">
       <span className="sr-only">Loading…</span>
       {Array.from({ length: lines }, (_, index) => (
-        <span key={index} className="block h-4 animate-pulse rounded bg-slate-200 motion-reduce:animate-none" style={{ width: `${90 - index * 15}%` }} />
+        <span key={index} className="block h-4 animate-pulse rounded-md bg-slate-100 motion-reduce:animate-none" style={{ width: `${90 - index * 15}%` }} />
       ))}
     </div>
   );
@@ -156,7 +156,7 @@ export function Skeleton({ lines = 3 }: { lines?: number }) {
 /** An error with a way out. Used wherever a request can fail. */
 export function ErrorPanel({ message, onRetry }: { message: string; onRetry?: () => void }) {
   return (
-    <div role="alert" className="flex gap-3 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-800">
+    <div role="alert" className="flex gap-3 rounded-2xl border border-red-200 bg-red-50/80 p-4 text-sm text-red-800">
       <Icon name="alert" size={20} className="mt-0.5 text-red-500" />
       <div>
         <p>{message}</p>
@@ -172,11 +172,11 @@ export function ErrorPanel({ message, onRetry }: { message: string; onRetry?: ()
 
 export function EmptyPanel({ title, description, action, icon = 'layers' }: { title: string; description?: ReactNode; action?: ReactNode; icon?: IconName }) {
   return (
-    <div className="rounded-xl border border-dashed border-slate-300 bg-white px-6 py-10 text-center">
-      <span aria-hidden="true" className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-slate-100 text-slate-500">
-        <Icon name={icon} size={22} />
+    <div className="rounded-2xl border border-dashed border-slate-300 bg-white px-6 py-12 text-center">
+      <span aria-hidden="true" className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-brand-50 text-brand-600 ring-8 ring-brand-50/50">
+        <Icon name={icon} size={24} />
       </span>
-      <p className="font-medium text-slate-900">{title}</p>
+      <p className="font-semibold text-slate-900">{title}</p>
       {description && <p className="mx-auto mt-1 max-w-md text-sm text-slate-600">{description}</p>}
       {action && <div className="mt-4 flex justify-center">{action}</div>}
     </div>
@@ -211,7 +211,7 @@ export function AccessNotice({ message, code }: { message?: string; code?: strin
   const mfa = code === 'mfa_enrollment_required' || code === 'mfa_verification_required';
 
   return (
-    <div role="status" className="rounded-md border border-amber-300 bg-amber-50 p-4 text-sm text-amber-900">
+    <div role="status" className="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
       <p className="font-medium">{mfa ? 'Two-step sign-in is needed here.' : 'You cannot open this.'}</p>
       <p className="mt-1">{message ?? 'Your role does not include this page. Ask the store owner if you need it.'}</p>
       {code === 'mfa_enrollment_required' && (
@@ -229,7 +229,7 @@ export function AccessNotice({ message, code }: { message?: string; code?: strin
 /** A package boundary, said plainly: what is not included, the current package, and where to change it. */
 export function PackageNotice({ title, children, packageName, canSeeBilling }: { title: string; children?: ReactNode; packageName: string | null; canSeeBilling: boolean }) {
   return (
-    <div role="status" className="rounded-md border border-indigo-200 bg-indigo-50 p-4 text-sm text-indigo-900">
+    <div role="status" className="rounded-2xl border border-brand-200 bg-brand-50 p-4 text-sm text-brand-900">
       <p className="font-medium">{title}</p>
       <p className="mt-1">
         {children}
@@ -263,8 +263,8 @@ export function UsageMeter({ label, current, limit }: { label: string; current: 
       <p className={`text-sm ${full ? 'font-medium text-red-700' : 'text-slate-600'}`}>
         {label}: {current} of {limit} used{full ? ' — limit reached' : ''}
       </p>
-      <div className="mt-1 h-1.5 w-full rounded-full bg-slate-200" role="progressbar" aria-valuenow={current} aria-valuemin={0} aria-valuemax={limit} aria-label={label}>
-        <div className={`h-1.5 rounded-full ${full ? 'bg-red-600' : percent >= 80 ? 'bg-amber-500' : 'bg-indigo-600'}`} style={{ width: `${percent}%` }} />
+      <div className="mt-1.5 h-2 w-full overflow-hidden rounded-full bg-slate-100" role="progressbar" aria-valuenow={current} aria-valuemin={0} aria-valuemax={limit} aria-label={label}>
+        <div className={`h-2 rounded-full transition-[width] duration-500 motion-reduce:transition-none ${full ? 'bg-red-600' : percent >= 80 ? 'bg-amber-500' : 'bg-brand-600'}`} style={{ width: `${percent}%` }} />
       </div>
     </div>
   );

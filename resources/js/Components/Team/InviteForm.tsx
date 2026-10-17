@@ -40,12 +40,12 @@ export default function InviteForm({ roles, disabledReason, onInvited }: Props) 
       <div className="mt-3 flex flex-wrap items-start gap-3">
         <label className="flex-1">
           <span className="block text-sm text-gray-700">Email</span>
-          <input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} className="mt-1 block w-full rounded-lg border border-slate-300 px-3 py-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-600" />
+          <input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} className="mt-1 block w-full rounded-lg border border-slate-300 px-3 py-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-600" />
           {errors.email && <span className="mt-1 block text-sm text-red-600">{errors.email}</span>}
         </label>
         <label>
           <span className="block text-sm text-gray-700">Role</span>
-          <select value={role} onChange={(e) => setRole(e.target.value)} className="mt-1 block rounded-lg border border-slate-300 px-3 py-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-600">
+          <select value={role} onChange={(e) => setRole(e.target.value)} className="mt-1 block rounded-lg border border-slate-300 px-3 py-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-600">
             {grantable.map((r) => (
               <option key={r.slug} value={r.slug}>
                 {r.name}
@@ -54,7 +54,7 @@ export default function InviteForm({ roles, disabledReason, onInvited }: Props) 
           </select>
           {errors.role && <span className="mt-1 block text-sm text-red-600">{errors.role}</span>}
         </label>
-        <button type="submit" disabled={sending || disabledReason !== null} className="mt-6 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-700 disabled:opacity-50">
+        <button type="submit" disabled={sending || disabledReason !== null} className="mt-6 rounded-lg bg-brand-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-brand-700 disabled:opacity-50">
           {sending ? 'Sending…' : 'Send invitation'}
         </button>
       </div>

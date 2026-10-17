@@ -48,7 +48,7 @@ export default function PasswordField({ id, label, value, onChange, error, autoC
           onClick={() => setShown((s) => !s)}
           aria-label={shown ? `Hide ${label.toLowerCase()}` : `Show ${label.toLowerCase()}`}
           aria-pressed={shown}
-          className="absolute inset-y-0 right-0 mt-1.5 flex w-11 items-center justify-center rounded-r-lg text-slate-500 hover:text-slate-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
+          className="absolute inset-y-0 right-0 mt-1.5 flex w-11 items-center justify-center rounded-r-lg text-slate-500 hover:text-slate-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
         >
           <Icon name={shown ? 'eyeOff' : 'eye'} size={18} />
         </button>

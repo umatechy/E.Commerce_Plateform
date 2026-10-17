@@ -223,7 +223,7 @@ export default function Show({ orderId }: { orderId: string }) {
                   { label: 'Payment', value: <StatusBadge status={order.payment_status} /> },
                   { label: 'Fulfilment', value: <StatusBadge status={order.fulfillment_status} /> },
                   ...(order.return_status && order.return_status !== 'none' ? [{ label: 'Returns', value: <StatusBadge status={order.return_status} label={ORDER_RETURN_LABELS[order.return_status]} /> }] : []),
-                  ...(order.replacement_for ? [{ label: 'Replaces', value: <Link href={`/orders/${order.replacement_for.id}`} className={`rounded font-mono text-indigo-700 hover:underline ${FOCUS_RING}`}>{order.replacement_for.order_number}</Link> }] : []),
+                  ...(order.replacement_for ? [{ label: 'Replaces', value: <Link href={`/orders/${order.replacement_for.id}`} className={`rounded font-mono text-brand-700 hover:underline ${FOCUS_RING}`}>{order.replacement_for.order_number}</Link> }] : []),
                   ...(order.cancellation_reason ? [{ label: 'Cancelled because', value: humanize(order.cancellation_reason) }] : []),
                 ]}
               />
@@ -265,7 +265,7 @@ export default function Show({ orderId }: { orderId: string }) {
                 <div>
                   <p className="text-sm font-medium text-slate-900">
                     {order.customer && access.can('customers.view') ? (
-                      <Link href={`/customers/${order.customer.id}`} className={`rounded text-indigo-700 hover:underline ${FOCUS_RING}`}>{orderCustomer(order)}</Link>
+                      <Link href={`/customers/${order.customer.id}`} className={`rounded text-brand-700 hover:underline ${FOCUS_RING}`}>{orderCustomer(order)}</Link>
                     ) : (
                       orderCustomer(order)
                     )}

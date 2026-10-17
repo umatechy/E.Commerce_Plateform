@@ -59,13 +59,13 @@ function Body({ info, onChanged }: { info: ClosureInfo; onChanged: () => void })
             Umar Techy has suspended the store{info.suspended_at ? ` on ${formatDate(info.suspended_at)}` : ''}. Its shop is closed and nothing can be changed. You can still see and download your data.
           </p>
           <p className="mt-2 text-sm">
-            <Link href="/support" className="font-medium text-indigo-700 underline">Contact Umar Techy support</Link> to talk about it.
+            <Link href="/support" className="font-medium text-brand-700 underline">Contact Umar Techy support</Link> to talk about it.
           </p>
         </Card>
       )}
       {info.status === 'archived' && (
         <Card title="This store is archived" actions={<Badge>Archived</Badge>}>
-          <p className="text-sm text-slate-700">The time to reopen it has passed. <Link href="/support" className="font-medium text-indigo-700 underline">Contact Umar Techy support</Link> if you need anything from it.</p>
+          <p className="text-sm text-slate-700">The time to reopen it has passed. <Link href="/support" className="font-medium text-brand-700 underline">Contact Umar Techy support</Link> if you need anything from it.</p>
         </Card>
       )}
 

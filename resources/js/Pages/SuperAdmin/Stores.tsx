@@ -55,7 +55,7 @@ export default function Stores() {
       header: 'Store',
       render: (store) => (
         <div>
-          <Link href={`/super-admin/stores/${store.id}`} className={`rounded font-medium text-indigo-700 hover:underline ${FOCUS_RING}`}>
+          <Link href={`/super-admin/stores/${store.id}`} className={`rounded font-medium text-brand-700 hover:underline ${FOCUS_RING}`}>
             {store.name}
           </Link>
           <p className="font-mono text-xs text-slate-500">{store.slug}</p>

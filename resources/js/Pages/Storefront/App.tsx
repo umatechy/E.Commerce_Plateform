@@ -182,7 +182,7 @@ export default function MobileApp() {
             </Card>
 
             <Card title="Learn more">
-              <Link href="/help" className={`rounded text-sm text-indigo-700 hover:underline ${FOCUS_RING}`}>
+              <Link href="/help" className={`rounded text-sm text-brand-700 hover:underline ${FOCUS_RING}`}>
                 Help center
               </Link>
             </Card>

@@ -1,7 +1,7 @@
 import { FormEvent, useState } from 'react';
 import { AdminApiError, adminErrorMessage, adminFetch } from '@/lib/adminApi';
 
-const input = 'mt-1 block w-full rounded-md border border-slate-300 px-3 py-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-600';
+const input = 'mt-1 block w-full rounded-md border border-slate-300 px-3 py-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-600';
 
 /**
  * Phase B58 (Module 28 §92, §117) — the public partner page: what an
@@ -49,11 +49,11 @@ export default function Apply() {
 
   return (
     <div className="min-h-screen bg-slate-50">
-      <header className="bg-indigo-900 text-white">
+      <header className="bg-brand-900 text-white">
         <div className="mx-auto max-w-5xl px-4 py-14">
-          <p className="text-sm font-semibold uppercase tracking-wider text-indigo-200">Umar Techy partner program</p>
+          <p className="text-sm font-semibold uppercase tracking-wider text-brand-200">Umar Techy partner program</p>
           <h1 className="mt-2 max-w-2xl text-3xl font-bold sm:text-4xl">Sell online stores to your clients, and earn every time they renew</h1>
-          <p className="mt-4 max-w-2xl text-indigo-100">
+          <p className="mt-4 max-w-2xl text-brand-100">
             For agencies, freelancers and consultants who set up businesses online. Bring your clients to Umar Techy: they get a partner price, you earn a commission on what they pay.
           </p>
         </div>
@@ -70,7 +70,7 @@ export default function Apply() {
               ['Get paid', 'Follow every store, commission and payout in your portal. Umar Techy pays you by bank transfer, JazzCash or Easypaisa.'],
             ].map(([title, text], i) => (
               <li key={title} className="flex gap-4">
-                <span aria-hidden="true" className="flex h-9 w-9 flex-none items-center justify-center rounded-full bg-indigo-700 font-bold text-white">{i + 1}</span>
+                <span aria-hidden="true" className="flex h-9 w-9 flex-none items-center justify-center rounded-full bg-brand-700 font-bold text-white">{i + 1}</span>
                 <span>
                   <span className="block font-semibold text-slate-900">{title}</span>
                   <span className="block text-sm text-slate-600">{text}</span>
@@ -115,10 +115,10 @@ export default function Apply() {
               </label>
               {errors.accept_terms && <span className="block text-sm text-red-600">{errors.accept_terms}</span>}
               {error && <p role="alert" className="text-sm text-red-600">{error}</p>}
-              <button type="submit" disabled={busy} className="w-full rounded-md bg-indigo-700 py-2.5 font-medium text-white hover:bg-indigo-800 disabled:opacity-50">
+              <button type="submit" disabled={busy} className="w-full rounded-md bg-brand-700 py-2.5 font-medium text-white hover:bg-brand-800 disabled:opacity-50">
                 {busy ? 'Sending…' : 'Send application'}
               </button>
-              <p className="text-xs text-slate-500">Already a partner? <a href="/login" className="text-indigo-700 underline">Sign in</a></p>
+              <p className="text-xs text-slate-500">Already a partner? <a href="/login" className="text-brand-700 underline">Sign in</a></p>
             </form>
           )}
         </section>

@@ -78,7 +78,7 @@ function AllPayments({ filters, setFilters, onOpen }: { filters: typeof FILTER_D
       header: 'Order',
       render: (payment) =>
         payment.order ? (
-          <Link href={`/orders/${payment.order.id}`} className={`rounded font-mono text-indigo-700 hover:underline ${FOCUS_RING}`}>
+          <Link href={`/orders/${payment.order.id}`} className={`rounded font-mono text-brand-700 hover:underline ${FOCUS_RING}`}>
             {payment.order.order_number}
           </Link>
         ) : '—',
@@ -146,7 +146,7 @@ function Findings({ state, status, onStatus, onOpenPayment }: { state: ReturnTyp
                       <StatusBadge status={finding.status === 'open' ? 'needs_attention' : 'resolved'} label={finding.status === 'open' ? 'To look at' : 'Resolved'} />
                     </div>
                     <dl className="mt-3 grid gap-x-6 gap-y-1 text-sm sm:grid-cols-2 lg:grid-cols-4">
-                      <div><dt className="text-xs text-slate-500">Order</dt><dd>{finding.payment?.order ? <Link href={`/orders/${finding.payment.order.id}`} className="font-mono text-indigo-700 hover:underline">{finding.payment.order.order_number}</Link> : '—'}</dd></div>
+                      <div><dt className="text-xs text-slate-500">Order</dt><dd>{finding.payment?.order ? <Link href={`/orders/${finding.payment.order.id}`} className="font-mono text-brand-700 hover:underline">{finding.payment.order.order_number}</Link> : '—'}</dd></div>
                       <div><dt className="text-xs text-slate-500">Reference</dt><dd className="font-mono">{attempt?.reference ?? finding.details.reference ?? '—'}</dd></div>
                       {finding.details.expected_minor !== undefined && (
                         <div><dt className="text-xs text-slate-500">Asked / confirmed</dt><dd>{money(finding.details.expected_minor, finding.details.expected_currency ?? '')} / {money(finding.details.confirmed_minor ?? 0, finding.details.confirmed_currency ?? '')}</dd></div>

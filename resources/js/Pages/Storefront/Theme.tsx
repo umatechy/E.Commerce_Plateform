@@ -243,7 +243,7 @@ export default function Theme() {
       actions={
         <>
           {auth.activeStore && (
-            <a href={`/shop/${auth.activeStore.slug}`} target="_blank" rel="noreferrer" className={`rounded text-sm text-indigo-700 hover:underline ${FOCUS_RING}`}>
+            <a href={`/shop/${auth.activeStore.slug}`} target="_blank" rel="noreferrer" className={`rounded text-sm text-brand-700 hover:underline ${FOCUS_RING}`}>
               View published storefront<span className="sr-only"> (opens in a new tab)</span>
             </a>
           )}
@@ -364,8 +364,8 @@ export default function Theme() {
                 const chosen = motionValue('profile') === profile.value;
 
                 return (
-                  <label key={profile.value} className={`flex cursor-pointer gap-3 rounded-md border p-3 text-sm ${chosen ? 'border-indigo-500 bg-indigo-50' : 'border-slate-200'} ${off ? 'cursor-not-allowed opacity-60' : ''}`}>
-                    <input type="radio" name="motion-profile" value={profile.value} checked={chosen} disabled={!canEdit || off} onChange={() => setMotion('profile', profile.value)} className="mt-0.5 h-4 w-4 text-indigo-600 focus:ring-indigo-500" />
+                  <label key={profile.value} className={`flex cursor-pointer gap-3 rounded-md border p-3 text-sm ${chosen ? 'border-brand-500 bg-brand-50' : 'border-slate-200'} ${off ? 'cursor-not-allowed opacity-60' : ''}`}>
+                    <input type="radio" name="motion-profile" value={profile.value} checked={chosen} disabled={!canEdit || off} onChange={() => setMotion('profile', profile.value)} className="mt-0.5 h-4 w-4 text-brand-600 focus:ring-brand-500" />
                     <span>
                       <span className="font-medium text-slate-900">
                         {profile.label}

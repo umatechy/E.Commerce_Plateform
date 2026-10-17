@@ -62,7 +62,7 @@ export default function ReturnParcelCard({ returnId, status, onChanged }: { retu
             <legend className="text-sm font-medium text-slate-700">Arrange the parcel</legend>
             <div className="mt-2 grid gap-2 sm:grid-cols-2">
               {[...pickups.map((c) => ({ value: c.provider, title: `${c.label} pickup`, text: 'The courier collects it from the customer.' })), { value: 'manual_courier', title: 'Another courier or drop-off', text: 'Print the return label; add the tracking number if there is one.' }].map((choice) => (
-                <label key={choice.value} className={`flex cursor-pointer gap-2 rounded-md border p-3 text-sm ${carrier === choice.value ? 'border-indigo-500 ring-1 ring-indigo-500' : 'border-slate-300'}`}>
+                <label key={choice.value} className={`flex cursor-pointer gap-2 rounded-md border p-3 text-sm ${carrier === choice.value ? 'border-brand-500 ring-1 ring-brand-500' : 'border-slate-300'}`}>
                   <input type="radio" name="return-carrier" checked={carrier === choice.value} onChange={() => form.set('carrier', choice.value)} className="mt-0.5" />
                   <span><span className="block font-medium">{choice.title}</span><span className="block text-xs text-slate-500">{choice.text}</span></span>
                 </label>

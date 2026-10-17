@@ -92,7 +92,7 @@ function SaveTemplateDialog({ storeId, storeName, category, categories, onClose 
           </p>
           {saved.skipped_deeper_categories > 0 && <p className="text-amber-800">{saved.skipped_deeper_categories} categories below the second level were not copied: a template has two levels.</p>}
           <div className="flex justify-end gap-2">
-            <a href="/super-admin/starter-templates" className="text-sm font-medium text-indigo-700 underline">Open starter templates</a>
+            <a href="/super-admin/starter-templates" className="text-sm font-medium text-brand-700 underline">Open starter templates</a>
             <Button onClick={onClose}>Close</Button>
           </div>
         </div>

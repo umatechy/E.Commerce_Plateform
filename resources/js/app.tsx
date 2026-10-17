@@ -3,6 +3,10 @@ import { createInertiaApp, router } from '@inertiajs/react';
 import { createRoot } from 'react-dom/client';
 import type { ComponentType } from 'react';
 import { localeFromProps, setDisplayLocale, setDisplayTimezone, timezoneFromProps } from '@/lib/datetime';
+import { applyStoredTheme } from '@/lib/adminTheme';
+
+// UI-7: the user's admin colour theme, before the first render (no flash).
+applyStoredTheme();
 
 // Approved Stack: Inertia.js SPA bootstrap, Sanctum SPA cookie-session
 // mode (ADR-002 Surface A) — no client-side token handling here; the

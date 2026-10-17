@@ -151,7 +151,7 @@ function ImportDialog({ onClose, onDone }: { onClose: () => void; onDone: () => 
             <span className="font-mono">phone</span>, <span className="font-mono">group</span> and <span className="font-mono">tags</span> (separated by ;) may be added. Up to 2,000 customers, 2 MB.
             Nothing is saved until you confirm the check.
           </p>
-          <a href={`data:text/csv;charset=utf-8,${encodeURIComponent(IMPORT_TEMPLATE)}`} download="customers-template.csv" className={`inline-block rounded text-sm font-medium text-indigo-700 underline ${FOCUS_RING}`}>
+          <a href={`data:text/csv;charset=utf-8,${encodeURIComponent(IMPORT_TEMPLATE)}`} download="customers-template.csv" className={`inline-block rounded text-sm font-medium text-brand-700 underline ${FOCUS_RING}`}>
             Download an example file
           </a>
           <div>
@@ -224,7 +224,7 @@ export default function Index() {
       header: 'Customer',
       render: (customer) => (
         <div>
-          <Link href={`/customers/${customer.id}`} className={`rounded font-medium text-indigo-700 hover:underline ${FOCUS_RING}`}>{customer.name}</Link>
+          <Link href={`/customers/${customer.id}`} className={`rounded font-medium text-brand-700 hover:underline ${FOCUS_RING}`}>{customer.name}</Link>
           <p className="break-all text-xs text-slate-600">{customer.email}</p>
         </div>
       ),

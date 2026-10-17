@@ -177,7 +177,7 @@ function Orders({ customer }: { customer: CustomerDetail }) {
       key: 'number',
       header: 'Order',
       render: (order) => (
-        <Link href={`/orders/${order.id}`} className={`rounded font-mono text-indigo-700 hover:underline ${FOCUS_RING}`}>{order.order_number}</Link>
+        <Link href={`/orders/${order.id}`} className={`rounded font-mono text-brand-700 hover:underline ${FOCUS_RING}`}>{order.order_number}</Link>
       ),
     },
     { key: 'date', header: 'Placed', render: (order) => formatDateTime(order.created_at) },
@@ -280,7 +280,7 @@ function Activity({ customerId, version }: { customerId: string; version: number
                 {event.order && (
                   <>
                     {' '}
-                    <Link href={`/orders/${event.order.id}`} className={`rounded font-mono font-normal text-indigo-700 hover:underline ${FOCUS_RING}`}>{event.order.order_number}</Link>
+                    <Link href={`/orders/${event.order.id}`} className={`rounded font-mono font-normal text-brand-700 hover:underline ${FOCUS_RING}`}>{event.order.order_number}</Link>
                   </>
                 )}
               </p>
@@ -599,7 +599,7 @@ export default function Show({ customerId }: { customerId: string }) {
                 <ul className="space-y-1 text-sm">
                   {(customer.merged_from ?? []).map((record) => (
                     <li key={record.id}>
-                      <Link href={`/customers/${record.id}`} className={`rounded text-indigo-700 hover:underline ${FOCUS_RING}`}>{record.name}</Link>{' '}
+                      <Link href={`/customers/${record.id}`} className={`rounded text-brand-700 hover:underline ${FOCUS_RING}`}>{record.name}</Link>{' '}
                       <span className="text-slate-600">on {formatDate(record.at)}</span>
                     </li>
                   ))}

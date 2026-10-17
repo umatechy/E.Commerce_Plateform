@@ -61,7 +61,7 @@ export default function ArticleView({ article, compact = false }: { article: Hel
         </p>
       )}
 
-      <div className="help-article text-sm text-slate-800 [&_a]:text-indigo-700" dangerouslySetInnerHTML={{ __html: article.html }} />
+      <div className="help-article text-sm text-slate-800 [&_a]:text-brand-700" dangerouslySetInnerHTML={{ __html: article.html }} />
 
       <p className="mt-6 text-xs text-slate-500">
         {article.updated_at ? `Updated ${formatDate(article.updated_at)} · ` : ''}For Umar Techy {article.applies_from}
@@ -88,7 +88,7 @@ export function ArticleList({ articles, onOpen }: { articles: HelpSummary[]; onO
       {articles.map((item) => (
         <li key={item.key} className="py-2">
           <Link href={articleHref(item.key)} onClick={onOpen} className={`block rounded ${FOCUS_RING}`}>
-            <span className="font-medium text-indigo-700 hover:underline">{item.title}</span>
+            <span className="font-medium text-brand-700 hover:underline">{item.title}</span>
             {item.status === 'deprecated' && (
               <>
                 {' '}

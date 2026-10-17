@@ -1,4 +1,5 @@
 import { useSyncExternalStore } from 'react';
+import Icon, { type IconName } from './Icon';
 
 /**
  * Short feedback after an action ("Saved", "Could not save"). Kept in a
@@ -52,10 +53,12 @@ function subscribe(listener: () => void): () => void {
 }
 
 const STYLE: Record<ToastKind, string> = {
-  success: 'border-green-300 bg-green-50 text-green-900',
-  error: 'border-red-300 bg-red-50 text-red-900',
-  warning: 'border-amber-300 bg-amber-50 text-amber-900',
+  success: 'text-emerald-600 bg-emerald-50',
+  error: 'text-red-600 bg-red-50',
+  warning: 'text-amber-600 bg-amber-50',
 };
+
+const ICON: Record<ToastKind, IconName> = { success: 'checkCircle', error: 'alert', warning: 'alert' };
 
 const PREFIX: Record<ToastKind, string> = { success: 'Done', error: 'Error', warning: 'Note' };
 
@@ -70,13 +73,14 @@ export function Toaster() {
   return (
     <div aria-live="polite" className="pointer-events-none fixed bottom-4 right-4 z-[60] flex w-[calc(100%-2rem)] max-w-sm flex-col gap-2">
       {current.map((item) => (
-        <div key={item.id} role={item.kind === 'error' ? 'alert' : 'status'} className={`pointer-events-auto flex items-start justify-between gap-3 rounded-md border p-3 text-sm shadow-md ${STYLE[item.kind]}`}>
-          <p>
+        <div key={item.id} role={item.kind === 'error' ? 'alert' : 'status'} className="pointer-events-auto flex items-start gap-3 rounded-xl border border-slate-200 bg-white p-3.5 text-sm text-slate-800 shadow-xl shadow-slate-900/10 motion-safe:animate-fade-in-up">
+          <span aria-hidden="true" className={`flex h-8 w-8 flex-none items-center justify-center rounded-lg ${STYLE[item.kind]}`}><Icon name={ICON[item.kind]} size={18} /></span>
+          <p className="min-w-0 flex-1 pt-1.5">
             <span className="font-semibold">{PREFIX[item.kind]}: </span>
             {item.message}
           </p>
-          <button type="button" onClick={() => dismissToast(item.id)} aria-label="Dismiss" className="rounded px-1 text-current hover:bg-black/5 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-600">
-            ✕
+          <button type="button" onClick={() => dismissToast(item.id)} aria-label="Dismiss" className="rounded-md p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-600">
+            <Icon name="x" size={16} />
           </button>
         </div>
       ))}

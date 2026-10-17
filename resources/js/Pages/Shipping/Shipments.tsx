@@ -65,7 +65,7 @@ export default function Shipments() {
       header: 'Order',
       render: (shipment) =>
         shipment.order ? (
-          <Link href={`/orders/${shipment.order.id}`} className={`rounded font-mono text-indigo-700 hover:underline ${FOCUS_RING}`}>
+          <Link href={`/orders/${shipment.order.id}`} className={`rounded font-mono text-brand-700 hover:underline ${FOCUS_RING}`}>
             {shipment.order.order_number}
           </Link>
         ) : '—',

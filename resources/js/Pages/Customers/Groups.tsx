@@ -70,7 +70,7 @@ function RenameTagDialog({ tag, onClose, onDone }: { tag: CustomerTag; onClose: 
 }
 
 const memberLink = (query: string, count: number) => (
-  <Link href={`/customers?${query}`} className={`rounded text-indigo-700 hover:underline ${FOCUS_RING}`}>
+  <Link href={`/customers?${query}`} className={`rounded text-brand-700 hover:underline ${FOCUS_RING}`}>
     {count} {count === 1 ? 'customer' : 'customers'}
   </Link>
 );

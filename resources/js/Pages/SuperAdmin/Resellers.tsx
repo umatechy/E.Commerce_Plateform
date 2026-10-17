@@ -310,7 +310,7 @@ function ResellerDrawer({ id, tiers, canManage, currencies, onClose, onChanged, 
                 {d.stores.map((s) => (
                   <li key={s.id} className={`flex flex-wrap items-start justify-between gap-3 py-3 ${s.ended_at ? 'opacity-60' : ''}`}>
                     <span>
-                      <a href={`/super-admin/stores/${s.store.id}`} className="font-medium text-indigo-700 hover:underline">{s.store.name}</a>
+                      <a href={`/super-admin/stores/${s.store.id}`} className="font-medium text-brand-700 hover:underline">{s.store.name}</a>
                       <span className="block text-xs text-slate-500">
                         {SOURCE[s.source] ?? s.source} · since {formatDate(s.since)} · terms {String(s.terms.tier)}: {Number(s.terms.client_discount_bp) / 100}% off, {Number(s.terms.initial_commission_bp) / 100}% / {Number(s.terms.recurring_commission_bp) / 100}%
                       </span>

@@ -35,7 +35,7 @@ export default function ForgotPassword() {
     <AuthShell title={sent ? 'Check your email' : 'Forgot your password?'} subtitle={sent ? undefined : 'Enter the email you sign in with. We will email you a link to choose a new password. Two-step sign-in stays on.'} footer={back}>
       {sent ? (
         <div role="status" className="space-y-3 text-sm text-slate-700">
-          <span className="flex h-12 w-12 items-center justify-center rounded-full bg-indigo-50 text-indigo-600"><Icon name="mail" size={24} /></span>
+          <span className="flex h-12 w-12 items-center justify-center rounded-full bg-brand-50 text-brand-600"><Icon name="mail" size={24} /></span>
           <p>If an account exists for <strong className="break-all">{email}</strong>, we have sent it a link to choose a new password. The link works for 60 minutes.</p>
           <p className="text-slate-500">No email? Check your spam folder, or ask again in a minute.</p>
         </div>

@@ -67,7 +67,7 @@ export default function AccountDialog({ info, endpoint, currency, owner, kind = 
               const disabled = env === 'production' && productionBlocked;
 
               return (
-                <label key={env} className={`flex cursor-pointer gap-2 rounded-md border p-3 text-sm ${v.environment === env ? 'border-indigo-500 ring-1 ring-indigo-500' : 'border-slate-300'} ${disabled ? 'cursor-not-allowed opacity-60' : ''}`}>
+                <label key={env} className={`flex cursor-pointer gap-2 rounded-md border p-3 text-sm ${v.environment === env ? 'border-brand-500 ring-1 ring-brand-500' : 'border-slate-300'} ${disabled ? 'cursor-not-allowed opacity-60' : ''}`}>
                   <input type="radio" name="environment" value={env} checked={v.environment === env} disabled={disabled} onChange={() => form.set('environment', env)} className="mt-0.5" />
                   <span>
                     <span className="block font-medium">{env === 'sandbox' ? 'Sandbox' : 'Production'}</span>

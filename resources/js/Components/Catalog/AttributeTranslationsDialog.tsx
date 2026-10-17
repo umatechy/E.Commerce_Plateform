@@ -41,7 +41,7 @@ export default function AttributeTranslationsDialog({ attribute, canEdit, onClos
         <Skeleton lines={4} />
       ) : data.languages.length === 0 ? (
         <p className="text-sm text-slate-600">
-          Your storefront has one language. To show attributes in Urdu as well, add <code>ur</code> to Storefront languages in <Link href="/settings" className="text-indigo-700 underline">Settings</Link>.
+          Your storefront has one language. To show attributes in Urdu as well, add <code>ur</code> to Storefront languages in <Link href="/settings" className="text-brand-700 underline">Settings</Link>.
         </p>
       ) : (
         <div className="space-y-6">

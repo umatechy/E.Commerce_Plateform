@@ -90,9 +90,9 @@ export default function BulkBar({ selected, currency, canCollections, onDone, on
   }
 
   return (
-    <section aria-label="Change the chosen products" className="mb-4 rounded-lg border border-indigo-200 bg-indigo-50 p-3">
+    <section aria-label="Change the chosen products" className="mb-4 rounded-lg border border-brand-200 bg-brand-50 p-3">
       <div className="flex flex-wrap items-end gap-3">
-        <p className="text-sm font-medium text-indigo-900" aria-live="polite">{selected.length} chosen</p>
+        <p className="text-sm font-medium text-brand-900" aria-live="polite">{selected.length} chosen</p>
         <div className="w-64">
           <SelectField
             label="Change"

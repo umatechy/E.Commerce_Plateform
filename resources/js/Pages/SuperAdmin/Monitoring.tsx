@@ -115,7 +115,7 @@ function Failures() {
   const messages = usePagedApi<MessageFailure>('/super-admin/notifications/failures', { page: messagePage });
   const storeLink = (id: number | null) =>
     id === null ? 'Platform' : (
-      <Link href={`/super-admin/stores/${id}`} className={`rounded text-indigo-700 hover:underline ${FOCUS_RING}`}>
+      <Link href={`/super-admin/stores/${id}`} className={`rounded text-brand-700 hover:underline ${FOCUS_RING}`}>
         Store #{id}
       </Link>
     );

@@ -90,7 +90,7 @@ export default function ProductImportDialog({ onClose, onDone }: { onClose: () =
             (attribute keys from Catalog → Attributes). Up to 2,000 rows, 4 MB. Nothing is saved until you confirm the check.
           </p>
           <p className="text-sm text-slate-700">Tip: export your products first — the exported file has the same columns and can be edited and imported back.</p>
-          <a href={`data:text/csv;charset=utf-8,${encodeURIComponent(PRODUCT_IMPORT_TEMPLATE)}`} download="products-template.csv" className={`inline-block rounded text-sm font-medium text-indigo-700 underline ${FOCUS_RING}`}>
+          <a href={`data:text/csv;charset=utf-8,${encodeURIComponent(PRODUCT_IMPORT_TEMPLATE)}`} download="products-template.csv" className={`inline-block rounded text-sm font-medium text-brand-700 underline ${FOCUS_RING}`}>
             Download an example file
           </a>
           <div>

@@ -45,7 +45,7 @@ export default function Index() {
       header: 'Order',
       render: (order) => (
         <div>
-          <Link href={`/orders/${order.id}`} className={`rounded font-mono font-medium text-indigo-700 hover:underline ${FOCUS_RING}`}>
+          <Link href={`/orders/${order.id}`} className={`rounded font-mono font-medium text-brand-700 hover:underline ${FOCUS_RING}`}>
             {order.order_number}
           </Link>
           <p className="text-xs text-slate-500">{formatDateTime(order.created_at)}</p>
@@ -75,7 +75,7 @@ export default function Index() {
               type="button"
               aria-pressed={active}
               onClick={() => setFilters({ status: q.status, page: '1' })}
-              className={`whitespace-nowrap rounded-full px-3.5 py-1.5 text-sm font-medium ${FOCUS_RING} ${active ? 'bg-indigo-600 text-white shadow-sm' : 'bg-white text-slate-600 ring-1 ring-slate-200 hover:bg-slate-50 hover:text-slate-900'}`}
+              className={`whitespace-nowrap rounded-full px-3.5 py-1.5 text-sm font-medium ${FOCUS_RING} ${active ? 'bg-brand-600 text-white shadow-sm' : 'bg-white text-slate-600 ring-1 ring-slate-200 hover:bg-slate-50 hover:text-slate-900'}`}
             >
               {q.label}
             </button>

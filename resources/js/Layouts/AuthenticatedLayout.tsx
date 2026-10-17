@@ -11,6 +11,7 @@ import { toast, Toaster } from '@/Components/ui/toast';
 import StepUpDialog from '@/Components/StepUpDialog';
 import { HelpButton } from '@/Components/Help/HelpPanel';
 import { setDisplayTimezone } from '@/lib/datetime';
+import { onThemeChange, setTheme, storedTheme, THEMES, type ThemeId } from '@/lib/adminTheme';
 
 /**
  * The admin shell (Phase B31, gap G6): sidebar navigation, top bar with
@@ -27,6 +28,10 @@ import { setDisplayTimezone } from '@/lib/datetime';
  * Store Admin and Umar Techy Super Admin are two separate sections of
  * the menu: store pages act on the active store only; platform pages are
  * shown to platform staff only and are marked as such.
+ *
+ * UI-7: the theme colour (brand-*) and a theme picker in the account menu;
+ * UI-8: a calmer frame — a taller header, an accent on the current entry,
+ * and each page easing in (off with reduced motion).
  */
 const SIDEBAR_PREFERENCE = 'admin.sidebar.collapsed';
 
@@ -43,10 +48,10 @@ function NavLink({ item, active, onNavigate }: { item: NavEntry; active: boolean
   // reason, instead of a link that would only bounce back.
   if (item.state !== 'open') {
     return (
-      <span aria-disabled="true" title={item.reason} className="flex cursor-not-allowed items-center gap-2.5 rounded-lg px-3 py-1.5 text-sm text-slate-400">
+      <span aria-disabled="true" title={item.reason} className="flex cursor-not-allowed items-center gap-3 rounded-lg px-3 py-2 text-sm text-slate-400">
         {NAV_ICONS[item.href] && <Icon name={NAV_ICONS[item.href]} size={18} />}
         <span className="flex-1">{item.label}</span>
-        <span className="text-[10px] uppercase tracking-wide">{item.state === 'locked' ? 'Locked' : 'Upgrade'}</span>
+        <span className="rounded-full bg-slate-100 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-slate-500">{item.state === 'locked' ? 'Locked' : 'Upgrade'}</span>
         <span className="sr-only">. {item.reason}</span>
       </span>
     );
@@ -57,10 +62,10 @@ function NavLink({ item, active, onNavigate }: { item: NavEntry; active: boolean
       href={item.href}
       onClick={onNavigate}
       aria-current={active ? 'page' : undefined}
-      className={`group flex items-center gap-2.5 rounded-lg px-3 py-1.5 text-sm ${FOCUS_RING} ${active ? 'bg-indigo-50 font-medium text-indigo-800' : 'text-slate-700 hover:bg-slate-100 hover:text-slate-900'}`}
+      className={`group relative flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors duration-150 motion-reduce:transition-none ${FOCUS_RING} ${active ? 'bg-brand-50 font-semibold text-brand-700 before:absolute before:inset-y-1.5 before:left-0 before:w-1 before:rounded-full before:bg-brand-600' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'}`}
     >
-      {NAV_ICONS[item.href] && <Icon name={NAV_ICONS[item.href]} size={18} className={active ? 'text-indigo-600' : 'text-slate-400 group-hover:text-slate-600'} />}
-      <span>{item.label}</span>
+      {NAV_ICONS[item.href] && <Icon name={NAV_ICONS[item.href]} size={18} className={`transition-transform duration-150 group-hover:translate-x-0.5 motion-reduce:transform-none ${active ? 'text-brand-600' : 'text-slate-400 group-hover:text-slate-600'}`} />}
+      <span className="truncate">{item.label}</span>
     </Link>
   );
 }
@@ -95,10 +100,10 @@ function SidebarNav({ groups, current, path, locked, onNavigate }: { groups: Res
   }
 
   return (
-    <nav aria-label="Admin" className="flex-1 space-y-5 overflow-y-auto px-3 py-4">
+    <nav aria-label="Admin" className="flex-1 space-y-6 overflow-y-auto px-3 py-5">
       <div>
         {locked ? (
-          <span aria-disabled="true" title="Turn on two-step sign-in first" className="block cursor-not-allowed rounded-md px-3 py-1.5 text-sm text-slate-400">
+          <span aria-disabled="true" title="Turn on two-step sign-in first" className="flex cursor-not-allowed items-center gap-3 rounded-lg px-3 py-2 text-sm text-slate-400">
             Dashboard
           </span>
         ) : (
@@ -106,9 +111,9 @@ function SidebarNav({ groups, current, path, locked, onNavigate }: { groups: Res
             href="/"
             onClick={onNavigate}
             aria-current={path === '/' ? 'page' : undefined}
-            className={`flex items-center gap-2.5 rounded-lg px-3 py-1.5 text-sm ${FOCUS_RING} ${path === '/' ? 'bg-indigo-50 font-medium text-indigo-800' : 'text-slate-700 hover:bg-slate-100'}`}
+            className={`group relative flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors duration-150 motion-reduce:transition-none ${FOCUS_RING} ${path === '/' ? 'bg-brand-50 font-semibold text-brand-700 before:absolute before:inset-y-1.5 before:left-0 before:w-1 before:rounded-full before:bg-brand-600' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'}`}
           >
-            <Icon name="grid" size={18} className={path === '/' ? 'text-indigo-600' : 'text-slate-400'} />
+            <Icon name="grid" size={18} className={path === '/' ? 'text-brand-600' : 'text-slate-400 group-hover:text-slate-600'} />
             <span>Dashboard</span>
           </Link>
         )}
@@ -119,12 +124,12 @@ function SidebarNav({ groups, current, path, locked, onNavigate }: { groups: Res
 
         return (
           <div key={group.label} className={group.platform ? 'rounded-xl border border-violet-200 bg-violet-50/60 p-2' : ''}>
-            <h2 className={`text-xs font-semibold uppercase tracking-wide ${group.platform ? 'text-violet-800' : 'text-slate-500'}`}>
+            <h2 className={`text-[11px] font-semibold uppercase tracking-wider ${group.platform ? 'text-violet-800' : 'text-slate-400'}`}>
               <button
                 type="button"
                 onClick={() => toggleFold(group.label)}
                 aria-expanded={!isFolded}
-                className={`flex w-full items-center justify-between rounded px-3 pb-1 text-left uppercase ${FOCUS_RING}`}
+                className={`flex w-full items-center justify-between rounded px-3 pb-1.5 text-left uppercase transition-colors hover:text-slate-700 motion-reduce:transition-none ${FOCUS_RING}`}
               >
                 {group.label}
                 <Icon name="chevronDown" size={14} className={`transition-transform motion-reduce:transition-none ${isFolded ? '-rotate-90' : ''}`} />
@@ -153,8 +158,9 @@ function StoreSwitcher({ auth }: { auth: AuthProps }) {
 
   if (stores.length <= 1) {
     return auth.activeStore ? (
-      <span className="max-w-[12rem] truncate rounded bg-slate-100 px-2 py-1 text-sm text-slate-700" title="The store you are managing">
-        {auth.activeStore.name}
+      <span className="inline-flex max-w-[14rem] items-center gap-2 truncate rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-1.5 text-sm font-medium text-slate-700" title="The store you are managing">
+        <Icon name="store" size={16} className="flex-none text-brand-600" />
+        <span className="truncate">{auth.activeStore.name}</span>
       </span>
     ) : null;
   }
@@ -180,7 +186,7 @@ function StoreSwitcher({ auth }: { auth: AuthProps }) {
         value={auth.activeStore ? String(auth.activeStore.id) : ''}
         disabled={busy}
         onChange={(e) => switchTo(e.target.value)}
-        className={`max-w-[11rem] rounded-md border border-slate-300 bg-white px-2 py-1 text-sm text-slate-900 ${FOCUS_RING}`}
+        className={`max-w-[12rem] rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-1.5 text-sm font-medium text-slate-900 hover:border-slate-300 ${FOCUS_RING}`}
       >
         {!auth.activeStore && <option value="">Choose a store…</option>}
         {stores.map((store) => (
@@ -216,26 +222,62 @@ function AccountMenu({ auth, onLogout }: { auth: AuthProps; onLogout: () => void
         aria-haspopup="true"
         aria-expanded={open}
         onClick={() => setOpen((value) => !value)}
-        className={`flex max-w-[14rem] items-center gap-2 rounded-lg px-1.5 py-1 text-sm text-slate-700 hover:bg-slate-100 ${FOCUS_RING}`}
+        className={`flex max-w-[14rem] items-center gap-2 rounded-xl px-1.5 py-1 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-100 motion-reduce:transition-none ${FOCUS_RING}`}
       >
-        <span aria-hidden="true" className="flex h-8 w-8 flex-none items-center justify-center rounded-full bg-gradient-to-br from-indigo-500 to-violet-600 text-xs font-bold text-white">
+        <span aria-hidden="true" className="flex h-8 w-8 flex-none items-center justify-center rounded-full bg-gradient-to-br from-brand-500 to-brand-700 text-xs font-bold text-white ring-2 ring-white">
           {auth.user.name.split(/\s+/).map((part) => part[0]).join('').slice(0, 2).toUpperCase()}
         </span>
         <span className="hidden truncate sm:inline">{auth.user.name}</span>
         <Icon name="chevronDown" size={14} className="text-slate-400" />
       </button>
       {open && (
-        <div className="absolute right-0 z-40 mt-1 w-56 rounded-md border border-slate-200 bg-white p-1 text-sm shadow-lg">
-          <p className="truncate px-3 py-2 text-xs text-slate-500">{auth.user.email}</p>
-          <Link href="/security" className={`flex items-center gap-2 rounded px-3 py-1.5 text-slate-700 hover:bg-slate-100 ${FOCUS_RING}`} onClick={() => setOpen(false)}>
-            <Icon name="shieldCheck" size={16} className="text-slate-400" />Security
-          </Link>
-          <button type="button" onClick={onLogout} className={`flex w-full items-center gap-2 rounded px-3 py-1.5 text-left text-slate-700 hover:bg-slate-100 ${FOCUS_RING}`}>
-            <Icon name="logOut" size={16} className="text-slate-400" />Log out
-          </button>
+        <div className="absolute right-0 z-40 mt-2 w-64 origin-top-right rounded-xl border border-slate-200 bg-white p-1.5 text-sm shadow-xl shadow-slate-900/10 motion-safe:animate-scale-in">
+          <div className="border-b border-slate-100 px-3 pb-2.5 pt-2">
+            <p className="truncate font-semibold text-slate-900">{auth.user.name}</p>
+            <p className="truncate text-xs text-slate-500">{auth.user.email}</p>
+          </div>
+          <ThemePicker />
+          <div className="border-t border-slate-100 pt-1">
+            <Link href="/security" className={`flex items-center gap-2.5 rounded-lg px-3 py-2 text-slate-700 transition-colors hover:bg-slate-100 motion-reduce:transition-none ${FOCUS_RING}`} onClick={() => setOpen(false)}>
+              <Icon name="shieldCheck" size={16} className="text-slate-400" />Security
+            </Link>
+            <button type="button" onClick={onLogout} className={`flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-left text-slate-700 transition-colors hover:bg-red-50 hover:text-red-700 motion-reduce:transition-none ${FOCUS_RING}`}>
+              <Icon name="logOut" size={16} className="text-slate-400" />Log out
+            </button>
+          </div>
         </div>
       )}
     </div>
+  );
+}
+
+/** UI-7: the admin colour theme, kept on this device (lib/adminTheme). */
+function ThemePicker() {
+  const [theme, setCurrent] = useState<ThemeId>('indigo');
+  useEffect(() => {
+    setCurrent(storedTheme());
+
+    return onThemeChange(setCurrent);
+  }, []);
+
+  return (
+    <fieldset className="px-3 py-2.5">
+      <legend className="mb-2 text-xs font-medium text-slate-500">Theme colour</legend>
+      <div className="flex gap-2">
+        {THEMES.map((t) => (
+          <label
+            key={t.id}
+            className={`flex flex-1 cursor-pointer flex-col items-center gap-1 rounded-lg border px-2 py-1.5 text-[11px] font-medium transition-colors motion-reduce:transition-none has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-brand-600 ${theme === t.id ? 'border-brand-300 bg-brand-50 text-brand-700' : 'border-slate-200 text-slate-600 hover:border-slate-300 hover:bg-slate-50'}`}
+          >
+            <input type="radio" name="admin-theme" value={t.id} checked={theme === t.id} onChange={() => setTheme(t.id)} className="sr-only" />
+            <span aria-hidden="true" className="flex h-5 w-5 items-center justify-center rounded-full text-white shadow-inner" style={{ backgroundColor: t.swatch }}>
+              {theme === t.id && <Icon name="check" size={12} strokeWidth={3} />}
+            </span>
+            {t.label}
+          </label>
+        ))}
+      </div>
+    </fieldset>
   );
 }
 
@@ -305,33 +347,33 @@ export default function AuthenticatedLayout({ children }: PropsWithChildren) {
   }
 
   const brand = (
-    <div className="flex h-14 items-center border-b border-slate-200 px-5">
+    <div className="flex h-16 items-center border-b border-slate-100 px-5">
       <Link href="/" className={`rounded ${FOCUS_RING}`}>
-        <BrandLogo size={30} />
+        <BrandLogo size={32} />
       </Link>
     </div>
   );
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900">
+    <div className="min-h-screen bg-slate-50 text-slate-900 antialiased">
       <a href="#main" className="sr-only focus:not-sr-only focus:fixed focus:left-2 focus:top-2 focus:z-[70] focus:rounded focus:bg-white focus:px-3 focus:py-2 focus:shadow">
         Skip to content
       </a>
 
       {auth.user && !collapsed && (
-        <aside className="fixed inset-y-0 left-0 z-30 hidden w-64 flex-col border-r border-slate-200 bg-white lg:flex">
+        <aside className="fixed inset-y-0 left-0 z-30 hidden w-64 flex-col border-r border-slate-200/80 bg-white lg:flex">
           {brand}
           <SidebarNav groups={groups} current={current} path={path} locked={locked} />
         </aside>
       )}
 
       {auth.user && drawer && (
-        <div className="fixed inset-0 z-40 flex bg-slate-900/50 lg:hidden" onMouseDown={(e) => e.target === e.currentTarget && setDrawer(false)} onKeyDown={(e) => e.key === 'Escape' && setDrawer(false)}>
-          <div role="dialog" aria-modal="true" aria-label="Menu" className="flex h-full w-72 max-w-[85vw] flex-col bg-white shadow-xl">
+        <div className="fixed inset-0 z-40 flex bg-slate-950/40 backdrop-blur-[2px] motion-safe:animate-fade-in lg:hidden" onMouseDown={(e) => e.target === e.currentTarget && setDrawer(false)} onKeyDown={(e) => e.key === 'Escape' && setDrawer(false)}>
+          <div role="dialog" aria-modal="true" aria-label="Menu" className="flex h-full w-72 max-w-[85vw] flex-col bg-white shadow-2xl">
             <div className="flex items-center justify-between border-b border-slate-200 pr-2">
               {brand}
-              <button type="button" autoFocus onClick={() => setDrawer(false)} aria-label="Close menu" className={`rounded-md px-2 py-1 text-slate-600 hover:bg-slate-100 ${FOCUS_RING}`}>
-                ✕
+              <button type="button" autoFocus onClick={() => setDrawer(false)} aria-label="Close menu" className={`rounded-lg p-2 text-slate-500 hover:bg-slate-100 hover:text-slate-800 ${FOCUS_RING}`}>
+                <Icon name="x" size={18} />
               </button>
             </div>
             <SidebarNav groups={groups} current={current} path={path} locked={locked} onNavigate={() => setDrawer(false)} />
@@ -340,11 +382,11 @@ export default function AuthenticatedLayout({ children }: PropsWithChildren) {
       )}
 
       <div className={auth.user && !collapsed ? 'lg:pl-64' : ''}>
-        <header className="sticky top-0 z-20 flex h-14 items-center justify-between gap-3 border-b border-slate-200 bg-white/90 px-4 backdrop-blur">
+        <header className="sticky top-0 z-20 flex h-16 items-center justify-between gap-3 border-b border-slate-200/80 bg-white/85 px-4 backdrop-blur-md sm:px-6">
           <div className="flex min-w-0 items-center gap-3">
             {auth.user && (
-              <button type="button" onClick={toggleSidebar} aria-label="Menu" aria-expanded={drawer || !collapsed} className={`rounded-md border border-slate-300 px-2 py-1 text-slate-700 hover:bg-slate-100 ${FOCUS_RING}`}>
-                <Icon name="menu" size={18} />
+              <button type="button" onClick={toggleSidebar} aria-label="Menu" aria-expanded={drawer || !collapsed} className={`rounded-lg p-2 text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900 motion-reduce:transition-none ${FOCUS_RING}`}>
+                <Icon name="menu" size={20} />
               </button>
             )}
             {(collapsed || !auth.user) && (
@@ -354,7 +396,7 @@ export default function AuthenticatedLayout({ children }: PropsWithChildren) {
             )}
             <StoreSwitcher auth={auth} />
             {access.hasStore && auth.activeStore && !locked && (
-              <a href={`/shop/${auth.activeStore.slug}`} target="_blank" rel="noreferrer" className={`hidden items-center gap-1 rounded text-sm font-medium text-indigo-700 hover:underline md:inline-flex ${FOCUS_RING}`}>
+              <a href={`/shop/${auth.activeStore.slug}`} target="_blank" rel="noreferrer" className={`hidden items-center gap-1.5 rounded-lg px-2 py-1.5 text-sm font-medium text-brand-700 transition-colors hover:bg-brand-50 md:inline-flex motion-reduce:transition-none ${FOCUS_RING}`}>
                 View storefront<Icon name="externalLink" size={14} /><span className="sr-only"> (opens in a new tab)</span>
               </a>
             )}
@@ -364,11 +406,11 @@ export default function AuthenticatedLayout({ children }: PropsWithChildren) {
               <button
                 type="button"
                 onClick={() => setPalette(true)}
-                className={`mr-1 hidden items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-3 py-1.5 text-sm text-slate-500 hover:border-slate-300 hover:text-slate-700 sm:flex ${FOCUS_RING}`}
+                className={`mr-1 hidden min-w-[13rem] items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-500 transition-colors hover:border-slate-300 hover:bg-white hover:text-slate-700 sm:flex motion-reduce:transition-none ${FOCUS_RING}`}
               >
                 <Icon name="search" size={16} />
-                <span>Go to…</span>
-                <kbd className="rounded border border-slate-200 bg-white px-1 text-[10px] text-slate-500">Ctrl K</kbd>
+                <span className="flex-1 text-left">Go to…</span>
+                <kbd className="rounded-md border border-slate-200 bg-white px-1.5 py-0.5 font-sans text-[10px] font-medium text-slate-500">Ctrl K</kbd>
               </button>
             )}
             {auth.user && !locked && <HelpButton path={path} unseenRelease={auth.help_unseen_release ?? null} canAskPlatform={access.hasStore && access.can('support.platform')} />}
@@ -377,8 +419,8 @@ export default function AuthenticatedLayout({ children }: PropsWithChildren) {
         </header>
 
         {locked && (
-          <div role="status" className="border-b border-amber-300 bg-amber-50">
-            <p className="mx-auto max-w-7xl px-4 py-3 text-sm text-amber-900">
+          <div role="status" className="border-b border-amber-200 bg-amber-50">
+            <p className="mx-auto max-w-7xl px-4 py-3 text-sm text-amber-900 sm:px-6 lg:px-8">
               <strong>One step before you can manage your store:</strong> turn on two-step sign-in below. Store owners must have it. The other pages
               open as soon as it is on.
             </p>
@@ -387,8 +429,9 @@ export default function AuthenticatedLayout({ children }: PropsWithChildren) {
 
         {!locked && <StoreStateBanner auth={auth} isOwner={access.isOwner} />}
 
-        <main id="main" className="mx-auto max-w-7xl px-4 py-6">
-          {children}
+        <main id="main" className="mx-auto max-w-7xl px-4 py-6 sm:px-6 sm:py-8 lg:px-8">
+          {/* Each page eases in (keyed by the address, so it runs on every visit). */}
+          <div key={path} className="motion-safe:animate-fade-in-up">{children}</div>
         </main>
       </div>
 

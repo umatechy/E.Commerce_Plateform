@@ -110,7 +110,7 @@ export function ShipmentDrawer({ shipmentId, onClose, onChanged }: { shipmentId:
               {
                 label: 'Tracking number',
                 value: shipment.tracking_number ? (
-                  shipment.tracking_url ? <a href={shipment.tracking_url} target="_blank" rel="noreferrer noopener" className="font-mono text-indigo-700 hover:underline">{shipment.tracking_number}</a> : <span className="font-mono">{shipment.tracking_number}</span>
+                  shipment.tracking_url ? <a href={shipment.tracking_url} target="_blank" rel="noreferrer noopener" className="font-mono text-brand-700 hover:underline">{shipment.tracking_number}</a> : <span className="font-mono">{shipment.tracking_number}</span>
                 ) : '—',
               },
               { label: 'Parcel', value: `${shipment.pieces ?? 1} piece${(shipment.pieces ?? 1) === 1 ? '' : 's'} · ${weightText(shipment.weight_grams)}` },
@@ -187,7 +187,7 @@ export function ShipmentDrawer({ shipmentId, onClose, onChanged }: { shipmentId:
               <ol className="relative space-y-3 border-s border-slate-200 ps-4 text-sm">
                 {[...(shipment.tracking_events ?? [])].sort((a, b) => b.occurred_at.localeCompare(a.occurred_at)).map((event, index) => (
                   <li key={`${event.occurred_at}-${index}`}>
-                    <span aria-hidden="true" className={`absolute -start-1.5 mt-1 h-3 w-3 rounded-full border-2 border-white ${index === 0 ? 'bg-indigo-600' : 'bg-slate-300'}`} />
+                    <span aria-hidden="true" className={`absolute -start-1.5 mt-1 h-3 w-3 rounded-full border-2 border-white ${index === 0 ? 'bg-brand-600' : 'bg-slate-300'}`} />
                     <div className="flex flex-wrap items-center justify-between gap-2">
                       <StatusBadge status={event.status} />
                       <span className="text-xs text-slate-500">{formatDateTime(event.occurred_at)}{event.source ? ` · ${event.source === 'carrier' ? 'courier' : event.source}` : ''}</span>
@@ -272,7 +272,7 @@ export function CreateShipmentDialog({ order, onClose, onDone }: { order: Order;
           <legend className="text-sm font-medium text-slate-700">How does it go?</legend>
           <div className="mt-2 grid gap-2 sm:grid-cols-2">
             {choices.map((choice) => (
-              <label key={choice.value} className={`flex cursor-pointer gap-2 rounded-md border p-3 text-sm ${v.carrier === choice.value ? 'border-indigo-500 ring-1 ring-indigo-500' : 'border-slate-300'}`}>
+              <label key={choice.value} className={`flex cursor-pointer gap-2 rounded-md border p-3 text-sm ${v.carrier === choice.value ? 'border-brand-500 ring-1 ring-brand-500' : 'border-slate-300'}`}>
                 <input type="radio" name="carrier" value={choice.value} checked={v.carrier === choice.value} onChange={() => form.set('carrier', choice.value)} className="mt-0.5" />
                 <span>
                   <span className="block font-medium">{choice.title}</span>

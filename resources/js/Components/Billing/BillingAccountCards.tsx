@@ -66,7 +66,7 @@ export default function BillingAccountCards({ version }: { version: number }) {
             {notes.data.data.map((n) => (
               <li key={n.id} className="flex flex-wrap items-center justify-between gap-2 py-1.5">
                 <span>{n.number} · invoice {n.invoice} · {SETTLEMENT[n.settlement] ?? n.settlement} · {n.reason}</span>
-                <span className="flex items-center gap-3">{money(n.total_minor, n.currency)} <a href={`/api/v1/billing/credit-notes/${n.id}/pdf`} className="text-indigo-700 underline">PDF<span className="sr-only"> of {n.number}</span></a></span>
+                <span className="flex items-center gap-3">{money(n.total_minor, n.currency)} <a href={`/api/v1/billing/credit-notes/${n.id}/pdf`} className="text-brand-700 underline">PDF<span className="sr-only"> of {n.number}</span></a></span>
               </li>
             ))}
           </ul>

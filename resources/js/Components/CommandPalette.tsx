@@ -81,9 +81,9 @@ export default function CommandPalette({ entries, open, onClose }: { entries: Pa
               aria-selected={i === active}
               onMouseEnter={() => setActive(i)}
               onClick={() => go(entry)}
-              className={`flex cursor-pointer items-center gap-3 rounded-xl px-3 py-2.5 ${i === active ? 'bg-indigo-50' : ''}`}
+              className={`flex cursor-pointer items-center gap-3 rounded-xl px-3 py-2.5 ${i === active ? 'bg-brand-50' : ''}`}
             >
-              <span className={`flex h-9 w-9 flex-none items-center justify-center rounded-lg ${i === active ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-600'}`}>
+              <span className={`flex h-9 w-9 flex-none items-center justify-center rounded-lg ${i === active ? 'bg-brand-600 text-white' : 'bg-slate-100 text-slate-600'}`}>
                 <Icon name={entry.icon} size={18} />
               </span>
               <span className="min-w-0 flex-1">

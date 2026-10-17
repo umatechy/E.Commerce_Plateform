@@ -43,7 +43,7 @@ function cellVisibility<T>(column: Column<T>, index: number): string {
 export default function DataTable<T>({ caption, columns, rows, rowKey, loading = false, error, onRetry, empty, onRowClick }: Props<T>) {
   if (error) {
     return (
-      <div role="alert" className="rounded-md border border-red-200 bg-red-50 p-4 text-sm text-red-800">
+      <div role="alert" className="rounded-2xl border border-red-200 bg-red-50/80 p-4 text-sm text-red-800">
         <p>{error}</p>
         {onRetry && (
           <Button size="sm" className="mt-3" onClick={onRetry}>
@@ -57,10 +57,10 @@ export default function DataTable<T>({ caption, columns, rows, rowKey, loading =
   if (rows !== null && rows.length === 0 && !loading) return <>{empty}</>;
 
   return (
-    <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white shadow-sm" aria-busy={loading || undefined}>
+    <div className="overflow-x-auto rounded-2xl border border-slate-200/80 bg-white shadow-[0_1px_2px_rgba(15,23,42,0.04)]" aria-busy={loading || undefined}>
       <table className="w-full text-left text-sm">
         <caption className="sr-only">{caption}</caption>
-        <thead className="border-b border-slate-200 bg-slate-50/80 text-[11px] uppercase tracking-wider text-slate-500">
+        <thead className="border-b border-slate-200 bg-slate-50 text-[11px] uppercase tracking-wider text-slate-500">
           <tr>
             {columns.map((column, index) => (
               <th key={column.key} scope="col" className={`px-4 py-2.5 font-semibold ${column.align === 'right' ? 'text-right' : ''} ${cellVisibility(column, index)}`}>
@@ -69,13 +69,13 @@ export default function DataTable<T>({ caption, columns, rows, rowKey, loading =
             ))}
           </tr>
         </thead>
-        <tbody className={loading && rows !== null ? 'opacity-60' : ''}>
+        <tbody className={`transition-opacity motion-reduce:transition-none ${loading && rows !== null ? 'opacity-60' : ''}`}>
           {rows === null
             ? [0, 1, 2, 3, 4].map((line) => (
                 <tr key={line} className="border-b border-slate-100 last:border-0">
                   {columns.map((column, index) => (
                     <td key={column.key} className={`px-4 py-3.5 ${cellVisibility(column, index)}`}>
-                      <span className="block h-4 w-3/4 animate-pulse rounded bg-slate-200 motion-reduce:animate-none" />
+                      <span className="block h-4 w-3/4 animate-pulse rounded-md bg-slate-100 motion-reduce:animate-none" />
                     </td>
                   ))}
                 </tr>
@@ -83,12 +83,12 @@ export default function DataTable<T>({ caption, columns, rows, rowKey, loading =
             : rows.map((row) => (
                 <tr
                   key={rowKey(row)}
-                  className={`border-b border-slate-100 transition-colors last:border-0 hover:bg-slate-50/70 motion-reduce:transition-none ${onRowClick ? 'cursor-pointer' : ''}`}
+                  className={`border-b border-slate-100 transition-colors last:border-0 motion-reduce:transition-none ${onRowClick ? 'cursor-pointer hover:bg-brand-50/50' : 'hover:bg-slate-50/70'}`}
                   // A click on a link, button or field inside the row does its own thing, not the row's.
                   onClick={onRowClick ? (event) => !(event.target as HTMLElement).closest('a, button, input, select, textarea, label') && onRowClick(row) : undefined}
                 >
                   {columns.map((column, index) => (
-                    <td key={column.key} className={`px-4 py-3 align-middle ${column.align === 'right' ? 'text-right' : ''} ${cellVisibility(column, index)}`}>
+                    <td key={column.key} className={`px-4 py-3.5 align-middle ${column.align === 'right' ? 'text-right' : ''} ${cellVisibility(column, index)}`}>
                       {column.render(row)}
                     </td>
                   ))}

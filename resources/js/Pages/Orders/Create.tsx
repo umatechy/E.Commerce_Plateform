@@ -73,7 +73,7 @@ function CustomerPicker({ chosen, onChoose }: { chosen: CustomerRow | null; onCh
             <ul className="divide-y divide-slate-100 rounded-md border border-slate-200">
               {results.rows.map((customer) => (
                 <li key={customer.id}>
-                  <button type="button" onClick={() => onChoose(customer)} className="w-full p-2 text-left text-sm hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500">
+                  <button type="button" onClick={() => onChoose(customer)} className="w-full p-2 text-left text-sm hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500">
                     <span className="font-medium text-slate-900">{customer.name}</span> <span className="text-slate-600">{customer.email}</span>
                   </button>
                 </li>
@@ -204,7 +204,7 @@ export default function Create() {
             <div className="flex flex-wrap gap-4 text-sm">
               {(['customer', 'guest'] as const).map((value) => (
                 <label key={value} className="flex items-center gap-2">
-                  <input type="radio" name="order-for" value={value} checked={mode === value} onChange={() => setMode(value)} className="h-4 w-4 border-slate-400 text-indigo-600 focus:ring-indigo-500" />
+                  <input type="radio" name="order-for" value={value} checked={mode === value} onChange={() => setMode(value)} className="h-4 w-4 border-slate-400 text-brand-600 focus:ring-brand-500" />
                   {value === 'customer' ? 'A customer of the store' : 'Guest (no account)'}
                 </label>
               ))}
@@ -235,7 +235,7 @@ export default function Create() {
         <Card title="Payment">
           {creditOffered && (
             <label className="mb-4 flex items-start gap-2 text-sm">
-              <input type="checkbox" checked={useCredit} onChange={(e) => setUseCredit(e.target.checked)} className="mt-0.5 h-4 w-4 rounded border-slate-400 text-indigo-600 focus:ring-indigo-500" />
+              <input type="checkbox" checked={useCredit} onChange={(e) => setUseCredit(e.target.checked)} className="mt-0.5 h-4 w-4 rounded border-slate-400 text-brand-600 focus:ring-brand-500" />
               <span>
                 Pay with {customer?.name}&rsquo;s store credit (balance {money(creditBalance, access.currency)})
                 <span className="block text-slate-600">As much of the total as the balance covers. Cancelling the order gives it back.</span>
