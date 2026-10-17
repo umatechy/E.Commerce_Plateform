@@ -281,7 +281,7 @@ function DeletionDialog({ base, data, onClose, onDone }: { base: string; data: L
           <div className="grid gap-4 sm:grid-cols-2">
             <div>
               <h3 className="text-sm font-semibold text-slate-900">Removed: {plan.data.data.purge_total.toLocaleString()} rows</h3>
-              <ul className="mt-1 max-h-48 overflow-auto rounded border border-slate-200 text-xs">
+              <ul className="mt-1 max-h-48 overflow-auto rounded-lg border border-slate-200 text-xs">
                 {top.map(([table, n]) => <li key={table} className="flex justify-between border-b border-slate-100 px-2 py-1 last:border-0"><span className="font-mono">{table}</span><span>{n.toLocaleString()}</span></li>)}
               </ul>
             </div>

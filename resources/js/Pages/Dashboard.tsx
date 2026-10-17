@@ -96,16 +96,20 @@ function MiniStat({ label, value, href, icon, tone = 'slate' }: { label: string;
   const colour = { slate: 'bg-slate-100 text-slate-600', amber: 'bg-amber-50 text-amber-700', emerald: 'bg-emerald-50 text-emerald-700' }[tone];
   const body = (
     <>
-      <span className={`flex h-9 w-9 flex-none items-center justify-center rounded-lg ${colour}`}><Icon name={icon} size={18} /></span>
+      <span className={`flex h-10 w-10 flex-none items-center justify-center rounded-xl ${colour}`}><Icon name={icon} size={18} /></span>
       <span className="min-w-0">
         <span className="block truncate text-xs text-slate-500">{label}</span>
         <span className="block text-lg font-semibold text-slate-900">{value}</span>
       </span>
     </>
   );
-  const box = 'flex items-center gap-3 rounded-xl border border-slate-200 bg-white px-4 py-3 shadow-sm';
+  const box = 'flex items-center gap-3 rounded-2xl border border-slate-200/80 bg-white px-4 py-3.5 shadow-[0_1px_2px_rgba(15,23,42,0.04)]';
 
-  return href ? <Link href={href} className={`${box} hover:border-brand-300 ${FOCUS_RING}`}>{body}</Link> : <div className={box}>{body}</div>;
+  return href ? (
+    <Link href={href} className={`${box} transition duration-200 hover:-translate-y-0.5 hover:border-brand-200 hover:shadow-lg hover:shadow-slate-900/5 motion-reduce:transform-none motion-reduce:transition-none ${FOCUS_RING}`}>{body}</Link>
+  ) : (
+    <div className={box}>{body}</div>
+  );
 }
 
 type SalesDay = { date: string; order_count: number; revenue_minor: number };
@@ -247,7 +251,7 @@ function SetupSection() {
   const blocking = setup.blocking ?? [];
 
   const row = (check: SetupCheck) => (
-    <li key={check.key} className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1 py-2.5">
+    <li key={check.key} className="-mx-2 flex flex-wrap items-center justify-between gap-x-3 gap-y-1 rounded-lg px-2 py-2.5 transition-colors hover:bg-slate-50 motion-reduce:transition-none">
       <span className="flex min-w-0 items-start gap-2.5">
         <span className={`mt-0.5 flex h-5 w-5 flex-none items-center justify-center rounded-full ${check.done ? 'bg-emerald-500 text-white' : 'border-2 border-slate-300'}`} aria-hidden="true">
           {check.done && <Icon name="check" size={12} strokeWidth={3} />}
@@ -255,7 +259,7 @@ function SetupSection() {
         <span className={check.done ? 'text-slate-500' : 'text-slate-800'}>
           <span className="sr-only">{check.done ? 'Done: ' : 'To do: '}</span>
           {check.message}{' '}
-          {check.required ? <span className="text-xs font-medium text-amber-700">(required)</span> : <span className="text-xs text-slate-500">(optional)</span>}
+          {check.required ? <span className="ml-1 inline-flex rounded-full bg-amber-50 px-2 py-0.5 text-[11px] font-semibold text-amber-800 ring-1 ring-inset ring-amber-200">Required</span> : <span className="ml-1 text-xs text-slate-400">Optional</span>}
         </span>
       </span>
       {!check.done && (
@@ -279,8 +283,8 @@ function SetupSection() {
             </Button>
           ) : (
             SETUP_LINK[check.key] && (
-              <Link href={SETUP_LINK[check.key]} className={`inline-flex items-center gap-1 rounded-md border border-slate-300 px-2.5 py-1 text-sm font-medium text-slate-700 hover:bg-slate-50 ${FOCUS_RING}`}>
-                Open<Icon name="arrowRight" size={14} />
+              <Link href={SETUP_LINK[check.key]} className={`group/open inline-flex items-center gap-1 rounded-lg bg-brand-50 px-3 py-1.5 text-sm font-semibold text-brand-700 transition-colors hover:bg-brand-100 motion-reduce:transition-none ${FOCUS_RING}`}>
+                Open<Icon name="arrowRight" size={14} className="transition-transform group-hover/open:translate-x-0.5 motion-reduce:transform-none" />
               </Link>
             )
           )}
@@ -310,7 +314,7 @@ function SetupSection() {
     >
       <div className="flex flex-col gap-5 sm:flex-row sm:items-start">
         {setup.progress && (
-          <div className="flex items-center gap-4 sm:w-52 sm:flex-col sm:items-start">
+          <div className="flex items-center gap-4 rounded-xl bg-slate-50 p-4 sm:w-56 sm:flex-col sm:items-start">
             <ProgressRing percent={setup.progress.percent} />
             <div className="text-sm">
               <p className="font-semibold text-slate-900">{setup.progress.done} of {setup.progress.total} steps done</p>
@@ -329,8 +333,8 @@ function SetupSection() {
 
             return (
               <div key={group} className="mb-3 last:mb-0">
-                <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-500">{title}</h3>
-                <ul className="divide-y divide-slate-100 text-sm">{checks.map(row)}</ul>
+                <h3 className="mb-1 text-[11px] font-semibold uppercase tracking-wider text-slate-400">{title}</h3>
+                <ul className="text-sm">{checks.map(row)}</ul>
               </div>
             );
           })}
@@ -339,7 +343,7 @@ function SetupSection() {
               <button type="button" onClick={() => setShowDone((s) => !s)} aria-expanded={showDone} className={`rounded text-sm font-medium text-slate-600 hover:text-slate-900 ${FOCUS_RING}`}>
                 {showDone ? 'Hide' : 'Show'} the {done.length} completed step{done.length === 1 ? '' : 's'}
               </button>
-              {showDone && <ul className="divide-y divide-slate-100 text-sm">{done.map(row)}</ul>}
+              {showDone && <ul className="text-sm">{done.map(row)}</ul>}
             </div>
           )}
         </div>
@@ -360,14 +364,14 @@ function RecentOrders() {
       ) : state.rows.length === 0 ? (
         <p className="text-sm text-slate-600">No orders yet. They appear here as customers buy.</p>
       ) : (
-        <ul className="-mx-4 -my-2 divide-y divide-slate-100 text-sm">
+        <ul className="-mx-5 -my-2 divide-y divide-slate-100 text-sm">
           {state.rows.slice(0, 6).map((order) => {
             const who = order.customer?.name ?? order.guest_name ?? null;
 
             return (
               <li key={order.id}>
-                <Link href={`/orders/${order.id}`} className={`flex items-center gap-3 px-4 py-2.5 hover:bg-slate-50 ${FOCUS_RING}`}>
-                  <span className="flex h-9 w-9 flex-none items-center justify-center rounded-full bg-slate-100 text-xs font-semibold text-slate-600" aria-hidden="true">
+                <Link href={`/orders/${order.id}`} className={`flex items-center gap-3 px-5 py-3 transition-colors hover:bg-brand-50/50 motion-reduce:transition-none ${FOCUS_RING}`}>
+                  <span className="flex h-9 w-9 flex-none items-center justify-center rounded-full bg-brand-50 text-xs font-semibold text-brand-700" aria-hidden="true">
                     {(who ?? '#').trim().slice(0, 1).toUpperCase()}
                   </span>
                   <span className="min-w-0 flex-1">
@@ -478,20 +482,35 @@ export default function Dashboard() {
 
   return (
     <AuthenticatedLayout>
-      <PageHeader
-        title={`${greeting()}${firstName ? `, ${firstName}` : ''}`}
-        description={<>Here is how <strong className="font-semibold text-slate-800">{auth.activeStore?.name}</strong> is doing.</>}
-        actions={
-          <>
+      {/* UI-8: a welcome banner in the theme colour, with the most used actions. */}
+      <section className="relative mb-6 overflow-hidden rounded-3xl bg-gradient-to-br from-brand-600 via-brand-700 to-brand-900 p-6 text-white shadow-lg shadow-brand-900/20 sm:p-8">
+        <div aria-hidden="true" className="pointer-events-none absolute -right-16 -top-24 h-72 w-72 rounded-full bg-white/10 blur-2xl" />
+        <div aria-hidden="true" className="pointer-events-none absolute -bottom-24 right-40 h-56 w-56 rounded-full bg-white/5 blur-2xl" />
+        <div className="relative flex flex-wrap items-end justify-between gap-5">
+          <div className="min-w-0">
+            <p className="text-sm font-medium text-white/70">{new Date().toLocaleDateString(undefined, { weekday: 'long', day: 'numeric', month: 'long' })}</p>
+            <h1 className="mt-1 text-2xl font-semibold tracking-tight sm:text-3xl">{`${greeting()}${firstName ? `, ${firstName}` : ''}`}</h1>
+            <p className="mt-1.5 text-sm text-white/80">Here is how <strong className="font-semibold text-white">{auth.activeStore?.name}</strong> is doing.</p>
+          </div>
+          <div className="flex flex-wrap gap-2">
             {auth.activeStore && (
-              <a href={`/shop/${auth.activeStore.slug}`} target="_blank" rel="noreferrer" className={`inline-flex items-center gap-1.5 rounded-md border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 ${FOCUS_RING}`}>
+              <a href={`/shop/${auth.activeStore.slug}`} target="_blank" rel="noreferrer" className={`inline-flex min-h-10 items-center gap-2 rounded-lg bg-white/10 px-4 py-2 text-sm font-semibold text-white ring-1 ring-inset ring-white/20 backdrop-blur transition hover:-translate-y-px hover:bg-white/20 motion-reduce:transform-none motion-reduce:transition-none ${FOCUS_RING} focus-visible:ring-offset-brand-700`}>
                 <Icon name="store" size={16} />View shop<span className="sr-only"> (opens in a new tab)</span>
               </a>
             )}
-            {access.can('products.create') && <ButtonLink href="/products/new" variant="primary">Add product</ButtonLink>}
-          </>
-        }
-      />
+            {access.can('orders.create') && (
+              <Link href="/orders/new" className={`inline-flex min-h-10 items-center gap-2 rounded-lg bg-white/10 px-4 py-2 text-sm font-semibold text-white ring-1 ring-inset ring-white/20 backdrop-blur transition hover:-translate-y-px hover:bg-white/20 motion-reduce:transform-none motion-reduce:transition-none ${FOCUS_RING} focus-visible:ring-offset-brand-700`}>
+                <Icon name="cart" size={16} />New order
+              </Link>
+            )}
+            {access.can('products.create') && (
+              <Link href="/products/new" className={`inline-flex min-h-10 items-center gap-2 rounded-lg bg-white px-4 py-2 text-sm font-semibold text-brand-700 shadow-sm transition hover:-translate-y-px hover:bg-brand-50 motion-reduce:transform-none motion-reduce:transition-none ${FOCUS_RING} focus-visible:ring-offset-brand-700`}>
+                <Icon name="box" size={16} />Add product
+              </Link>
+            )}
+          </div>
+        </div>
+      </section>
 
       <div className="space-y-6">
         {access.can('storefront.manage') && <SetupSection />}

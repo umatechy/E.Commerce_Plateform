@@ -12,7 +12,7 @@ type Props = {
 const STATUS_TONES: Record<TeamMember['status'], string> = {
   active: 'bg-green-50 text-green-700',
   suspended: 'bg-amber-50 text-amber-800',
-  revoked: 'bg-gray-100 text-gray-500',
+  revoked: 'bg-slate-100 text-slate-500',
 };
 
 /**
@@ -46,7 +46,7 @@ export default function MemberList({ members, roles, canManage, busy, onRoleChan
                     {member.name.split(/\s+/).map((part) => part[0]).join('').slice(0, 2).toUpperCase()}
                   </span>
                   {member.name}
-                  {member.is_you && <span className="ml-2 text-xs text-gray-500">(you)</span>}
+                  {member.is_you && <span className="ml-2 text-xs text-slate-500">(you)</span>}
                 </div>
                 <div className="pl-10 text-slate-500">{member.email}</div>
               </td>

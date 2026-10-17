@@ -31,7 +31,7 @@ function formatDate(iso: string): string {
 const STATUS_STYLE: Record<Invoice['status'], string> = {
   open: 'bg-yellow-100 text-yellow-800',
   paid: 'bg-green-100 text-green-800',
-  void: 'bg-gray-100 text-gray-700',
+  void: 'bg-slate-100 text-slate-700',
   uncollectible: 'bg-red-100 text-red-700',
 };
 
@@ -44,7 +44,7 @@ export default function InvoiceTable({ invoices, onOpen }: { invoices: Invoice[]
     <div className="overflow-x-auto">
     <table className="w-full min-w-[32rem] text-left text-sm">
       <caption className="sr-only">Invoices</caption>
-      <thead className="text-gray-500">
+      <thead className="text-slate-500">
         <tr>
           <th className="py-2">Invoice</th>
           <th className="py-2">Period</th>

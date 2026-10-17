@@ -24,8 +24,8 @@ type Agent = { id: string; name: string };
 type Filters = { status: string; priority: string; category: string; assignee: string; q: string; breached: boolean };
 
 const DEFAULT_FILTERS: Filters = { status: 'active', priority: '', category: '', assignee: '', q: '', breached: false };
-const select = 'rounded border border-gray-300 bg-white px-2 py-1.5 text-sm';
-const PRIORITY_TONES: Record<string, string> = { urgent: 'bg-red-600 text-white', high: 'bg-orange-100 text-orange-800', normal: '', low: 'text-gray-400' };
+const select = 'rounded border border-slate-300 bg-white px-2 py-1.5 text-sm';
+const PRIORITY_TONES: Record<string, string> = { urgent: 'bg-red-600 text-white', high: 'bg-orange-100 text-orange-800', normal: '', low: 'text-slate-400' };
 
 function initialTicket(): string | null {
   if (typeof window === 'undefined') return null;
@@ -179,29 +179,29 @@ export default function AgentInbox({ apiBase, title, categories, showStore = fal
                 type="button"
                 onClick={card.onClick}
                 aria-pressed={card.pressed}
-                className={`rounded border bg-white p-3 text-left hover:border-gray-400 ${card.pressed ? 'border-gray-900' : 'border-gray-200'}`}
+                className={`rounded-2xl border bg-white p-4 text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow-md motion-reduce:transform-none ${card.pressed ? 'border-brand-500 ring-2 ring-brand-100' : 'border-slate-200 hover:border-slate-300'}`}
               >
-                <span className="block text-xs text-gray-500">{card.label}</span>
-                <span className={`text-xl font-semibold ${card.tone ?? ''}`}>{card.value}</span>
+                <span className="block text-xs text-slate-500">{card.label}</span>
+                <span className={`text-2xl font-semibold tracking-tight text-slate-900 ${card.tone ?? ''}`}>{card.value}</span>
               </button>
             ) : (
-              <div key={card.label} className="rounded border border-gray-200 bg-white p-3">
-                <span className="block text-xs text-gray-500">{card.label}</span>
-                <span className="text-xl font-semibold">{card.value}</span>
+              <div key={card.label} className="rounded-2xl border border-slate-200/80 bg-white shadow-[0_1px_2px_rgba(15,23,42,0.04)] p-4">
+                <span className="block text-xs text-slate-500">{card.label}</span>
+                <span className="text-2xl font-semibold tracking-tight text-slate-900">{card.value}</span>
               </div>
             ),
           )}
         </div>
       )}
 
-      <div className="flex flex-wrap items-center gap-2 rounded border border-gray-200 bg-white p-3" role="search">
+      <div className="flex flex-wrap items-center gap-2 rounded-2xl border border-slate-200/80 bg-white shadow-[0_1px_2px_rgba(15,23,42,0.04)] p-4" role="search">
         <input
           type="search"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="Search number, subject, name or email"
           aria-label="Search tickets"
-          className="min-w-[14rem] flex-1 rounded border border-gray-300 px-3 py-1.5 text-sm"
+          className="min-w-[14rem] flex-1 block min-h-10 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm shadow-sm shadow-slate-900/5 transition-colors placeholder:text-slate-400 hover:border-slate-400 focus:outline-none focus-visible:border-brand-500 focus-visible:ring-2 focus-visible:ring-brand-600"
         />
         <select aria-label="Status" value={filters.status} onChange={(e) => filter({ status: e.target.value })} className={select}>
           <option value="active">All active</option>
@@ -249,23 +249,23 @@ export default function AgentInbox({ apiBase, title, categories, showStore = fal
           {!list && <LoadingState />}
           {list?.tickets.length === 0 && <EmptyState title="No tickets here" description="Nothing matches these filters." />}
           {list && list.tickets.length > 0 && (
-            <ul className="divide-y rounded border border-gray-200 bg-white">
+            <ul className="divide-y divide-slate-100 overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-[0_1px_2px_rgba(15,23,42,0.04)]">
               {list.tickets.map((ticket) => (
                 <li key={ticket.id}>
                   <button
                     type="button"
                     onClick={() => open(ticket.id)}
                     aria-current={selected === ticket.id}
-                    className={`block w-full px-3 py-3 text-left hover:bg-gray-50 ${selected === ticket.id ? 'bg-blue-50' : ''}`}
+                    className={`block w-full px-3 py-3 text-left hover:bg-slate-50 ${selected === ticket.id ? 'bg-blue-50' : ''}`}
                   >
-                    <div className="flex items-center gap-2 text-xs text-gray-500">
+                    <div className="flex items-center gap-2 text-xs text-slate-500">
                       <span className="font-mono">{ticket.number}</span>
                       {ticket.priority !== 'normal' && <span className={`rounded px-1.5 py-0.5 font-medium ${PRIORITY_TONES[ticket.priority]}`}>{priorityLabel(ticket.priority)}</span>}
                       <span>{statusLabel(ticket.status, 'agent')}</span>
                       <span className="ml-auto">{timeAgo(ticket.last_requester_activity_at ?? ticket.created_at, now)}</span>
                     </div>
-                    <p className="mt-1 truncate font-medium text-gray-900">{ticket.subject}</p>
-                    <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-gray-500">
+                    <p className="mt-1 truncate font-medium text-slate-900">{ticket.subject}</p>
+                    <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-slate-500">
                       <span>{ticket.requester.name}</span>
                       {showStore && ticket.store && <span>· {ticket.store.name}</span>}
                       <span>· {ticket.assignee ? ticket.assignee.name : 'Unassigned'}</span>
@@ -278,20 +278,20 @@ export default function AgentInbox({ apiBase, title, categories, showStore = fal
           )}
           {list && list.pagination.last_page > 1 && (
             <div className="mt-3 flex items-center justify-between text-sm">
-              <button type="button" disabled={page <= 1} onClick={() => setPage(page - 1)} className="rounded border bg-white px-3 py-1 disabled:opacity-40">
+              <button type="button" disabled={page <= 1} onClick={() => setPage(page - 1)} className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-xs font-semibold text-slate-700 shadow-sm transition-colors hover:bg-slate-50 disabled:pointer-events-none disabled:opacity-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-600">
                 Previous
               </button>
-              <span className="text-gray-500">
+              <span className="text-slate-500">
                 Page {list.pagination.page} of {list.pagination.last_page} · {list.pagination.total} tickets
               </span>
-              <button type="button" disabled={page >= list.pagination.last_page} onClick={() => setPage(page + 1)} className="rounded border bg-white px-3 py-1 disabled:opacity-40">
+              <button type="button" disabled={page >= list.pagination.last_page} onClick={() => setPage(page + 1)} className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-xs font-semibold text-slate-700 shadow-sm transition-colors hover:bg-slate-50 disabled:pointer-events-none disabled:opacity-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-600">
                 Next
               </button>
             </div>
           )}
         </section>
 
-        <section aria-label="Selected ticket" className="rounded border border-gray-200 bg-white p-4">
+        <section aria-label="Selected ticket" className="rounded-2xl border border-slate-200/80 bg-white shadow-[0_1px_2px_rgba(15,23,42,0.04)] p-5">
           {detailError && <ErrorState message={detailError} />}
           {!selected && !detailError && <EmptyState title="Select a ticket" description="Pick a ticket from the list to read and answer it." />}
           {selected && !detail && !detailError && <LoadingState />}

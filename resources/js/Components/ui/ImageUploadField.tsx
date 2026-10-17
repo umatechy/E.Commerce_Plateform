@@ -64,7 +64,7 @@ export default function ImageUploadField({
         {label} <span className="font-normal text-slate-500">(optional)</span>
       </label>
       <div className="mt-1 flex items-start gap-3">
-        <div className="flex h-14 w-14 flex-none items-center justify-center overflow-hidden rounded border border-slate-200 bg-slate-50">
+        <div className="flex h-14 w-14 flex-none items-center justify-center overflow-hidden rounded-lg border border-slate-200 bg-slate-50">
           {value ? <img src={value} alt={`${label} preview`} className="max-h-full max-w-full object-contain" /> : <span className="text-[10px] text-slate-400">None</span>}
         </div>
         <div className="min-w-0 flex-1 space-y-2">

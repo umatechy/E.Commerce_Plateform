@@ -32,13 +32,13 @@ export default function MessageThread({
               : 'border-blue-200 bg-blue-50'
             : sf
               ? 'border-sf-border bg-sf-bg'
-              : 'border-gray-200 bg-white';
+              : 'border-slate-200 bg-white';
 
         return (
           <li key={message.id} className={`flex ${own ? 'justify-end' : 'justify-start'}`}>
             <div className={`w-full max-w-[90%] border p-4 sm:max-w-[80%] ${sf ? 'rounded-sf' : 'rounded'} ${box}`}>
-              <div className={`mb-2 flex flex-wrap items-center gap-2 text-xs ${sf ? 'text-sf-muted' : 'text-gray-500'}`}>
-                <span className={`font-semibold ${sf ? 'text-sf-text' : 'text-gray-800'}`}>{message.author_name}</span>
+              <div className={`mb-2 flex flex-wrap items-center gap-2 text-xs ${sf ? 'text-sf-muted' : 'text-slate-500'}`}>
+                <span className={`font-semibold ${sf ? 'text-sf-text' : 'text-slate-800'}`}>{message.author_name}</span>
                 {message.author_type === 'agent' && perspective === 'requester' && <span>· {t('Support team')}</span>}
                 {message.author_type === 'requester' && perspective === 'agent' && <span>· Requester</span>}
                 {message.internal && <span className="rounded bg-amber-200 px-1.5 py-0.5 font-medium text-amber-900">Internal note</span>}

@@ -9,7 +9,7 @@ import RequesterTicket from '@/Components/Support/RequesterTicket';
 import { AdminApiError, adminErrorMessage, adminFetch } from '@/lib/adminApi';
 import { categoryLabel, PLATFORM_CATEGORIES, statusLabel, timeAgo, type SupportCategory, type TicketDetail, type TicketPage, type TicketSummary } from '@/lib/support';
 
-const input = 'w-full rounded border border-gray-300 bg-white px-3 py-2 text-sm';
+const input = 'block min-h-10 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm shadow-sm transition-colors hover:border-slate-400 focus:outline-none focus-visible:border-brand-500 focus-visible:ring-2 focus-visible:ring-brand-600';
 const API = '/platform-support/tickets';
 
 /**
@@ -83,13 +83,13 @@ export default function Platform() {
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="text-lg font-semibold">Help from the platform</h1>
-          <p className="text-sm text-gray-500">Questions about your plan, billing or a technical problem go to our team here.</p>
+          <p className="text-sm text-slate-500">Questions about your plan, billing or a technical problem go to our team here.</p>
         </div>
         <div className="flex items-center gap-4">
           <Link href="/support" className="text-sm text-blue-700 hover:underline">
             ← Customer support inbox
           </Link>
-          <button type="button" onClick={() => setComposing(true)} className="rounded bg-gray-900 px-4 py-2 text-sm font-medium text-white">
+          <button type="button" onClick={() => setComposing(true)} className="inline-flex min-h-10 items-center justify-center gap-2 rounded-lg border border-transparent bg-brand-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:-translate-y-px hover:bg-brand-700 disabled:pointer-events-none disabled:opacity-50 motion-reduce:transform-none focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-600 focus-visible:ring-offset-2">
             New request
           </button>
         </div>
@@ -102,22 +102,22 @@ export default function Platform() {
             {!list && <LoadingState />}
             {list?.tickets.length === 0 && <EmptyState title="No requests yet" description="When you ask our team for help, the conversation appears here." />}
             {list && list.tickets.length > 0 && (
-              <ul className="divide-y rounded border border-gray-200 bg-white">
+              <ul className="divide-y divide-slate-100 overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-[0_1px_2px_rgba(15,23,42,0.04)]">
                 {list.tickets.map((t) => (
                   <li key={t.id}>
                     <button
                       type="button"
                       onClick={() => open(t.id)}
                       aria-current={selected === t.id}
-                      className={`block w-full px-3 py-3 text-left hover:bg-gray-50 ${selected === t.id && !composing ? 'bg-blue-50' : ''}`}
+                      className={`block w-full px-3 py-3 text-left hover:bg-slate-50 ${selected === t.id && !composing ? 'bg-blue-50' : ''}`}
                     >
-                      <div className="flex items-center gap-2 text-xs text-gray-500">
+                      <div className="flex items-center gap-2 text-xs text-slate-500">
                         <span className="font-mono">{t.number}</span>
                         <span>{statusLabel(t.status)}</span>
                         <span className="ml-auto">{timeAgo(t.updated_at)}</span>
                       </div>
-                      <p className="mt-1 truncate font-medium text-gray-900">{t.subject}</p>
-                      <p className="text-xs text-gray-500">{categoryLabel(t.category)}</p>
+                      <p className="mt-1 truncate font-medium text-slate-900">{t.subject}</p>
+                      <p className="text-xs text-slate-500">{categoryLabel(t.category)}</p>
                     </button>
                   </li>
                 ))}
@@ -125,12 +125,12 @@ export default function Platform() {
             )}
           </section>
 
-          <section className="rounded border border-gray-200 bg-white p-4">
+          <section className="rounded-2xl border border-slate-200/80 bg-white shadow-[0_1px_2px_rgba(15,23,42,0.04)] p-5">
             {composing ? (
               <form onSubmit={submit} className="space-y-4" aria-label="New request">
                 <h2 className="font-semibold">New request to the platform</h2>
                 <label className="block text-sm">
-                  <span className="mb-1 block text-gray-600">Topic</span>
+                  <span className="mb-1 block text-slate-600">Topic</span>
                   <select value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value as SupportCategory })} className={input} name="category">
                     {PLATFORM_CATEGORIES.map((c) => (
                       <option key={c} value={c}>
@@ -140,11 +140,11 @@ export default function Platform() {
                   </select>
                 </label>
                 <label className="block text-sm">
-                  <span className="mb-1 block text-gray-600">Subject</span>
+                  <span className="mb-1 block text-slate-600">Subject</span>
                   <input required maxLength={200} value={form.subject} onChange={(e) => setForm({ ...form, subject: e.target.value })} className={input} name="subject" />
                 </label>
                 <label className="block text-sm">
-                  <span className="mb-1 block text-gray-600">Describe the problem</span>
+                  <span className="mb-1 block text-slate-600">Describe the problem</span>
                   <textarea required rows={6} maxLength={10000} value={form.message} onChange={(e) => setForm({ ...form, message: e.target.value })} className={input} name="message" />
                 </label>
                 {formError && (
@@ -153,10 +153,10 @@ export default function Platform() {
                   </p>
                 )}
                 <div className="flex gap-3">
-                  <button type="submit" disabled={busy} className="rounded bg-gray-900 px-4 py-2 text-sm font-medium text-white disabled:opacity-50">
+                  <button type="submit" disabled={busy} className="inline-flex min-h-10 items-center justify-center gap-2 rounded-lg border border-transparent bg-brand-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:-translate-y-px hover:bg-brand-700 disabled:pointer-events-none disabled:opacity-50 motion-reduce:transform-none focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-600 focus-visible:ring-offset-2">
                     {busy ? 'Sending…' : 'Send request'}
                   </button>
-                  <button type="button" onClick={() => setComposing(false)} className="rounded border border-gray-300 px-4 py-2 text-sm">
+                  <button type="button" onClick={() => setComposing(false)} className="inline-flex min-h-10 items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-800 shadow-sm transition hover:-translate-y-px hover:bg-slate-50 disabled:pointer-events-none disabled:opacity-50 motion-reduce:transform-none focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-600 focus-visible:ring-offset-2">
                     Cancel
                   </button>
                 </div>

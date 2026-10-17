@@ -1,5 +1,5 @@
 import AdminPage from '@/Components/AdminPage';
-import SettingsEditor, { type SettingInfo } from '@/Components/SettingsEditor';
+import SettingsEditor, { type SettingGroup, type SettingInfo } from '@/Components/SettingsEditor';
 
 /**
  * Module 33 platform settings (/api/v1/super-admin/settings). Platform
@@ -55,6 +55,18 @@ const INFO: Record<string, SettingInfo> = {
   'alerts.whatsapp_recipients': { label: 'WhatsApp alert numbers', description: 'Numbers for critical alerts by WhatsApp.', itemHint: 'One number per line, in international format such as +923001234567.' },
 };
 
+/** UI-9: platform settings grouped by the first part of their key, in this order. */
+const GROUPS: Record<string, SettingGroup> = {
+  platform: { title: 'Platform and sign-up', description: 'Name, logo, languages, sign-up and trials.', icon: 'globe' },
+  billing: { title: 'Billing and invoices', description: 'How stores are billed and what invoices say.', icon: 'receipt' },
+  payments: { title: 'Payments', description: 'Online payment timings and live providers.', icon: 'creditCard' },
+  messaging: { title: 'Messaging', description: 'WhatsApp and SMS providers.', icon: 'mail' },
+  stores: { title: 'Closing stores', description: 'Reminders, retention and deletion.', icon: 'store' },
+  backup: { title: 'Backups', description: 'Retention, schedules and restore rehearsals.', icon: 'database' },
+  alerts: { title: 'Alerts', description: 'Who hears about critical problems, and how.', icon: 'bell' },
+  api: { title: 'Developer API', description: 'Limits for the stores’ API access.', icon: 'code' },
+};
+
 export default function Settings() {
   return (
     <AdminPage title="Platform settings" description="Configuration for the whole platform. You will be asked for your password when you change one.">
@@ -62,6 +74,7 @@ export default function Settings() {
         listPath="/super-admin/settings"
         updatePath="/super-admin/settings"
         info={INFO}
+        groups={GROUPS}
         canManage
         historyPath={(key) => `/super-admin/settings/${key}/history`}
         rollbackPath={(id) => `/super-admin/settings/revisions/${id}/rollback`}

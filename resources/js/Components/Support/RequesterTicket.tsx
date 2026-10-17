@@ -17,13 +17,13 @@ const STYLES: Record<Tone, { input: string; primary: string; secondary: string; 
     badge: 'rounded-sf bg-sf-surface px-2 py-1 text-xs font-medium',
   },
   admin: {
-    input: 'w-full rounded border border-gray-300 bg-white px-3 py-2',
-    primary: 'rounded bg-gray-900 px-4 py-2 text-sm font-medium text-white disabled:opacity-50',
-    secondary: 'rounded border border-gray-300 bg-white px-4 py-2 text-sm font-medium disabled:opacity-50',
-    muted: 'text-gray-500',
+    input: 'block min-h-10 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 shadow-sm transition-colors hover:border-slate-400 focus:outline-none focus-visible:border-brand-500 focus-visible:ring-2 focus-visible:ring-brand-600',
+    primary: 'rounded bg-slate-900 px-4 py-2 text-sm font-medium text-white disabled:opacity-50',
+    secondary: 'rounded border border-slate-300 bg-white px-4 py-2 text-sm font-medium disabled:opacity-50',
+    muted: 'text-slate-500',
     error: 'text-red-700',
-    card: 'rounded border border-gray-200 bg-white p-4',
-    badge: 'rounded bg-gray-100 px-2 py-1 text-xs font-medium text-gray-700',
+    card: 'rounded border border-slate-200 bg-white p-4',
+    badge: 'rounded bg-slate-100 px-2 py-1 text-xs font-medium text-slate-700',
   },
 };
 
@@ -149,7 +149,7 @@ export default function RequesterTicket({
                 aria-checked={rating === value}
                 aria-label={t('{value} out of 5', { value })}
                 onClick={() => setRating(value)}
-                className={`text-2xl leading-none ${value <= rating ? 'text-amber-500' : 'text-gray-300'}`}
+                className={`text-2xl leading-none ${value <= rating ? 'text-amber-500' : 'text-slate-300'}`}
               >
                 ★
               </button>

@@ -90,7 +90,7 @@ export default function Join() {
     <AuthShell title="Join as a partner" subtitle="Umar Techy partner program">
       <div>
 
-        {fatal && <p className="mt-6 rounded border border-red-200 bg-red-50 p-3 text-sm text-red-700" role="alert">{fatal}</p>}
+        {fatal && <p className="mt-6 rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700" role="alert">{fatal}</p>}
         {!fatal && !invitation && <p className="mt-6 text-slate-500" role="status">Checking your invitation…</p>}
 
         {invitation && (

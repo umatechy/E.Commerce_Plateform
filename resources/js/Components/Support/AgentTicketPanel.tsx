@@ -17,7 +17,7 @@ import {
 
 type Agent = { id: string; name: string };
 
-const select = 'rounded border border-gray-300 bg-white px-2 py-1 text-sm disabled:bg-gray-100 disabled:text-gray-500';
+const select = 'rounded border border-slate-300 bg-white px-2 py-1 text-sm disabled:bg-slate-100 disabled:text-slate-500';
 const REQUESTER_TYPES: Record<string, string> = { customer: 'Customer', guest: 'Guest', user: 'Merchant' };
 const AFTER_REPLY: { value: SupportStatus; label: string }[] = [
   { value: 'awaiting_customer', label: 'Wait for the customer' },
@@ -89,44 +89,44 @@ export default function AgentTicketPanel({
   return (
     <article className="space-y-5" aria-label={`Ticket ${ticket.number}`}>
       <header className="space-y-2">
-        <div className="flex flex-wrap items-center gap-2 text-sm text-gray-500">
+        <div className="flex flex-wrap items-center gap-2 text-sm text-slate-500">
           <span className="font-mono">{ticket.number}</span>
           <span>· {categoryLabel(ticket.category)}</span>
           <span>· via {ticket.channel}</span>
           <SlaBadge ticket={ticket} now={now} />
         </div>
-        <h2 className="text-xl font-semibold text-gray-900">{ticket.subject}</h2>
+        <h2 className="text-2xl font-semibold tracking-tight text-slate-900">{ticket.subject}</h2>
         <dl className="grid gap-x-6 gap-y-1 text-sm sm:grid-cols-2">
           <div>
-            <dt className="inline text-gray-500">From </dt>
+            <dt className="inline text-slate-500">From </dt>
             <dd className="inline">
-              {ticket.requester.name} &lt;{ticket.requester.email}&gt; <span className="text-gray-500">({REQUESTER_TYPES[ticket.requester.type] ?? ticket.requester.type})</span>
+              {ticket.requester.name} &lt;{ticket.requester.email}&gt; <span className="text-slate-500">({REQUESTER_TYPES[ticket.requester.type] ?? ticket.requester.type})</span>
             </dd>
           </div>
           {ticket.store && (
             <div>
-              <dt className="inline text-gray-500">Store </dt>
+              <dt className="inline text-slate-500">Store </dt>
               <dd className="inline">{ticket.store.name}</dd>
             </div>
           )}
           {ticket.order && (
             <div>
-              <dt className="inline text-gray-500">Order </dt>
+              <dt className="inline text-slate-500">Order </dt>
               <dd className="inline">
                 <span className="font-mono">{ticket.order.number}</span>
-                {ticket.order.status && <span className="text-gray-500"> · {ticket.order.status.replace(/_/g, ' ')}</span>}
+                {ticket.order.status && <span className="text-slate-500"> · {ticket.order.status.replace(/_/g, ' ')}</span>}
                 {ticket.order.grand_total_minor !== undefined && ticket.order.currency && (
-                  <span className="text-gray-500"> · {formatMoney(ticket.order.grand_total_minor, ticket.order.currency)}</span>
+                  <span className="text-slate-500"> · {formatMoney(ticket.order.grand_total_minor, ticket.order.currency)}</span>
                 )}
               </dd>
             </div>
           )}
           <div>
-            <dt className="inline text-gray-500">Opened </dt>
+            <dt className="inline text-slate-500">Opened </dt>
             <dd className="inline">{formatDateTime(ticket.created_at)}</dd>
           </div>
           <div>
-            <dt className="inline text-gray-500">First reply </dt>
+            <dt className="inline text-slate-500">First reply </dt>
             <dd className="inline">
               {ticket.sla.first_responded_at
                 ? formatDateTime(ticket.sla.first_responded_at)
@@ -137,18 +137,18 @@ export default function AgentTicketPanel({
           </div>
           {ticket.satisfaction && (
             <div>
-              <dt className="inline text-gray-500">Rating </dt>
+              <dt className="inline text-slate-500">Rating </dt>
               <dd className="inline">
                 {'★'.repeat(ticket.satisfaction.rating)}
-                <span className="text-gray-300">{'★'.repeat(5 - ticket.satisfaction.rating)}</span>
-                {ticket.satisfaction.comment && <span className="text-gray-600"> “{ticket.satisfaction.comment}”</span>}
+                <span className="text-slate-300">{'★'.repeat(5 - ticket.satisfaction.rating)}</span>
+                {ticket.satisfaction.comment && <span className="text-slate-600"> “{ticket.satisfaction.comment}”</span>}
               </dd>
             </div>
           )}
         </dl>
       </header>
 
-      <div className="flex flex-wrap gap-3 rounded border border-gray-200 bg-gray-50 p-3 text-sm">
+      <div className="flex flex-wrap gap-3 rounded-xl border border-slate-200 bg-slate-50 p-3 text-sm">
         <label className="flex items-center gap-2">
           Status
           <select value={ticket.status} disabled={!canChangeStatus || busy !== null} onChange={(e) => update('status', e.target.value)} className={select} name="status">
@@ -197,11 +197,11 @@ export default function AgentTicketPanel({
             ))}
           </select>
         </label>
-        {busy && busy !== 'reply' && <span className="self-center text-gray-500">Saving…</span>}
+        {busy && busy !== 'reply' && <span className="self-center text-slate-500">Saving…</span>}
       </div>
 
       {error && (
-        <p role="alert" className="rounded border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+        <p role="alert" className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700">
           {error}
         </p>
       )}
@@ -209,14 +209,14 @@ export default function AgentTicketPanel({
       <MessageThread messages={ticket.messages} perspective="agent" tone="admin" />
 
       {!abilities.reply ? (
-        <p className="rounded border border-gray-200 bg-gray-50 p-3 text-sm text-gray-600">You can read tickets here; replying needs the support reply permission.</p>
+        <p className="rounded-xl border border-slate-200 bg-slate-50 p-3 text-sm text-slate-600">You can read tickets here; replying needs the support reply permission.</p>
       ) : !ticket.can_reply ? (
-        <p className="rounded border border-gray-200 bg-gray-50 p-3 text-sm text-gray-600">This ticket is closed. The customer can open a new request if they need more help.</p>
+        <p className="rounded-xl border border-slate-200 bg-slate-50 p-3 text-sm text-slate-600">This ticket is closed. The customer can open a new request if they need more help.</p>
       ) : (
-        <form onSubmit={submit} className={`space-y-3 rounded border p-3 ${internal ? 'border-amber-300 bg-amber-50' : 'border-gray-200 bg-white'}`}>
+        <form onSubmit={submit} className={`space-y-3 rounded-2xl border p-4 ${internal ? 'border-amber-300 bg-amber-50' : 'border-slate-200 bg-white'}`}>
           <label className="block text-sm">
-            <span className="mb-1 block text-gray-600">{internal ? 'Internal note — only your team sees this' : `Reply to ${ticket.requester.name}`}</span>
-            <textarea rows={5} maxLength={10000} value={body} onChange={(e) => setBody(e.target.value)} className="w-full rounded border border-gray-300 px-3 py-2" name="reply" />
+            <span className="mb-1 block text-slate-600">{internal ? 'Internal note — only your team sees this' : `Reply to ${ticket.requester.name}`}</span>
+            <textarea rows={5} maxLength={10000} value={body} onChange={(e) => setBody(e.target.value)} className="block min-h-10 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm shadow-sm shadow-slate-900/5 transition-colors placeholder:text-slate-400 hover:border-slate-400 focus:outline-none focus-visible:border-brand-500 focus-visible:ring-2 focus-visible:ring-brand-600" name="reply" />
           </label>
           <div className="flex flex-wrap items-center gap-4 text-sm">
             <label className="flex items-center gap-2">
@@ -235,7 +235,7 @@ export default function AgentTicketPanel({
                 </select>
               </label>
             )}
-            <button type="submit" disabled={busy !== null || body.trim() === ''} className="ml-auto rounded bg-gray-900 px-4 py-2 font-medium text-white disabled:opacity-50">
+            <button type="submit" disabled={busy !== null || body.trim() === ''} className="ml-auto inline-flex min-h-10 items-center justify-center gap-2 rounded-lg border border-transparent bg-brand-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:-translate-y-px hover:bg-brand-700 disabled:pointer-events-none disabled:opacity-50 motion-reduce:transform-none focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-600 focus-visible:ring-offset-2">
               {busy === 'reply' ? 'Sending…' : internal ? 'Add note' : 'Send reply'}
             </button>
           </div>

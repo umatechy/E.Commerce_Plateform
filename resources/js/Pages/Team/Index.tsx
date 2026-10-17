@@ -78,7 +78,7 @@ export default function Index() {
       actions={access.can('roles.view') && <ButtonLink href="/team/roles">Roles and permissions</ButtonLink>}
     >
 
-      {notice && <div className="mt-4 rounded border border-red-200 bg-red-50 p-3 text-sm text-red-700" role="alert">{notice}</div>}
+      {notice && <div className="mt-4 rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700" role="alert">{notice}</div>}
 
       {summary.abilities.invite && (
         <div className="mt-6">

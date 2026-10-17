@@ -26,7 +26,7 @@ type Values = { label: string; tone: string; priority: string; is_active: boolea
 const BLANK: Values = { label: '', tone: 'accent', priority: '50', is_active: true };
 
 const TONE_LABEL: Record<string, string> = { accent: 'Theme accent', success: 'Green (success)', warning: 'Amber (warning)', danger: 'Red (danger)', neutral: 'Dark (neutral)' };
-const SWATCH: Record<string, string> = { accent: 'bg-brand-600', success: 'bg-green-700', warning: 'bg-amber-700', danger: 'bg-red-700', neutral: 'bg-gray-900' };
+const SWATCH: Record<string, string> = { accent: 'bg-brand-600', success: 'bg-green-700', warning: 'bg-amber-700', danger: 'bg-red-700', neutral: 'bg-slate-900' };
 
 const AUTOMATIC = [
   ['Sold out', 100, 'when nothing can be bought'],

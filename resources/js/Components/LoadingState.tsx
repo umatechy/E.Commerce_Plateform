@@ -5,7 +5,7 @@ export default function LoadingState() {
   const t = useT(); // English outside a storefront page
 
   return (
-    <div role="status" className="p-8 text-center text-gray-500">
+    <div role="status" className="p-8 text-center text-slate-500">
       {t('Loading…')}
     </div>
   );

@@ -42,12 +42,12 @@ export function StatusBadge({ status }: { status: HealthStatus }) {
 
 export default function HealthCheckList({ checks }: { checks: HealthCheck[] }) {
   return (
-    <ul className="divide-y rounded border bg-white">
+    <ul className="divide-y divide-slate-100 overflow-hidden rounded-2xl border border-slate-200/80 bg-white">
       {checks.map((check) => (
         <li key={check.key} className="flex items-start justify-between gap-4 p-3">
           <div>
             <p className="font-medium">{CHECK_TITLE[check.key] ?? check.key}</p>
-            <p className="text-sm text-gray-600">{check.message}</p>
+            <p className="text-sm text-slate-600">{check.message}</p>
           </div>
           <StatusBadge status={check.status} />
         </li>

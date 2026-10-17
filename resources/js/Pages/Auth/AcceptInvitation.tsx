@@ -85,8 +85,8 @@ export default function AcceptInvitation({ invitationId }: { invitationId: strin
   return (
     <AuthShell title="Join a team">
 
-      {fatal && <p className="mt-4 rounded border border-red-200 bg-red-50 p-3 text-sm text-red-700" role="alert">{fatal}</p>}
-      {!fatal && !invitation && <p className="mt-4 text-gray-500">Checking your invitation…</p>}
+      {fatal && <p className="mt-4 rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700" role="alert">{fatal}</p>}
+      {!fatal && !invitation && <p className="mt-4 text-slate-500">Checking your invitation…</p>}
 
       {invitation && (
         <>
@@ -104,9 +104,9 @@ export default function AcceptInvitation({ invitationId }: { invitationId: strin
             </button>
           ) : invitation.has_account ? (
             <form onSubmit={signInAndAccept} className="mt-6 space-y-4">
-              <p className="text-sm text-gray-600">You already have an account. Sign in to accept.</p>
+              <p className="text-sm text-slate-600">You already have an account. Sign in to accept.</p>
               <label className="block">
-                <span className="text-sm text-gray-700">Password</span>
+                <span className="text-sm text-slate-700">Password</span>
                 <input type="password" required autoComplete="current-password" value={fields.password} onChange={(e) => setFields({ ...fields, password: e.target.value })} className={input} />
                 {errors.email && <span className="mt-1 block text-sm text-red-600">{errors.email}</span>}
               </label>
@@ -117,17 +117,17 @@ export default function AcceptInvitation({ invitationId }: { invitationId: strin
           ) : (
             <form onSubmit={submitNew} className="mt-6 space-y-4">
               <label className="block">
-                <span className="text-sm text-gray-700">Your name</span>
+                <span className="text-sm text-slate-700">Your name</span>
                 <input required autoComplete="name" value={fields.name} onChange={(e) => setFields({ ...fields, name: e.target.value })} className={input} />
                 {errors.name && <span className="mt-1 block text-sm text-red-600">{errors.name}</span>}
               </label>
               <label className="block">
-                <span className="text-sm text-gray-700">Choose a password</span>
+                <span className="text-sm text-slate-700">Choose a password</span>
                 <input type="password" required autoComplete="new-password" value={fields.password} onChange={(e) => setFields({ ...fields, password: e.target.value })} className={input} />
                 {errors.password && <span className="mt-1 block text-sm text-red-600">{errors.password}</span>}
               </label>
               <label className="block">
-                <span className="text-sm text-gray-700">Repeat the password</span>
+                <span className="text-sm text-slate-700">Repeat the password</span>
                 <input type="password" required autoComplete="new-password" value={fields.password_confirmation} onChange={(e) => setFields({ ...fields, password_confirmation: e.target.value })} className={input} />
               </label>
               <button type="submit" disabled={working} className={authButton}>
