@@ -9,7 +9,7 @@ The owner froze features after B58 and asked for the interface to be made
 | UI-2 Admin frame and dashboard | Sidebar with icons, header, search, store dashboard | ✅ |
 | UI-3 Lists and product form | Orders, products, customers; add/edit product | ✅ |
 | UI-4 Shop | Placeholders, cart badge, product page | ✅ |
-| UI-5 Super Admin and finish | Figures, alerts, charts; empty and loading states | planned |
+| UI-5 Super Admin and finish | Figures, attention, empty and error states | ✅ |
 
 ## UI-1
 
@@ -76,3 +76,11 @@ The owner froze features after B58 and asked for the interface to be made
   out of view.
 - The sideways-scrolling category row on a phone was kept (it is the theme’s design, tested); the demo store
   still has no product pictures — they are the owner’s to add.
+
+## UI-5
+
+- **Platform overview**: “Needs attention” at the top (overdue backup, failing scheduled backups, failing
+  infrastructure checks, failed payments), each with a link; “All clear” when there is nothing. Figures with
+  icons and grouped digits; sums over several currencies stay plain numbers (a currency sign would be wrong).
+- **Every page**: cards with the shared frame; error panels with a warning icon; empty panels with an icon (an
+  optional `icon` per page).

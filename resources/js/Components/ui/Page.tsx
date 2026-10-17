@@ -48,9 +48,9 @@ export function PageHeader({ title, description, actions, crumbs }: { title: str
 
 export function Card({ title, description, actions, children, className = '' }: { title?: ReactNode; description?: ReactNode; actions?: ReactNode; children: ReactNode; className?: string }) {
   return (
-    <section className={`rounded-lg border border-slate-200 bg-white ${className}`}>
+    <section className={`rounded-xl border border-slate-200 bg-white shadow-sm ${className}`}>
       {(title || actions) && (
-        <div className="flex flex-wrap items-start justify-between gap-2 border-b border-slate-200 px-4 py-3">
+        <div className="flex flex-wrap items-start justify-between gap-2 border-b border-slate-100 px-4 py-3">
           <div>
             {title && <h2 className="text-sm font-semibold text-slate-900">{title}</h2>}
             {description && <p className="mt-0.5 text-xs text-slate-600">{description}</p>}
@@ -156,20 +156,26 @@ export function Skeleton({ lines = 3 }: { lines?: number }) {
 /** An error with a way out. Used wherever a request can fail. */
 export function ErrorPanel({ message, onRetry }: { message: string; onRetry?: () => void }) {
   return (
-    <div role="alert" className="rounded-md border border-red-200 bg-red-50 p-4 text-sm text-red-800">
-      <p>{message}</p>
-      {onRetry && (
-        <Button size="sm" className="mt-3" onClick={onRetry}>
-          Try again
-        </Button>
-      )}
+    <div role="alert" className="flex gap-3 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-800">
+      <Icon name="alert" size={20} className="mt-0.5 text-red-500" />
+      <div>
+        <p>{message}</p>
+        {onRetry && (
+          <Button size="sm" className="mt-3" onClick={onRetry}>
+            Try again
+          </Button>
+        )}
+      </div>
     </div>
   );
 }
 
-export function EmptyPanel({ title, description, action }: { title: string; description?: ReactNode; action?: ReactNode }) {
+export function EmptyPanel({ title, description, action, icon = 'layers' }: { title: string; description?: ReactNode; action?: ReactNode; icon?: IconName }) {
   return (
-    <div className="rounded-lg border border-dashed border-slate-300 bg-white p-8 text-center">
+    <div className="rounded-xl border border-dashed border-slate-300 bg-white px-6 py-10 text-center">
+      <span aria-hidden="true" className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-slate-100 text-slate-500">
+        <Icon name={icon} size={22} />
+      </span>
       <p className="font-medium text-slate-900">{title}</p>
       {description && <p className="mx-auto mt-1 max-w-md text-sm text-slate-600">{description}</p>}
       {action && <div className="mt-4 flex justify-center">{action}</div>}
