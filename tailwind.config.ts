@@ -29,6 +29,17 @@ export default {
         'sf-heading': 'var(--sf-font-heading, system-ui)',
         'sf-body': 'var(--sf-font-body, system-ui)',
       },
+      // UI-6: light motion for the admin; used with motion-safe: so reduced motion turns it off.
+      keyframes: {
+        "fade-in": { from: { opacity: "0" }, to: { opacity: "1" } },
+        "fade-in-up": { from: { opacity: "0", transform: "translateY(6px)" }, to: { opacity: "1", transform: "translateY(0)" } },
+        "scale-in": { from: { opacity: "0", transform: "scale(0.97)" }, to: { opacity: "1", transform: "scale(1)" } },
+      },
+      animation: {
+        "fade-in": "fade-in 200ms ease-out both",
+        "fade-in-up": "fade-in-up 280ms cubic-bezier(0.2, 0.8, 0.2, 1) both",
+        "scale-in": "scale-in 180ms cubic-bezier(0.2, 0.8, 0.2, 1) both",
+      },
       boxShadow: {
         sf: 'var(--sf-shadow, none)',
         'sf-hover': 'var(--sf-shadow-hover, none)',
