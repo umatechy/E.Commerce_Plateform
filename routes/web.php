@@ -139,6 +139,8 @@ Route::middleware(['auth', 'required.mfa'])->group(function () {
     Route::get('/customers/groups', fn () => Inertia::render('Customers/Groups'));
     Route::get('/customers/{customer}', fn (string $customer) => Inertia::render('Customers/Show', ['customerId' => $customer]))->where('customer', '[0-9A-Za-z]{26}');
     Route::get('/orders/{order}', fn (string $order) => Inertia::render('Orders/Show', ['orderId' => $order]))->where('order', '[0-9A-Za-z]{26}');
+    // UI-15: a printable packing slip (the data comes from /api/v1/orders/{id}, with its permission).
+    Route::get('/orders/{order}/print', fn (string $order) => Inertia::render('Orders/Print', ['orderId' => $order]))->where('order', '[0-9A-Za-z]{26}');
     // Phase B33 (gap G8): returns. Data and permissions come from /api/v1/returns.
     Route::get('/returns', fn () => Inertia::render('Returns/Index'));
     Route::get('/returns/{return}', fn (string $return) => Inertia::render('Returns/Show', ['returnId' => $return]))->where('return', '[0-9A-Za-z]{26}');

@@ -1,4 +1,8 @@
+import { useState } from 'react';
 import { Link, router } from '@inertiajs/react';
+import RowMenu from '@/Components/ui/RowMenu';
+import { WhatsAppDialog } from '@/Components/Orders/ContactCustomer';
+import { orderPhone } from '@/lib/contact';
 import AdminPage from '@/Components/AdminPage';
 import DataTable, { Pagination, type Column } from '@/Components/ui/DataTable';
 import Button, { ButtonLink, FOCUS_RING } from '@/Components/ui/Button';
@@ -6,7 +10,7 @@ import { SelectField } from '@/Components/ui/Form';
 import { FilterBar, SearchField } from '@/Components/ui/Filters';
 import { StatusBadge } from '@/Components/ui/Badge';
 import { EmptyPanel } from '@/Components/ui/Page';
-import { useAccess } from '@/lib/access';
+import { useAccess, useAuth } from '@/lib/access';
 import { usePagedApi } from '@/lib/useApi';
 import { useUrlState } from '@/lib/useUrlState';
 import { money } from '@/lib/money';
@@ -19,6 +23,9 @@ import { ORDER_PAYMENT_STATUSES, ORDER_STATUSES, orderCustomer, type Order } fro
  * server page at a time (GET /api/v1/orders). Search and the two status
  * filters are applied by the server and kept in the URL. Totals are the
  * server's; nothing is recalculated here.
+ *
+ * UI-15: each row's "⋯" menu reaches the customer (WhatsApp, call) and
+ * prints the packing slip without opening the order.
  */
 const FILTER_DEFAULTS = { search: '', status: '', payment_status: '', page: '1' };
 
@@ -35,6 +42,8 @@ const QUICK: { status: string; label: string }[] = [
 
 export default function Index() {
   const access = useAccess();
+  const auth = useAuth();
+  const [writingTo, setWritingTo] = useState<Order | null>(null);
   const [filters, setFilters] = useUrlState(FILTER_DEFAULTS);
   const list = usePagedApi<Order>('/orders', { search: filters.search, status: filters.status, payment_status: filters.payment_status, page: filters.page });
   const filtered = filters.search !== '' || filters.status !== '' || filters.payment_status !== '';
@@ -52,13 +61,47 @@ export default function Index() {
         </div>
       ),
     },
-    { key: 'customer', header: 'Customer', render: (order) => orderCustomer(order) },
+    {
+      key: 'customer',
+      header: 'Customer',
+      render: (order) => (
+        <div>
+          <span>{orderCustomer(order)}</span>
+          {orderPhone(order) && <p className="font-mono text-xs text-slate-500">{orderPhone(order)}</p>}
+        </div>
+      ),
+    },
     { key: 'status', header: 'Status', priority: true, render: (order) => <StatusBadge status={order.status} /> },
     { key: 'payment', header: 'Payment', render: (order) => <StatusBadge status={order.payment_status} /> },
     { key: 'fulfilment', header: 'Fulfilment', render: (order) => <StatusBadge status={order.fulfillment_status} /> },
     { key: 'total', header: 'Total', align: 'right', priority: true, render: (order) => <span className="font-medium">{money(order.grand_total_minor, order.currency)}</span> },
-  ];
+    {
+      key: 'actions',
+      header: 'Actions',
+      srOnlyHeader: true,
+      align: 'right',
+      priority: true,
+      render: (order) => {
+        const phone = orderPhone(order);
 
+        return (
+          <RowMenu
+            label={`Actions for ${order.order_number}`}
+            actions={[
+              { label: 'Open order', icon: 'arrowRight', onSelect: () => router.visit(`/orders/${order.id}`) },
+              ...(phone
+                ? [
+                    { label: 'Message on WhatsApp', icon: 'chat' as const, onSelect: () => setWritingTo(order) },
+                    { label: 'Call the customer', icon: 'call' as const, onSelect: () => window.location.assign(`tel:${phone.replace(/[^\d+]/g, '')}`) },
+                  ]
+                : []),
+              { label: 'Print packing slip', icon: 'printer', onSelect: () => window.open(`/orders/${order.id}/print?print=1`, '_blank', 'noopener') },
+            ]}
+          />
+        );
+      },
+    },
+  ];
   return (
     <AdminPage
       title="Orders"
@@ -111,6 +154,7 @@ export default function Index() {
         }
       />
       <Pagination meta={list.meta} disabled={list.loading} onPage={(page) => setFilters({ page: String(page) })} />
+      {writingTo && <WhatsAppDialog order={writingTo} storeName={auth.activeStore?.name ?? ''} onClose={() => setWritingTo(null)} />}
     </AdminPage>
   );
 }

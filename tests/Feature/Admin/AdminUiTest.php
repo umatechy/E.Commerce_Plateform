@@ -111,7 +111,7 @@ final class AdminUiTest extends TestCase
             '/products' => 'Catalog/Products', '/products/new' => 'Catalog/ProductEdit', "/products/{$id}" => 'Catalog/ProductEdit',
             '/categories' => 'Catalog/Categories', '/brands' => 'Catalog/Brands', '/attributes' => 'Catalog/Attributes',
             '/inventory' => 'Inventory/Index', '/warehouses' => 'Inventory/Warehouses',
-            '/orders' => 'Orders/Index', '/orders/new' => 'Orders/Create', "/orders/{$id}" => 'Orders/Show',
+            '/orders' => 'Orders/Index', '/orders/new' => 'Orders/Create', "/orders/{$id}" => 'Orders/Show', "/orders/{$id}/print" => 'Orders/Print',
             '/payments' => 'Payments/Index', '/shipments' => 'Shipping/Shipments', '/shipping' => 'Shipping/Settings',
             '/customers' => 'Customers/Index',
             '/promotions' => 'Marketing/Promotions', '/campaigns' => 'Marketing/Campaigns', '/segments' => 'Marketing/Segments',

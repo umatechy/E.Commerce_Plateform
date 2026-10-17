@@ -1,4 +1,4 @@
-import { FormEvent, useState } from 'react';
+import { FormEvent, useEffect, useState } from 'react';
 import { Link } from '@inertiajs/react';
 import AdminPage from '@/Components/AdminPage';
 import Button, { ButtonLink, FOCUS_RING } from '@/Components/ui/Button';
@@ -18,6 +18,10 @@ import { adminFetch } from '@/lib/adminApi';
 import { money } from '@/lib/money';
 import { formatDateTime } from '@/lib/datetime';
 import { options } from '@/lib/labels';
+import { ContactButtons, WhatsAppDialog } from '@/Components/Orders/ContactCustomer';
+import Icon, { type IconName } from '@/Components/ui/Icon';
+import { useAuth } from '@/lib/access';
+import { orderPhone } from '@/lib/contact';
 import { addressLines, CANCELLATION_REASONS, CARRIER_LABELS, orderCustomer, PAYMENT_METHOD_LABELS, ratePercent, type Order, type OrderItem, type Payment, type Shipment, type TimelineEvent } from '@/lib/orders';
 
 /**
@@ -28,6 +32,11 @@ import { addressLines, CANCELLATION_REASONS, CARRIER_LABELS, orderCustomer, PAYM
  * payments, shipments and cancellation. This page has no "set status"
  * control because the backend has none. Cancelling is offered; whether
  * it is allowed is the server's answer.
+ *
+ * UI-15: a "next step" bar says what to do with the order now (confirm it
+ * with the customer, pack and ship it, tell them it is on its way) with the
+ * buttons for it: WhatsApp and call from the store's own phone, the packing
+ * slip, and creating the shipment.
  */
 function CancelDialog({ order, onClose, onDone }: { order: Order; onClose: () => void; onDone: (order: Order) => void }) {
   const form = useForm({ reason: 'customer_request', note: '' });
@@ -88,11 +97,15 @@ function PaymentsCard({ order, onChanged }: { order: Order; onChanged: () => voi
   );
 }
 
-function ShipmentsCard({ order, onChanged }: { order: Order; onChanged: () => void }) {
+function ShipmentsCard({ order, onChanged, createRequest = 0 }: { order: Order; onChanged: () => void; createRequest?: number }) {
   const access = useAccess();
   const list = usePagedApi<Shipment>('/shipments', { order: order.id });
   const [open, setOpen] = useState<string | null>(null);
   const [creating, setCreating] = useState(false);
+  // The next-step bar's "Create shipment".
+  useEffect(() => {
+    if (createRequest > 0) setCreating(true);
+  }, [createRequest]);
   const columns: Column<Shipment>[] = [
     { key: 'carrier', header: 'Carrier', render: (shipment) => CARRIER_LABELS[shipment.carrier] ?? humanize(shipment.carrier) },
     { key: 'status', header: 'Status', priority: true, render: (shipment) => <StatusBadge status={shipment.status} /> },
@@ -162,11 +175,84 @@ function Address({ title, address }: { title: string; address: Record<string, un
   );
 }
 
+type Step = { tone: 'amber' | 'brand' | 'emerald' | 'slate'; icon: IconName; title: string; text: string };
+
+/** What the order needs now, from its status (the server moves the status; this only reads it). */
+function nextStep(order: Order): Step | null {
+  const unpaid = order.payment_status !== 'paid';
+  switch (order.status) {
+    case 'pending_confirmation':
+      return { tone: 'amber', icon: 'chat', title: 'Confirm this order with the customer', text: 'A quick WhatsApp message or call before you pack cuts fake cash-on-delivery orders.' };
+    case 'confirmed':
+    case 'processing':
+    case 'ready_to_fulfill':
+      return {
+        tone: 'brand',
+        icon: 'box',
+        title: 'Pack and ship',
+        text: unpaid ? 'Confirm with the customer if you have not yet, print the packing slip, then create the shipment.' : 'Print the packing slip, pack the items, then create the shipment.',
+      };
+    case 'fulfilling':
+    case 'shipped':
+      return { tone: 'emerald', icon: 'truck', title: 'On its way', text: 'Let the customer know, and update the shipment when it is delivered.' };
+    default:
+      return null;
+  }
+}
+
+const STEP_TONES: Record<Step['tone'], string> = {
+  amber: 'border-amber-200 bg-amber-50/70 [&_.step-icon]:bg-amber-100 [&_.step-icon]:text-amber-700',
+  brand: 'border-brand-200 bg-brand-50/60 [&_.step-icon]:bg-brand-100 [&_.step-icon]:text-brand-700',
+  emerald: 'border-emerald-200 bg-emerald-50/60 [&_.step-icon]:bg-emerald-100 [&_.step-icon]:text-emerald-700',
+  slate: 'border-slate-200 bg-white [&_.step-icon]:bg-slate-100 [&_.step-icon]:text-slate-600',
+};
+
+function NextStepBar({ order, canShip, onCreateShipment }: { order: Order; canShip: boolean; onCreateShipment: () => void }) {
+  const auth = useAuth();
+  const [writing, setWriting] = useState(false);
+  const step = nextStep(order);
+  if (!step) return null;
+  const storeName = auth.activeStore?.name ?? '';
+  const shipping = step.icon === 'box';
+  const onItsWay = step.icon === 'truck';
+
+  return (
+    <section aria-label="Next step" className={`rounded-2xl border p-4 sm:p-5 ${STEP_TONES[step.tone]}`}>
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+        <div className="flex items-start gap-3">
+          <span aria-hidden="true" className="step-icon flex h-10 w-10 flex-none items-center justify-center rounded-xl"><Icon name={step.icon} size={20} /></span>
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">Next step</p>
+            <h2 className="font-semibold text-slate-900">{step.title}</h2>
+            <p className="mt-0.5 text-sm text-slate-600">{step.text}</p>
+          </div>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          {onItsWay && orderPhone(order) ? (
+            <Button onClick={() => setWriting(true)} className="!border-emerald-200 !text-emerald-800 hover:!bg-emerald-50"><Icon name="chat" size={16} />Tell them on WhatsApp</Button>
+          ) : (
+            <ContactButtons order={order} storeName={storeName} />
+          )}
+          {(shipping || step.tone === 'amber') && (
+            <a href={`/orders/${order.id}/print?print=1`} target="_blank" rel="noreferrer" className="inline-flex min-h-10 items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-800 shadow-sm transition hover:-translate-y-px hover:bg-slate-50 motion-reduce:transform-none focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-600 focus-visible:ring-offset-2">
+              <Icon name="printer" size={16} />Packing slip<span className="sr-only"> (opens in a new tab)</span>
+            </a>
+          )}
+          {shipping && canShip && <Button variant="primary" onClick={onCreateShipment}><Icon name="truck" size={16} />Create shipment</Button>}
+        </div>
+      </div>
+      {writing && <WhatsAppDialog order={order} storeName={storeName} initialKind="shipped" onClose={() => setWriting(false)} />}
+    </section>
+  );
+}
+
 export default function Show({ orderId }: { orderId: string }) {
   const access = useAccess();
+  const auth = useAuth();
   const state = useApi<{ data: Order }>(`/orders/${orderId}`);
   const [cancelling, setCancelling] = useState(false);
   const [version, setVersion] = useState(0);
+  const [shipRequest, setShipRequest] = useState(0);
   const order = state.data?.data ?? null;
 
   const refresh = () => {
@@ -203,6 +289,11 @@ export default function Show({ orderId }: { orderId: string }) {
       actions={
         <>
           <ButtonLink href="/orders">All orders</ButtonLink>
+          {order && (
+            <a href={`/orders/${order.id}/print`} target="_blank" rel="noreferrer" className="inline-flex min-h-10 items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-800 shadow-sm transition hover:-translate-y-px hover:bg-slate-50 motion-reduce:transform-none focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-600 focus-visible:ring-offset-2">
+              <Icon name="printer" size={16} />Print<span className="sr-only"> packing slip (opens in a new tab)</span>
+            </a>
+          )}
           {order && access.can('orders.cancel') && cancellable && <Button variant="danger" onClick={() => setCancelling(true)}>Cancel order</Button>}
         </>
       }
@@ -216,6 +307,7 @@ export default function Show({ orderId }: { orderId: string }) {
       ) : (
         <div className="grid gap-4 lg:grid-cols-3">
           <div className="space-y-4 lg:col-span-2">
+            <NextStepBar order={order} canShip={access.can('shipments.view') && access.can('shipments.fulfill')} onCreateShipment={() => setShipRequest((n) => n + 1)} />
             <Card>
               <Details
                 items={[
@@ -255,7 +347,7 @@ export default function Show({ orderId }: { orderId: string }) {
             </Card>
 
             {access.can('payments.view') && <PaymentsCard order={order} onChanged={refresh} />}
-            {access.can('shipments.view') && <ShipmentsCard order={order} onChanged={refresh} />}
+            {access.can('shipments.view') && <ShipmentsCard order={order} onChanged={refresh} createRequest={shipRequest} />}
             {access.can('returns.view') && <ReturnsCard order={order} />}
           </div>
 
@@ -273,6 +365,7 @@ export default function Show({ orderId }: { orderId: string }) {
                   <p className="text-sm text-slate-700">{order.customer?.email ?? order.guest_email ?? ''}</p>
                   {order.guest_phone && <p className="text-sm text-slate-700">{order.guest_phone}</p>}
                 </div>
+                {orderPhone(order) && <div className="flex flex-wrap gap-2"><ContactButtons order={order} storeName={auth.activeStore?.name ?? ''} size="sm" /></div>}
                 <Address title="Ship to" address={order.shipping_address} />
                 <Address title="Bill to" address={order.billing_address} />
                 {order.notes && (
