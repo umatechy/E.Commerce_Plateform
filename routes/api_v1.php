@@ -434,6 +434,8 @@ Route::middleware(['auth:sanctum', 'session.track', 'staff.principal', 'required
 
     // --- Reports, Analytics & Dashboard (Module 22, Phase B12) ---
     Route::get('/dashboard', [DashboardController::class, 'summary']);
+    // UI-17: what needs attention now (the header bell); each entry only with its page's permission.
+    Route::get('/attention', \App\Domain\Analytics\Http\Controllers\AttentionController::class);
     Route::get('/reports/sales', [ReportController::class, 'sales']);
     Route::get('/reports/products', [ReportController::class, 'products']);
     Route::get('/reports/customers', [ReportController::class, 'customers']);

@@ -96,7 +96,9 @@ describe('admin navigation', () => {
     fireEvent.change(screen.getByLabelText('Store you are managing'), { target: { value: '9' } });
 
     await waitFor(() => expect(assign).toHaveBeenCalledWith('/'));
-    expect(JSON.parse(fetchMock.mock.calls[0][1]?.body as string)).toEqual({ store_id: 9 });
+    // The header bell also asks /attention; the switch is the POST.
+    const switchCall = fetchMock.mock.calls.find(([url]) => String(url).includes('/store/switch'));
+    expect(JSON.parse(switchCall?.[1]?.body as string)).toEqual({ store_id: 9 });
   });
 });
 
@@ -158,7 +160,7 @@ describe('step-up dialog', () => {
     fireEvent.click(within(dialog).getByRole('button', { name: 'Cancel' }));
 
     await waitFor(() => expect((error as { code?: string })?.code).toBe('step_up_cancelled'));
-    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(fetchMock.mock.calls.filter(([url]) => String(url).includes('/restore-request'))).toHaveLength(1);
   });
 });
 

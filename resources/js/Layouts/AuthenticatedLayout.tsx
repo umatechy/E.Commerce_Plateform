@@ -10,6 +10,7 @@ import { FOCUS_RING } from '@/Components/ui/Button';
 import { toast, Toaster } from '@/Components/ui/toast';
 import StepUpDialog from '@/Components/StepUpDialog';
 import { HelpButton } from '@/Components/Help/HelpPanel';
+import AttentionBell from '@/Components/AttentionBell';
 import { setDisplayTimezone } from '@/lib/datetime';
 import { onThemeChange, setTheme, storedTheme, THEMES, type ThemeId } from '@/lib/adminTheme';
 import { leave, stay, useLeaveGuard, usePendingLeave } from '@/lib/leaveGuard';
@@ -427,6 +428,7 @@ export default function AuthenticatedLayout({ children }: PropsWithChildren) {
                 <kbd className="rounded-md border border-slate-200 bg-white px-1.5 py-0.5 font-sans text-[10px] font-medium text-slate-500">Ctrl K</kbd>
               </button>
             )}
+            {auth.user && !locked && access.hasStore && <AttentionBell />}
             {auth.user && !locked && <HelpButton path={path} unseenRelease={auth.help_unseen_release ?? null} canAskPlatform={access.hasStore && access.can('support.platform')} />}
             <AccountMenu auth={auth} onLogout={logout} />
           </div>
