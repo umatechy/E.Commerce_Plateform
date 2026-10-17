@@ -84,3 +84,83 @@ The owner froze features after B58 and asked for the interface to be made
   icons and grouped digits; sums over several currencies stay plain numbers (a currency sign would be wrong).
 - **Every page**: cards with the shared frame; error panels with a warning icon; empty panels with an icon (an
   optional `icon` per page).
+
+# Second round (owner request, 2026-10-17)
+
+After testing, the owner asked for two things:
+
+- a fix: after a new store turned on two-step sign-in, the Security page stayed open instead of going to the dashboard;
+- a professional, modern admin on shared Tailwind components, with hover effects and light motion, on every page.
+
+"Theme 3" was confirmed as **three colour themes the user picks**: Indigo, Emerald and Slate. It does not mean light and dark modes.
+
+| Part | What | Commit |
+| --- | --- | --- |
+| UI-6 First impression | Guided two-step set-up ending on the dashboard; sign-up says it comes next | 08e452c, 4d70b3e |
+| UI-7 Design system | Three themes, buttons, cards, tables, dialogs, toasts, fields, motion | c7c5273 |
+| UI-8 Frame and dashboard | Current menu entry marked, taller header, welcome banner, setup steps | c7c5273, e4e7d78 |
+| UI-9 Settings and older pages | Grouped settings (store and platform); older pages moved onto the components | e4e7d78 |
+| UI-10 Every page | 48 store and 19 platform pages checked on desktop and phone; fixes | 4d70b3e |
+
+## UI-6
+
+- **Security** (`Pages/Security/Index.tsx`): turning two-step sign-in on takes three steps, with a stepper:
+  1. confirm the password;
+  2. scan the QR code and type the code into six boxes (a pasted code is sent at once);
+  3. save the recovery codes, with a "Copy codes" button.
+- An owner who had to turn it on then gets **"I have saved them — go to my dashboard"**.
+- When two-step sign-in is already on, the management form stays closed behind "Manage". It says it is not a sign-in: its password and code fields had looked like a second login.
+- The session was already verified on confirm (`SecuritySession::markMfaVerified`), so the dashboard opens without signing in again.
+
+## UI-7
+
+- **Themes** (`lib/adminTheme.ts`, `resources/css/app.css`):
+  - Tailwind's `brand-*` colour reads the CSS variables `--brand-50…950`, stored as RGB channels so opacity modifiers work.
+  - `data-admin-theme` on `<html>` switches them. It is applied in `app.tsx` before the first render.
+  - The choice is a per-browser preference in localStorage (wrapped; falls back to Indigo). Pick it in the account menu under "Theme colour".
+  - Emerald's shades from 500 up are one step darker, so white text on `brand-600` meets WCAG AA.
+  - The storefront and the public home page keep their own colours.
+- **Components** (`Components/ui/*`):
+  - Buttons: lift on hover, press on click, spinner while busy, new `soft` and `outline` variants, new `lg` size.
+  - Cards, tables, dialogs and toasts are rounder. Dialogs have a blurred backdrop and scale in (drawers slide in). Toasts have icons.
+  - Fields are 40px tall with a theme-coloured focus. The search field has an icon.
+- **Motion**: `fade-in`, `fade-in-up`, `scale-in` and `slide-in-right`, used only with `motion-safe:`.
+  - The fill mode is **`backwards`, never `both`**. A transform left on the page wrapper made it the containing block of fixed and absolute children, which broke dialogs and sticky bars and let hidden labels widen phones (UI-10).
+
+## UI-8
+
+- **Frame**:
+  - The current menu entry gets a theme-coloured bar.
+  - "Locked" and "Upgrade" show as pills.
+  - The header is 64px with a wider "Go to…" box.
+  - The account menu shows the name and email, the theme picker, Security and Log out.
+  - Each page eases in.
+- **Dashboard**:
+  - A welcome banner in the theme gradient, with date, greeting, store name and View shop / New order / Add product.
+  - Setup steps show a "Required" pill and a theme-coloured "Open".
+  - The figures lift on hover.
+
+## UI-9
+
+- **Settings editor** (`Components/SettingsEditor.tsx`):
+  - Settings are grouped into cards, with a side menu on large screens. A setting's group is `info.group`, else the first part of its key.
+  - The current value shows as a chip: On/Off coloured, "Not set" muted. History sits behind a clock icon.
+  - Store settings have seven named groups; platform settings group by key prefix.
+- **Older pages**: these used `gray-*` and plain boxes and were moved onto the components' look by exact class strings, then finished by hand:
+  - platform backups, support inbox and tickets, invitations, team, health list;
+  - the empty, loading and error states.
+
+## UI-10
+
+Every admin page was opened at 1440 and 390 pixels:
+
+- 48 store pages, signed in as an owner with demo data;
+- 19 platform pages, signed in as platform staff.
+
+Fixes:
+
+- Phones scrolled sideways on payments, inventory, audit log and resellers (5–124px). The cause was screen-reader-only labels inside tables escaping their scroll box. Every table scroll box is now positioned, and the animation fix above removed the root cause.
+- Inventory row actions fold into a "⋯" menu on phones.
+- The product save bar meets the page edges at every width.
+
+Result: no script errors, no server errors, no sideways scrolling.
