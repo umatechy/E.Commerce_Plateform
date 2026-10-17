@@ -111,3 +111,15 @@ describe('admin in Urdu', () => {
     expect(adminTranslate('en', 'Orders')).toBe('Orders');
   });
 });
+
+describe('preferences kept with the account (UI-20)', () => {
+  it('opens in the theme and language the account saved, whatever this browser had', () => {
+    window.localStorage.setItem('ut.admin-theme', 'indigo');
+    setPage({ ...owner, user: { ...owner.user!, preferences: { theme: 'emerald', language: 'ur' } } }, '/orders');
+    const { container } = render(<AuthenticatedLayout>content</AuthenticatedLayout>);
+
+    expect(document.documentElement.dataset.adminTheme).toBe('emerald');
+    expect(container.querySelector('.admin-root')?.getAttribute('dir')).toBe('rtl');
+    act(() => setAdminLanguage('en', false));
+  });
+});

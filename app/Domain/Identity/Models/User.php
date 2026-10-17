@@ -56,6 +56,7 @@ final class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'is_active' => 'boolean',
+            'admin_preferences' => 'array', // UI-20: theme colour and admin language
             'mfa_secret' => 'encrypted', // Module 32 §8: the TOTP secret is never stored in the clear
             'mfa_confirmed_at' => 'datetime',
             'mfa_last_used_step' => 'integer',

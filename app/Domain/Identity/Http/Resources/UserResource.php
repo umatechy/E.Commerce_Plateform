@@ -27,6 +27,8 @@ final class UserResource extends JsonResource
             'email_verified' => $this->email_verified_at !== null,
             'is_platform_staff' => $this->isPlatformStaff(),
             'mfa_enabled' => $this->hasMfaEnabled(),
+            // UI-20: the admin theme colour and language, kept with the account.
+            'preferences' => (object) \App\Domain\Identity\Http\Controllers\AccountPreferencesController::of($this->resource),
         ];
     }
 }

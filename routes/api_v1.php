@@ -81,6 +81,7 @@ Route::post('/auth/password/reset', [\App\Domain\Identity\Http\Controllers\Staff
 Route::middleware(['auth:sanctum', 'session.track', 'staff.principal', 'required.mfa', 'store.operational'])->group(function () {
     Route::post('/auth/logout', [AuthController::class, 'logout']);
     Route::get('/auth/me', [AuthController::class, 'me']);
+    Route::put('/auth/preferences', [\App\Domain\Identity\Http\Controllers\AccountPreferencesController::class, 'update'])->middleware('throttle:30,1'); // UI-20
 
     // --- The signed-in user's own MFA and step-up (Module 32 §8, Module 30 §6 — Phase B29) ---
     Route::get('/auth/mfa', [\App\Domain\Identity\Http\Controllers\MfaController::class, 'show']);

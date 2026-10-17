@@ -4,6 +4,8 @@
  * data-admin-theme on <html>, which switches the --brand-* colours in
  * app.css. Indigo is the default and what a blocked storage falls back to.
  */
+import { savePreference } from './preferences';
+
 export type ThemeId = 'indigo' | 'emerald' | 'slate';
 
 export const THEMES: { id: ThemeId; label: string; swatch: string }[] = [
@@ -37,7 +39,8 @@ export function applyStoredTheme(): void {
   apply(storedTheme());
 }
 
-export function setTheme(theme: ThemeId): void {
+/** `save`: also keep it with the account (false when the account is where it came from). */
+export function setTheme(theme: ThemeId, save = true): void {
   try {
     window.localStorage.setItem(KEY, theme);
   } catch {
@@ -45,6 +48,11 @@ export function setTheme(theme: ThemeId): void {
   }
   apply(theme);
   listeners.forEach((listener) => listener(theme));
+  if (save) savePreference({ theme });
+}
+
+export function isThemeId(value: unknown): value is ThemeId {
+  return isTheme(value);
 }
 
 export function onThemeChange(listener: (theme: ThemeId) => void): () => void {

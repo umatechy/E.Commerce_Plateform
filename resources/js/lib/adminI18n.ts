@@ -1,5 +1,6 @@
 import { useCallback, useSyncExternalStore } from 'react';
 import { adminUr } from './adminUr';
+import { savePreference } from './preferences';
 
 /**
  * UI-18 — the admin in English or Urdu (اردو, right to left), chosen by each
@@ -40,7 +41,8 @@ export function currentAdminLanguage(): AdminLanguage {
   return typeof window === 'undefined' ? 'en' : read();
 }
 
-export function setAdminLanguage(language: AdminLanguage): void {
+/** `save`: also keep it with the account (false when the account is where it came from). */
+export function setAdminLanguage(language: AdminLanguage, save = true): void {
   current = language;
   try {
     window.localStorage.setItem(KEY, language);
@@ -48,6 +50,7 @@ export function setAdminLanguage(language: AdminLanguage): void {
     // Storage blocked: the language still applies for this visit.
   }
   listeners.forEach((listener) => listener());
+  if (save) savePreference({ language });
 }
 
 export function adminTranslate(language: AdminLanguage, text: string, values?: Record<string, string | number>): string {

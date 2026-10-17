@@ -12,7 +12,7 @@ import StepUpDialog from '@/Components/StepUpDialog';
 import { HelpButton } from '@/Components/Help/HelpPanel';
 import AttentionBell from '@/Components/AttentionBell';
 import { setDisplayTimezone } from '@/lib/datetime';
-import { onThemeChange, setTheme, storedTheme, THEMES, type ThemeId } from '@/lib/adminTheme';
+import { isThemeId, onThemeChange, setTheme, storedTheme, THEMES, type ThemeId } from '@/lib/adminTheme';
 import { leave, stay, useLeaveGuard, usePendingLeave } from '@/lib/leaveGuard';
 import { ADMIN_LANGUAGES, setAdminLanguage, useAdminLanguage, useAdminT, type AdminTranslate } from '@/lib/adminI18n';
 import { loadFont } from '@/Storefront/fonts';
@@ -419,6 +419,14 @@ export default function AuthenticatedLayout({ children }: PropsWithChildren) {
   const urdu = language === 'ur';
   // UI-19: the phone tab bar, for store users with the admin open.
   const tabBar = Boolean(auth.user) && access.hasStore && !locked;
+  // UI-20: the account's saved theme and language win over this browser's (they follow the user to every device).
+  // Only when the server's values change, so a choice just made here is not turned back.
+  const saved = auth.user?.preferences;
+  useEffect(() => {
+    if (saved?.theme && isThemeId(saved.theme) && saved.theme !== storedTheme()) setTheme(saved.theme, false);
+    if ((saved?.language === 'en' || saved?.language === 'ur') && saved.language !== language) setAdminLanguage(saved.language, false);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [saved?.theme, saved?.language]);
   // UI-18: Urdu is shown in Nastaliq, loaded only when chosen.
   useEffect(() => {
     if (urdu) loadFont('Noto Nastaliq Urdu');
