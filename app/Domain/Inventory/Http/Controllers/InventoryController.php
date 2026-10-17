@@ -39,12 +39,14 @@ final class InventoryController
         Gate::forUser($request->user())->authorize('viewAny', Inventory::class);
 
         // Phase B31 (G6): the admin list names the product and filters by stock state.
-        $filters = $request->validate(['stock' => ['nullable', 'in:low,out']]);
+        // UI-21: one product's stock records (product = its internal id), for editing stock from the product list.
+        $filters = $request->validate(['stock' => ['nullable', 'in:low,out'], 'product' => ['nullable', 'integer', 'min:1']]);
 
         return InventoryResource::collection(
             Inventory::query()->with(['warehouse', 'product', 'variant.product'])
                 ->when(($filters['stock'] ?? null) === 'low', fn ($q) => $q->whereNotNull('reorder_point')->whereRaw('(on_hand - reserved) <= reorder_point'))
                 ->when(($filters['stock'] ?? null) === 'out', fn ($q) => $q->whereRaw('(on_hand - reserved) <= 0'))
+                ->when(isset($filters['product']), fn ($q) => $q->where('product_id', $filters['product'])->whereNull('product_variant_id'))
                 ->orderByDesc('id')
                 ->paginate(25)
         );

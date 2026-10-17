@@ -4,6 +4,7 @@ import RowMenu from '@/Components/ui/RowMenu';
 import { WhatsAppDialog } from '@/Components/Orders/ContactCustomer';
 import { orderPhone } from '@/lib/contact';
 import { useAdminT } from '@/lib/adminI18n';
+import SavedViews, { viewFilters, viewQuery } from '@/Components/ui/SavedViews';
 import AdminPage from '@/Components/AdminPage';
 import DataTable, { Pagination, type Column } from '@/Components/ui/DataTable';
 import Button, { ButtonLink, FOCUS_RING } from '@/Components/ui/Button';
@@ -128,6 +129,7 @@ export default function Index() {
           );
         })}
       </nav>
+      <SavedViews list="orders" query={viewQuery(filters, FILTER_DEFAULTS)} onApply={(query) => setFilters(viewFilters(query, FILTER_DEFAULTS) as typeof FILTER_DEFAULTS)} />
       <FilterBar>
         <SearchField label="Search" placeholder="Order number, guest name or email" value={filters.search} onChange={(search) => setFilters({ search, page: '1' })} />
         <div className="w-48">

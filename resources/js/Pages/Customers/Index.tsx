@@ -1,5 +1,6 @@
 import { FormEvent, useRef, useState } from 'react';
 import { Link, router } from '@inertiajs/react';
+import SavedViews, { viewFilters, viewQuery } from '@/Components/ui/SavedViews';
 import AdminPage from '@/Components/AdminPage';
 import Button, { ButtonLink, FOCUS_RING } from '@/Components/ui/Button';
 import DataTable, { Pagination, type Column } from '@/Components/ui/DataTable';
@@ -277,6 +278,7 @@ export default function Index() {
       )}
       {access.can('analytics.view') && <Figures />}
 
+      <SavedViews list="customers" query={viewQuery(filters, FILTER_DEFAULTS)} onApply={(query) => setFilters(viewFilters(query, FILTER_DEFAULTS) as typeof FILTER_DEFAULTS)} />
       <FilterBar>
         <SearchField label="Search" placeholder="Name, email, phone or order number" value={filters.search} onChange={(search) => setFilters({ search, page: '1' })} />
         <div className="w-36"><SelectField label="Status" value={filters.status} onChange={(status) => setFilters({ status, page: '1' })} options={options(CUSTOMER_STATUSES)} placeholder="Any" /></div>

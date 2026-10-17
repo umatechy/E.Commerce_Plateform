@@ -40,4 +40,19 @@ final class AccountPreferencesTest extends TestCase
     {
         $this->putJson('/api/v1/auth/preferences', ['theme' => 'slate'])->assertUnauthorized();
     }
+
+    public function test_saved_list_views_are_kept_per_list_and_limited(): void
+    {
+        $user = User::factory()->create();
+        $views = [['name' => 'COD to confirm', 'query' => 'status=pending_confirmation'], ['name' => 'Delivered', 'query' => 'status=delivered']];
+
+        $this->actingAs($user)->putJson('/api/v1/auth/preferences', ['saved_views' => ['orders' => $views]])->assertOk()->assertJsonPath('data.saved_views.orders.1.name', 'Delivered');
+        $this->actingAs($user)->putJson('/api/v1/auth/preferences', ['saved_views' => ['products' => [['name' => 'Drafts', 'query' => 'status=draft']]]])->assertOk()
+            ->assertJsonPath('data.saved_views.orders.0.query', 'status=pending_confirmation')
+            ->assertJsonPath('data.saved_views.products.0.name', 'Drafts');
+
+        $this->actingAs($user)->putJson('/api/v1/auth/preferences', ['saved_views' => ['payouts' => []]])->assertStatus(422);
+        $this->actingAs($user)->putJson('/api/v1/auth/preferences', ['saved_views' => ['orders' => array_fill(0, 11, ['name' => 'x', 'query' => ''])]])->assertStatus(422);
+        $this->actingAs($user)->putJson('/api/v1/auth/preferences', ['saved_views' => ['orders' => [['name' => str_repeat('n', 41), 'query' => '']]]])->assertStatus(422);
+    }
 }

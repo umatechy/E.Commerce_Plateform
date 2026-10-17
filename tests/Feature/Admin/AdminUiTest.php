@@ -277,6 +277,9 @@ final class AdminUiTest extends TestCase
             ->assertJsonPath('data.0.product.name', 'Low Item')->assertJsonPath('data.0.product.id', $low->public_id);
         $this->getJson('/api/v1/inventory?stock=out')->assertJsonCount(0, 'data');
         $this->getJson('/api/v1/warehouses')->assertOk()->assertJsonPath('data.0.internal_id', $warehouse->id);
+        // UI-21: one product's stock records, for editing stock from the product list.
+        $this->getJson("/api/v1/inventory?product={$fine->id}")->assertJsonCount(1, 'data')->assertJsonPath('data.0.product.name', 'Fine Item');
+        $this->getJson('/api/v1/inventory?product=0')->assertStatus(422);
     }
 
     /** UI-3: the product list shows the stock available to sell, also when more is reserved than on hand. */

@@ -6,7 +6,7 @@ import { adminFetch } from './adminApi';
  * as well as on this browser. Saving is best effort; the change already
  * applies here even when the request fails (for example signed out).
  */
-export type AdminPreferences = { theme?: string; language?: string };
+export type AdminPreferences = { theme?: string; language?: string; saved_views?: Record<string, { name: string; query: string }[]> };
 
 export function savePreference(preference: AdminPreferences): void {
   adminFetch('/auth/preferences', { method: 'PUT', body: preference }).catch(() => undefined);

@@ -12,8 +12,11 @@ import { useAccess } from '@/lib/access';
 import { useApi, usePagedApi } from '@/lib/useApi';
 import { useUrlState } from '@/lib/useUrlState';
 import { useAction } from '@/lib/useForm';
-import { adminErrorMessage, adminFetch } from '@/lib/adminApi';
-import { money } from '@/lib/money';
+import { adminErrorMessage, adminFetch, idempotencyKey } from '@/lib/adminApi';
+import { fromMinor, money, toMinor } from '@/lib/money';
+import InlineEdit from '@/Components/ui/InlineEdit';
+import SavedViews, { viewFilters, viewQuery } from '@/Components/ui/SavedViews';
+import { useAdminT } from '@/lib/adminI18n';
 import { options } from '@/lib/labels';
 import type { BulkResult, Product } from '@/lib/catalog';
 import { PRODUCT_STATUSES } from '@/lib/catalog';
@@ -28,11 +31,15 @@ import Icon from '@/Components/ui/Icon';
  * Module 06 §64 "Product Listing Admin UX": the store's products, one
  * server page at a time, searched and filtered by the server
  * (GET /api/v1/products). The filters live in the URL.
+ *
+ * UI-21: the price of a simple product and its stock (in its one warehouse)
+ * change right in the list; named filters can be saved as views.
  */
 const FILTER_DEFAULTS = { search: '', status: '', page: '1' };
 
 export default function Products() {
   const access = useAccess();
+  const t = useAdminT();
   const [filters, setFilters] = useUrlState(FILTER_DEFAULTS);
   const list = usePagedApi<Product>('/products', { search: filters.search, status: filters.status, page: filters.page });
   const usage = useApi<{ data: Record<string, { limit: number | null; current: number; unlimited: boolean }> }>('/subscription/usage');
@@ -50,7 +57,68 @@ export default function Products() {
   const allOnPage = pageIds.length > 0 && pageIds.every((id) => selected.includes(id));
 
   const limit = usage.data?.data.max_products;
-  const filtered = filters.search !== '' || filters.status !== '';
+
+  /** Saves a simple product's price from the list. */
+  async function savePrice(product: Product, text: string): Promise<boolean> {
+    const currency = product.currency ?? access.currency;
+    const minor = toMinor(text, currency);
+    if (minor === null || minor < 0) {
+      toast.error(t('Enter a price such as 2500 ({currency}).', { currency }));
+
+      return false;
+    }
+    try {
+      await adminFetch(`/products/${product.id}`, { method: 'PUT', body: { price_minor: minor } });
+      toast.success(t('Price saved.'));
+      list.reload();
+
+      return true;
+    } catch (e) {
+      toast.error(adminErrorMessage(e));
+
+      return false;
+    }
+  }
+
+  /**
+   * Sets a product's stock available to sell, from the list: in its one stock
+   * record (creating it in the default warehouse with opening stock when there is
+   * none). With stock in several warehouses the Inventory page does it.
+   */
+  async function saveStock(product: Product, text: string): Promise<boolean> {
+    const wanted = Number(text);
+    if (text === '' || !Number.isInteger(wanted) || wanted < 0) {
+      toast.error(t('Enter the stock as a whole number, or leave it empty.'));
+
+      return false;
+    }
+    try {
+      const records = (await adminFetch<{ data: { id: string; on_hand: number; reserved: number }[] }>('/inventory', { query: { product: product.internal_id } })).data;
+      if (records.length > 1) {
+        toast.warning(t('This product has stock in several warehouses. Change it on the Inventory page.'));
+
+        return false;
+      }
+      if (records.length === 0) {
+        const warehouses = (await adminFetch<{ data: { internal_id: number; is_default: boolean }[] }>('/warehouses')).data;
+        const warehouse = warehouses.find((w) => w.is_default) ?? warehouses[0];
+        if (!warehouse) throw new Error(t('This store has no warehouse yet.'));
+        const record = await adminFetch<{ data: { id: string } }>('/inventory', { method: 'POST', body: { warehouse_id: warehouse.internal_id, product_id: product.internal_id, product_variant_id: null } });
+        if (wanted > 0) await adminFetch(`/inventory/${record.data.id}/opening-stock`, { method: 'POST', body: { quantity: wanted, reason: 'Stock set from the product list', idempotency_key: idempotencyKey() } });
+      } else {
+        const delta = wanted - (records[0].on_hand - records[0].reserved);
+        if (delta !== 0) await adminFetch(`/inventory/${records[0].id}/adjust`, { method: 'POST', body: { quantity: delta, reason: 'Stock set from the product list', idempotency_key: idempotencyKey() } });
+      }
+      toast.success(t('Stock saved.'));
+      list.reload();
+
+      return true;
+    } catch (e) {
+      toast.error(adminErrorMessage(e));
+
+      return false;
+    }
+  }  const filtered = filters.search !== '' || filters.status !== '';
 
   const columns: Column<Product>[] = [
     ...(canBulk
@@ -93,19 +161,44 @@ export default function Products() {
       ),
     },
     { key: 'status', header: 'Status', priority: true, render: (product) => <StatusBadge status={product.status} /> },
-    { key: 'price', header: 'Price', align: 'right', render: (product) => (product.effective_price_minor === null ? '—' : money(product.effective_price_minor, product.currency ?? access.currency)) },
+    {
+      key: 'price',
+      header: 'Price',
+      align: 'right',
+      render: (product) => {
+        const currency = product.currency ?? access.currency;
+        const shown = product.effective_price_minor === null ? '—' : money(product.effective_price_minor, currency);
+        // A simple product's own price; variants keep theirs on the product page.
+        const editable = access.can('products.update') && product.type === 'simple' && (product.variants?.length ?? 0) === 0;
+
+        return editable ? (
+          <InlineEdit display={<span className="tabular-nums">{shown}</span>} initial={product.price_minor === null ? '' : fromMinor(product.price_minor, currency)} label={t('Price of {name}', { name: product.name })} onSave={(text) => savePrice(product, text)} />
+        ) : (
+          shown
+        );
+      },
+    },
     {
       key: 'stock',
       header: 'Stock',
       align: 'right',
-      render: (product) =>
-        product.stock_available === undefined ? (
-          '—'
-        ) : product.stock_available <= 0 ? (
-          <span className="font-medium text-red-700">Out of stock</span>
+      render: (product) => {
+        const shown =
+          product.stock_available === undefined ? (
+            '—'
+          ) : product.stock_available <= 0 ? (
+            <span className="font-medium text-red-700">{t('Out of stock')}</span>
+          ) : (
+            <span className={product.stock_available <= 5 ? 'font-medium text-amber-700' : 'text-slate-700'}>{t('{count} in stock', { count: product.stock_available.toLocaleString() })}</span>
+          );
+        const editable = access.can('inventory.adjust') && product.type === 'simple' && (product.variants?.length ?? 0) === 0;
+
+        return editable ? (
+          <InlineEdit display={shown} initial={String(Math.max(0, product.stock_available ?? 0))} inputMode="numeric" label={t('Stock of {name}', { name: product.name })} onSave={(text) => saveStock(product, text)} />
         ) : (
-          <span className={product.stock_available <= 5 ? 'font-medium text-amber-700' : 'text-slate-700'}>{product.stock_available.toLocaleString()} in stock</span>
-        ),
+          shown
+        );
+      },
     },
     { key: 'variants', header: 'Variants', align: 'right', render: (product) => product.variants?.length ?? 0 },
     { key: 'brand', header: 'Brand', render: (product) => product.brand?.name ?? '—' },
@@ -180,6 +273,7 @@ export default function Products() {
         </div>
       )}
 
+      <SavedViews list="products" query={viewQuery(filters, FILTER_DEFAULTS)} onApply={(query) => setFilters(viewFilters(query, FILTER_DEFAULTS) as typeof FILTER_DEFAULTS)} />
       <FilterBar>
         <SearchField label="Search" placeholder="Name or SKU" value={filters.search} onChange={(search) => setFilters({ search, page: '1' })} />
         <div className="w-44">
