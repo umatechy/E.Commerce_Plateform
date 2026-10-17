@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link } from '@inertiajs/react';
+import { Link, router } from '@inertiajs/react';
 import AdminPage from '@/Components/AdminPage';
 import DataTable, { Pagination, type Column } from '@/Components/ui/DataTable';
 import Button, { ButtonLink, FOCUS_RING } from '@/Components/ui/Button';
@@ -21,6 +21,8 @@ import BulkBar from '@/Components/Catalog/BulkBar';
 import ProductImportDialog from '@/Components/Catalog/ProductImportDialog';
 import { toast } from '@/Components/ui/toast';
 import { downloadFile } from '@/lib/download';
+import RowMenu from '@/Components/ui/RowMenu';
+import Icon from '@/Components/ui/Icon';
 
 /**
  * Module 06 §64 "Product Listing Admin UX": the store's products, one
@@ -71,17 +73,40 @@ export default function Products() {
     {
       key: 'name',
       header: 'Product',
+      priority: true, // the select box is the first column; the name must stay on a phone too
       render: (product) => (
-        <div>
-          <Link href={`/products/${product.id}`} className={`rounded font-medium text-indigo-700 hover:underline ${FOCUS_RING}`}>
-            {product.name}
-          </Link>
-          {product.sku && <p className="font-mono text-xs text-slate-500">{product.sku}</p>}
+        <div className="flex items-center gap-3">
+          {product.thumbnail_url ? (
+            <img src={product.thumbnail_url} alt="" loading="lazy" className="h-11 w-11 flex-none rounded-lg border border-slate-200 object-cover" />
+          ) : (
+            <span aria-hidden="true" className="flex h-11 w-11 flex-none items-center justify-center rounded-lg border border-dashed border-slate-300 bg-slate-50 text-slate-400">
+              <Icon name="box" size={18} />
+            </span>
+          )}
+          <div className="min-w-0">
+            <Link href={`/products/${product.id}`} className={`rounded font-medium text-slate-900 hover:text-indigo-700 hover:underline ${FOCUS_RING}`}>
+              {product.name}
+            </Link>
+            {product.sku && <p className="font-mono text-xs text-slate-500">{product.sku}</p>}
+          </div>
         </div>
       ),
     },
     { key: 'status', header: 'Status', priority: true, render: (product) => <StatusBadge status={product.status} /> },
     { key: 'price', header: 'Price', align: 'right', render: (product) => (product.effective_price_minor === null ? '—' : money(product.effective_price_minor, product.currency ?? access.currency)) },
+    {
+      key: 'stock',
+      header: 'Stock',
+      align: 'right',
+      render: (product) =>
+        product.stock_available === undefined ? (
+          '—'
+        ) : product.stock_available <= 0 ? (
+          <span className="font-medium text-red-700">Out of stock</span>
+        ) : (
+          <span className={product.stock_available <= 5 ? 'font-medium text-amber-700' : 'text-slate-700'}>{product.stock_available.toLocaleString()} in stock</span>
+        ),
+    },
     { key: 'variants', header: 'Variants', align: 'right', render: (product) => product.variants?.length ?? 0 },
     { key: 'brand', header: 'Brand', render: (product) => product.brand?.name ?? '—' },
     {
@@ -91,31 +116,28 @@ export default function Products() {
       align: 'right',
       priority: true,
       render: (product) => (
-        <span className="flex justify-end gap-1">
-          {/* Phase B39 (Module 06 §60): a hidden draft copy. */}
-          {access.can('products.create') && (
-            <Button
-              size="sm"
-              variant="ghost"
-              busy={busy === `copy-${product.id}`}
-              onClick={() =>
-                run(`copy-${product.id}`, () => adminFetch(`/products/${product.id}/duplicate`, { method: 'POST' }), { success: 'Copy created as a hidden draft.' }).then((copy) => {
-                  if (copy !== undefined) {
-                    list.reload();
-                    usage.reload();
-                  }
-                })
-              }
-            >
-              Duplicate<span className="sr-only"> {product.name}</span>
-            </Button>
-          )}
-          {access.can('products.delete') && (
-            <Button size="sm" variant="ghost" onClick={() => setRemoving(product)}>
-              Delete<span className="sr-only"> {product.name}</span>
-            </Button>
-          )}
-        </span>
+        <RowMenu
+          label={`Actions for ${product.name}`}
+          actions={[
+            { label: 'Edit', icon: 'settings', onSelect: () => router.visit(`/products/${product.id}`) },
+            // Phase B39 (Module 06 §60): a hidden draft copy.
+            ...(access.can('products.create')
+              ? [{
+                  label: busy === `copy-${product.id}` ? 'Copying…' : 'Duplicate',
+                  icon: 'layers' as const,
+                  disabled: busy !== null,
+                  onSelect: () =>
+                    void run(`copy-${product.id}`, () => adminFetch(`/products/${product.id}/duplicate`, { method: 'POST' }), { success: 'Copy created as a hidden draft.' }).then((copy) => {
+                      if (copy !== undefined) {
+                        list.reload();
+                        usage.reload();
+                      }
+                    }),
+                }]
+              : []),
+            ...(access.can('products.delete') ? [{ label: 'Delete', icon: 'x' as const, danger: true, onSelect: () => setRemoving(product) }] : []),
+          ]}
+        />
       ),
     },
   ];

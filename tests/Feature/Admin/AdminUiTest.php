@@ -279,6 +279,27 @@ final class AdminUiTest extends TestCase
         $this->getJson('/api/v1/warehouses')->assertOk()->assertJsonPath('data.0.internal_id', $warehouse->id);
     }
 
+    /** UI-3: the product list shows the stock available to sell, also when more is reserved than on hand. */
+    public function test_the_product_list_shows_stock_available_and_the_first_picture(): void
+    {
+        [$store, $owner] = $this->storeWithOwner();
+        $warehouse = Warehouse::query()->withoutTenantScope()->where('store_id', $store->id)->firstOrFail();
+        $stocked = Product::factory()->for($store)->create(['name' => 'Stocked']);
+        $oversold = Product::factory()->for($store)->create(['name' => 'Oversold']);
+        Inventory::factory()->for($store)->create(['warehouse_id' => $warehouse->id, 'product_id' => $stocked->id, 'on_hand' => 12, 'reserved' => 2]);
+        Inventory::factory()->for($store)->create(['warehouse_id' => $warehouse->id, 'product_id' => $oversold->id, 'on_hand' => 1, 'reserved' => 3]);
+        [$otherStore] = $this->storeWithOwner();
+        $otherWarehouse = Warehouse::query()->withoutTenantScope()->where('store_id', $otherStore->id)->firstOrFail();
+        Inventory::factory()->for($otherStore)->create(['warehouse_id' => $otherWarehouse->id, 'product_id' => Product::factory()->for($otherStore)->create()->id, 'on_hand' => 99, 'reserved' => 0]);
+
+        $this->actingAs($owner);
+        $rows = collect($this->getJson('/api/v1/products')->assertOk()->json('data'))->keyBy('name');
+        $this->assertSame(10, $rows['Stocked']['stock_available']);
+        $this->assertSame(-2, $rows['Oversold']['stock_available'], 'no SQL error on unsigned columns; shown as out of stock');
+        $this->assertNull($rows['Stocked']['thumbnail_url']);
+        $this->assertCount(2, $rows);
+    }
+
     public function test_the_shipping_rates_of_the_store_are_listed_and_only_its_own(): void
     {
         [$store, $owner] = $this->storeWithOwner();

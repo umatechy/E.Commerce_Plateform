@@ -51,7 +51,12 @@ final class ProductController
         ]);
 
         return ProductResource::collection(
-            Product::query()->with(['brand', 'variants'])
+            // UI-3: the list shows each product's first picture and its stock available to sell.
+            Product::query()->with(['brand', 'variants', 'images'])
+                ->select('products.*')
+                ->selectSub(fn ($q) => $q->from('inventories')->selectRaw('COALESCE(SUM(CAST(on_hand AS SIGNED) - CAST(reserved AS SIGNED)), 0)')
+                    ->where(fn ($w) => $w->whereColumn('inventories.product_id', 'products.id')
+                        ->orWhereIn('inventories.product_variant_id', fn ($v) => $v->from('product_variants')->select('id')->whereColumn('product_variants.product_id', 'products.id'))), 'stock_available')
                 ->when($filters['search'] ?? null, function ($query, string $search) {
                     $like = '%'.addcslashes($search, '%_\\').'%';
                     $query->where(fn ($q) => $q->where('name', 'like', $like)->orWhere('sku', 'like', $like));

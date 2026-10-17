@@ -57,13 +57,13 @@ export default function DataTable<T>({ caption, columns, rows, rowKey, loading =
   if (rows !== null && rows.length === 0 && !loading) return <>{empty}</>;
 
   return (
-    <div className="overflow-x-auto rounded-md border border-slate-200 bg-white" aria-busy={loading || undefined}>
+    <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white shadow-sm" aria-busy={loading || undefined}>
       <table className="w-full text-left text-sm">
         <caption className="sr-only">{caption}</caption>
-        <thead className="border-b border-slate-200 bg-slate-50 text-xs uppercase tracking-wide text-slate-600">
+        <thead className="border-b border-slate-200 bg-slate-50/80 text-[11px] uppercase tracking-wider text-slate-500">
           <tr>
             {columns.map((column, index) => (
-              <th key={column.key} scope="col" className={`px-3 py-2 font-medium ${column.align === 'right' ? 'text-right' : ''} ${cellVisibility(column, index)}`}>
+              <th key={column.key} scope="col" className={`px-4 py-2.5 font-semibold ${column.align === 'right' ? 'text-right' : ''} ${cellVisibility(column, index)}`}>
                 {column.srOnlyHeader ? <span className="sr-only">{column.header}</span> : column.header}
               </th>
             ))}
@@ -74,7 +74,7 @@ export default function DataTable<T>({ caption, columns, rows, rowKey, loading =
             ? [0, 1, 2, 3, 4].map((line) => (
                 <tr key={line} className="border-b border-slate-100 last:border-0">
                   {columns.map((column, index) => (
-                    <td key={column.key} className={`px-3 py-3 ${cellVisibility(column, index)}`}>
+                    <td key={column.key} className={`px-4 py-3.5 ${cellVisibility(column, index)}`}>
                       <span className="block h-4 w-3/4 animate-pulse rounded bg-slate-200 motion-reduce:animate-none" />
                     </td>
                   ))}
@@ -83,11 +83,12 @@ export default function DataTable<T>({ caption, columns, rows, rowKey, loading =
             : rows.map((row) => (
                 <tr
                   key={rowKey(row)}
-                  className={`border-b border-slate-100 last:border-0 ${onRowClick ? 'cursor-pointer hover:bg-slate-50' : ''}`}
-                  onClick={onRowClick ? () => onRowClick(row) : undefined}
+                  className={`border-b border-slate-100 transition-colors last:border-0 hover:bg-slate-50/70 motion-reduce:transition-none ${onRowClick ? 'cursor-pointer' : ''}`}
+                  // A click on a link, button or field inside the row does its own thing, not the row's.
+                  onClick={onRowClick ? (event) => !(event.target as HTMLElement).closest('a, button, input, select, textarea, label') && onRowClick(row) : undefined}
                 >
                   {columns.map((column, index) => (
-                    <td key={column.key} className={`px-3 py-2.5 align-middle ${column.align === 'right' ? 'text-right' : ''} ${cellVisibility(column, index)}`}>
+                    <td key={column.key} className={`px-4 py-3 align-middle ${column.align === 'right' ? 'text-right' : ''} ${cellVisibility(column, index)}`}>
                       {column.render(row)}
                     </td>
                   ))}

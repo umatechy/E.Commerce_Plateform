@@ -30,6 +30,9 @@ export type Variant = {
 
 export type Product = {
   id: string;
+  /** UI-3: in the admin list only — the first picture and the stock available to sell. */
+  thumbnail_url?: string | null;
+  stock_available?: number;
   internal_id: number;
   type: string;
   name: string;

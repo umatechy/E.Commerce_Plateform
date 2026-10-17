@@ -1,4 +1,4 @@
-import { Link } from '@inertiajs/react';
+import { Link, router } from '@inertiajs/react';
 import AdminPage from '@/Components/AdminPage';
 import DataTable, { Pagination, type Column } from '@/Components/ui/DataTable';
 import Button, { ButtonLink, FOCUS_RING } from '@/Components/ui/Button';
@@ -21,6 +21,17 @@ import { ORDER_PAYMENT_STATUSES, ORDER_STATUSES, orderCustomer, type Order } fro
  * server's; nothing is recalculated here.
  */
 const FILTER_DEFAULTS = { search: '', status: '', payment_status: '', page: '1' };
+
+/** UI-3: the statuses a store looks at most, one click away (the Status filter still has them all). */
+const QUICK: { status: string; label: string }[] = [
+  { status: '', label: 'All' },
+  { status: 'pending_confirmation', label: 'To confirm' },
+  { status: 'confirmed', label: 'Confirmed' },
+  { status: 'processing', label: 'Processing' },
+  { status: 'shipped', label: 'Shipped' },
+  { status: 'delivered', label: 'Delivered' },
+  { status: 'cancelled', label: 'Cancelled' },
+];
 
 export default function Index() {
   const access = useAccess();
@@ -54,6 +65,23 @@ export default function Index() {
       description="Every order of your store. Open one to see its items, payments and deliveries."
       actions={access.can('orders.create') && <ButtonLink href="/orders/new" variant="primary">Create order</ButtonLink>}
     >
+      <nav aria-label="Order status" className="-mx-1 mb-3 flex gap-1 overflow-x-auto px-1 pb-1">
+        {QUICK.map((q) => {
+          const active = filters.status === q.status;
+
+          return (
+            <button
+              key={q.label}
+              type="button"
+              aria-pressed={active}
+              onClick={() => setFilters({ status: q.status, page: '1' })}
+              className={`whitespace-nowrap rounded-full px-3.5 py-1.5 text-sm font-medium ${FOCUS_RING} ${active ? 'bg-indigo-600 text-white shadow-sm' : 'bg-white text-slate-600 ring-1 ring-slate-200 hover:bg-slate-50 hover:text-slate-900'}`}
+            >
+              {q.label}
+            </button>
+          );
+        })}
+      </nav>
       <FilterBar>
         <SearchField label="Search" placeholder="Order number, guest name or email" value={filters.search} onChange={(search) => setFilters({ search, page: '1' })} />
         <div className="w-48">
@@ -70,6 +98,7 @@ export default function Index() {
         columns={columns}
         rows={list.rows}
         rowKey={(order) => order.id}
+        onRowClick={(order) => router.visit(`/orders/${order.id}`)}
         loading={list.loading}
         error={list.error}
         onRetry={list.reload}

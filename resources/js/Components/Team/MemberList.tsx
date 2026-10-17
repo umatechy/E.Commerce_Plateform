@@ -24,8 +24,8 @@ export default function MemberList({ members, roles, canManage, busy, onRoleChan
   const grantable = roles.filter((role) => role.grantable);
 
   return (
-    <table className="w-full text-left text-sm">
-      <thead className="border-b text-xs uppercase text-gray-500">
+    <table className="w-full min-w-[34rem] text-left text-sm">
+      <thead className="border-b border-slate-200 text-[11px] uppercase tracking-wider text-slate-500">
         <tr>
           <th className="py-2 pr-4">Person</th>
           <th className="py-2 pr-4">Role</th>
@@ -39,13 +39,16 @@ export default function MemberList({ members, roles, canManage, busy, onRoleChan
           const working = busy === member.id;
 
           return (
-            <tr key={member.id} className="border-b last:border-0">
+            <tr key={member.id} className="border-b border-slate-100 last:border-0">
               <td className="py-3 pr-4">
-                <div className="font-medium text-gray-900">
+                <div className="flex items-center gap-2 font-medium text-slate-900">
+                  <span aria-hidden="true" className="flex h-8 w-8 flex-none items-center justify-center rounded-full bg-slate-100 text-xs font-semibold text-slate-600">
+                    {member.name.split(/\s+/).map((part) => part[0]).join('').slice(0, 2).toUpperCase()}
+                  </span>
                   {member.name}
                   {member.is_you && <span className="ml-2 text-xs text-gray-500">(you)</span>}
                 </div>
-                <div className="text-gray-500">{member.email}</div>
+                <div className="pl-10 text-slate-500">{member.email}</div>
               </td>
               <td className="py-3 pr-4">
                 {editable && member.status !== 'revoked' && member.role ? (
@@ -55,7 +58,7 @@ export default function MemberList({ members, roles, canManage, busy, onRoleChan
                       value={member.role.slug}
                       disabled={working}
                       onChange={(e) => onRoleChange(member, e.target.value)}
-                      className="rounded border border-gray-300 bg-white px-2 py-1 text-sm"
+                      className="rounded-lg border border-slate-300 bg-white px-2 py-1 text-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-600"
                     >
                       {!grantable.some((role) => role.slug === member.role?.slug) && <option value={member.role.slug}>{member.role.name}</option>}
                       {grantable.map((role) => (

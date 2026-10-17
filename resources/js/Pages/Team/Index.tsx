@@ -90,8 +90,9 @@ export default function Index() {
         </div>
       )}
 
-      <section className="mt-6 rounded border bg-white p-4">
-        <h2 className="mb-2 font-semibold">Members</h2>
+      <section className="mt-6 rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+        <h2 className="mb-2 font-semibold text-slate-900">Members</h2>
+        <div className="-mx-4 overflow-x-auto px-4">
         <MemberList
           members={members}
           roles={summary.roles}
@@ -107,17 +108,18 @@ export default function Index() {
             void run(member.id, () => adminFetch(`/team/members/${member.id}/reactivate`, { method: 'POST' }));
           }}
         />
+        </div>
       </section>
 
       {invitations.length > 0 && (
-        <section className="mt-6 rounded border bg-white p-4">
-          <h2 className="mb-2 font-semibold">Open invitations</h2>
-          <ul className="divide-y text-sm">
+        <section className="mt-6 rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+          <h2 className="mb-2 font-semibold text-slate-900">Open invitations</h2>
+          <ul className="divide-y divide-slate-100 text-sm">
             {invitations.map((invitation) => (
-              <li key={invitation.id} className="flex items-center justify-between py-2">
-                <div>
-                  <span className="font-medium">{invitation.email}</span>
-                  <span className="ml-2 text-gray-500">
+              <li key={invitation.id} className="flex flex-wrap items-center justify-between gap-2 py-2">
+                <div className="min-w-0">
+                  <span className="break-all font-medium">{invitation.email}</span>
+                  <span className="ml-2 text-slate-500">
                     {invitation.role.name} · {invitation.status === 'expired' ? 'expired' : `expires ${formatDate(invitation.expires_at)}`}
                   </span>
                 </div>

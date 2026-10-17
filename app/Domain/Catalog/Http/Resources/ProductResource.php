@@ -61,6 +61,9 @@ final class ProductResource extends JsonResource
             'published_at' => $this->published_at?->toIso8601String(),
             'archived_at' => $this->archived_at?->toIso8601String(),
             'variants' => ProductVariantResource::collection($this->whenLoaded('variants')),
+            // UI-3 (the admin list): the first picture, and the stock available to sell across warehouses and variants.
+            'thumbnail_url' => $this->whenLoaded('images', fn () => $this->images->first()?->url()),
+            'stock_available' => $this->when(isset($this->resource->getAttributes()['stock_available']), fn () => (int) $this->resource->getAttributes()['stock_available']),
         ];
     }
 }

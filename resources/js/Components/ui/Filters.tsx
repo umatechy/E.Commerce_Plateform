@@ -47,5 +47,5 @@ export function SearchField({ label, value, onChange, placeholder }: { label: st
 
 /** The row of filters above a list. */
 export function FilterBar({ children }: { children: ReactNode }) {
-  return <div className="mb-4 flex flex-wrap items-end gap-3 rounded-lg border border-slate-200 bg-white p-3">{children}</div>;
+  return <div className="mb-4 flex flex-wrap items-end gap-3 rounded-xl border border-slate-200 bg-white p-3 shadow-sm">{children}</div>;
 }

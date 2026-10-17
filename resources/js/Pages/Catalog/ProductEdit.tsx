@@ -1,4 +1,5 @@
 import { FormEvent, useEffect, useRef, useState } from 'react';
+import Icon from '@/Components/ui/Icon';
 import { router } from '@inertiajs/react';
 import AdminPage from '@/Components/AdminPage';
 import Button, { ButtonLink } from '@/Components/ui/Button';
@@ -132,6 +133,9 @@ function ProductForm({ product, onSaved }: { product: Product | null; onSaved: (
   const [tab, setTab] = useState('details');
   // Phase B37: pictures chosen while creating; uploaded right after the product exists.
   const [pictures, setPictures] = useState<File[]>([]);
+  const [dragging, setDragging] = useState(false);
+  // JPG and PNG only, at most 12 (the server checks again).
+  const addPictures = (files: File[]) => setPictures((current) => [...current, ...files.filter((file) => ['image/jpeg', 'image/png'].includes(file.type))].slice(0, 12));
   const [previews, setPreviews] = useState<string[]>([]);
   useEffect(() => {
     const urls = pictures.map((file) => URL.createObjectURL(file));
@@ -258,25 +262,40 @@ function ProductForm({ product, onSaved }: { product: Product | null; onSaved: (
         </Card>
         {product === null && (
           <Card title="Pictures" description="Choose JPG or PNG files from your computer. They are added when you create the product; the first one is the main picture.">
-            <label htmlFor="new-product-pictures" className="block text-sm font-medium text-slate-700">Choose files (JPG, PNG)</label>
+            {/* UI-3: drop pictures on the box, or click it to choose them. */}
+            <label
+              htmlFor="new-product-pictures"
+              onDragOver={(e) => { e.preventDefault(); setDragging(true); }}
+              onDragLeave={() => setDragging(false)}
+              onDrop={(e) => {
+                e.preventDefault();
+                setDragging(false);
+                addPictures(Array.from(e.dataTransfer.files));
+              }}
+              className={`flex cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed px-4 py-8 text-center transition-colors motion-reduce:transition-none ${dragging ? 'border-indigo-500 bg-indigo-50' : 'border-slate-300 bg-slate-50 hover:border-indigo-400 hover:bg-indigo-50/50'}`}
+            >
+              <span className="flex h-12 w-12 items-center justify-center rounded-full bg-white text-indigo-600 shadow-sm"><Icon name="box" size={22} /></span>
+              <span className="text-sm font-medium text-slate-800">Drag pictures here, or <span className="text-indigo-700 underline">choose files</span></span>
+              <span className="text-xs text-slate-500">JPG or PNG · up to 12 pictures, 5 MB each</span>
+            </label>
             <input
               id="new-product-pictures"
               type="file"
               multiple
               accept="image/jpeg,image/png"
-              className="mt-1 block w-full text-sm"
+              aria-label="Choose files (JPG, PNG)"
+              className="sr-only"
               onChange={(e) => {
-                const chosen = Array.from(e.target.files ?? []).filter((file) => ['image/jpeg', 'image/png'].includes(file.type));
-                setPictures((current) => [...current, ...chosen].slice(0, 12));
+                addPictures(Array.from(e.target.files ?? []));
                 e.target.value = '';
               }}
             />
-            <p className="mt-1 text-xs text-slate-500">Up to 12 pictures, 5 MB each.</p>
             {pictures.length > 0 && (
-              <ul className="mt-3 grid grid-cols-3 gap-3 sm:grid-cols-6">
+              <ul className="mt-4 grid grid-cols-3 gap-3 sm:grid-cols-6">
                 {pictures.map((file, index) => (
-                  <li key={`${file.name}-${index}`} className="rounded-md border border-slate-200 p-1">
-                    <img src={previews[index]} alt={`Picture ${index + 1}: ${file.name}`} className="aspect-square w-full rounded object-cover" />
+                  <li key={`${file.name}-${index}`} className="relative rounded-xl border border-slate-200 p-1">
+                    {index === 0 && <span className="absolute left-2 top-2 rounded-full bg-indigo-600 px-2 py-0.5 text-[10px] font-semibold text-white">Main</span>}
+                    <img src={previews[index]} alt={`Picture ${index + 1}: ${file.name}`} className="aspect-square w-full rounded-lg object-cover" />
                     <Button size="sm" variant="ghost" className="mt-1 w-full" onClick={() => setPictures((current) => current.filter((_, i) => i !== index))}>
                       Remove<span className="sr-only"> {file.name}</span>
                     </Button>
@@ -407,7 +426,8 @@ function ProductForm({ product, onSaved }: { product: Product | null; onSaved: (
         </Card>
       </div>
 
-      <div className="mt-4 flex flex-wrap items-center gap-3">
+      {/* UI-3: the save bar stays in view at the bottom while the form scrolls. */}
+      <div className="sticky bottom-0 z-10 -mx-4 mt-6 flex flex-wrap items-center gap-3 border-t border-slate-200 bg-white/95 px-4 py-3 backdrop-blur">
         {canSave ? (
           <Button type="submit" variant="primary" busy={form.busy} busyLabel="Saving…">
             {product === null ? 'Create product' : 'Save changes'}
@@ -416,7 +436,11 @@ function ProductForm({ product, onSaved }: { product: Product | null; onSaved: (
           <p className="text-sm text-slate-600">Your role can view this product but not change it.</p>
         )}
         <ButtonLink href="/products">Back to products</ButtonLink>
-        {form.dirty && <span className="text-sm text-amber-800">You have unsaved changes.</span>}
+        {form.dirty && (
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-50 px-2.5 py-1 text-xs font-medium text-amber-800">
+            <span aria-hidden="true" className="h-1.5 w-1.5 rounded-full bg-amber-500" />You have unsaved changes.
+          </span>
+        )}
       </div>
     </form>
   );

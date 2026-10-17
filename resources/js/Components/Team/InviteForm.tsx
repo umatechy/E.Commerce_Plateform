@@ -34,18 +34,18 @@ export default function InviteForm({ roles, disabledReason, onInvited }: Props) 
   if (grantable.length === 0) return null;
 
   return (
-    <form onSubmit={submit} className="rounded border bg-white p-4">
-      <h2 className="font-semibold">Invite someone</h2>
+    <form onSubmit={submit} className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+      <h2 className="font-semibold text-slate-900">Invite someone</h2>
       {disabledReason && <p className="mt-2 text-sm text-amber-800">{disabledReason}</p>}
       <div className="mt-3 flex flex-wrap items-start gap-3">
         <label className="flex-1">
           <span className="block text-sm text-gray-700">Email</span>
-          <input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} className="mt-1 block w-full rounded border border-gray-300 px-3 py-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-600" />
+          <input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} className="mt-1 block w-full rounded-lg border border-slate-300 px-3 py-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-600" />
           {errors.email && <span className="mt-1 block text-sm text-red-600">{errors.email}</span>}
         </label>
         <label>
           <span className="block text-sm text-gray-700">Role</span>
-          <select value={role} onChange={(e) => setRole(e.target.value)} className="mt-1 block rounded border border-gray-300 px-3 py-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-600">
+          <select value={role} onChange={(e) => setRole(e.target.value)} className="mt-1 block rounded-lg border border-slate-300 px-3 py-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-600">
             {grantable.map((r) => (
               <option key={r.slug} value={r.slug}>
                 {r.name}
@@ -54,7 +54,7 @@ export default function InviteForm({ roles, disabledReason, onInvited }: Props) 
           </select>
           {errors.role && <span className="mt-1 block text-sm text-red-600">{errors.role}</span>}
         </label>
-        <button type="submit" disabled={sending || disabledReason !== null} className="mt-6 rounded bg-gray-900 px-4 py-2 text-sm text-white disabled:opacity-50">
+        <button type="submit" disabled={sending || disabledReason !== null} className="mt-6 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-700 disabled:opacity-50">
           {sending ? 'Sending…' : 'Send invitation'}
         </button>
       </div>

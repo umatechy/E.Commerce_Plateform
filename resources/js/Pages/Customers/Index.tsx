@@ -298,6 +298,7 @@ export default function Index() {
         columns={columns}
         rows={list.rows}
         rowKey={(customer) => customer.id}
+        onRowClick={(customer) => router.visit(`/customers/${customer.id}`)}
         loading={list.loading}
         error={list.error}
         onRetry={list.reload}

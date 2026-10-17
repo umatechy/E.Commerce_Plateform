@@ -7,7 +7,7 @@ The owner froze features after B58 and asked for the interface to be made
 | --- | --- | --- |
 | UI-1 First impression | Public home page, sign in, two-step code, create store, forgot/reset password, team and partner invitations; platform logo and name | ✅ |
 | UI-2 Admin frame and dashboard | Sidebar with icons, header, search, store dashboard | ✅ |
-| UI-3 Lists and product form | Orders, products, customers; add/edit product | planned |
+| UI-3 Lists and product form | Orders, products, customers; add/edit product | ✅ |
 | UI-4 Shop | Placeholders, mobile menu, cart badge, product page | planned |
 | UI-5 Super Admin and finish | Figures, alerts, charts; empty and loading states | planned |
 
@@ -45,3 +45,20 @@ The owner froze features after B58 and asked for the interface to be made
   has the same links).
 - Fixed on the way: on a phone the dashboard was wider than the screen (a grid column grew to its content).
   Team (465 px) and Inventory (391 px) are still wider than a phone; they are list pages (UI-3).
+
+## UI-3
+
+- **Every list** (`Components/ui/DataTable.tsx`, 44 pages): softer frame, roomier rows, a hover on every row; a
+  click on a link, button or field inside a clickable row does its own thing only.
+- **Row menu** (`Components/ui/RowMenu.tsx`): less used and risky actions behind “⋯” (“Actions for <name>”), with
+  keyboard support — a delete is never one stray click.
+- **Products**: first picture (or a placeholder), **stock available** (on hand minus reserved, all warehouses and
+  variants; out of stock in red, low in amber), Edit/Duplicate/Delete in the row menu. The product API list now
+  returns `thumbnail_url` and `stock_available` (signed arithmetic, so an oversold product never errors).
+- **Orders**: one-click status tabs (All, To confirm, Confirmed, Processing, Shipped, Delivered, Cancelled); the
+  whole row opens the order. **Customers**: the whole row opens the customer.
+- **Add/edit product**: pictures by drag and drop or click, the first marked “Main”; the save bar stays in view
+  at the bottom, with an unsaved-changes mark.
+- **Team**: the shared look; initials; the member table scrolls inside its box on a phone.
+- Fixed on the way: on a phone the product list hid the product name (the select box was the only column
+  kept); the team page was wider than the screen.

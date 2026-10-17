@@ -261,7 +261,8 @@ describe('product list', () => {
     setPage(owner, '/products');
     render(<Products />);
 
-    fireEvent.click(await screen.findByRole('button', { name: 'Delete Blue Shirt' }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Actions for Blue Shirt' }));
+    fireEvent.click(screen.getByRole('menuitem', { name: 'Delete' }));
     const dialog = screen.getByRole('dialog', { name: 'Delete this product?' });
     expect(dialog.textContent).toContain('Blue Shirt');
     expect(dialog.textContent).toContain('cannot be undone');
