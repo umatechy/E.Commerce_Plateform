@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import Icon from '@/Components/ui/Icon';
 import { Link } from '@inertiajs/react';
 import Price from './Price';
 import ProductBadges from './ProductBadges';
@@ -61,7 +62,12 @@ export default function ProductCard({ product, basePath }: { product: Card; base
 function CardImage({ product }: { product: Card }) {
   const t = useT();
   if (!product.image) {
-    return <div className="flex h-full items-center justify-center text-sm text-sf-muted">{t('No image')}</div>;
+    return (
+      <div className="flex h-full flex-col items-center justify-center gap-2 bg-gradient-to-br from-sf-surface to-sf-bg text-sf-muted">
+        <Icon name="image" size={36} strokeWidth={1.4} className="opacity-60" />
+        <span className="text-xs">{t('No image')}</span>
+      </div>
+    );
   }
 
   return (

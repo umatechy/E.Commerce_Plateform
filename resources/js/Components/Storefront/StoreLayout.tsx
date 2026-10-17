@@ -7,6 +7,8 @@ import { CONTAINER, layoutOf, motionOf, StorefrontThemeContext, themeStyle, type
 import type { Seo, Shell } from '@/Storefront/types';
 import AppLayer from '@/Components/Storefront/AppLayer';
 import { rememberReferral } from '@/Storefront/referral';
+import { cartCount, onCartCount } from '@/Storefront/api';
+import Icon from '@/Components/ui/Icon';
 
 /**
  * The storefront shell: announcement, header with navigation, search and
@@ -102,14 +104,34 @@ function Actions({ shell, inverted = false }: { shell: Shell; inverted?: boolean
   const hover = inverted ? 'hover:bg-white/10' : 'hover:bg-sf-surface';
   const t = useT();
 
+  // UI-4: the number of items in the cart, kept from the last cart the shop saw.
+  const [count, setCount] = useState(0);
+  useEffect(() => {
+    const read = () => setCount(cartCount(shell));
+    read();
+
+    return onCartCount(read);
+  }, [shell]);
+
   return (
-    <div className="flex items-center gap-2">
+    <div className="flex items-center gap-1.5">
       <LanguageSwitch shell={shell} className={`sf-btn rounded-sf px-2 py-2 text-sm font-medium ${hover}`} />
-      <Link href={`${base}/account`} className={`sf-btn rounded-sf px-3 py-2 text-sm font-medium ${hover}`}>
-        {t('Account')}
+      <Link href={`${base}/account`} aria-label={t('Account')} className={`sf-btn inline-flex items-center gap-1.5 rounded-sf px-2.5 py-2 text-sm font-medium ${hover}`}>
+        <Icon name="user" size={18} />
+        <span className="hidden sm:inline" aria-hidden="true">{t('Account')}</span>
       </Link>
-      <Link href={`${base}/cart`} className={`sf-btn rounded-sf border px-3 py-2 text-sm font-medium ${inverted ? 'border-white/40' : 'border-sf-border'}`}>
-        {t('Cart')}
+      <Link
+        href={`${base}/cart`}
+        aria-label={count === 1 ? t('Cart, 1 item') : count > 1 ? t('Cart, {count} items', { count }) : t('Cart')}
+        className={`sf-btn relative inline-flex items-center gap-1.5 rounded-sf border px-2.5 py-2 text-sm font-medium ${inverted ? 'border-white/40' : 'border-sf-border'}`}
+      >
+        <Icon name="cart" size={18} />
+        <span className="hidden sm:inline" aria-hidden="true">{t('Cart')}</span>
+        {count > 0 && (
+          <span aria-hidden="true" className="absolute -end-2 -top-2 flex h-5 min-w-[1.25rem] items-center justify-center rounded-full bg-sf-primary px-1 text-[11px] font-bold leading-none text-white ring-2 ring-sf-bg">
+            {count > 99 ? '99+' : count}
+          </span>
+        )}
       </Link>
     </div>
   );

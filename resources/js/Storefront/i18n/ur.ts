@@ -590,6 +590,9 @@ export const ur: Record<string, string> = {
   'Not now': 'ابھی نہیں',
   'App navigation': 'ایپ کی نیویگیشن',
   'You are offline. Your cart is kept; connect to the internet to place the order.': 'آپ آف لائن ہیں۔ آپ کا کارٹ محفوظ ہے؛ آرڈر دینے کے لیے انٹرنیٹ سے جڑیں۔',
+  // UI-4: the cart badge.
+  'Cart, 1 item': 'کارٹ، 1 چیز',
+  'Cart, {count} items': 'کارٹ، {count} اشیاء',
   // Phase B57: the affiliate program (join page and the affiliate's private page).
   'Become an affiliate': 'ایفیلیئیٹ بنیں',
   'Recommend {store} to your friends and followers and earn a commission on the orders they place.': '{store} کو اپنے دوستوں اور فالوورز کو تجویز کریں اور ان کے آرڈرز پر کمیشن کمائیں۔',

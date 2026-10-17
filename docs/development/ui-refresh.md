@@ -8,7 +8,7 @@ The owner froze features after B58 and asked for the interface to be made
 | UI-1 First impression | Public home page, sign in, two-step code, create store, forgot/reset password, team and partner invitations; platform logo and name | ✅ |
 | UI-2 Admin frame and dashboard | Sidebar with icons, header, search, store dashboard | ✅ |
 | UI-3 Lists and product form | Orders, products, customers; add/edit product | ✅ |
-| UI-4 Shop | Placeholders, mobile menu, cart badge, product page | planned |
+| UI-4 Shop | Placeholders, cart badge, product page | ✅ |
 | UI-5 Super Admin and finish | Figures, alerts, charts; empty and loading states | planned |
 
 ## UI-1
@@ -62,3 +62,17 @@ The owner froze features after B58 and asked for the interface to be made
 - **Team**: the shared look; initials; the member table scrolls inside its box on a phone.
 - Fixed on the way: on a phone the product list hid the product name (the select box was the only column
   kept); the team page was wider than the screen.
+
+## UI-4
+
+- **Header**: Account and Cart with icons (words from the small breakpoint up; the links keep their names for
+  screen readers) and a **cart badge** with the number of items. The count is taken from every cart the API
+  sends back (`Storefront/api.ts`), never fetched for the badge alone, because reading a cart creates one for a
+  visitor who has none; other tabs follow through the storage event.
+- **No picture yet**: an image icon on the shop’s own surface colours instead of bare words, on cards and the
+  product page.
+- **Product page on a phone**: once Add to cart has scrolled out of view, a bar at the bottom offers it again
+  with the name and price, above the app’s tab bar when that is shown. It exists only while the main button is
+  out of view.
+- The sideways-scrolling category row on a phone was kept (it is the theme’s design, tested); the demo store
+  still has no product pictures — they are the owner’s to add.

@@ -42,6 +42,46 @@ export function forgetCart(shell: Shell): void {
   } catch {
     /* storage unavailable: nothing to forget */
   }
+  rememberCartCount(shell, 0);
+}
+
+/**
+ * UI-4: how many items the cart holds, for the badge on the header's cart.
+ * Taken from every cart the API sends back (add, change, the cart page), so
+ * the shop never asks the server just for the badge (reading a cart would
+ * create one for a visitor who has none).
+ */
+const CART_COUNT_EVENT = 'sf-cart-count';
+
+function countKey(shell: Shell): string {
+  return `storefront:${shell.store.slug}:cart-count`;
+}
+
+export function cartCount(shell: Shell): number {
+  try {
+    return Math.max(0, Number(window.localStorage.getItem(countKey(shell)) ?? 0) || 0);
+  } catch {
+    return 0;
+  }
+}
+
+function rememberCartCount(shell: Shell, count: number): void {
+  try {
+    window.localStorage.setItem(countKey(shell), String(count));
+  } catch {
+    /* storage unavailable: no badge */
+  }
+  window.dispatchEvent(new CustomEvent(CART_COUNT_EVENT));
+}
+
+export function onCartCount(listener: () => void): () => void {
+  window.addEventListener(CART_COUNT_EVENT, listener);
+  window.addEventListener('storage', listener); // another tab changed the cart
+
+  return () => {
+    window.removeEventListener(CART_COUNT_EVENT, listener);
+    window.removeEventListener('storage', listener);
+  };
 }
 
 function rememberCart(shell: Shell, token: string | null | undefined): void {
@@ -109,6 +149,11 @@ export async function storefrontFetch<T = Record<string, unknown>>(
 
   const guestToken = (body as { data?: { guest_token?: string } }).data?.guest_token;
   rememberCart(shell, guestToken);
+  // A cart came back: keep its item count for the header badge.
+  const cart = (body as { data?: { items?: { quantity?: number }[]; subtotal_minor?: number } }).data;
+  if (cart && Array.isArray(cart.items) && typeof cart.subtotal_minor === 'number') {
+    rememberCartCount(shell, cart.items.reduce((sum, item) => sum + (Number(item.quantity) || 0), 0));
+  }
 
   return body as T;
 }

@@ -1,5 +1,7 @@
 import { Link, router } from '@inertiajs/react';
-import { useMemo, useState } from 'react';
+import Icon from '@/Components/ui/Icon';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { useApp } from '@/Storefront/pwa';
 import StoreLayout from '@/Components/Storefront/StoreLayout';
 import ProductGrid from '@/Components/Storefront/ProductGrid';
 import Price from '@/Components/Storefront/Price';
@@ -30,6 +32,19 @@ export default function Product({
   const axes = product.options.map((option) => option.name);
   const [selection, setSelection] = useState<Selection>(() => initialSelection(product.variants));
   const [quantity, setQuantity] = useState(1);
+  // UI-4: on a phone, once the Add to cart button has scrolled out of view, a bar at the bottom offers it again.
+  const buyBox = useRef<HTMLDivElement>(null);
+  const [buyBoxPassed, setBuyBoxPassed] = useState(false);
+  const app = useApp();
+  useEffect(() => {
+    const target = buyBox.current;
+    if (!target || typeof IntersectionObserver === 'undefined') return;
+    const observer = new IntersectionObserver(([entry]) => setBuyBoxPassed(!entry.isIntersecting && entry.boundingClientRect.top < 0));
+    observer.observe(target);
+
+    return () => observer.disconnect();
+  }, []);
+  const tabBar = !!storefront.pwa?.enabled && (storefront.pwa.mobile_nav === 'always' || (storefront.pwa.mobile_nav === 'installed' && app.standalone));
   const [status, setStatus] = useState<{ type: 'idle' | 'busy' | 'added' | 'saved' | 'error'; message?: string }>({ type: 'idle' });
   const variant = useMemo(() => findVariant(product.variants, selection, axes), [product.variants, selection, axes]);
   const [activeImageId, setActiveImageId] = useState<string | null>(product.images[0]?.id ?? null);
@@ -94,7 +109,10 @@ export default function Product({
             {shownImage ? (
               <img src={shownImage.url} alt={shownImage.alt ?? product.name} width={shownImage.width} height={shownImage.height} className="h-full w-full object-cover" />
             ) : (
-              <div className="flex h-full items-center justify-center text-sf-muted">{t('No image')}</div>
+              <div className="flex h-full flex-col items-center justify-center gap-3 bg-gradient-to-br from-sf-surface to-sf-bg text-sf-muted">
+                <Icon name="image" size={56} strokeWidth={1.2} className="opacity-60" />
+                <span className="text-sm">{t('No image')}</span>
+              </div>
             )}
           </div>
           {product.images.length > 1 && (
@@ -187,6 +205,23 @@ export default function Product({
               {status.type === 'busy' ? t('Adding…') : purchasable ? t('Add to cart') : t('Unavailable')}
             </button>
           </div>
+          <div ref={buyBox} aria-hidden="true" />
+          {buyBoxPassed && purchasable && (
+            <div className={`fixed inset-x-0 z-20 flex items-center gap-3 border-t border-sf-border bg-sf-bg px-4 py-3 shadow-sf md:hidden ${tabBar ? 'bottom-14' : 'bottom-0 pb-[calc(0.75rem+env(safe-area-inset-bottom))]'}`}>
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-sm font-medium">{product.name}</p>
+                <Price price={price} className="text-sm" />
+              </div>
+              <button
+                type="button"
+                onClick={addToCart}
+                disabled={status.type === 'busy'}
+                className="sf-btn rounded-sf bg-sf-primary px-5 py-2.5 text-sm font-semibold text-white disabled:opacity-50"
+              >
+                {status.type === 'busy' ? t('Adding…') : t('Add to cart')}
+              </button>
+            </div>
+          )}
           <button type="button" onClick={saveToWishlist} disabled={status.type === 'busy'} className="mt-3 text-sm text-sf-accent disabled:opacity-50">
             ♡ {t('Save to wishlist')}
           </button>
