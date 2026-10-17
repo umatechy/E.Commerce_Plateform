@@ -1,12 +1,14 @@
 import { ReactNode, useEffect, useId, useRef, useState } from 'react';
 import { FOCUS_RING } from './Button';
 import Icon from './Icon';
+import { useAdminT } from '@/lib/adminI18n';
 
 /**
  * A search box that asks the server, not the page: it reports what was
  * typed after a short pause, so a list is not requested on every key.
  */
 export function SearchField({ label, value, onChange, placeholder }: { label: string; value: string; onChange: (value: string) => void; placeholder?: string }) {
+  const t = useAdminT();
   const id = useId();
   const [text, setText] = useState(value);
   const sent = useRef(value);
@@ -32,17 +34,17 @@ export function SearchField({ label, value, onChange, placeholder }: { label: st
   return (
     <div className="min-w-[12rem] flex-1">
       <label htmlFor={id} className="block text-sm font-medium text-slate-700">
-        {label}
+        {t(label)}
       </label>
       <div className="relative mt-1">
-        <Icon name="search" size={16} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+        <Icon name="search" size={16} className="pointer-events-none absolute start-3 top-1/2 -translate-y-1/2 text-slate-400" />
         <input
           id={id}
           type="search"
           value={text}
-          placeholder={placeholder}
+          placeholder={placeholder && t(placeholder)}
           onChange={(e) => setText(e.target.value)}
-          className={`block min-h-10 w-full rounded-lg border border-slate-300 bg-white py-2 pl-9 pr-3 text-sm shadow-sm shadow-slate-900/5 transition-colors placeholder:text-slate-400 hover:border-slate-400 focus-visible:border-brand-500 motion-reduce:transition-none ${FOCUS_RING}`}
+          className={`block min-h-10 w-full rounded-lg border border-slate-300 bg-white py-2 ps-9 pe-3 text-sm shadow-sm shadow-slate-900/5 transition-colors placeholder:text-slate-400 hover:border-slate-400 focus-visible:border-brand-500 motion-reduce:transition-none ${FOCUS_RING}`}
         />
       </div>
     </div>

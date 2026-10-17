@@ -3,6 +3,7 @@ import { Link, router } from '@inertiajs/react';
 import RowMenu from '@/Components/ui/RowMenu';
 import { WhatsAppDialog } from '@/Components/Orders/ContactCustomer';
 import { orderPhone } from '@/lib/contact';
+import { useAdminT } from '@/lib/adminI18n';
 import AdminPage from '@/Components/AdminPage';
 import DataTable, { Pagination, type Column } from '@/Components/ui/DataTable';
 import Button, { ButtonLink, FOCUS_RING } from '@/Components/ui/Button';
@@ -30,6 +31,7 @@ import { ORDER_PAYMENT_STATUSES, ORDER_STATUSES, orderCustomer, type Order } fro
 const FILTER_DEFAULTS = { search: '', status: '', payment_status: '', page: '1' };
 
 /** UI-3: the statuses a store looks at most, one click away (the Status filter still has them all). */
+// t('All') t('To confirm') t('Confirmed') t('Processing') t('Shipped') t('Delivered') t('Cancelled')
 const QUICK: { status: string; label: string }[] = [
   { status: '', label: 'All' },
   { status: 'pending_confirmation', label: 'To confirm' },
@@ -43,6 +45,7 @@ const QUICK: { status: string; label: string }[] = [
 export default function Index() {
   const access = useAccess();
   const auth = useAuth();
+  const t = useAdminT();
   const [writingTo, setWritingTo] = useState<Order | null>(null);
   const [filters, setFilters] = useUrlState(FILTER_DEFAULTS);
   const list = usePagedApi<Order>('/orders', { search: filters.search, status: filters.status, payment_status: filters.payment_status, page: filters.page });
@@ -86,16 +89,16 @@ export default function Index() {
 
         return (
           <RowMenu
-            label={`Actions for ${order.order_number}`}
+            label={t('Actions for {name}', { name: order.order_number })}
             actions={[
-              { label: 'Open order', icon: 'arrowRight', onSelect: () => router.visit(`/orders/${order.id}`) },
+              { label: t('Open order'), icon: 'arrowRight', onSelect: () => router.visit(`/orders/${order.id}`) },
               ...(phone
                 ? [
-                    { label: 'Message on WhatsApp', icon: 'chat' as const, onSelect: () => setWritingTo(order) },
-                    { label: 'Call the customer', icon: 'call' as const, onSelect: () => window.location.assign(`tel:${phone.replace(/[^\d+]/g, '')}`) },
+                    { label: t('Message on WhatsApp'), icon: 'chat' as const, onSelect: () => setWritingTo(order) },
+                    { label: t('Call the customer'), icon: 'call' as const, onSelect: () => window.location.assign(`tel:${phone.replace(/[^\d+]/g, '')}`) },
                   ]
                 : []),
-              { label: 'Print packing slip', icon: 'printer', onSelect: () => window.open(`/orders/${order.id}/print?print=1`, '_blank', 'noopener') },
+              { label: t('Print packing slip'), icon: 'printer', onSelect: () => window.open(`/orders/${order.id}/print?print=1`, '_blank', 'noopener') },
             ]}
           />
         );
@@ -106,9 +109,9 @@ export default function Index() {
     <AdminPage
       title="Orders"
       description="Every order of your store. Open one to see its items, payments and deliveries."
-      actions={access.can('orders.create') && <ButtonLink href="/orders/new" variant="primary">Create order</ButtonLink>}
+      actions={access.can('orders.create') && <ButtonLink href="/orders/new" variant="primary">{t('Create order')}</ButtonLink>}
     >
-      <nav aria-label="Order status" className="relative -mx-1 mb-3 flex gap-1 overflow-x-auto px-1 pb-1">
+      <nav aria-label={t('Order status')} className="relative -mx-1 mb-3 flex gap-1 overflow-x-auto px-1 pb-1">
         {QUICK.map((q) => {
           const active = filters.status === q.status;
 
@@ -120,7 +123,7 @@ export default function Index() {
               onClick={() => setFilters({ status: q.status, page: '1' })}
               className={`whitespace-nowrap rounded-full px-3.5 py-1.5 text-sm font-medium ${FOCUS_RING} ${active ? 'bg-brand-600 text-white shadow-sm' : 'bg-white text-slate-600 ring-1 ring-slate-200 hover:bg-slate-50 hover:text-slate-900'}`}
             >
-              {q.label}
+              {t(q.label)}
             </button>
           );
         })}

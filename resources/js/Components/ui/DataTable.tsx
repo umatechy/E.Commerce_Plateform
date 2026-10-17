@@ -1,5 +1,6 @@
 import { ReactNode } from 'react';
 import Button from './Button';
+import { useAdminT } from '@/lib/adminI18n';
 import type { PageMeta } from '@/lib/useApi';
 
 /**
@@ -41,13 +42,14 @@ function cellVisibility<T>(column: Column<T>, index: number): string {
 }
 
 export default function DataTable<T>({ caption, columns, rows, rowKey, loading = false, error, onRetry, empty, onRowClick }: Props<T>) {
+  const t = useAdminT();
   if (error) {
     return (
       <div role="alert" className="rounded-2xl border border-red-200 bg-red-50/80 p-4 text-sm text-red-800">
         <p>{error}</p>
         {onRetry && (
           <Button size="sm" className="mt-3" onClick={onRetry}>
-            Try again
+            {t('Try again')}
           </Button>
         )}
       </div>
@@ -63,8 +65,8 @@ export default function DataTable<T>({ caption, columns, rows, rowKey, loading =
         <thead className="border-b border-slate-200 bg-slate-50 text-[11px] uppercase tracking-wider text-slate-500">
           <tr>
             {columns.map((column, index) => (
-              <th key={column.key} scope="col" className={`px-4 py-2.5 font-semibold ${column.align === 'right' ? 'text-right' : ''} ${cellVisibility(column, index)}`}>
-                {column.srOnlyHeader ? <span className="sr-only">{column.header}</span> : column.header}
+              <th key={column.key} scope="col" className={`px-4 py-2.5 font-semibold ${column.align === 'right' ? 'text-end' : ''} ${cellVisibility(column, index)}`}>
+                {column.srOnlyHeader ? <span className="sr-only">{t(column.header)}</span> : t(column.header)}
               </th>
             ))}
           </tr>
@@ -88,7 +90,7 @@ export default function DataTable<T>({ caption, columns, rows, rowKey, loading =
                   onClick={onRowClick ? (event) => !(event.target as HTMLElement).closest('a, button, input, select, textarea, label') && onRowClick(row) : undefined}
                 >
                   {columns.map((column, index) => (
-                    <td key={column.key} className={`px-4 py-3.5 align-middle ${column.align === 'right' ? 'text-right' : ''} ${cellVisibility(column, index)}`}>
+                    <td key={column.key} className={`px-4 py-3.5 align-middle ${column.align === 'right' ? 'text-end' : ''} ${cellVisibility(column, index)}`}>
                       {column.render(row)}
                     </td>
                   ))}
@@ -96,28 +98,29 @@ export default function DataTable<T>({ caption, columns, rows, rowKey, loading =
               ))}
         </tbody>
       </table>
-      {rows === null && <p className="sr-only" role="status">Loading…</p>}
+      {rows === null && <p className="sr-only" role="status">{t('Loading…')}</p>}
     </div>
   );
 }
 
 /** Previous / next over a server-paged list. Hidden when there is a single page. */
 export function Pagination({ meta, onPage, disabled = false }: { meta: PageMeta | null; onPage: (page: number) => void; disabled?: boolean }) {
+  const t = useAdminT();
   if (meta === null || meta.lastPage <= 1) {
-    return meta !== null && meta.total > 0 ? <p className="mt-3 text-sm text-slate-600">{meta.total} in total</p> : null;
+    return meta !== null && meta.total > 0 ? <p className="mt-3 text-sm text-slate-600">{t('{total} in total', { total: meta.total })}</p> : null;
   }
 
   return (
-    <nav aria-label="Pagination" className="mt-3 flex items-center justify-between gap-3 text-sm text-slate-600">
+    <nav aria-label={t('Pagination')} className="mt-3 flex items-center justify-between gap-3 text-sm text-slate-600">
       <p>
-        Page {meta.page} of {meta.lastPage} · {meta.total} in total
+        {t('Page {page} of {last}', { page: meta.page, last: meta.lastPage })} · {t('{total} in total', { total: meta.total })}
       </p>
       <div className="flex gap-2">
         <Button size="sm" disabled={disabled || meta.page <= 1} onClick={() => onPage(meta.page - 1)}>
-          Previous
+          {t('Previous')}
         </Button>
         <Button size="sm" disabled={disabled || meta.page >= meta.lastPage} onClick={() => onPage(meta.page + 1)}>
-          Next
+          {t('Next')}
         </Button>
       </div>
     </nav>

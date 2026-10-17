@@ -77,6 +77,9 @@ export type IconName = keyof typeof PATHS;
 
 type Props = Omit<SVGProps<SVGSVGElement>, 'name'> & { name: IconName; size?: number; title?: string };
 
+/** Icons that point a way: mirrored in right-to-left text (UI-18). */
+const DIRECTIONAL = new Set<IconName>(['arrowRight', 'arrowLeft', 'externalLink', 'logOut', 'undo']);
+
 export default function Icon({ name, size = 20, title, className = '', strokeWidth = 1.8, ...rest }: Props) {
   return (
     <svg
@@ -88,7 +91,7 @@ export default function Icon({ name, size = 20, title, className = '', strokeWid
       strokeWidth={strokeWidth}
       strokeLinecap="round"
       strokeLinejoin="round"
-      className={`flex-none ${className}`}
+      className={`flex-none ${DIRECTIONAL.has(name) ? 'rtl:-scale-x-100' : ''} ${className}`}
       aria-hidden={title ? undefined : true}
       role={title ? 'img' : undefined}
       {...rest}

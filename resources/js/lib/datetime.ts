@@ -7,6 +7,8 @@
  * The timezone comes from the server's shared page props and is set once
  * per page visit by app.tsx (see timezoneFromProps).
  */
+import { currentAdminLanguage } from './adminI18n';
+
 let displayTimezone: string | undefined;
 // Phase B38 (LOC-004): a storefront formats dates in its language (en-PK, ur-PK); admin pages use the browser's.
 let displayLocale: string | undefined;
@@ -50,13 +52,18 @@ function format(iso: string, options: Intl.DateTimeFormatOptions, timeZone: stri
 }
 
 /** A calendar date, e.g. "10/14/2026". */
+/** UI-18: in the Urdu admin a date is isolated (LRI … PDI) so its parts are not reordered by the right-to-left text around it. */
+function isolate(text: string): string {
+  return displayLocale === undefined && currentAdminLanguage() === 'ur' ? `\u2066${text}\u2069` : text;
+}
+
 export function formatDate(iso: string, timeZone: string | undefined = displayTimezone): string {
-  return format(iso, { dateStyle: 'short' }, timeZone);
+  return isolate(format(iso, { dateStyle: 'short' }, timeZone));
 }
 
 /** Date and time, e.g. "10/14/2026, 9:05 AM". */
 export function formatDateTime(iso: string, timeZone: string | undefined = displayTimezone): string {
-  return format(iso, { dateStyle: 'short', timeStyle: 'short' }, timeZone);
+  return isolate(format(iso, { dateStyle: 'short', timeStyle: 'short' }, timeZone));
 }
 
 /** The timezone admin pages show dates in (the store's), for labels such as "Times are in Asia/Karachi". */

@@ -5,6 +5,7 @@ import { SearchField } from '@/Components/ui/Filters';
 import { ErrorPanel, Skeleton } from '@/Components/ui/Page';
 import { FOCUS_RING } from '@/Components/ui/Button';
 import { ArticleList } from '@/Components/Help/ArticleView';
+import { useAdminT } from '@/lib/adminI18n';
 import { useApi } from '@/lib/useApi';
 import type { HelpSummary } from '@/lib/help';
 
@@ -18,6 +19,7 @@ import type { HelpSummary } from '@/lib/help';
  * only with those (Module 34 §62).
  */
 export function HelpButton({ path, unseenRelease, canAskPlatform }: { path: string; unseenRelease: string | null; canAskPlatform: boolean }) {
+  const t = useAdminT();
   const [open, setOpen] = useState(false);
 
   return (
@@ -31,10 +33,10 @@ export function HelpButton({ path, unseenRelease, canAskPlatform }: { path: stri
         <span aria-hidden="true" className="inline-flex h-5 w-5 items-center justify-center rounded-full border border-slate-400 text-xs font-semibold">
           ?
         </span>
-        <span className="hidden sm:inline">Help</span>
+        <span className="hidden sm:inline">{t('Help')}</span>
         {unseenRelease && (
           <>
-            <span aria-hidden="true" className="absolute right-1 top-1 h-2 w-2 rounded-full bg-brand-600" />
+            <span aria-hidden="true" className="absolute end-1 top-1 h-2 w-2 rounded-full bg-brand-600" />
             <span className="sr-only">. New: what changed in version {unseenRelease}</span>
           </>
         )}
@@ -45,13 +47,14 @@ export function HelpButton({ path, unseenRelease, canAskPlatform }: { path: stri
 }
 
 function HelpPanel({ path, unseenRelease, canAskPlatform, onClose }: { path: string; unseenRelease: string | null; canAskPlatform: boolean; onClose: () => void }) {
+  const t = useAdminT();
   const [query, setQuery] = useState('');
   const searching = query.trim().length >= 2;
   const page = useApi<{ data: HelpSummary[] }>('/help/page', { path });
   const results = useApi<{ data: HelpSummary[] }>(searching ? '/help/search' : null, { q: query.trim() });
 
   return (
-    <Dialog open side title="Help" description="Answers for the page you are on, or search the help center." onClose={onClose}>
+    <Dialog open side title={t('Help')} description={t('Answers for the page you are on, or search the help center.')} onClose={onClose}>
       <div className="space-y-6">
         <SearchField label="Search help" value={query} onChange={setQuery} placeholder="For example: cash on delivery, refund, store_closed" />
 

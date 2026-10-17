@@ -13,6 +13,7 @@ import Icon, { type IconName } from '@/Components/ui/Icon';
 import { AdminApiError, adminErrorMessage, adminFetch } from '@/lib/adminApi';
 import { formatDate } from '@/lib/datetime';
 import { PasswordCard, SessionsCard } from '@/Components/Security/AccountSecurity';
+import { useAdminT } from '@/lib/adminI18n';
 
 /**
  * The signed-in user's own two-step sign-in (Module 32 §8; SRS AUTH-006,
@@ -44,7 +45,9 @@ function FormMessage({ message }: { message?: string }) {
 }
 
 /** The three steps of turning it on, with the one in progress marked. */
+// t('Confirm it is you') t('Connect your phone') t('Save recovery codes')
 function Stepper({ stage }: { stage: Stage }) {
+  const t = useAdminT();
   const steps: { id: Stage; label: string }[] = [
     { id: 'password', label: 'Confirm it is you' },
     { id: 'scan', label: 'Connect your phone' },
@@ -59,7 +62,7 @@ function Stepper({ stage }: { stage: Stage }) {
           <span className={`flex h-7 w-7 flex-none items-center justify-center rounded-full text-xs font-bold transition-colors motion-reduce:transition-none ${i < at ? 'bg-emerald-500 text-white' : i === at ? 'bg-brand-600 text-white ring-4 ring-brand-100' : 'bg-slate-100 text-slate-500'}`}>
             {i < at ? <Icon name="check" size={14} strokeWidth={3} /> : i + 1}
           </span>
-          <span className={`hidden truncate sm:block ${i === at ? 'text-slate-900' : 'text-slate-500'}`}>{s.label}</span>
+          <span className={`hidden truncate sm:block ${i === at ? 'text-slate-900' : 'text-slate-500'}`}>{t(s.label)}</span>
           {i < steps.length - 1 && <span aria-hidden="true" className={`h-px flex-1 ${i < at ? 'bg-emerald-300' : 'bg-slate-200'}`} />}
         </li>
       ))}
@@ -68,6 +71,7 @@ function Stepper({ stage }: { stage: Stage }) {
 }
 
 function Panel({ icon, tone = 'indigo', title, description, aside, children }: { icon: IconName; tone?: 'indigo' | 'emerald' | 'amber'; title: ReactNode; description?: ReactNode; aside?: ReactNode; children?: ReactNode }) {
+  const t = useAdminT();
   const tones = { indigo: 'bg-brand-50 text-brand-600', emerald: 'bg-emerald-50 text-emerald-600', amber: 'bg-amber-50 text-amber-600' };
 
   return (
@@ -76,10 +80,10 @@ function Panel({ icon, tone = 'indigo', title, description, aside, children }: {
         <span className={`flex h-11 w-11 flex-none items-center justify-center rounded-xl ${tones[tone]}`}><Icon name={icon} size={22} /></span>
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center justify-between gap-2">
-            <h2 className="text-base font-semibold text-slate-900">{title}</h2>
+            <h2 className="text-base font-semibold text-slate-900">{typeof title === 'string' ? t(title) : title}</h2>
             {aside}
           </div>
-          {description && <div className="mt-1 text-sm leading-relaxed text-slate-600">{description}</div>}
+          {description && <div className="mt-1 text-sm leading-relaxed text-slate-600">{typeof description === 'string' ? t(description) : description}</div>}
         </div>
       </div>
       {children && <div className="border-t border-slate-100 p-5 sm:p-6">{children}</div>}
@@ -88,6 +92,7 @@ function Panel({ icon, tone = 'indigo', title, description, aside, children }: {
 }
 
 function RecoveryCodes({ codes, onDone, doneLabel }: { codes: string[]; onDone: () => void; doneLabel: string }) {
+  const t = useAdminT();
   const [copied, setCopied] = useState(false);
   const copy = () => {
     void navigator.clipboard?.writeText(codes.join('\n')).then(() => setCopied(true), () => setCopied(false));
@@ -97,20 +102,21 @@ function RecoveryCodes({ codes, onDone, doneLabel }: { codes: string[]; onDone: 
     <div className="space-y-4">
       <div className="flex items-start gap-3 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
         <Icon name="key" size={18} className="mt-0.5 flex-none text-amber-600" />
-        <p>Each code signs you in <strong>once</strong> if you lose your phone. They are shown only now — write them down or keep them in a safe place.</p>
+        <p>{t('Each code signs you in once if you lose your phone. They are shown only now — write them down or keep them in a safe place.')}</p>
       </div>
-      <ul aria-label="Recovery codes" className="grid grid-cols-2 gap-2 rounded-xl bg-slate-950 p-4 font-mono text-sm text-emerald-300 sm:grid-cols-2">
+      <ul aria-label={t('Recovery codes')} className="grid grid-cols-2 gap-2 rounded-xl bg-slate-950 p-4 font-mono text-sm text-emerald-300 sm:grid-cols-2">
         {codes.map((code) => <li key={code} className="rounded-md bg-white/5 px-3 py-1.5 text-center tracking-wider">{code}</li>)}
       </ul>
       <div className="flex flex-wrap gap-2">
-        <Button variant="primary" onClick={onDone}>{doneLabel}<Icon name="arrowRight" size={16} /></Button>
-        <Button onClick={copy}><Icon name={copied ? 'check' : 'file'} size={16} />{copied ? 'Copied' : 'Copy codes'}</Button>
+        <Button variant="primary" onClick={onDone}>{doneLabel}<Icon name="arrowRight" size={16} className="rtl:-scale-x-100" /></Button>
+        <Button onClick={copy}><Icon name={copied ? 'check' : 'file'} size={16} />{copied ? t('Copied') : t('Copy codes')}</Button>
       </div>
     </div>
   );
 }
 
 export default function Index() {
+  const t = useAdminT();
   const [status, setStatus] = useState<Status | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [setup, setSetup] = useState<Setup | null>(null);
@@ -129,16 +135,16 @@ export default function Index() {
   const load = useCallback(() => {
     setLoadError(null);
     const timeout = new Promise<never>((_, reject) => {
-      window.setTimeout(() => reject(new Error('The server did not answer. Check that it is running, then try again.')), 15000);
+      window.setTimeout(() => reject(new Error(t('The server did not answer. Check that it is running, then try again.'))), 15000);
     });
 
     Promise.race([adminFetch<{ data?: Status }>('/auth/mfa'), timeout])
       .then((body) => {
-        if (!body.data) throw new Error('The server answered without your security settings. Try again, or sign in again.');
+        if (!body.data) throw new Error(t('The server answered without your security settings. Try again, or sign in again.'));
         setStatus(body.data);
       })
       .catch((error) => setLoadError(adminErrorMessage(error, error instanceof Error ? error.message : undefined)));
-  }, []);
+  }, [t]);
 
   useEffect(load, [load]);
 
@@ -193,7 +199,7 @@ export default function Index() {
   };
 
   const turnOff = () => {
-    if (!window.confirm('Turn off two-step sign-in? Your account will be protected by the password alone.')) return;
+    if (!window.confirm(t('Turn off two-step sign-in? Your account will be protected by the password alone.'))) return;
     void run(async () => {
       setStatus((await adminFetch<{ data: Status }>('/auth/mfa', { method: 'DELETE', body: { password, code } })).data);
       setManage(false);
@@ -213,14 +219,14 @@ export default function Index() {
     <AuthenticatedLayout>
       <AdminCrumbs fallback={[{ label: 'Dashboard', href: '/' }, { label: 'Your account' }, { label: 'Security' }]} />
       <div className="mb-6">
-        <h1 className="text-2xl font-semibold tracking-tight text-slate-900">Security</h1>
-        <p className="mt-1 text-sm text-slate-600">Protect your account with two-step sign-in, and see where you are signed in.</p>
+        <h1 className="text-2xl font-semibold tracking-tight text-slate-900">{t('Security')}</h1>
+        <p className="mt-1 text-sm text-slate-600">{t('Protect your account with two-step sign-in, and see where you are signed in.')}</p>
       </div>
 
       {loadError && !status && (
         <div className="max-w-2xl space-y-3">
           <ErrorState message={loadError} />
-          <Button onClick={load}>Try again</Button>
+          <Button onClick={load}>{t('Try again')}</Button>
         </div>
       )}
       {!status && !loadError && <LoadingState />}
@@ -229,9 +235,9 @@ export default function Index() {
         <div className="max-w-2xl motion-safe:animate-fade-in-up">
           <Panel
             icon="shieldCheck"
-            title={status.required && !justEnabled ? 'One step before you manage your store' : 'Turn on two-step sign-in'}
-            description="After your password, you enter a 6-digit code from an authenticator app on your phone. Someone who learns your password still cannot sign in."
-            aside={<Badge tone={status.enabled ? 'green' : 'amber'}>{status.enabled ? 'On' : 'Off'}</Badge>}
+            title={status.required && !justEnabled ? t('One step before you manage your store') : t('Turn on two-step sign-in')}
+            description={t('After your password, you enter a 6-digit code from an authenticator app on your phone. Someone who learns your password still cannot sign in.')}
+            aside={<Badge tone={status.enabled ? 'green' : 'amber'}>{status.enabled ? t('On') : t('Off')}</Badge>}
           >
             <Stepper stage={stage} />
 
@@ -239,12 +245,12 @@ export default function Index() {
               {stage === 'password' && (
                 <form onSubmit={begin} className="space-y-4" noValidate>
                   <div className="rounded-xl bg-slate-50 p-4 text-sm text-slate-700">
-                    <p className="font-medium text-slate-900">You will need an authenticator app on your phone</p>
-                    <p className="mt-1">Google Authenticator, Microsoft Authenticator or Authy — free on the Play Store and App Store.</p>
+                    <p className="font-medium text-slate-900">{t('You will need an authenticator app on your phone')}</p>
+                    <p className="mt-1">{t('Google Authenticator, Microsoft Authenticator or Authy — free on the Play Store and App Store.')}</p>
                   </div>
                   <TextField label="Your password" type="password" value={password} onChange={setPassword} error={errors.password} autoComplete="current-password" hint="To make sure it is you." className="max-w-sm" />
                   <FormMessage message={errors.form} />
-                  <Button type="submit" variant="primary" busy={busy} busyLabel="Checking…">Continue<Icon name="arrowRight" size={16} /></Button>
+                  <Button type="submit" variant="primary" busy={busy} busyLabel={t('Checking…')}>{t('Continue')}<Icon name="arrowRight" size={16} className="rtl:-scale-x-100" /></Button>
                 </form>
               )}
 
@@ -252,18 +258,18 @@ export default function Index() {
                 <form onSubmit={confirm} className="space-y-5" noValidate>
                   <div className="grid gap-5 sm:grid-cols-[auto_1fr] sm:items-center">
                     <div className="mx-auto rounded-2xl border border-slate-200 bg-white p-3 shadow-sm sm:mx-0">
-                      {qr ? <img src={qr} alt="QR code for your authenticator app" width={176} height={176} /> : <div className="h-44 w-44 animate-pulse rounded-lg bg-slate-100" />}
+                      {qr ? <img src={qr} alt={t('QR code for your authenticator app')} width={176} height={176} /> : <div className="h-44 w-44 animate-pulse rounded-lg bg-slate-100" />}
                     </div>
                     <div className="space-y-2 text-sm text-slate-700">
-                      <p><span className="font-semibold text-slate-900">1.</span> Open the app and tap <strong>+</strong> (add account).</p>
-                      <p><span className="font-semibold text-slate-900">2.</span> Scan this QR code with the phone’s camera.</p>
-                      <p className="text-slate-500">Cannot scan? Choose “enter a setup key” and type:</p>
+                      <p><span className="font-semibold text-slate-900">1.</span> {t('Open the app and tap + (add account).')}</p>
+                      <p><span className="font-semibold text-slate-900">2.</span> {t('Scan this QR code with the phone’s camera.')}</p>
+                      <p className="text-slate-500">{t('Cannot scan? Choose “enter a setup key” and type:')}</p>
                       <code className="block break-all rounded-lg bg-slate-100 px-3 py-2 font-mono text-xs text-slate-800">{setup.secret}</code>
                     </div>
                   </div>
                   <div>
-                    <label htmlFor="enrol-code" className="block text-sm font-medium text-slate-900"><span className="font-semibold">3.</span> Enter the 6-digit code the app shows</label>
-                    <p id="enrol-code-hint" className="mt-0.5 text-xs text-slate-500">It changes every 30 seconds — type the one showing now.</p>
+                    <label htmlFor="enrol-code" className="block text-sm font-medium text-slate-900"><span className="font-semibold">3.</span> {t('Enter the 6-digit code the app shows')}</label>
+                    <p id="enrol-code-hint" className="mt-0.5 text-xs text-slate-500">{t('It changes every 30 seconds — type the one showing now.')}</p>
                     <div className="mt-2 max-w-sm">
                       <CodeField id="enrol-code" value={code} onChange={setCode} onComplete={confirmCode} invalid={Boolean(errors.code)} describedBy="enrol-code-hint" />
                     </div>
@@ -271,16 +277,16 @@ export default function Index() {
                   </div>
                   <FormMessage message={errors.form} />
                   <div className="flex flex-wrap gap-2">
-                    <Button type="submit" variant="primary" busy={busy} busyLabel="Checking…" disabled={code.length !== 6}>Turn on two-step sign-in</Button>
-                    <Button variant="ghost" onClick={() => { setSetup(null); setErrors({}); }} disabled={busy}>Back</Button>
+                    <Button type="submit" variant="primary" busy={busy} busyLabel={t('Checking…')} disabled={code.length !== 6}>{t('Turn on two-step sign-in')}</Button>
+                    <Button variant="ghost" onClick={() => { setSetup(null); setErrors({}); }} disabled={busy}>{t('Back')}</Button>
                   </div>
                 </form>
               )}
 
               {stage === 'codes' && codes && (
                 <div className="space-y-4">
-                  <p className="flex items-center gap-2 text-sm font-medium text-emerald-700"><Icon name="checkCircle" size={18} />Two-step sign-in is on.</p>
-                  <RecoveryCodes codes={codes} onDone={codesSaved} doneLabel="I have saved them — go to my dashboard" />
+                  <p className="flex items-center gap-2 text-sm font-medium text-emerald-700"><Icon name="checkCircle" size={18} />{t('Two-step sign-in is on.')}</p>
+                  <RecoveryCodes codes={codes} onDone={codesSaved} doneLabel={t('I have saved them — go to my dashboard')} />
                 </div>
               )}
             </div>
@@ -293,29 +299,29 @@ export default function Index() {
           <Panel
             icon="shieldCheck"
             tone="emerald"
-            title="Two-step sign-in"
+            title={t('Two-step sign-in')}
             aside={<Badge tone="green">On</Badge>}
-            description={<>Your account asks for a code from your authenticator app after the password.{status.confirmed_at && <> On since {formatDate(status.confirmed_at)}.</>} Recovery codes left: <strong>{status.recovery_codes_remaining}</strong>.</>}
+            description={<>{t('Your account asks for a code from your authenticator app after the password.')}{status.confirmed_at && <> {t('On since {date}.', { date: formatDate(status.confirmed_at) })}</>} {t('Recovery codes left:')} <strong>{status.recovery_codes_remaining}</strong>.</>}
           >
             {codes ? (
-              <RecoveryCodes codes={codes} onDone={codesSaved} doneLabel="I have saved them" />
+              <RecoveryCodes codes={codes} onDone={codesSaved} doneLabel={t('I have saved them')} />
             ) : !manage ? (
               <div className="flex flex-wrap items-center justify-between gap-3">
-                <p className="text-sm text-slate-600">Nothing to do here — you are protected.</p>
-                <Button onClick={() => setManage(true)}><Icon name="settings" size={16} />Manage</Button>
+                <p className="text-sm text-slate-600">{t('Nothing to do here — you are protected.')}</p>
+                <Button onClick={() => setManage(true)}><Icon name="settings" size={16} />{t('Manage')}</Button>
               </div>
             ) : (
               <form onSubmit={regenerate} className="space-y-4" noValidate>
-                <p className="text-sm text-slate-600">To get new recovery codes or to turn two-step sign-in off, confirm with your password and a current code from the app. <strong>This is not a sign-in</strong> — you are already signed in.</p>
+                <p className="text-sm text-slate-600">{t('To get new recovery codes or to turn two-step sign-in off, confirm with your password and a current code from the app.')} <strong>{t('This is not a sign-in')}</strong> — {t('you are already signed in.')}</p>
                 <div className="grid gap-4 sm:grid-cols-2">
                   <TextField label="Your password" type="password" value={password} onChange={setPassword} error={errors.password} autoComplete="current-password" />
                   <TextField label="Current 6-digit code" inputMode="numeric" value={code} onChange={(v) => setCode(v.replace(/\D/g, '').slice(0, 6))} error={errors.code} autoComplete="one-time-code" />
                 </div>
                 <FormMessage message={errors.form} />
                 <div className="flex flex-wrap gap-2">
-                  <Button type="submit" variant="primary" busy={busy} busyLabel="Working…">New recovery codes</Button>
-                  <Button variant="danger" disabled={busy} onClick={turnOff}>Turn off</Button>
-                  <Button variant="ghost" disabled={busy} onClick={() => { setManage(false); setErrors({}); setPassword(''); setCode(''); }}>Cancel</Button>
+                  <Button type="submit" variant="primary" busy={busy} busyLabel={t('Working…')}>{t('New recovery codes')}</Button>
+                  <Button variant="danger" disabled={busy} onClick={turnOff}>{t('Turn off')}</Button>
+                  <Button variant="ghost" disabled={busy} onClick={() => { setManage(false); setErrors({}); setPassword(''); setCode(''); }}>{t('Cancel')}</Button>
                 </div>
               </form>
             )}

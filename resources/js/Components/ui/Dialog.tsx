@@ -2,6 +2,7 @@ import { ReactNode, useEffect, useId, useRef, useState } from 'react';
 import Button, { ButtonVariant } from './Button';
 import { TextField } from './Form';
 import Icon from './Icon';
+import { useAdminT } from '@/lib/adminI18n';
 
 /**
  * A modal dialog (Phase B31 design system): role="dialog", labelled by
@@ -35,6 +36,7 @@ const openDialogs: symbol[] = [];
 const FOCUSABLE = 'a[href], button:not([disabled]), textarea:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])';
 
 export default function Dialog({ open, title, description, onClose, children, footer, side = false, busy = false, wide = false, guard = true }: DialogProps) {
+  const t = useAdminT();
   const titleId = useId();
   const descriptionId = useId();
   const panel = useRef<HTMLDivElement>(null);
@@ -142,16 +144,16 @@ export default function Dialog({ open, title, description, onClose, children, fo
               </div>
             )}
           </div>
-          <Button variant="ghost" size="sm" onClick={requestClose} disabled={busy} aria-label="Close" className="-mr-2 !px-2">
+          <Button variant="ghost" size="sm" onClick={requestClose} disabled={busy} aria-label={t('Close')} className="-me-2 !px-2">
             <Icon name="x" size={18} />
           </Button>
         </div>
         {asking && (
           <div role="alert" className="flex flex-wrap items-center justify-between gap-3 border-b border-amber-200 bg-amber-50 px-6 py-3 text-sm text-amber-900 motion-safe:animate-fade-in">
-            <span className="font-medium">Discard your changes in this form?</span>
+            <span className="font-medium">{t('Discard your changes in this form?')}</span>
             <span className="flex gap-2">
-              <Button size="sm" onClick={() => setAsking(false)} data-autofocus>Keep editing</Button>
-              <Button size="sm" variant="danger" onClick={onClose}>Discard changes</Button>
+              <Button size="sm" onClick={() => setAsking(false)} data-autofocus>{t('Keep editing')}</Button>
+              <Button size="sm" variant="danger" onClick={onClose}>{t('Discard changes')}</Button>
             </span>
           </div>
         )}
@@ -185,7 +187,8 @@ type ConfirmProps = {
   onClose: () => void;
 };
 
-export function ConfirmDialog({ open, title, children, confirmLabel, variant = 'danger', confirmText, busy = false, error, cancelLabel = 'Cancel', onConfirm, onClose }: ConfirmProps) {
+export function ConfirmDialog({ open, title, children, confirmLabel, variant = 'danger', confirmText, busy = false, error, cancelLabel, onConfirm, onClose }: ConfirmProps) {
+  const t = useAdminT();
   const [typed, setTyped] = useState('');
 
   useEffect(() => {
@@ -204,7 +207,7 @@ export function ConfirmDialog({ open, title, children, confirmLabel, variant = '
       footer={
         <>
           <Button onClick={onClose} disabled={busy} data-autofocus>
-            {cancelLabel}
+            {cancelLabel ?? t('Cancel')}
           </Button>
           <Button variant={variant} onClick={onConfirm} busy={busy} disabled={!ready}>
             {confirmLabel}
@@ -214,7 +217,7 @@ export function ConfirmDialog({ open, title, children, confirmLabel, variant = '
     >
       <div className="space-y-3 text-sm text-slate-700">
         {children}
-        {confirmText !== undefined && <TextField label={`Type ${confirmText} to confirm`} value={typed} onChange={setTyped} autoComplete="off" />}
+        {confirmText !== undefined && <TextField label={t('Type {text} to confirm', { text: confirmText })} value={typed} onChange={setTyped} autoComplete="off" />}
         {error && (
           <p role="alert" className="rounded-lg border border-red-200 bg-red-50 p-2.5 text-red-800">
             {error}

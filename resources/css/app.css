@@ -284,3 +284,45 @@
   --brand-900: 2 6 23;
   --brand-950: 2 6 23;
 }
+
+/*
+ * UI-18 — the admin in Urdu: Nastaliq for Urdu letters (Latin text, digits,
+ * order numbers and amounts fall through to the system font), with more
+ * room between lines because Nastaliq is tall.
+ */
+.admin-root[lang='ur'] {
+  font-family: 'Noto Nastaliq Urdu', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  line-height: 1.95;
+}
+.admin-root[lang='ur'] input,
+.admin-root[lang='ur'] textarea,
+.admin-root[lang='ur'] select,
+.admin-root[lang='ur'] button {
+  font-family: inherit;
+}
+.admin-root[lang='ur'] .font-mono,
+.admin-root[lang='ur'] code,
+.admin-root[lang='ur'] kbd {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+/* Nastaliq letters reach past their box: room so a cut-off line does not clip the last letter. */
+.admin-root[lang='ur'] .truncate {
+  padding-inline-end: 0.35em;
+}
+/* Codes, phone numbers and figures keep their left-to-right order inside Urdu text. */
+.admin-root[lang='ur'] .font-mono,
+.admin-root[lang='ur'] .tabular-nums {
+  direction: ltr;
+  unicode-bidi: isolate;
+}
+/* Menu labels are short: in Urdu they are not cut at all, so Nastaliq's sweeping endings are never clipped. */
+.admin-root[lang='ur'] nav .truncate {
+  overflow: visible;
+}
+/* A paragraph or cell still in English reads left to right inside the Urdu admin. */
+.admin-root[lang='ur'] p,
+.admin-root[lang='ur'] li,
+.admin-root[lang='ur'] td,
+.admin-root[lang='ur'] dd {
+  unicode-bidi: plaintext;
+}

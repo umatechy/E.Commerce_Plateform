@@ -10,6 +10,7 @@ import { humanize } from '@/Components/ui/Badge';
 import { orderCustomer, type Order } from '@/lib/orders';
 import type { Product } from '@/lib/catalog';
 import type { CustomerRow } from '@/lib/customers';
+import { useAdminT } from '@/lib/adminI18n';
 
 /**
  * UI-2 — "Go to…" search over the admin (Ctrl+K or ⌘K): every page the
@@ -20,7 +21,7 @@ import type { CustomerRow } from '@/lib/customers';
  * open) for the first matches, so "ORD-26", "shawl" or a phone number opens
  * the record directly. Each list's API still decides what may be seen.
  */
-export type PaletteEntry = { href: string; label: string; hint: string; icon: IconName; group: string };
+export type PaletteEntry = { href: string; label: string; hint: string; icon: IconName; group: string; keywords?: string };
 export type PaletteSearch = { orders: boolean; products: boolean; customers: boolean };
 
 export function paletteEntries(groups: ResolvedGroup[], icons: Record<string, IconName>, extra: PaletteEntry[]): PaletteEntry[] {
@@ -34,7 +35,7 @@ export function paletteEntries(groups: ResolvedGroup[], icons: Record<string, Ic
 function matches(entry: PaletteEntry, query: string): boolean {
   const q = query.trim().toLowerCase();
   if (q === '') return true;
-  const hay = `${entry.label} ${entry.hint} ${entry.group}`.toLowerCase();
+  const hay = `${entry.label} ${entry.hint} ${entry.group} ${entry.keywords ?? ''}`.toLowerCase();
 
   return q.split(/\s+/).every((word) => hay.includes(word));
 }
@@ -78,6 +79,7 @@ async function findRecords(query: string, search: PaletteSearch, signal: AbortSi
 }
 
 export default function CommandPalette({ entries, open, onClose, search = { orders: false, products: false, customers: false } }: { entries: PaletteEntry[]; open: boolean; onClose: () => void; search?: PaletteSearch }) {
+  const t = useAdminT();
   const [query, setQuery] = useState('');
   const [active, setActive] = useState(0);
   const [records, setRecords] = useState<PaletteEntry[]>([]);
@@ -139,7 +141,7 @@ export default function CommandPalette({ entries, open, onClose, search = { orde
 
   return (
     <div className="fixed inset-0 z-[60] flex items-start justify-center bg-slate-950/40 px-4 pt-[12vh] backdrop-blur-[2px] motion-safe:animate-fade-in" onMouseDown={(e) => e.target === e.currentTarget && onClose()}>
-      <div role="dialog" aria-modal="true" aria-label="Go to a page" className="w-full max-w-xl overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl motion-safe:animate-scale-in">
+      <div role="dialog" aria-modal="true" aria-label={t('Go to a page')} className="w-full max-w-xl overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl motion-safe:animate-scale-in">
         <div className="flex items-center gap-3 border-b border-slate-200 px-4">
           {searching ? <Spinner className="text-brand-600" /> : <Icon name="search" size={18} className="text-slate-400" />}
           <input
@@ -152,24 +154,24 @@ export default function CommandPalette({ entries, open, onClose, search = { orde
               if (e.key === 'ArrowUp') { e.preventDefault(); setActive((a) => Math.max(a - 1, 0)); }
               if (e.key === 'Enter') { e.preventDefault(); go(list[active]); }
             }}
-            placeholder={canSearch ? 'Search pages, orders, products, customers…' : 'Go to… (orders, add product, theme)'}
-            aria-label={canSearch ? 'Search pages and records' : 'Search pages'}
+            placeholder={canSearch ? t('Search pages, orders, products, customers…') : t('Go to… (orders, add product, theme)')}
+            aria-label={canSearch ? t('Search pages and records') : t('Search pages')}
             aria-controls="palette-results"
             aria-activedescendant={list[active] ? `palette-${active}` : undefined}
             className="h-14 flex-1 bg-transparent text-base text-slate-900 placeholder:text-slate-400 focus:outline-none"
           />
           <kbd className="hidden rounded-md border border-slate-200 px-1.5 py-0.5 text-[11px] text-slate-500 sm:inline">Esc</kbd>
         </div>
-        <ul id="palette-results" role="listbox" aria-label="Results" className="max-h-[55vh] overflow-y-auto p-2">
-          {list.length === 0 && !searching && <li className="px-3 py-6 text-center text-sm text-slate-500">Nothing matches “{query}”.</li>}
-          {list.length === 0 && searching && <li className="px-3 py-6 text-center text-sm text-slate-500">Searching your store…</li>}
+        <ul id="palette-results" role="listbox" aria-label={t('Results')} className="max-h-[55vh] overflow-y-auto p-2">
+          {list.length === 0 && !searching && <li className="px-3 py-6 text-center text-sm text-slate-500">{t('Nothing matches “{query}”.', { query })}</li>}
+          {list.length === 0 && searching && <li className="px-3 py-6 text-center text-sm text-slate-500">{t('Searching your store…')}</li>}
           {list.map((entry, i) => {
             const heading = entry.group !== lastGroup && ['Orders', 'Products', 'Customers'].includes(entry.group);
             lastGroup = entry.group;
 
             return (
               <li key={`${entry.group}-${entry.href}`} role="presentation">
-                {heading && <p className="px-3 pb-1 pt-3 text-[11px] font-semibold uppercase tracking-wider text-slate-400">{entry.group}</p>}
+                {heading && <p className="px-3 pb-1 pt-3 text-[11px] font-semibold uppercase tracking-wider text-slate-400">{t(entry.group)}</p>}
                 <div
                   id={`palette-${i}`}
                   role="option"
@@ -186,13 +188,13 @@ export default function CommandPalette({ entries, open, onClose, search = { orde
                     <span className="block truncate text-xs text-slate-500">{entry.hint}</span>
                   </span>
                   {!heading && !['Orders', 'Products', 'Customers'].includes(entry.group) && <span className="hidden text-[11px] uppercase tracking-wide text-slate-400 sm:inline">{entry.group}</span>}
-                  {i === active && <Icon name="arrowRight" size={16} className="text-brand-600" />}
+                  {i === active && <Icon name="arrowRight" size={16} className="text-brand-600 rtl:-scale-x-100" />}
                 </div>
               </li>
             );
           })}
         </ul>
-        <p className="border-t border-slate-100 px-4 py-2 text-[11px] text-slate-500">↑ ↓ to move · Enter to open · Esc to close{canSearch ? ' · Type 2+ letters to find orders, products and customers' : ''}</p>
+        <p className="border-t border-slate-100 px-4 py-2 text-[11px] text-slate-500">{t('↑ ↓ to move · Enter to open · Esc to close')}{canSearch ? ` · ${t('Type 2+ letters to find orders, products and customers')}` : ''}</p>
       </div>
     </div>
   );

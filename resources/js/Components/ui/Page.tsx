@@ -2,26 +2,28 @@ import { KeyboardEvent, ReactNode, useId } from 'react';
 import { Link } from '@inertiajs/react';
 import Button, { FOCUS_RING } from './Button';
 import Icon, { type IconName } from './Icon';
+import { useAdminT } from '@/lib/adminI18n';
 
 /** Page building blocks of the admin (Phase B31 design system): heading, cards, figures, tabs, and the load states of a page. */
 
 export type Crumb = { label: string; href?: string };
 
 export function Breadcrumbs({ items }: { items: Crumb[] }) {
+  const t = useAdminT();
   if (items.length === 0) return null;
 
   return (
-    <nav aria-label="Breadcrumb" className="mb-2 text-xs font-medium text-slate-500">
+    <nav aria-label={t('Breadcrumb')} className="mb-2 text-xs font-medium text-slate-500">
       <ol className="flex flex-wrap items-center gap-1">
         {items.map((item, index) => (
           <li key={`${item.label}-${index}`} className="flex items-center gap-1">
-            {index > 0 && <Icon name="chevronDown" size={12} className="-rotate-90 text-slate-300" />}
+            {index > 0 && <Icon name="chevronDown" size={12} className="-rotate-90 text-slate-300 rtl:rotate-90" />}
             {item.href ? (
               <Link href={item.href} className={`rounded transition-colors hover:text-brand-700 ${FOCUS_RING}`}>
-                {item.label}
+                {t(item.label)}
               </Link>
             ) : (
-              <span aria-current={index === items.length - 1 ? 'page' : undefined} className="text-slate-700">{item.label}</span>
+              <span aria-current={index === items.length - 1 ? 'page' : undefined} className="text-slate-700">{t(item.label)}</span>
             )}
           </li>
         ))}
@@ -32,13 +34,14 @@ export function Breadcrumbs({ items }: { items: Crumb[] }) {
 
 /** The one <h1> of a page, with what the page is for and its main actions. */
 export function PageHeader({ title, description, actions, crumbs }: { title: string; description?: ReactNode; actions?: ReactNode; crumbs?: Crumb[] }) {
+  const t = useAdminT();
   return (
     <div className="mb-6">
       {crumbs && <Breadcrumbs items={crumbs} />}
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div className="min-w-0">
-          <h1 className="text-2xl font-semibold tracking-tight text-slate-900">{title}</h1>
-          {description && <p className="mt-1 max-w-3xl text-sm text-slate-600">{description}</p>}
+          <h1 className="text-2xl font-semibold tracking-tight text-slate-900">{t(title)}</h1>
+          {description && <p className="mt-1 max-w-3xl text-sm text-slate-600">{typeof description === 'string' ? t(description) : description}</p>}
         </div>
         {actions && <div className="flex flex-wrap items-center gap-2">{actions}</div>}
       </div>
@@ -47,13 +50,14 @@ export function PageHeader({ title, description, actions, crumbs }: { title: str
 }
 
 export function Card({ title, description, actions, children, className = '' }: { title?: ReactNode; description?: ReactNode; actions?: ReactNode; children: ReactNode; className?: string }) {
+  const t = useAdminT();
   return (
     <section className={`rounded-2xl border border-slate-200/80 bg-white shadow-[0_1px_2px_rgba(15,23,42,0.04),0_1px_3px_rgba(15,23,42,0.04)] ${className}`}>
       {(title || actions) && (
         <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 px-5 py-3.5">
           <div className="min-w-0">
-            {title && <h2 className="text-[15px] font-semibold text-slate-900">{title}</h2>}
-            {description && <p className="mt-0.5 text-xs text-slate-500">{description}</p>}
+            {title && <h2 className="text-[15px] font-semibold text-slate-900">{typeof title === 'string' ? t(title) : title}</h2>}
+            {description && <p className="mt-0.5 text-xs text-slate-500">{typeof description === 'string' ? t(description) : description}</p>}
           </div>
           {actions && <div className="flex flex-wrap gap-2">{actions}</div>}
         </div>
@@ -68,16 +72,17 @@ export function Card({ title, description, actions, children, className = '' }: 
  * UI-2: an optional icon, and `trend` (a percentage the server sent) as a coloured arrow before the hint.
  */
 export function StatCard({ label, value, hint, href, icon, trend }: { label: string; value: ReactNode | null; hint?: ReactNode; href?: string; icon?: IconName; trend?: number | null }) {
+  const t = useAdminT();
   const hasTrend = trend !== undefined && trend !== null;
   const body = (
     <>
       {icon && (
-        <span className="absolute right-4 top-4 flex h-9 w-9 items-center justify-center rounded-xl bg-brand-50 text-brand-600 ring-1 ring-brand-100 transition-transform duration-200 group-hover:scale-110 motion-reduce:transform-none">
+        <span className="absolute end-4 top-4 flex h-9 w-9 items-center justify-center rounded-xl bg-brand-50 text-brand-600 ring-1 ring-brand-100 transition-transform duration-200 group-hover:scale-110 motion-reduce:transform-none">
           <Icon name={icon} size={18} />
         </span>
       )}
-      <p className={`text-xs font-medium uppercase tracking-wide text-slate-500 ${icon ? 'pr-10' : ''}`}>{label}</p>
-      <p className="mt-1 text-2xl font-semibold tracking-tight text-slate-900">{value ?? <span className="text-base font-normal text-slate-500">Not available</span>}</p>
+      <p className={`text-xs font-medium uppercase tracking-wide text-slate-500 ${icon ? 'pe-10' : ''}`}>{t(label)}</p>
+      <p className="mt-1 text-2xl font-semibold tracking-tight text-slate-900">{value ?? <span className="text-base font-normal text-slate-500">{t('Not available')}</span>}</p>
       {(hint || hasTrend) && (
         <p className="mt-1 flex flex-wrap items-center gap-1.5 text-xs text-slate-600">
           {hasTrend && (
@@ -88,7 +93,7 @@ export function StatCard({ label, value, hint, href, icon, trend }: { label: str
               {trend > 0 ? '↑' : trend < 0 ? '↓' : '→'} {Math.abs(trend)}%
             </span>
           )}
-          {hint && <span>{hint}</span>}
+          {hint && <span>{typeof hint === 'string' ? t(hint) : hint}</span>}
         </p>
       )}
     </>
@@ -143,9 +148,10 @@ export function Tabs({ tabs, active, onChange, label }: { tabs: TabItem[]; activ
 }
 
 export function Skeleton({ lines = 3 }: { lines?: number }) {
+  const t = useAdminT();
   return (
     <div role="status" className="space-y-3 rounded-2xl border border-slate-200/80 bg-white p-5">
-      <span className="sr-only">Loading…</span>
+      <span className="sr-only">{t('Loading…')}</span>
       {Array.from({ length: lines }, (_, index) => (
         <span key={index} className="block h-4 animate-pulse rounded-md bg-slate-100 motion-reduce:animate-none" style={{ width: `${90 - index * 15}%` }} />
       ))}
@@ -155,6 +161,7 @@ export function Skeleton({ lines = 3 }: { lines?: number }) {
 
 /** An error with a way out. Used wherever a request can fail. */
 export function ErrorPanel({ message, onRetry }: { message: string; onRetry?: () => void }) {
+  const t = useAdminT();
   return (
     <div role="alert" className="flex gap-3 rounded-2xl border border-red-200 bg-red-50/80 p-4 text-sm text-red-800">
       <Icon name="alert" size={20} className="mt-0.5 text-red-500" />
@@ -162,7 +169,7 @@ export function ErrorPanel({ message, onRetry }: { message: string; onRetry?: ()
         <p>{message}</p>
         {onRetry && (
           <Button size="sm" className="mt-3" onClick={onRetry}>
-            Try again
+            {t('Try again')}
           </Button>
         )}
       </div>
@@ -171,13 +178,14 @@ export function ErrorPanel({ message, onRetry }: { message: string; onRetry?: ()
 }
 
 export function EmptyPanel({ title, description, action, icon = 'layers' }: { title: string; description?: ReactNode; action?: ReactNode; icon?: IconName }) {
+  const t = useAdminT();
   return (
     <div className="rounded-2xl border border-dashed border-slate-300 bg-white px-6 py-12 text-center">
       <span aria-hidden="true" className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-brand-50 text-brand-600 ring-8 ring-brand-50/50">
         <Icon name={icon} size={24} />
       </span>
-      <p className="font-semibold text-slate-900">{title}</p>
-      {description && <p className="mx-auto mt-1 max-w-md text-sm text-slate-600">{description}</p>}
+      <p className="font-semibold text-slate-900">{t(title)}</p>
+      {description && <p className="mx-auto mt-1 max-w-md text-sm text-slate-600">{typeof description === 'string' ? t(description) : description}</p>}
       {action && <div className="mt-4 flex justify-center">{action}</div>}
     </div>
   );
@@ -207,21 +215,22 @@ export function QueryState<T>({
 
 /** Shown when the API refused the page's data: this is about permission or package, not a broken page. */
 export function AccessNotice({ message, code }: { message?: string; code?: string | null }) {
+  const t = useAdminT();
   // Two-step sign-in is the reason (Phase B29): say what to do about it.
   const mfa = code === 'mfa_enrollment_required' || code === 'mfa_verification_required';
 
   return (
     <div role="status" className="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
-      <p className="font-medium">{mfa ? 'Two-step sign-in is needed here.' : 'You cannot open this.'}</p>
-      <p className="mt-1">{message ?? 'Your role does not include this page. Ask the store owner if you need it.'}</p>
+      <p className="font-medium">{mfa ? t('Two-step sign-in is needed here.') : t('You cannot open this.')}</p>
+      <p className="mt-1">{message ?? t('Your role does not include this page. Ask the store owner if you need it.')}</p>
       {code === 'mfa_enrollment_required' && (
         <p className="mt-2">
           <Link href="/security" className={`font-medium underline ${FOCUS_RING}`}>
-            Turn on two-step sign-in
+            {t('Turn on two-step sign-in')}
           </Link>
         </p>
       )}
-      {code === 'mfa_verification_required' && <p className="mt-2">Log out and sign in again with your two-step code.</p>}
+      {code === 'mfa_verification_required' && <p className="mt-2">{t('Log out and sign in again with your two-step code.')}</p>}
     </div>
   );
 }
@@ -248,10 +257,11 @@ export function PackageNotice({ title, children, packageName, canSeeBilling }: {
 
 /** A usage limit as the server reports it: current, limit, and a bar (with the numbers as text). */
 export function UsageMeter({ label, current, limit }: { label: string; current: number; limit: number | null }) {
+  const t = useAdminT();
   if (limit === null) {
     return (
       <p className="text-sm text-slate-600">
-        {label}: {current} used, no limit on your package.
+        {t(label)}: {t('{current} used, no limit on your package.', { current })}
       </p>
     );
   }
@@ -261,7 +271,7 @@ export function UsageMeter({ label, current, limit }: { label: string; current: 
   return (
     <div>
       <p className={`text-sm ${full ? 'font-medium text-red-700' : 'text-slate-600'}`}>
-        {label}: {current} of {limit} used{full ? ' — limit reached' : ''}
+        {t(label)}: {t('{current} of {limit} used', { current, limit })}{full ? ` — ${t('limit reached')}` : ''}
       </p>
       <div className="mt-1.5 h-2 w-full overflow-hidden rounded-full bg-slate-100" role="progressbar" aria-valuenow={current} aria-valuemin={0} aria-valuemax={limit} aria-label={label}>
         <div className={`h-2 rounded-full transition-[width] duration-500 motion-reduce:transition-none ${full ? 'bg-red-600' : percent >= 80 ? 'bg-amber-500' : 'bg-brand-600'}`} style={{ width: `${percent}%` }} />
@@ -272,11 +282,12 @@ export function UsageMeter({ label, current, limit }: { label: string; current: 
 
 /** Label and value pairs (a details list). */
 export function Details({ items }: { items: { label: string; value: ReactNode }[] }) {
+  const t = useAdminT();
   return (
     <dl className="grid gap-x-6 gap-y-3 text-sm sm:grid-cols-2">
       {items.map((item) => (
         <div key={item.label}>
-          <dt className="text-xs font-medium uppercase tracking-wide text-slate-500">{item.label}</dt>
+          <dt className="text-xs font-medium uppercase tracking-wide text-slate-500">{t(item.label)}</dt>
           <dd className="mt-0.5 break-words text-slate-900">{item.value ?? '—'}</dd>
         </div>
       ))}

@@ -1,5 +1,6 @@
 import { InputHTMLAttributes, ReactNode, SelectHTMLAttributes, TextareaHTMLAttributes, useId } from 'react';
 import { FOCUS_RING } from './Button';
+import { useAdminT } from '@/lib/adminI18n';
 
 /**
  * Form fields for the admin (Phase B31 design system). Each field has a
@@ -21,21 +22,23 @@ function controlClass(hasError: boolean, extra = ''): string {
 type Shell = { label: string; hint?: ReactNode; error?: string | null; optional?: boolean };
 
 function FieldShell({ id, label, hint, error, optional, children }: Shell & { id: string; children: ReactNode }) {
+  const t = useAdminT();
+
   return (
     <div>
       <label htmlFor={id} className="block text-sm font-medium text-slate-700">
-        {label}
-        {optional && <span className="ml-1 font-normal text-slate-500">(optional)</span>}
+        {t(label)}
+        {optional && <span className="ms-1 font-normal text-slate-500">{t('(optional)')}</span>}
       </label>
       <div className="mt-1">{children}</div>
       {hint && !error && (
         <p id={`${id}-hint`} className="mt-1 text-xs text-slate-500">
-          {hint}
+          {typeof hint === 'string' ? t(hint) : hint}
         </p>
       )}
       {error && (
         <p id={`${id}-error`} role="alert" className="mt-1 text-xs font-medium text-red-700">
-          <span className="sr-only">Error: </span>
+          <span className="sr-only">{t('Error:')} </span>
           {error}
         </p>
       )}
@@ -96,6 +99,7 @@ type SelectProps = Shell &
   Omit<SelectHTMLAttributes<HTMLSelectElement>, 'onChange' | 'value'> & { value: string; onChange: (value: string) => void; options: Option[]; placeholder?: string };
 
 export function SelectField({ label, hint, error, optional, value, onChange, options, placeholder, className, ...rest }: SelectProps) {
+  const t = useAdminT();
   const id = useId();
 
   return (
@@ -109,10 +113,10 @@ export function SelectField({ label, hint, error, optional, value, onChange, opt
         className={controlClass(Boolean(error), className)}
         {...rest}
       >
-        {placeholder !== undefined && <option value="">{placeholder}</option>}
+        {placeholder !== undefined && <option value="">{t(placeholder)}</option>}
         {options.map((option) => (
           <option key={option.value} value={option.value} disabled={option.disabled}>
-            {option.label}
+            {t(option.label)}
           </option>
         ))}
       </select>
@@ -157,6 +161,7 @@ export function CheckboxField({ label, hint, checked, onChange, disabled, error 
 
 /** An on/off setting. A real checkbox with role="switch", so the keyboard and readers treat it as one. */
 export function SwitchField({ label, hint, checked, onChange, disabled }: CheckProps) {
+  const t = useAdminT();
   const id = useId();
 
   return (
@@ -184,9 +189,9 @@ export function SwitchField({ label, hint, checked, onChange, disabled }: CheckP
         />
         <span
           aria-hidden="true"
-          className="pointer-events-none absolute left-0.5 h-5 w-5 rounded-full bg-white shadow-md transition-transform duration-200 ease-out peer-checked:translate-x-5 motion-reduce:transition-none"
+          className="pointer-events-none absolute start-0.5 h-5 w-5 rounded-full bg-white shadow-md transition-transform duration-200 ease-out peer-checked:translate-x-5 rtl:peer-checked:-translate-x-5 motion-reduce:transition-none"
         />
-        <span className="ml-2 w-6 text-xs text-slate-600">{checked ? 'On' : 'Off'}</span>
+        <span className="ms-2 w-6 text-xs text-slate-600">{checked ? t('On') : t('Off')}</span>
       </span>
     </div>
   );

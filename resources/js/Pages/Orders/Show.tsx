@@ -22,6 +22,7 @@ import { ContactButtons, WhatsAppDialog } from '@/Components/Orders/ContactCusto
 import Icon, { type IconName } from '@/Components/ui/Icon';
 import { useAuth } from '@/lib/access';
 import { orderPhone } from '@/lib/contact';
+import { useAdminT } from '@/lib/adminI18n';
 import { addressLines, CANCELLATION_REASONS, CARRIER_LABELS, orderCustomer, PAYMENT_METHOD_LABELS, ratePercent, type Order, type OrderItem, type Payment, type Shipment, type TimelineEvent } from '@/lib/orders';
 
 /**
@@ -136,6 +137,7 @@ function ShipmentsCard({ order, onChanged, createRequest = 0 }: { order: Order; 
 }
 
 function Timeline({ orderId }: { orderId: string }) {
+  const t = useAdminT();
   const state = useApi<{ data: TimelineEvent[] }>(`/orders/${orderId}/timeline`);
 
   return (
@@ -145,14 +147,14 @@ function Timeline({ orderId }: { orderId: string }) {
       ) : state.data === null ? (
         <Skeleton lines={3} />
       ) : state.data.data.length === 0 ? (
-        <p className="text-sm text-slate-600">No events yet.</p>
+        <p className="text-sm text-slate-600">{t('No events yet.')}</p>
       ) : (
         <ol className="space-y-3 text-sm">
           {state.data.data.map((event, index) => (
-            <li key={`${event.created_at}-${index}`} className="border-l-2 border-slate-200 pl-3">
+            <li key={`${event.created_at}-${index}`} className="border-s-2 border-slate-200 ps-3">
               <p className="font-medium text-slate-900">
-                {humanize(event.event_type)}
-                {event.to_status && <span className="font-normal text-slate-600"> → {humanize(event.to_status)}</span>}
+                {t(humanize(event.event_type))}
+                {event.to_status && <span className="font-normal text-slate-600"> {'→'} {t(humanize(event.to_status))}</span>}
               </p>
               {(event.reason || event.note) && <p className="text-slate-700">{[event.reason ? humanize(event.reason) : null, event.note].filter(Boolean).join(' · ')}</p>}
               <p className="text-xs text-slate-500">{formatDateTime(event.created_at)}</p>
@@ -165,16 +167,18 @@ function Timeline({ orderId }: { orderId: string }) {
 }
 
 function Address({ title, address }: { title: string; address: Record<string, unknown> | null }) {
+  const t = useAdminT();
   const lines = addressLines(address);
 
   return (
     <div>
-      <h3 className="text-xs font-medium uppercase tracking-wide text-slate-500">{title}</h3>
-      {lines.length === 0 ? <p className="mt-0.5 text-sm text-slate-600">Not given</p> : <address className="mt-0.5 text-sm not-italic text-slate-900">{lines.map((line, index) => <span key={index} className="block">{line}</span>)}</address>}
+      <h3 className="text-xs font-medium uppercase tracking-wide text-slate-500">{t(title)}</h3>
+      {lines.length === 0 ? <p className="mt-0.5 text-sm text-slate-600">{t('Not given')}</p> : <address className="mt-0.5 text-sm not-italic text-slate-900">{lines.map((line, index) => <span key={index} className="block">{line}</span>)}</address>}
     </div>
   );
 }
 
+// t('Confirm this order with the customer') t('A quick WhatsApp message or call before you pack cuts fake cash-on-delivery orders.') t('Pack and ship') t('Confirm with the customer if you have not yet, print the packing slip, then create the shipment.') t('Print the packing slip, pack the items, then create the shipment.') t('On its way') t('Let the customer know, and update the shipment when it is delivered.')
 type Step = { tone: 'amber' | 'brand' | 'emerald' | 'slate'; icon: IconName; title: string; text: string };
 
 /** What the order needs now, from its status (the server moves the status; this only reads it). */
@@ -208,6 +212,7 @@ const STEP_TONES: Record<Step['tone'], string> = {
 };
 
 function NextStepBar({ order, canShip, onCreateShipment }: { order: Order; canShip: boolean; onCreateShipment: () => void }) {
+  const t = useAdminT();
   const auth = useAuth();
   const [writing, setWriting] = useState(false);
   const step = nextStep(order);
@@ -217,28 +222,28 @@ function NextStepBar({ order, canShip, onCreateShipment }: { order: Order; canSh
   const onItsWay = step.icon === 'truck';
 
   return (
-    <section aria-label="Next step" className={`rounded-2xl border p-4 sm:p-5 ${STEP_TONES[step.tone]}`}>
+    <section aria-label={t('Next step')} className={`rounded-2xl border p-4 sm:p-5 ${STEP_TONES[step.tone]}`}>
       <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
         <div className="flex items-start gap-3">
           <span aria-hidden="true" className="step-icon flex h-10 w-10 flex-none items-center justify-center rounded-xl"><Icon name={step.icon} size={20} /></span>
           <div>
-            <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">Next step</p>
-            <h2 className="font-semibold text-slate-900">{step.title}</h2>
-            <p className="mt-0.5 text-sm text-slate-600">{step.text}</p>
+            <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">{t('Next step')}</p>
+            <h2 className="font-semibold text-slate-900">{t(step.title)}</h2>
+            <p className="mt-0.5 text-sm text-slate-600">{t(step.text)}</p>
           </div>
         </div>
         <div className="flex flex-wrap gap-2">
           {onItsWay && orderPhone(order) ? (
-            <Button onClick={() => setWriting(true)} className="!border-emerald-200 !text-emerald-800 hover:!bg-emerald-50"><Icon name="chat" size={16} />Tell them on WhatsApp</Button>
+            <Button onClick={() => setWriting(true)} className="!border-emerald-200 !text-emerald-800 hover:!bg-emerald-50"><Icon name="chat" size={16} />{t('Tell them on WhatsApp')}</Button>
           ) : (
             <ContactButtons order={order} storeName={storeName} />
           )}
           {(shipping || step.tone === 'amber') && (
             <a href={`/orders/${order.id}/print?print=1`} target="_blank" rel="noreferrer" className="inline-flex min-h-10 items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-800 shadow-sm transition hover:-translate-y-px hover:bg-slate-50 motion-reduce:transform-none focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-600 focus-visible:ring-offset-2">
-              <Icon name="printer" size={16} />Packing slip<span className="sr-only"> (opens in a new tab)</span>
+              <Icon name="printer" size={16} />{t('Packing slip')}<span className="sr-only"> {t('(opens in a new tab)')}</span>
             </a>
           )}
-          {shipping && canShip && <Button variant="primary" onClick={onCreateShipment}><Icon name="truck" size={16} />Create shipment</Button>}
+          {shipping && canShip && <Button variant="primary" onClick={onCreateShipment}><Icon name="truck" size={16} />{t('Create shipment')}</Button>}
         </div>
       </div>
       {writing && <WhatsAppDialog order={order} storeName={storeName} initialKind="shipped" onClose={() => setWriting(false)} />}
@@ -249,6 +254,7 @@ function NextStepBar({ order, canShip, onCreateShipment }: { order: Order; canSh
 export default function Show({ orderId }: { orderId: string }) {
   const access = useAccess();
   const auth = useAuth();
+  const t = useAdminT();
   const state = useApi<{ data: Order }>(`/orders/${orderId}`);
   const [cancelling, setCancelling] = useState(false);
   const [version, setVersion] = useState(0);
@@ -283,18 +289,18 @@ export default function Show({ orderId }: { orderId: string }) {
 
   return (
     <AdminPage
-      title={order ? `Order ${order.order_number}` : 'Order'}
+      title={order ? t('Order {number}', { number: order.order_number }) : t('Order')}
       trail={[{ label: order?.order_number ?? 'Order' }]}
-      description={order ? `Placed ${formatDateTime(order.created_at)} · ${humanize(order.source)}` : undefined}
+      description={order ? t('Placed {date} · {source}', { date: formatDateTime(order.created_at), source: t(humanize(order.source)) }) : undefined}
       actions={
         <>
-          <ButtonLink href="/orders">All orders</ButtonLink>
+          <ButtonLink href="/orders">{t('All orders')}</ButtonLink>
           {order && (
             <a href={`/orders/${order.id}/print`} target="_blank" rel="noreferrer" className="inline-flex min-h-10 items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-800 shadow-sm transition hover:-translate-y-px hover:bg-slate-50 motion-reduce:transform-none focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-600 focus-visible:ring-offset-2">
-              <Icon name="printer" size={16} />Print<span className="sr-only"> packing slip (opens in a new tab)</span>
+              <Icon name="printer" size={16} />{t('Print')}<span className="sr-only"> {t('packing slip (opens in a new tab)')}</span>
             </a>
           )}
-          {order && access.can('orders.cancel') && cancellable && <Button variant="danger" onClick={() => setCancelling(true)}>Cancel order</Button>}
+          {order && access.can('orders.cancel') && cancellable && <Button variant="danger" onClick={() => setCancelling(true)}>{t('Cancel order')}</Button>}
         </>
       }
     >
@@ -323,20 +329,20 @@ export default function Show({ orderId }: { orderId: string }) {
 
             <Card title="Items">
               <DataTable caption="Order items" columns={itemColumns} rows={order.items ?? []} rowKey={(item) => item.id} empty={<p className="text-sm text-slate-600">This order has no items.</p>} />
-              <dl className="ml-auto mt-4 max-w-xs space-y-1 text-sm">
-                <div className="flex justify-between"><dt className="text-slate-600">Subtotal</dt><dd>{money(order.subtotal_minor, order.currency)}</dd></div>
-                <div className="flex justify-between"><dt className="text-slate-600">Discounts</dt><dd>− {money(order.discount_total_minor, order.currency)}</dd></div>
+              <dl className="ms-auto mt-4 max-w-xs space-y-1 text-sm">
+                <div className="flex justify-between"><dt className="text-slate-600">{t('Subtotal')}</dt><dd>{money(order.subtotal_minor, order.currency)}</dd></div>
+                <div className="flex justify-between"><dt className="text-slate-600">{t('Discounts')}</dt><dd>− {money(order.discount_total_minor, order.currency)}</dd></div>
                 {/* Phase B46: the tax as it was charged, rate by rate. */}
                 {order.tax?.exempt ? (
                   <div className="flex justify-between"><dt className="text-slate-600">{order.tax.label}</dt><dd>Exempt ({order.tax.exemption_reference})</dd></div>
                 ) : (
-                  <div className="flex justify-between"><dt className="text-slate-600">{order.tax ? `${order.tax.label}${order.tax.prices_include_tax ? ' (included in prices)' : ''}` : 'Tax'}</dt><dd>{money(order.tax_total_minor, order.currency)}</dd></div>
+                  <div className="flex justify-between"><dt className="text-slate-600">{order.tax ? `${order.tax.label}${order.tax.prices_include_tax ? ` (${t('included in prices')})` : ''}` : t('Tax')}</dt><dd>{money(order.tax_total_minor, order.currency)}</dd></div>
                 )}
                 {(order.tax?.breakdown ?? []).map((b) => (
                   <div key={b.name} className="flex justify-between ps-3 text-xs text-slate-600"><dt>{b.name} {ratePercent(b.rate_bps)} % on {money(b.base_minor, order.currency)}</dt><dd>{money(b.tax_minor, order.currency)}</dd></div>
                 ))}
-                <div className="flex justify-between"><dt className="text-slate-600">Shipping</dt><dd>{money(order.shipping_total_minor, order.currency)}</dd></div>
-                <div className="flex justify-between border-t border-slate-200 pt-1 font-semibold"><dt>Total</dt><dd>{money(order.grand_total_minor, order.currency)}</dd></div>
+                <div className="flex justify-between"><dt className="text-slate-600">{t('Shipping')}</dt><dd>{money(order.shipping_total_minor, order.currency)}</dd></div>
+                <div className="flex justify-between border-t border-slate-200 pt-1 font-semibold"><dt>{t('Total')}</dt><dd>{money(order.grand_total_minor, order.currency)}</dd></div>
                 {(order.store_credit_minor ?? 0) > 0 && (
                   <>
                     <div className="flex justify-between"><dt className="text-slate-600">Paid with store credit</dt><dd>− {money(order.store_credit_minor ?? 0, order.currency)}</dd></div>
@@ -370,7 +376,7 @@ export default function Show({ orderId }: { orderId: string }) {
                 <Address title="Bill to" address={order.billing_address} />
                 {order.notes && (
                   <div>
-                    <h3 className="text-xs font-medium uppercase tracking-wide text-slate-500">Note</h3>
+                    <h3 className="text-xs font-medium uppercase tracking-wide text-slate-500">{t('Note')}</h3>
                     <p className="mt-0.5 whitespace-pre-wrap text-sm text-slate-900">{order.notes}</p>
                   </div>
                 )}

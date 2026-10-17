@@ -1,5 +1,6 @@
 import { ButtonHTMLAttributes, forwardRef } from 'react';
 import { Link } from '@inertiajs/react';
+import { useAdminT } from '@/lib/adminI18n';
 
 /**
  * The admin's buttons (Phase B31 design system). One component so that
@@ -51,9 +52,11 @@ const Button = forwardRef<HTMLButtonElement, Props>(function Button(
   { variant = 'secondary', size = 'md', busy = false, busyLabel, disabled, children, className = '', type = 'button', ...rest },
   ref,
 ) {
+  const t = useAdminT();
+
   return (
     <button ref={ref} type={type} disabled={disabled || busy} aria-busy={busy || undefined} className={buttonClass(variant, size, className)} {...rest}>
-      {busy ? <><Spinner />{busyLabel ?? 'Working…'}</> : children}
+      {busy ? <><Spinner />{busyLabel ?? t('Working…')}</> : children}
     </button>
   );
 });

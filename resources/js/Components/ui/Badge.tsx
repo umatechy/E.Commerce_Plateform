@@ -1,4 +1,5 @@
 import { ReactNode } from 'react';
+import { useAdminT } from '@/lib/adminI18n';
 
 /**
  * A small status label. The status is always written out; colour only
@@ -41,5 +42,6 @@ export function toneForStatus(status: string): Tone {
 
 /** A server status shown as the server named it, in words. */
 export function StatusBadge({ status, label }: { status: string; label?: string }) {
-  return <Badge tone={toneForStatus(status)}>{label ?? humanize(status)}</Badge>;
+  const t = useAdminT();
+  return <Badge tone={toneForStatus(status)}>{t(label ?? humanize(status))}</Badge>;
 }

@@ -9,6 +9,7 @@ import { toMinor } from '@/lib/money';
 import { useForm } from '@/lib/useForm';
 import { readPage } from '@/lib/useApi';
 import { toast } from '@/Components/ui/toast';
+import { useAdminT } from '@/lib/adminI18n';
 
 /**
  * UI-16 — Quick start: the steps a new store needs before it can open,
@@ -24,6 +25,7 @@ import { toast } from '@/Components/ui/toast';
 export type QuickCheck = { key: string; done: boolean; required: boolean; message: string };
 type StepId = 'contact' | 'product' | 'launch';
 
+// t('How customers reach you') t('Your first product') t('Open your store')
 const STEP_META: Record<StepId, { title: string; icon: IconName }> = {
   contact: { title: 'How customers reach you', icon: 'mail' },
   product: { title: 'Your first product', icon: 'box' },
@@ -31,6 +33,7 @@ const STEP_META: Record<StepId, { title: string; icon: IconName }> = {
 };
 
 function ContactStep({ onDone }: { onDone: () => void }) {
+  const t = useAdminT();
   const form = useForm({ email: '', phone: '' });
 
   async function save(event: FormEvent) {
@@ -40,22 +43,23 @@ function ContactStep({ onDone }: { onDone: () => void }) {
       if (form.values.phone.trim() !== '') await adminFetch('/store/settings/store.contact_phone', { method: 'PUT', body: { value: form.values.phone.trim(), reason: 'Quick start' } });
 
       return true;
-    }, 'Contact details saved.');
+    }, t('Contact details saved.'));
     if (saved) onDone();
   }
 
   return (
     <form onSubmit={save} className="space-y-4" noValidate>
-      <p className="text-sm text-slate-600">Shown on your storefront and used by Umar Techy to reach you. Needed before you open.</p>
+      <p className="text-sm text-slate-600">{t('Shown on your storefront and used by Umar Techy to reach you. Needed before you open.')}</p>
       <FormError message={form.formError} errors={form.errors} />
-      <TextField label="Contact email" type="email" autoComplete="email" value={form.values.email} onChange={(v) => form.set('email', v)} error={form.errors.value} placeholder="shop@example.com" data-autofocus required />
-      <TextField label="Phone or WhatsApp" optional type="tel" autoComplete="tel" value={form.values.phone} onChange={(v) => form.set('phone', v)} placeholder="+92 300 1234567" />
-      <Button type="submit" variant="primary" busy={form.busy} busyLabel="Saving…" disabled={form.values.email.trim() === ''}>Save and continue<Icon name="arrowRight" size={16} /></Button>
+      <TextField label={t('Contact email')} type="email" autoComplete="email" value={form.values.email} onChange={(v) => form.set('email', v)} error={form.errors.value} placeholder="shop@example.com" data-autofocus required />
+      <TextField label={t('Phone or WhatsApp')} optional type="tel" autoComplete="tel" value={form.values.phone} onChange={(v) => form.set('phone', v)} placeholder="+92 300 1234567" />
+      <Button type="submit" variant="primary" busy={form.busy} busyLabel={t('Saving…')} disabled={form.values.email.trim() === ''}>{t('Save and continue')}<Icon name="arrowRight" size={16} /></Button>
     </form>
   );
 }
 
 function ProductStep({ currency, onDone }: { currency: string; onDone: () => void }) {
+  const t = useAdminT();
   const access = useAccess();
   const form = useForm({ name: '', price: '', stock: '' });
   const [local, setLocal] = useState<string | null>(null);
@@ -67,12 +71,12 @@ function ProductStep({ currency, onDone }: { currency: string; onDone: () => voi
     const price = toMinor(form.values.price, currency);
     const stock = form.values.stock.trim() === '' ? null : Number(form.values.stock);
     if (price === null || price <= 0) {
-      setLocal(`Enter a price such as 2500 (${currency}).`);
+      setLocal(t('Enter a price such as 2500 ({currency}).', { currency }));
 
       return;
     }
     if (stock !== null && (!Number.isInteger(stock) || stock < 0)) {
-      setLocal('Enter the stock as a whole number, or leave it empty.');
+      setLocal(t('Enter the stock as a whole number, or leave it empty.'));
 
       return;
     }
@@ -85,7 +89,7 @@ function ProductStep({ currency, onDone }: { currency: string; onDone: () => voi
       })).data;
 
       return created.current;
-    }, 'Your first product is in your store.');
+    }, t('Your first product is in your store.'));
     if (!saved) return;
     if (stock !== null && canStock) {
       // The stock is a second step: if it fails, the product stays and the seller is told where to finish.
@@ -96,7 +100,7 @@ function ProductStep({ currency, onDone }: { currency: string; onDone: () => voi
         const record = await adminFetch<{ data: { id: string } }>('/inventory', { method: 'POST', body: { warehouse_id: warehouse.internal_id, product_id: saved.internal_id, product_variant_id: null } });
         await adminFetch(`/inventory/${record.data.id}/opening-stock`, { method: 'POST', body: { quantity: stock, reason: 'Opening stock (quick start)', idempotency_key: idempotencyKey() } });
       } catch {
-        toast.warning('The product is added, but its stock was not saved. Set it on the Inventory page.');
+        toast.warning(t('The product is added, but its stock was not saved. Set it on the Inventory page.'));
       }
     }
     onDone();
@@ -104,19 +108,20 @@ function ProductStep({ currency, onDone }: { currency: string; onDone: () => voi
 
   return (
     <form onSubmit={save} className="space-y-4" noValidate>
-      <p className="text-sm text-slate-600">Just the basics — add pictures, a description and variants later on the product page.</p>
+      <p className="text-sm text-slate-600">{t('Just the basics — add pictures, a description and variants later on the product page.')}</p>
       <FormError message={form.formError} errors={form.errors} />
-      <TextField label="Product name" value={form.values.name} onChange={(v) => form.set('name', v)} error={form.errors.name} placeholder="For example: Lawn suit, 3 piece" data-autofocus required />
+      <TextField label={t('Product name')} value={form.values.name} onChange={(v) => form.set('name', v)} error={form.errors.name} placeholder={t('For example: Lawn suit, 3 piece')} data-autofocus required />
       <div className="grid gap-4 sm:grid-cols-2">
-        <TextField label={`Price (${currency})`} inputMode="decimal" value={form.values.price} onChange={(v) => form.set('price', v)} error={local ?? form.errors.price_minor} placeholder="2500" required />
-        {canStock && <TextField label="How many you have" optional inputMode="numeric" value={form.values.stock} onChange={(v) => form.set('stock', v)} placeholder="10" hint="Leave empty if you do not count stock." />}
+        <TextField label={t('Price ({currency})', { currency })} inputMode="decimal" value={form.values.price} onChange={(v) => form.set('price', v)} error={local ?? form.errors.price_minor} placeholder="2500" required />
+        {canStock && <TextField label={t('How many you have')} optional inputMode="numeric" value={form.values.stock} onChange={(v) => form.set('stock', v)} placeholder="10" hint={t('Leave empty if you do not count stock.')} />}
       </div>
-      <Button type="submit" variant="primary" busy={form.busy} busyLabel="Adding…" disabled={form.values.name.trim() === '' || form.values.price.trim() === ''}>Add product and continue<Icon name="arrowRight" size={16} /></Button>
+      <Button type="submit" variant="primary" busy={form.busy} busyLabel={t('Adding…')} disabled={form.values.name.trim() === '' || form.values.price.trim() === ''}>{t('Add product and continue')}<Icon name="arrowRight" size={16} /></Button>
     </form>
   );
 }
 
 function LaunchStep({ checks, onLaunched }: { checks: QuickCheck[]; onLaunched: () => void }) {
+  const t = useAdminT();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const missing = checks.filter((c) => c.required && !c.done);
@@ -128,7 +133,7 @@ function LaunchStep({ checks, onLaunched }: { checks: QuickCheck[]; onLaunched: 
       await adminFetch('/storefront/launch', { method: 'POST' });
       onLaunched();
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'The store could not be opened yet.');
+      setError(e instanceof Error ? e.message : t('The store could not be opened yet.'));
     } finally {
       setBusy(false);
     }
@@ -136,28 +141,29 @@ function LaunchStep({ checks, onLaunched }: { checks: QuickCheck[]; onLaunched: 
 
   return missing.length > 0 ? (
     <div className="space-y-3 text-sm">
-      <p className="text-slate-600">Almost there. Still needed before customers can buy:</p>
+      <p className="text-slate-600">{t('Almost there. Still needed before customers can buy:')}</p>
       <ul className="space-y-2">
         {missing.map((c) => (
-          <li key={c.key} className="flex items-start gap-2 rounded-lg bg-amber-50 px-3 py-2 text-amber-900"><Icon name="alert" size={16} className="mt-0.5 flex-none" />{c.message}</li>
+          <li key={c.key} className="flex items-start gap-2 rounded-lg bg-amber-50 px-3 py-2 text-amber-900"><Icon name="alert" size={16} className="mt-0.5 flex-none" />{t(c.message)}</li>
         ))}
       </ul>
-      <p className="text-slate-500">Each one is on the checklist on your dashboard, with a link to where it is done.</p>
+      <p className="text-slate-500">{t('Each one is on the checklist on your dashboard, with a link to where it is done.')}</p>
     </div>
   ) : (
     <div className="space-y-4 text-center">
       <span className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-600"><Icon name="checkCircle" size={28} /></span>
       <div>
-        <p className="font-semibold text-slate-900">Everything needed is done</p>
-        <p className="mt-1 text-sm text-slate-600">Open your store and share its address. You can keep improving it while it is open.</p>
+        <p className="font-semibold text-slate-900">{t('Everything needed is done')}</p>
+        <p className="mt-1 text-sm text-slate-600">{t('Open your store and share its address. You can keep improving it while it is open.')}</p>
       </div>
       {error && <p role="alert" className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-800">{error}</p>}
-      <Button variant="primary" size="lg" busy={busy} busyLabel="Opening…" onClick={launch}><Icon name="store" size={18} />Open my store</Button>
+      <Button variant="primary" size="lg" busy={busy} busyLabel={t('Opening…')} onClick={launch}><Icon name="store" size={18} />{t('Open my store')}</Button>
     </div>
   );
 }
 
 export default function QuickStart({ checks, launched, currency, onChanged, onClose }: { checks: QuickCheck[]; launched: boolean; currency: string; onChanged: () => void; onClose: () => void }) {
+  const t = useAdminT();
   const access = useAccess();
   const done = (key: string) => checks.find((c) => c.key === key)?.done ?? true;
   // The steps still open when the guide was opened (so finishing one does not reshuffle the list).
@@ -177,8 +183,8 @@ export default function QuickStart({ checks, launched, currency, onChanged, onCl
   if (!step) return null;
 
   return (
-    <Dialog open title="Quick start" description={`Step ${at + 1} of ${steps.length} · about two minutes`} onClose={onClose}>
-      <ol aria-label="Steps" className="mb-6 flex items-center gap-2">
+    <Dialog open title={t('Quick start')} description={t('Step {step} of {total} · about two minutes', { step: at + 1, total: steps.length })} onClose={onClose}>
+      <ol aria-label={t('Steps')} className="mb-6 flex items-center gap-2">
         {steps.map((id, i) => (
           <li key={id} className="flex flex-1 items-center gap-2" aria-current={i === at ? 'step' : undefined}>
             <span className={`flex h-8 w-8 flex-none items-center justify-center rounded-full transition-colors motion-reduce:transition-none ${i < at ? 'bg-emerald-500 text-white' : i === at ? 'bg-brand-600 text-white ring-4 ring-brand-100' : 'bg-slate-100 text-slate-400'}`}>
@@ -188,7 +194,7 @@ export default function QuickStart({ checks, launched, currency, onChanged, onCl
           </li>
         ))}
       </ol>
-      <h3 className="mb-3 text-lg font-semibold text-slate-900">{STEP_META[step].title}</h3>
+      <h3 className="mb-3 text-lg font-semibold text-slate-900">{t(STEP_META[step].title)}</h3>
       <div key={step} className="motion-safe:animate-fade-in-up">
         {step === 'contact' && <ContactStep onDone={next} />}
         {step === 'product' && <ProductStep currency={currency} onDone={next} />}
@@ -203,9 +209,9 @@ export default function QuickStart({ checks, launched, currency, onChanged, onCl
         )}
       </div>
       {step !== 'launch' && (
-        <div className="mt-5 border-t border-slate-100 pt-4 text-right">
+        <div className="mt-5 border-t border-slate-100 pt-4 text-end">
           <button type="button" onClick={() => (at < steps.length - 1 ? setAt(at + 1) : onClose())} className="rounded text-sm font-medium text-slate-500 hover:text-slate-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-600">
-            Skip this step
+            {t('Skip this step')}
           </button>
         </div>
       )}

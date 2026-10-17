@@ -50,7 +50,7 @@ describe('the WhatsApp dialog', () => {
     const link = () => screen.getByRole('link', { name: /Open WhatsApp/ }).getAttribute('href') ?? '';
     expect(decodeURIComponent(link())).toContain('Assalam o Alaikum');
 
-    fireEvent.change(screen.getByLabelText('Language'), { target: { value: 'en' } });
+    fireEvent.change(screen.getByLabelText('Message language'), { target: { value: 'en' } });
     expect(decodeURIComponent(link())).toContain('Hello Ayesha Khan');
 
     fireEvent.change(screen.getByLabelText('Text'), { target: { value: 'Custom note' } });

@@ -1,5 +1,6 @@
 import { useSyncExternalStore } from 'react';
 import Icon, { type IconName } from './Icon';
+import { useAdminT } from '@/lib/adminI18n';
 
 /**
  * Short feedback after an action ("Saved", "Could not save"). Kept in a
@@ -64,6 +65,7 @@ const PREFIX: Record<ToastKind, string> = { success: 'Done', error: 'Error', war
 
 /** Rendered once by the admin layout. A live region, so readers announce each toast. */
 export function Toaster() {
+  const t = useAdminT();
   const current = useSyncExternalStore(
     subscribe,
     () => items,
@@ -71,15 +73,15 @@ export function Toaster() {
   );
 
   return (
-    <div aria-live="polite" className="pointer-events-none fixed bottom-4 right-4 z-[60] flex w-[calc(100%-2rem)] max-w-sm flex-col gap-2">
+    <div aria-live="polite" className="pointer-events-none fixed bottom-4 end-4 z-[60] flex w-[calc(100%-2rem)] max-w-sm flex-col gap-2">
       {current.map((item) => (
         <div key={item.id} role={item.kind === 'error' ? 'alert' : 'status'} className="pointer-events-auto flex items-start gap-3 rounded-xl border border-slate-200 bg-white p-3.5 text-sm text-slate-800 shadow-xl shadow-slate-900/10 motion-safe:animate-fade-in-up">
           <span aria-hidden="true" className={`flex h-8 w-8 flex-none items-center justify-center rounded-lg ${STYLE[item.kind]}`}><Icon name={ICON[item.kind]} size={18} /></span>
           <p className="min-w-0 flex-1 pt-1.5">
-            <span className="font-semibold">{PREFIX[item.kind]}: </span>
+            <span className="font-semibold">{t(PREFIX[item.kind])}: </span>
             {item.message}
           </p>
-          <button type="button" onClick={() => dismissToast(item.id)} aria-label="Dismiss" className="rounded-md p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-600">
+          <button type="button" onClick={() => dismissToast(item.id)} aria-label={t('Dismiss')} className="rounded-md p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-600">
             <Icon name="x" size={16} />
           </button>
         </div>
