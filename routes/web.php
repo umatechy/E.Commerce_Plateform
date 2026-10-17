@@ -77,6 +77,27 @@ Route::prefix('shop/{storeSlug}')
 
 // Signed in: the admin home with links to every built admin page.
 // Signed out: the landing page with sign-in and registration links.
+// UI-19: the admin installs on a phone's home screen like an app (name from Platform settings).
+// No service worker: admin data is never kept for offline use on the device.
+Route::get('/admin.webmanifest', function () {
+    $name = (string) (app(\App\Domain\Settings\Services\ConfigService::class)->get('platform.brand_name') ?: 'Umar Techy');
+
+    return response()->json([
+        'name' => $name.' Admin',
+        'short_name' => $name,
+        'description' => 'Run your store: orders, products, customers and payments.',
+        'start_url' => '/',
+        'scope' => '/',
+        'display' => 'standalone',
+        'background_color' => '#f8fafc',
+        'theme_color' => '#4f46e5',
+        'icons' => [
+            ['src' => '/brand/app-icon.svg', 'sizes' => 'any', 'type' => 'image/svg+xml', 'purpose' => 'any'],
+            ['src' => '/brand/app-icon.svg', 'sizes' => 'any', 'type' => 'image/svg+xml', 'purpose' => 'maskable'],
+        ],
+    ], 200, ['Content-Type' => 'application/manifest+json', 'Cache-Control' => 'public, max-age=3600']);
+});
+
 Route::get('/', function (Request $request) {
     if ($request->user()) {
         return Inertia::render('Dashboard');

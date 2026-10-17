@@ -81,7 +81,7 @@ describe('admin navigation', () => {
     setPage({ ...owner, mfa_enrollment_required: false }, '/security');
     rerender(<AuthenticatedLayout>content</AuthenticatedLayout>);
 
-    expect(screen.getByRole('link', { name: 'Orders' })).toBeTruthy();
+    expect(within(screen.getByRole('navigation', { name: 'Admin' })).getByRole('link', { name: 'Orders' })).toBeTruthy();
     expect(screen.queryByText(/One step before you can manage your store/)).toBeNull();
   });
 

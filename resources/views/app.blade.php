@@ -54,6 +54,14 @@
         <title inertia>Umar Techy E-Commerce Platform</title>
     @endif
     <meta name="csrf-token" content="{{ csrf_token() }}">
+    {{-- UI-19: outside a storefront (the admin and its sign-in), the admin's own installable app. --}}
+    @if (! isset($page['props']['storefront']))
+        <link rel="manifest" href="/admin.webmanifest">
+        <meta name="theme-color" content="#4f46e5">
+        <meta name="mobile-web-app-capable" content="yes">
+        <meta name="apple-mobile-web-app-capable" content="yes">
+        <link rel="apple-touch-icon" href="/brand/app-icon.svg">
+    @endif
     @viteReactRefresh
     @vite(['resources/css/app.css', 'resources/js/app.tsx'])
     @inertiaHead

@@ -427,7 +427,7 @@ function ProductForm({ product, onSaved }: { product: Product | null; onSaved: (
       </div>
 
       {/* UI-3: the save bar stays in view at the bottom while the form scrolls. */}
-      <div className="sticky bottom-0 z-10 -mx-4 mt-6 flex flex-wrap items-center gap-3 border-t border-slate-200 bg-white/90 px-4 py-3 shadow-[0_-4px_12px_rgba(15,23,42,0.04)] backdrop-blur-md sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8">
+      <div className="sticky bottom-[calc(4.25rem+env(safe-area-inset-bottom))] z-10 -mx-4 mt-6 lg:bottom-0 flex flex-wrap items-center gap-3 border-t border-slate-200 bg-white/90 px-4 py-3 shadow-[0_-4px_12px_rgba(15,23,42,0.04)] backdrop-blur-md sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8">
         {canSave ? (
           <Button type="submit" variant="primary" busy={form.busy} busyLabel="Saving…">
             {product === null ? 'Create product' : 'Save changes'}

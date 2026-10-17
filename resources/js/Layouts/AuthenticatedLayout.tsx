@@ -325,6 +325,75 @@ function LanguagePicker() {
   );
 }
 
+/**
+ * UI-19 — on phones, the most used places one thumb away: a bar at the
+ * bottom with Dashboard, Orders, Products, a "+" for adding (a product or
+ * an order) and More (the full menu). Each entry only when the user may
+ * open it; hidden on large screens, where the sidebar is.
+ */
+function MobileTabBar({ path, canOrders, canProducts, canAddProduct, canAddOrder, onMore }: { path: string; canOrders: boolean; canProducts: boolean; canAddProduct: boolean; canAddOrder: boolean; onMore: () => void }) {
+  const t = useAdminT();
+  const [adding, setAdding] = useState(false);
+  const tab = (href: string, label: string, icon: Parameters<typeof Icon>[0]['name'], active: boolean) => (
+    <Link
+      href={href}
+      aria-current={active ? 'page' : undefined}
+      className={`flex flex-1 flex-col items-center justify-center gap-0.5 py-1.5 text-[11px] font-medium transition-colors motion-reduce:transition-none ${FOCUS_RING} ${active ? 'text-brand-700' : 'text-slate-500 hover:text-slate-800'}`}
+    >
+      <span className={`flex h-7 w-12 items-center justify-center rounded-full transition-colors ${active ? 'bg-brand-50' : ''}`}><Icon name={icon} size={20} /></span>
+      {t(label)}
+    </Link>
+  );
+  const canAdd = canAddProduct || canAddOrder;
+
+  return (
+    <>
+      {adding && (
+        <div className="fixed inset-0 z-40 bg-slate-950/30 backdrop-blur-[2px] motion-safe:animate-fade-in lg:hidden" onMouseDown={(e) => e.target === e.currentTarget && setAdding(false)}>
+          <div role="dialog" aria-modal="true" aria-label={t('Add a product or an order')} className="absolute inset-x-3 bottom-[calc(5rem+env(safe-area-inset-bottom))] rounded-2xl border border-slate-200 bg-white p-2 shadow-2xl motion-safe:animate-fade-in-up">
+            {canAddProduct && (
+              <Link href="/products/new" onClick={() => setAdding(false)} className={`flex items-center gap-3 rounded-xl px-3 py-3 text-sm font-medium text-slate-800 hover:bg-slate-50 \${FOCUS_RING}`}>
+                <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-brand-50 text-brand-600"><Icon name="box" size={20} /></span>
+                {t('Add product')}
+              </Link>
+            )}
+            {canAddOrder && (
+              <Link href="/orders/new" onClick={() => setAdding(false)} className={`flex items-center gap-3 rounded-xl px-3 py-3 text-sm font-medium text-slate-800 hover:bg-slate-50 \${FOCUS_RING}`}>
+                <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600"><Icon name="cart" size={20} /></span>
+                {t('New order')}
+              </Link>
+            )}
+          </div>
+        </div>
+      )}
+      <nav aria-label={t('Quick menu')} className="fixed inset-x-0 bottom-0 z-30 border-t border-slate-200 bg-white/95 pb-[env(safe-area-inset-bottom)] shadow-[0_-4px_16px_rgba(15,23,42,0.06)] backdrop-blur-md lg:hidden">
+        <div className="mx-auto flex max-w-lg items-stretch px-1">
+          {tab('/', 'Dashboard', 'grid', path === '/')}
+          {canOrders && tab('/orders', 'Orders', 'cart', path.startsWith('/orders'))}
+          {canAdd && (
+            <div className="flex flex-1 items-center justify-center">
+              <button
+                type="button"
+                onClick={() => setAdding((v) => !v)}
+                aria-expanded={adding}
+                aria-label={t('Add a product or an order')}
+                className={`-mt-6 flex h-14 w-14 items-center justify-center rounded-full bg-brand-600 text-white shadow-lg shadow-brand-900/25 ring-4 ring-white transition active:scale-95 motion-reduce:transform-none ${FOCUS_RING}`}
+              >
+                <Icon name={adding ? 'x' : 'plus'} size={26} strokeWidth={2.2} />
+              </button>
+            </div>
+          )}
+          {canProducts && tab('/products', 'Products', 'box', path.startsWith('/products'))}
+          <button type="button" onClick={onMore} className={`flex flex-1 flex-col items-center justify-center gap-0.5 py-1.5 text-[11px] font-medium text-slate-500 hover:text-slate-800 \${FOCUS_RING}`}>
+            <span className="flex h-7 w-12 items-center justify-center rounded-full"><Icon name="menu" size={20} /></span>
+            {t('More')}
+          </button>
+        </div>
+      </nav>
+    </>
+  );
+}
+
 /** UI-13: the question shown when a link would leave a page with unsaved changes (lib/leaveGuard). */
 function LeaveDialog() {
   const t = useAdminT();
@@ -348,6 +417,8 @@ export default function AuthenticatedLayout({ children }: PropsWithChildren) {
   const t = useAdminT();
   const language = useAdminLanguage();
   const urdu = language === 'ur';
+  // UI-19: the phone tab bar, for store users with the admin open.
+  const tabBar = Boolean(auth.user) && access.hasStore && !locked;
   // UI-18: Urdu is shown in Nastaliq, loaded only when chosen.
   useEffect(() => {
     if (urdu) loadFont('Noto Nastaliq Urdu');
@@ -493,12 +564,22 @@ export default function AuthenticatedLayout({ children }: PropsWithChildren) {
 
         {!locked && <StoreStateBanner auth={auth} isOwner={access.isOwner} />}
 
-        <main id="main" className="mx-auto max-w-7xl px-4 py-6 sm:px-6 sm:py-8 lg:px-8">
+        <main id="main" className={`mx-auto max-w-7xl px-4 py-6 sm:px-6 sm:py-8 lg:px-8 ${tabBar ? 'pb-28 lg:pb-8' : ''}`}>
           {/* Each page eases in (keyed by the address, so it runs on every visit). */}
           <div key={path} className="motion-safe:animate-fade-in-up">{children}</div>
         </main>
       </div>
 
+      {tabBar && (
+        <MobileTabBar
+          path={path}
+          canOrders={access.can('orders.view')}
+          canProducts={access.can('products.view')}
+          canAddProduct={access.can('products.create')}
+          canAddOrder={access.can('orders.create')}
+          onMore={() => setDrawer(true)}
+        />
+      )}
       <Toaster />
       <LeaveDialog />
       <CommandPalette

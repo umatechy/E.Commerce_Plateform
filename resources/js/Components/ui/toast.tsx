@@ -73,7 +73,7 @@ export function Toaster() {
   );
 
   return (
-    <div aria-live="polite" className="pointer-events-none fixed bottom-4 end-4 z-[60] flex w-[calc(100%-2rem)] max-w-sm flex-col gap-2">
+    <div aria-live="polite" className="pointer-events-none fixed bottom-[calc(5.5rem+env(safe-area-inset-bottom))] end-4 z-[60] lg:bottom-4 flex w-[calc(100%-2rem)] max-w-sm flex-col gap-2">
       {current.map((item) => (
         <div key={item.id} role={item.kind === 'error' ? 'alert' : 'status'} className="pointer-events-auto flex items-start gap-3 rounded-xl border border-slate-200 bg-white p-3.5 text-sm text-slate-800 shadow-xl shadow-slate-900/10 motion-safe:animate-fade-in-up">
           <span aria-hidden="true" className={`flex h-8 w-8 flex-none items-center justify-center rounded-lg ${STYLE[item.kind]}`}><Icon name={ICON[item.kind]} size={18} /></span>
