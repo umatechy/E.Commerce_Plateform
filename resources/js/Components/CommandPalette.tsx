@@ -69,7 +69,7 @@ export default function CommandPalette({ entries, open, onClose }: { entries: Pa
             aria-activedescendant={list[active] ? `palette-${active}` : undefined}
             className="h-14 flex-1 bg-transparent text-base text-slate-900 placeholder:text-slate-400 focus:outline-none"
           />
-          <kbd className="hidden rounded border border-slate-200 px-1.5 py-0.5 text-[11px] text-slate-500 sm:inline">Esc</kbd>
+          <kbd className="hidden rounded-md border border-slate-200 px-1.5 py-0.5 text-[11px] text-slate-500 sm:inline">Esc</kbd>
         </div>
         <ul id="palette-results" role="listbox" aria-label="Pages" className="max-h-[50vh] overflow-y-auto p-2">
           {list.length === 0 && <li className="px-3 py-6 text-center text-sm text-slate-500">Nothing matches “{query}”.</li>}
