@@ -44,9 +44,26 @@ final class InvoiceLedger
      * price, or the partner price when a reseller brought the store. Worked
      * out on the server for every invoice and plan change.
      */
-    public function amountFor(Subscription $subscription, PackagePrice $price): int
+    public function amountFor(Subscription $subscription, PackagePrice $price, bool $firstPeriod = false): int
     {
-        return app(\App\Domain\Resellers\Services\ResellerPricing::class)->price($subscription->store_id, $price->amount_minor);
+        return app(\App\Domain\Resellers\Services\ResellerPricing::class)->price($subscription->store_id, $this->listAmount($price, $firstPeriod));
+    }
+
+    /** Owner decision 2026-10-17: the first billed period costs the one-time price where one is set. */
+    private function listAmount(PackagePrice $price, bool $firstPeriod): int
+    {
+        return $firstPeriod && $price->first_period_amount_minor !== null ? $price->first_period_amount_minor : $price->amount_minor;
+    }
+
+    /**
+     * Whether the next invoice is the subscription's first one: it has never
+     * had an invoice that was not voided. A store returning after a lapse is
+     * renewed, not charged the one-time price again.
+     */
+    public function isFirstPeriod(Subscription $subscription): bool
+    {
+        return ! Invoice::query()->withoutTenantScope()->where('subscription_id', $subscription->id)
+            ->where('status', '!=', InvoiceStatus::Void->value)->exists();
     }
 
     /** @param ?int $packageId Phase B47: another package (a plan change); default the subscription's */
@@ -63,7 +80,7 @@ final class InvoiceLedger
     /**
      * What the next period will cost, without issuing anything.
      *
-     * @return ?array{period_start: CarbonImmutable, period_end: CarbonImmutable, currency: string, subtotal_minor: int, list_minor: int, tax_rate_bps: int, tax_minor: int, total_minor: int}
+     * @return ?array{period_start: CarbonImmutable, period_end: CarbonImmutable, currency: string, subtotal_minor: int, list_minor: int, first_period: bool, tax_rate_bps: int, tax_minor: int, total_minor: int}
      */
     public function quoteNextPeriod(Subscription $subscription): ?array
     {
@@ -75,7 +92,8 @@ final class InvoiceLedger
         }
 
         $periodStart = CarbonImmutable::instance($subscription->current_period_ends_at);
-        $amount = $this->amountFor($subscription, $price);
+        $first = $price->first_period_amount_minor !== null && $this->isFirstPeriod($subscription);
+        $amount = $this->amountFor($subscription, $price, $first);
         $taxRate = $this->taxRateBps();
         $tax = $this->taxOn($amount, $taxRate);
 
@@ -84,7 +102,8 @@ final class InvoiceLedger
             'period_end' => $this->intervalOf($subscription)->periodEnd($periodStart, $this->anchorOf($subscription, $periodStart)),
             'currency' => $price->currency,
             'subtotal_minor' => $amount,
-            'list_minor' => $price->amount_minor,
+            'list_minor' => $this->listAmount($price, $first),
+            'first_period' => $first,
             'tax_rate_bps' => $taxRate,
             'tax_minor' => $tax,
             'total_minor' => $amount + $tax,
@@ -145,8 +164,9 @@ final class InvoiceLedger
         ]);
 
         $invoice->lines()->create([
-            'description' => sprintf('%s plan (%s), %s to %s', $package->name, $this->intervalOf($subscription)->value,
-                $quote['period_start']->toDateString(), $quote['period_end']->toDateString())
+            'description' => ($quote['first_period']
+                ? sprintf('%s package, one-time price including %s to %s', $package->name, $quote['period_start']->toDateString(), $quote['period_end']->toDateString())
+                : sprintf('%s plan (%s), %s to %s', $package->name, $this->intervalOf($subscription)->value, $quote['period_start']->toDateString(), $quote['period_end']->toDateString()))
                 // Phase B58: a store a reseller brought pays the partner price.
                 .($quote['subtotal_minor'] < $quote['list_minor'] ? ', partner price' : ''),
             'quantity' => 1,

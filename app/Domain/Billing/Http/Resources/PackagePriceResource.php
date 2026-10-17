@@ -18,6 +18,7 @@ final class PackagePriceResource extends JsonResource
             'billing_interval' => $this->billing_interval->value,
             'currency' => $this->currency,
             'amount_minor' => $this->amount_minor,
+            'first_period_amount_minor' => $this->first_period_amount_minor,
             'is_active' => $this->is_active,
             'updated_at' => $this->updated_at?->toIso8601String(),
         ];

@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Head } from '@inertiajs/react';
 import BrandLogo, { useBrand } from '@/Components/Brand';
 import Icon, { type IconName } from '@/Components/ui/Icon';
-import { FEATURE_LABELS, USAGE_LABELS } from '@/lib/labels';
+import { FEATURE_LABELS } from '@/lib/labels';
 import { money } from '@/lib/money';
 
 /**
@@ -12,7 +12,7 @@ import { money } from '@/lib/money';
  * the server; nothing here invents a price or a feature), partners and
  * answers to first questions.
  */
-type Plan = { code: string; name: string; price: { amount_minor: number; currency: string; interval: string } | null; limits: Record<string, number | null>; features: string[] };
+type Plan = { code: string; name: string; price: { amount_minor: number; first_period_amount_minor?: number | null; currency: string; interval: string } | null; limits: Record<string, number | null>; features: string[] };
 type Props = { plans?: Plan[]; trialDays?: number; signupOpen?: boolean };
 
 const FEATURES: { icon: IconName; title: string; text: string }[] = [
@@ -40,41 +40,122 @@ const FAQ: { q: string; a: string }[] = [
   { q: 'Is my account safe?', a: 'Store owners sign in with two-step sign-in. Sensitive changes ask for the password again, and every change is recorded.' },
 ];
 
+/**
+ * How each feature a package includes is described to a buyer. Keys are the
+ * package features the server sends (only built ones); a key without copy
+ * here falls back to its short admin label.
+ */
+const FEATURE_COPY: Record<string, string> = {
+  'payment.cod': 'Cash on delivery, with collection tracked to the rupee',
+  'payment.online': 'Online payments with JazzCash and Easypaisa, paid into your own merchant account',
+  'payment.bank_transfer': 'Bank transfer with payment confirmation',
+  'promotions.basic': 'Discount codes, coupons and timed sales',
+  'reviews.product': 'Verified-buyer product reviews and star ratings',
+  'pwa.enabled': 'Your shop as an installable app on customers’ phones',
+  'domains.custom_domain': 'Connect your own domain name',
+  'customers.advanced': 'Customer groups and tags, import and export, duplicate merging',
+  'marketing.basic': 'Email campaigns and customer segments',
+  'affiliate.programs': 'Your own affiliate program, with commissions and payouts',
+  'reports.advanced': 'Advanced sales, product and customer reports',
+  'inventory.multi_warehouse': 'Stock across multiple warehouses and locations',
+  'custom_roles.enabled': 'Custom staff roles with fine-grained permissions',
+  'themes.business': 'The Modern business theme',
+  'themes.premium': 'Premium Boutique and Bold themes',
+  'integrations.api': 'Developer API and webhooks for your own systems',
+  'products.variants': 'Product variants such as sizes and colours',
+  'wishlist.basic': 'Customer accounts with wishlists and order history',
+  'seo.basic': 'Search-engine titles, descriptions and content pages',
+  'products.units_sold': 'Units sold shown on product pages',
+  'homepage.advanced_sections': 'Advanced home page sections',
+  'animation.advanced': 'Smooth scroll and hover effects',
+  'theme.custom_css': 'Custom CSS for your own design touches',
+  'layout.advanced': 'Premium page layouts',
+  'homepage.reorder': 'Arrange your home page sections freely',
+  'animation.premium': 'Premium, playful animations',
+};
+
+/** The package's limits in buyer's words; a limit the package does not set is not capped by the platform. */
+function limitLines(limits: Record<string, number | null>): string[] {
+  const lines: string[] = [];
+  const at = (key: string) => (key in limits ? limits[key] : undefined);
+  const products = at('max_products');
+  const staff = at('max_staff_accounts');
+  const orders = at('max_monthly_orders');
+  const storage = at('max_storage_gb');
+  if (products !== undefined) lines.push(products === null ? 'Unlimited products' : `Up to ${products.toLocaleString()} products`);
+  if (staff !== undefined) lines.push(staff === null ? 'Unlimited team members' : `${staff.toLocaleString()} team members`);
+  if (orders !== undefined) lines.push(orders === null ? 'Unlimited orders' : `Up to ${orders.toLocaleString()} orders a month`);
+  // Storage is named only where it is capped: an unlimited-storage promise is not ours to make.
+  if (typeof storage === 'number') lines.push(`${storage.toLocaleString()} GB of storage for pictures and files`);
+
+  return lines;
+}
+
+const INTERVAL_WORDS: Record<string, string> = { monthly: '/ month', yearly: '/ year', one_time: 'one-time payment' };
+
+const PERIOD_WORDS: Record<string, string> = { monthly: 'month', yearly: 'year' };
+
 function Price({ plan }: { plan: Plan }) {
   if (!plan.price) return <p className="text-sm text-slate-500">Price on request</p>;
+  const { first_period_amount_minor: once, amount_minor: renewal, currency, interval } = plan.price;
+  const period = PERIOD_WORDS[interval] ?? interval;
+
+  // A one-time price that includes the first period, then the renewal price.
+  if (once !== null && once !== undefined) {
+    return (
+      <div>
+        <p className="flex flex-wrap items-baseline gap-x-1.5">
+          <span className="text-3xl font-bold tracking-tight text-slate-900">{money(once, currency)}</span>
+          <span className="text-sm text-slate-500">one-time payment</span>
+        </p>
+        <p className="mt-1 text-sm text-slate-600">Includes the first {period}, then {money(renewal, currency)} / {period} renewal</p>
+      </div>
+    );
+  }
 
   return (
-    <p className="flex items-baseline gap-1">
+    <p className="flex flex-wrap items-baseline gap-x-1.5">
       <span className="text-3xl font-bold tracking-tight text-slate-900">{money(plan.price.amount_minor, plan.price.currency)}</span>
-      <span className="text-sm text-slate-500">/ {plan.price.interval === 'yearly' ? 'year' : 'month'}</span>
+      <span className="text-sm text-slate-500">{INTERVAL_WORDS[plan.price.interval] ?? `/ ${plan.price.interval}`}</span>
     </p>
   );
 }
 
-function PlanCard({ plan, highlighted, signupOpen }: { plan: Plan; highlighted: boolean; signupOpen: boolean }) {
-  const limits = Object.entries(plan.limits).filter(([key]) => USAGE_LABELS[key]);
+function Line({ children, strong = false }: { children: string; strong?: boolean }) {
+  return (
+    <li className="flex gap-2.5">
+      <span className="mt-0.5 flex h-5 w-5 flex-none items-center justify-center rounded-full bg-indigo-50 text-indigo-600"><Icon name="check" size={13} strokeWidth={2.6} /></span>
+      <span className={strong ? 'font-medium text-slate-900' : ''}>{children}</span>
+    </li>
+  );
+}
+
+function PlanCard({ plan, previous, highlighted, signupOpen }: { plan: Plan; previous: Plan | null; highlighted: boolean; signupOpen: boolean }) {
+  // A higher package lists what it adds to the one before it.
+  const added = previous ? plan.features.filter((key) => !previous.features.includes(key)) : plan.features;
 
   return (
-    <article className={`flex flex-col rounded-2xl border bg-white p-6 shadow-sm ${highlighted ? 'border-indigo-500 ring-2 ring-indigo-500/20' : 'border-slate-200'}`}>
+    <article className={`relative flex flex-col rounded-2xl border bg-white p-7 shadow-sm ${highlighted ? 'border-indigo-500 shadow-lg shadow-indigo-600/10 ring-2 ring-indigo-500/20' : 'border-slate-200'}`}>
+      {highlighted && <span className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-indigo-600 px-3 py-1 text-xs font-semibold text-white shadow-sm">Best for growing stores</span>}
       <h3 className="text-lg font-semibold text-slate-900">{plan.name}</h3>
       <div className="mt-3"><Price plan={plan} /></div>
-      <ul className="mt-6 flex-1 space-y-2.5 text-sm text-slate-700">
-        {limits.map(([key, value]) => (
-          <li key={key} className="flex gap-2"><Icon name="check" size={18} className="text-indigo-600" />{USAGE_LABELS[key]}: {value === null ? 'unlimited' : value.toLocaleString()}</li>
-        ))}
-        {plan.features.map((key) => (
-          <li key={key} className="flex gap-2"><Icon name="check" size={18} className="text-indigo-600" />{FEATURE_LABELS[key] ?? key}</li>
-        ))}
+      <ul className="mt-6 space-y-2.5 border-b border-slate-100 pb-5 text-sm text-slate-700">
+        {limitLines(plan.limits).map((line) => <Line key={line} strong>{line}</Line>)}
       </ul>
+      <div className="mt-5 flex-1">
+        {previous && <p className="mb-3 text-sm font-semibold text-slate-900">Everything in {previous.name}, plus:</p>}
+        <ul className="space-y-2.5 text-sm text-slate-700">
+          {added.map((key) => <Line key={key}>{FEATURE_COPY[key] ?? FEATURE_LABELS[key] ?? key}</Line>)}
+        </ul>
+      </div>
       {signupOpen && (
-        <a href="/register" className={`mt-6 inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-semibold focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 ${highlighted ? 'bg-indigo-600 text-white hover:bg-indigo-700' : 'border border-slate-300 text-slate-800 hover:bg-slate-50'}`}>
+        <a href="/register" className={`mt-7 inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-semibold focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 ${highlighted ? 'bg-indigo-600 text-white hover:bg-indigo-700' : 'border border-slate-300 text-slate-800 hover:bg-slate-50'}`}>
           Start with {plan.name}
         </a>
       )}
     </article>
   );
 }
-
 export default function Welcome({ plans = [], trialDays = 14, signupOpen = true }: Props) {
   const brand = useBrand();
   const [menu, setMenu] = useState(false);
@@ -186,13 +267,13 @@ export default function Welcome({ plans = [], trialDays = 14, signupOpen = true 
             <div className="mx-auto max-w-2xl text-center">
               <p className="text-sm font-semibold uppercase tracking-wider text-indigo-600">Pricing</p>
               <h2 className="mt-2 text-3xl font-bold tracking-tight sm:text-4xl">A package for every stage</h2>
-              <p className="mt-4 text-slate-600">Start small and move up when you grow. Change your package any time from your store’s billing page.</p>
+              <p className="mt-4 text-slate-600">Start small and move up when you grow. Pay once to set up your store, renew each year to keep it running, and change your package any time from your store’s billing page.</p>
             </div>
             {plans.length === 0 ? (
               <p className="mt-12 text-center text-slate-600">Packages are being prepared. Contact us for a price.</p>
             ) : (
               <div className={`mt-14 grid gap-6 ${plans.length >= 3 ? 'lg:grid-cols-3' : 'md:grid-cols-2'} mx-auto ${plans.length < 3 ? 'max-w-3xl' : ''}`}>
-                {plans.map((p, i) => <PlanCard key={p.code} plan={p} highlighted={i === middle} signupOpen={signupOpen} />)}
+                {plans.map((p, i) => <PlanCard key={p.code} plan={p} previous={i > 0 ? plans[i - 1] : null} highlighted={i === middle} signupOpen={signupOpen} />)}
               </div>
             )}
           </div>

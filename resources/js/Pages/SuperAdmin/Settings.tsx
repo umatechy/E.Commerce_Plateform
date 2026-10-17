@@ -35,6 +35,7 @@ const INFO: Record<string, SettingInfo> = {
   'billing.tax_rate_bps': { label: 'Tax on platform invoices (basis points)', description: '1700 = 17 %. 0 = no tax. Applies to invoices issued from now on; issued invoices keep their tax.' },
   'billing.tax_label': { label: 'Tax name on platform invoices', description: 'For example Tax, GST or Sales tax.' },
   'billing.approval_threshold_minor': { label: 'Credit notes need a second person from (minor units)', description: 'A credit note of this amount or more waits until another team member approves it. 0 = no approval step. In minor units: 500000 = Rs. 5,000.' },
+  'billing.default_interval': { label: 'How often stores renew', description: 'yearly or monthly. New stores start on it; a store keeps the interval it started with. The first period is charged the package’s one-time price where one is set.' },
   'billing.upgrade_timing': { label: 'When an upgrade starts', description: 'immediate_prorated: at once, with an invoice for the rest of the period. next_period: at the end of the paid period, like a downgrade.' },
   'billing.issuer_name': { label: 'Name on invoices', description: 'Who issues the invoices and credit notes (shown on the PDF).' },
   'billing.issuer_details': { label: 'Address and registration on invoices', description: 'Address, NTN / registration numbers, contact — printed under the name on every PDF.' },

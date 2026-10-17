@@ -73,7 +73,7 @@ describe('home page', () => {
       <Welcome
         trialDays={14}
         plans={[
-          { code: 'basic', name: 'Basic', price: { amount_minor: 250000, currency: 'PKR', interval: 'monthly' }, limits: { max_products: 500 }, features: ['payment.cod'] },
+          { code: 'basic', name: 'Basic', price: { amount_minor: 250000, currency: 'PKR', interval: 'monthly' }, limits: { max_products: 500, max_staff_accounts: null }, features: ['payment.cod'] },
           { code: 'business', name: 'Business', price: null, limits: {}, features: ['affiliate.programs'] },
         ]}
       />,
@@ -81,10 +81,20 @@ describe('home page', () => {
 
     expect(screen.getByRole('heading', { name: 'Basic' })).toBeTruthy();
     expect(screen.getByText('Rs. 2,500')).toBeTruthy();
-    expect(screen.getByText('Products: 500')).toBeTruthy();
-    expect(screen.getByText('Affiliate program')).toBeTruthy();
+    expect(screen.getByText('Up to 500 products')).toBeTruthy();
+    expect(screen.getByText('Everything in Basic, plus:')).toBeTruthy();
+    expect(screen.getByText('Your own affiliate program, with commissions and payouts')).toBeTruthy();
     expect(screen.getByText('Price on request')).toBeTruthy();
     expect(screen.getByText('Free 14-day trial. No card needed.')).toBeTruthy();
+  });
+
+  it('shows a one-time price that includes the first year, then the yearly renewal', () => {
+    setPage({ ...owner, user: null }, '/');
+    render(<Welcome plans={[{ code: 'basic', name: 'Basic', price: { amount_minor: 600000, first_period_amount_minor: 2000000, currency: 'PKR', interval: 'yearly' }, limits: {}, features: [] }]} />);
+
+    expect(screen.getByText('Rs. 20,000')).toBeTruthy();
+    expect(screen.getByText('one-time payment')).toBeTruthy();
+    expect(screen.getByText('Includes the first year, then Rs. 6,000 / year renewal')).toBeTruthy();
   });
 
   it('points to sign in only when sign-up is closed', () => {

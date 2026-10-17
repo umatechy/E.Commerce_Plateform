@@ -177,7 +177,7 @@ final class StoreOnboardingTest extends TestCase
 
         // No price yet for the package: said plainly. With a price: the first invoice, once.
         $this->actingAs($owner)->postJson('/api/v1/billing/first-invoice')->assertStatus(422)->assertJsonPath('code', 'no_price');
-        PackagePrice::query()->create(['package_id' => Package::query()->where('code', 'basic')->value('id'), 'billing_interval' => 'monthly', 'currency' => Subscription::query()->withoutTenantScope()->where('store_id', $store->id)->value('currency'), 'amount_minor' => 250000]);
+        PackagePrice::query()->create(['package_id' => Package::query()->where('code', 'basic')->value('id'), 'billing_interval' => 'yearly', 'currency' => Subscription::query()->withoutTenantScope()->where('store_id', $store->id)->value('currency'), 'amount_minor' => 250000]);
         $invoiceId = $this->actingAs($owner)->postJson('/api/v1/billing/first-invoice')->assertCreated()->json('data.id');
         $this->assertSame($invoiceId, $this->actingAs($owner)->postJson('/api/v1/billing/first-invoice')->json('data.id'));
 

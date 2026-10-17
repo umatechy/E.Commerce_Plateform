@@ -172,7 +172,7 @@ final class StoreBillingApiTest extends TestCase
         ])->assertCreated();
 
         $subscription = \App\Domain\Packages\Models\Subscription::query()->withoutTenantScope()->sole();
-        $this->assertSame('monthly', $subscription->billing_interval->value);
+        $this->assertSame('yearly', $subscription->billing_interval->value); // owner decision 2026-10-17: billing.default_interval
         $this->assertSame(config('billing.currency'), $subscription->currency);
         $this->assertTrue($subscription->billing_anchor_at->equalTo($subscription->trial_ends_at));
         $this->assertNotNull($subscription->current_period_started_at);

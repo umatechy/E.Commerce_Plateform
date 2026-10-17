@@ -49,6 +49,8 @@ final class SuperAdminBillingController
             'billing_interval' => ['required', Rule::enum(BillingInterval::class)],
             'currency' => ['required', 'string', 'size:3', \App\Domain\Settings\Services\Currencies::rule()], // owner decision 2026-10-03
             'amount_minor' => ['required', 'integer', 'min:0', 'max:100000000000'],
+            // Owner decision 2026-10-17: the one-time price of a subscription's first period (empty: the same as amount_minor).
+            'first_period_amount_minor' => ['sometimes', 'nullable', 'integer', 'min:0', 'max:100000000000'],
             'is_active' => ['sometimes', 'boolean'],
         ]);
 
@@ -61,12 +63,13 @@ final class SuperAdminBillingController
         $previous = $price->exists ? $price->amount_minor : null;
         $price->fill([
             'amount_minor' => $validated['amount_minor'],
+            ...(array_key_exists('first_period_amount_minor', $validated) ? ['first_period_amount_minor' => $validated['first_period_amount_minor']] : []),
             'is_active' => $validated['is_active'] ?? ($price->exists ? $price->is_active : true),
         ])->save();
 
         app(AuditLogger::class)->record('super_admin.billing.price_saved', [
             'package' => $package->code, 'interval' => $price->billing_interval, 'currency' => $price->currency,
-            'previous_amount_minor' => $previous, 'amount_minor' => $price->amount_minor, 'is_active' => $price->is_active,
+            'previous_amount_minor' => $previous, 'amount_minor' => $price->amount_minor, 'first_period_amount_minor' => $price->first_period_amount_minor, 'is_active' => $price->is_active,
         ], $price);
 
         return (new PackagePriceResource($price->load('package')))->response()->setStatusCode($previous === null ? 201 : 200);
@@ -76,13 +79,14 @@ final class SuperAdminBillingController
     {
         $validated = $request->validate([
             'amount_minor' => ['sometimes', 'integer', 'min:0', 'max:100000000000'],
+            'first_period_amount_minor' => ['sometimes', 'nullable', 'integer', 'min:0', 'max:100000000000'],
             'is_active' => ['sometimes', 'boolean'],
         ]);
-        $before = ['amount_minor' => $price->amount_minor, 'is_active' => $price->is_active];
+        $before = ['amount_minor' => $price->amount_minor, 'first_period_amount_minor' => $price->first_period_amount_minor, 'is_active' => $price->is_active];
         $price->update($validated);
 
         app(AuditLogger::class)->record('super_admin.billing.price_saved', [
-            'before' => $before, 'after' => ['amount_minor' => $price->amount_minor, 'is_active' => $price->is_active],
+            'before' => $before, 'after' => ['amount_minor' => $price->amount_minor, 'first_period_amount_minor' => $price->first_period_amount_minor, 'is_active' => $price->is_active],
         ], $price);
 
         return new PackagePriceResource($price->load('package'));

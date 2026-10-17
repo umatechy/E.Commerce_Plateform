@@ -21,12 +21,21 @@ final class PublicPlans
 {
     /** Built features worth naming on the home page, in the order they are shown. */
     private const SHOWN_FEATURES = [
-        'payment.cod', 'payment.online', 'payment.bank_transfer', 'promotions.basic', 'reviews.product', 'pwa.enabled',
-        'domains.custom_domain', 'customers.advanced', 'marketing.basic', 'affiliate.programs', 'reports.advanced',
-        'inventory.multi_warehouse', 'custom_roles.enabled', 'themes.business', 'themes.premium', 'integrations.api',
+        // Selling
+        'payment.cod', 'payment.online', 'payment.bank_transfer', 'products.variants', 'promotions.basic', 'wishlist.basic',
+        'pwa.enabled', 'domains.custom_domain', 'seo.basic', 'marketing.basic',
+        // Growing
+        'reviews.product', 'products.units_sold', 'customers.advanced', 'affiliate.programs', 'reports.advanced',
+        'inventory.multi_warehouse', 'custom_roles.enabled', 'integrations.api',
+        // Design
+        'themes.business', 'homepage.advanced_sections', 'animation.advanced', 'theme.custom_css',
+        'themes.premium', 'layout.advanced', 'homepage.reorder', 'animation.premium',
     ];
 
-    /** @return list<array{code: string, name: string, price: ?array{amount_minor: int, currency: string, interval: string}, limits: array<string, ?int>, features: list<string>}> */
+    /** The usage limits the home page names. A package that leaves one unset is not limited by the platform (EntitlementService::limitFor). */
+    private const LIMITS = ['max_products', 'max_staff_accounts', 'max_monthly_orders', 'max_storage_gb'];
+
+    /** @return list<array{code: string, name: string, price: ?array{amount_minor: int, first_period_amount_minor: ?int, currency: string, interval: string}, limits: array<string, ?int>, features: list<string>}> */
     public static function all(): array
     {
         $prices = PackagePrice::query()->where('is_active', true)->get()->groupBy('package_id');
@@ -34,15 +43,17 @@ final class PublicPlans
         return Package::query()->where('is_active', true)->with('entitlements')->orderBy('id')->get()
             ->map(function (Package $package) use ($prices) {
                 $mine = $prices[$package->id] ?? collect();
-                // Monthly first, in the platform's first currency where there is one.
-                $price = $mine->sortBy(fn (PackagePrice $p) => [$p->billing_interval->value === 'monthly' ? 0 : 1, $p->currency === 'PKR' ? 0 : 1])->first();
+                // The interval new stores are billed in first, in the platform's billing currency where there is one.
+                $interval = (string) app(\App\Domain\Settings\Services\ConfigService::class)->get('billing.default_interval');
+                $currency = (string) config('billing.currency');
+                $price = $mine->sortBy(fn (PackagePrice $p) => [$p->billing_interval->value === $interval ? 0 : 1, $p->currency === $currency ? 0 : 1])->first();
                 $features = [];
-                $limits = [];
+                $limits = array_fill_keys(self::LIMITS, null);
                 foreach ($package->entitlements as $e) {
                     if ($e->type === EntitlementType::Feature && $e->boolean_value && in_array($e->key, self::SHOWN_FEATURES, true)) {
                         $features[] = $e->key;
                     }
-                    if ($e->type === EntitlementType::UsageLimit) {
+                    if ($e->type === EntitlementType::UsageLimit && in_array($e->key, self::LIMITS, true)) {
                         $limits[$e->key] = $e->is_unlimited ? null : (int) $e->limit_value;
                     }
                 }
@@ -51,7 +62,7 @@ final class PublicPlans
                 return [
                     'code' => $package->code,
                     'name' => $package->name,
-                    'price' => $price === null ? null : ['amount_minor' => $price->amount_minor, 'currency' => $price->currency, 'interval' => $price->billing_interval->value],
+                    'price' => $price === null ? null : ['amount_minor' => $price->amount_minor, 'first_period_amount_minor' => $price->first_period_amount_minor, 'currency' => $price->currency, 'interval' => $price->billing_interval->value],
                     'limits' => $limits,
                     'features' => $features,
                 ];

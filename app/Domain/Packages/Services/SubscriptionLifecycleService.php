@@ -53,7 +53,7 @@ final class SubscriptionLifecycleService
 
         $trialDays ??= (int) ($config->get('platform.trial_days') ?? config('packages.default_trial_days'));
 
-        return DB::transaction(function () use ($store, $package, $trialDays) {
+        return DB::transaction(function () use ($store, $package, $trialDays, $config) {
             $subscription = Subscription::query()->withoutTenantScope()->create([
                 'store_id' => $store->id,
                 'package_id' => $package->id,
@@ -62,7 +62,8 @@ final class SubscriptionLifecycleService
                 'current_period_started_at' => now(),
                 'current_period_ends_at' => now()->addDays($trialDays),
                 // Module 29: the first paid period starts when the trial ends.
-                'billing_interval' => \App\Domain\Billing\Models\BillingInterval::Monthly,
+                // Owner decision 2026-10-17: the interval Umar Techy bills new stores in (Platform settings).
+                'billing_interval' => \App\Domain\Billing\Models\BillingInterval::tryFrom((string) $config->get('billing.default_interval')) ?? \App\Domain\Billing\Models\BillingInterval::Yearly,
                 'currency' => config('billing.currency'),
                 'billing_anchor_at' => now()->addDays($trialDays),
             ]);

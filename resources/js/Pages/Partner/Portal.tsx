@@ -41,7 +41,7 @@ type StoreRow = {
 };
 type Commission = { id: string; date: string; store: string; kind: 'initial' | 'renewal' | 'upgrade'; base_minor: number; rate_percent: number; amount_minor: number; currency: string; status: string; hold_until: string | null };
 type PayoutRow = { date: string; amount_minor: number; currency: string; status: 'pending' | 'paid'; reference: string | null };
-type PackageOption = { code: string; name: string; prices: { interval: string; currency: string; public_minor: number; partner_minor: number }[] };
+type PackageOption = { code: string; name: string; prices: { interval: string; currency: string; public_minor: number; partner_minor: number; first_public_minor?: number | null; first_partner_minor?: number | null }[] };
 
 const SUBSCRIPTION: Record<string, [string, Tone]> = {
   trialing: ['Trial', 'blue'], active: ['Paying', 'green'], past_due: ['Payment due', 'amber'], grace_period: ['Payment due', 'amber'],
@@ -393,6 +393,13 @@ function CreateStoreDialog({ o, onClose, onDone }: { o: Overview; onClose: () =>
           <ul className="rounded-md bg-slate-50 px-3 py-2 text-sm text-slate-700">
             {chosen.prices.map((p) => (
               <li key={`${p.interval}-${p.currency}`}>
+                {p.first_partner_minor != null && p.first_public_minor != null && (
+                  <span className="block">
+                    One-time: <strong>{money(p.first_partner_minor, p.currency)}</strong>
+                    {p.first_partner_minor < p.first_public_minor && <span className="text-slate-500"> (public price {money(p.first_public_minor, p.currency)})</span>}
+                    , then{' '}
+                  </span>
+                )}
                 {p.interval}: <strong>{money(p.partner_minor, p.currency)}</strong>
                 {p.partner_minor < p.public_minor && <span className="text-slate-500"> (public price {money(p.public_minor, p.currency)})</span>}
               </li>

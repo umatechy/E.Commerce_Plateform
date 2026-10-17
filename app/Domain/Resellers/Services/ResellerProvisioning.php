@@ -36,7 +36,7 @@ final class ResellerProvisioning
      * What the reseller can sell: active packages with their prices, public
      * and partner (the tier's discount), worked out here (§26).
      *
-     * @return list<array{code: string, name: string, prices: list<array{interval: string, currency: string, public_minor: int, partner_minor: int}>}>
+     * @return list<array{code: string, name: string, prices: list<array{interval: string, currency: string, public_minor: int, partner_minor: int, first_public_minor: ?int, first_partner_minor: ?int}>}>
      */
     public function packages(Reseller $reseller): array
     {
@@ -50,6 +50,9 @@ final class ResellerProvisioning
                 'prices' => $prices[$p->id]->map(fn (PackagePrice $price) => [
                     'interval' => $price->billing_interval->value, 'currency' => $price->currency,
                     'public_minor' => $price->amount_minor, 'partner_minor' => ResellerPricing::discounted($price->amount_minor, $discount),
+                    // The one-time price of the first period, where Umar Techy set one.
+                    'first_public_minor' => $price->first_period_amount_minor,
+                    'first_partner_minor' => $price->first_period_amount_minor === null ? null : ResellerPricing::discounted($price->first_period_amount_minor, $discount),
                 ])->values()->all(),
             ])->values()->all();
     }

@@ -32,7 +32,7 @@ type Summary = {
   currencies: { currency: string; mrr_minor: number; outstanding_minor: number; overdue_minor: number; open_invoices: number; collected_this_month_minor: number; refunded_this_month_minor?: number }[];
   subscriptions_by_status: Record<string, number>;
 };
-type Price = { id: string; package?: { code: string; name: string }; billing_interval: string; currency: string; amount_minor: number; is_active: boolean };
+type Price = { id: string; package?: { code: string; name: string }; billing_interval: string; currency: string; amount_minor: number; first_period_amount_minor?: number | null; is_active: boolean };
 type Invoice = {
   id: string; number: string; status: string; is_overdue: boolean; currency: string; total_minor: number; amount_paid_minor: number; amount_due_minor: number;
   period_start: string; period_end: string; issued_at: string; due_at: string; store?: { id: string; name: string } | null; package?: { code: string; name: string };
@@ -81,7 +81,7 @@ function Prices() {
   const prices = useApi<{ data: Price[] }>('/super-admin/billing/prices');
   const packages = useApi<{ data: Package[] }>('/super-admin/packages');
   const [adding, setAdding] = useState(false);
-  const form = useForm({ package_code: '', billing_interval: 'monthly', currency: DEFAULT_CURRENCY, amount: '' });
+  const form = useForm({ package_code: '', billing_interval: 'yearly', currency: DEFAULT_CURRENCY, amount: '', first: '' });
   const [local, setLocal] = useState<string | null>(null);
   const { busy, run } = useAction();
 
@@ -94,8 +94,15 @@ function Prices() {
 
       return;
     }
+    // Optional: the one-time price of a store's first period (it includes that period).
+    const first = form.values.first.trim() === '' ? null : toMinor(form.values.first, code);
+    if (first === null && form.values.first.trim() !== '') {
+      setLocal(`Enter a one-time price such as 20000.00 (${code}), or leave it empty.`);
+
+      return;
+    }
     setLocal(null);
-    const body = { package_code: form.values.package_code, billing_interval: form.values.billing_interval, currency: code, amount_minor: minor };
+    const body = { package_code: form.values.package_code, billing_interval: form.values.billing_interval, currency: code, amount_minor: minor, first_period_amount_minor: first };
     if ((await form.submit(() => adminFetch('/super-admin/billing/prices', { method: 'POST', body }), 'Price saved.')) !== undefined) {
       setAdding(false);
       prices.reload();
@@ -105,7 +112,8 @@ function Prices() {
   const columns: Column<Price>[] = [
     { key: 'package', header: 'Package', render: (price) => <span className="font-medium">{price.package?.name ?? '—'}</span> },
     { key: 'interval', header: 'Billed', render: (price) => humanize(price.billing_interval) },
-    { key: 'amount', header: 'Price', align: 'right', priority: true, render: (price) => money(price.amount_minor, price.currency) },
+    { key: 'first', header: 'One-time (first period)', align: 'right', render: (price) => (price.first_period_amount_minor == null ? '—' : money(price.first_period_amount_minor, price.currency)) },
+    { key: 'amount', header: 'Renewal price', align: 'right', priority: true, render: (price) => money(price.amount_minor, price.currency) },
     { key: 'state', header: 'Status', priority: true, render: (price) => <Badge tone={price.is_active ? 'green' : 'neutral'}>{price.is_active ? 'In use' : 'Switched off'}</Badge> },
     {
       key: 'actions', header: 'Actions', srOnlyHeader: true, align: 'right', priority: true,
@@ -120,7 +128,7 @@ function Prices() {
   return (
     <>
       <div className="mb-3 flex justify-end">
-        <Button variant="primary" onClick={() => { form.reset({ package_code: '', billing_interval: 'monthly', currency: DEFAULT_CURRENCY, amount: '' }); setLocal(null); setAdding(true); }}>Set a price</Button>
+        <Button variant="primary" onClick={() => { form.reset({ package_code: '', billing_interval: 'yearly', currency: DEFAULT_CURRENCY, amount: '', first: '' }); setLocal(null); setAdding(true); }}>Set a price</Button>
       </div>
       <DataTable caption="Package prices" columns={columns} rows={prices.data?.data ?? null} rowKey={(price) => price.id} loading={prices.loading} error={prices.error} onRetry={prices.reload} empty={<EmptyPanel title="No prices set" description="Without a price, no invoice can be issued for a package." />} />
 
@@ -131,8 +139,9 @@ function Prices() {
           <div className="grid gap-4 sm:grid-cols-3">
             <SelectField label="Billed" value={form.values.billing_interval} onChange={(v) => form.set('billing_interval', v)} error={form.errors.billing_interval} options={[{ value: 'monthly', label: 'Monthly' }, { value: 'yearly', label: 'Yearly' }]} />
             <CurrencyField value={form.values.currency} onChange={(v) => form.set('currency', v)} error={form.errors.currency} />
-            <TextField label="Amount" inputMode="decimal" value={form.values.amount} onChange={(v) => form.set('amount', v)} error={local ?? form.errors.amount_minor} required />
+            <TextField label="Renewal price" inputMode="decimal" value={form.values.amount} onChange={(v) => form.set('amount', v)} error={local ?? form.errors.amount_minor} required />
           </div>
+          <TextField label="One-time price (first period)" optional hint="A new store pays this once; it includes the first period. Every later period is charged the renewal price. Leave empty to charge the renewal price from the start." inputMode="decimal" value={form.values.first} onChange={(v) => form.set('first', v)} error={form.errors.first_period_amount_minor} />
           <div className="flex justify-end gap-2">
             <Button onClick={() => setAdding(false)} disabled={form.busy}>Cancel</Button>
             <Button type="submit" variant="primary" busy={form.busy} busyLabel="Saving…">Save price</Button>

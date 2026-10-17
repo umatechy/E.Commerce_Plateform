@@ -56,6 +56,8 @@ final class SettingRegistry
             'billing.tax_rate_bps' => new SettingDefinition(key: 'billing.tax_rate_bps', scope: SettingScope::Platform, type: SettingType::Integer, default: max(0, (int) config('billing.tax_rate_bps'))),
             'billing.tax_label' => new SettingDefinition(key: 'billing.tax_label', scope: SettingScope::Platform, type: SettingType::String, default: (string) config('billing.tax_label', 'Tax')),
             'billing.approval_threshold_minor' => new SettingDefinition(key: 'billing.approval_threshold_minor', scope: SettingScope::Platform, type: SettingType::Integer, default: 0),
+            // Owner decision 2026-10-17: a one-time first-year price, then yearly renewal. New subscriptions use this interval.
+            'billing.default_interval' => new SettingDefinition(key: 'billing.default_interval', scope: SettingScope::Platform, type: SettingType::String, default: 'yearly', allowedValues: ['monthly', 'yearly']),
             'billing.upgrade_timing' => new SettingDefinition(key: 'billing.upgrade_timing', scope: SettingScope::Platform, type: SettingType::String, default: 'immediate_prorated', allowedValues: ['immediate_prorated', 'next_period']),
             'billing.issuer_name' => new SettingDefinition(key: 'billing.issuer_name', scope: SettingScope::Platform, type: SettingType::String, default: 'Umar Techy'),
             'billing.issuer_details' => new SettingDefinition(key: 'billing.issuer_details', scope: SettingScope::Platform, type: SettingType::String, default: null),

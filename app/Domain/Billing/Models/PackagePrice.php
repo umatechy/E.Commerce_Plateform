@@ -19,6 +19,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property BillingInterval $billing_interval
  * @property string $currency
  * @property int $amount_minor
+ * @property ?int $first_period_amount_minor owner decision 2026-10-17: the one-time price of the first billed period (it includes that period); null = amount_minor
  * @property bool $is_active
  */
 final class PackagePrice extends Model
@@ -27,13 +28,14 @@ final class PackagePrice extends Model
 
     protected $table = 'package_prices';
 
-    protected $fillable = ['package_id', 'billing_interval', 'currency', 'amount_minor', 'is_active'];
+    protected $fillable = ['package_id', 'billing_interval', 'currency', 'amount_minor', 'first_period_amount_minor', 'is_active'];
 
     protected function casts(): array
     {
         return [
             'billing_interval' => BillingInterval::class,
             'amount_minor' => 'integer',
+            'first_period_amount_minor' => 'integer',
             'is_active' => 'boolean',
         ];
     }
