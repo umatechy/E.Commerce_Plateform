@@ -60,3 +60,59 @@ export function onThemeChange(listener: (theme: ThemeId) => void): () => void {
 
   return () => listeners.delete(listener);
 }
+
+/**
+ * UI-22 — light or dark admin, or the device's setting (system). Kept like
+ * the theme colour: on this browser and with the account.
+ */
+export type ModeId = 'light' | 'dark' | 'system';
+
+export const MODES: { id: ModeId; label: string }[] = [
+  { id: 'light', label: 'Light' },
+  { id: 'dark', label: 'Dark' },
+  { id: 'system', label: 'System' },
+];
+
+const MODE_KEY = 'ut.admin-mode';
+const modeListeners = new Set<(mode: ModeId) => void>();
+
+export function isModeId(value: unknown): value is ModeId {
+  return value === 'light' || value === 'dark' || value === 'system';
+}
+
+export function storedMode(): ModeId {
+  try {
+    const value = window.localStorage.getItem(MODE_KEY);
+
+    return isModeId(value) ? value : 'light';
+  } catch {
+    return 'light';
+  }
+}
+
+export function setMode(mode: ModeId, save = true): void {
+  try {
+    window.localStorage.setItem(MODE_KEY, mode);
+  } catch {
+    // Storage blocked: the mode still applies for this visit.
+  }
+  modeListeners.forEach((listener) => listener(mode));
+  if (save) savePreference({ mode });
+}
+
+export function onModeChange(listener: (mode: ModeId) => void): () => void {
+  modeListeners.add(listener);
+
+  return () => modeListeners.delete(listener);
+}
+
+/** Whether the admin shows dark: chosen, or the device prefers it under "system". */
+export function isDark(mode: ModeId): boolean {
+  if (mode === 'dark') return true;
+  if (mode === 'light') return false;
+  try {
+    return window.matchMedia('(prefers-color-scheme: dark)').matches;
+  } catch {
+    return false;
+  }
+}

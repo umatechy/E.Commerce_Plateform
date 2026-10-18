@@ -20,6 +20,7 @@ final class AccountPreferencesController
 {
     public const THEMES = ['indigo', 'emerald', 'slate'];
     public const LANGUAGES = ['en', 'ur'];
+    public const MODES = ['light', 'dark', 'system'];
     public const VIEW_LISTS = ['orders', 'products', 'customers'];
 
     public function update(Request $request): JsonResponse
@@ -27,6 +28,7 @@ final class AccountPreferencesController
         $data = $request->validate([
             'theme' => ['sometimes', 'string', 'in:'.implode(',', self::THEMES)],
             'language' => ['sometimes', 'string', 'in:'.implode(',', self::LANGUAGES)],
+            'mode' => ['sometimes', 'string', 'in:'.implode(',', self::MODES)], // UI-22
             'saved_views' => ['sometimes', 'array:'.implode(',', self::VIEW_LISTS)],
             'saved_views.*' => ['array', 'max:10'],
             'saved_views.*.*.name' => ['required', 'string', 'max:40'],
@@ -44,7 +46,7 @@ final class AccountPreferencesController
         return response()->json(['data' => self::of($user)]);
     }
 
-    /** @return array{theme?: string, language?: string, saved_views?: array<string, list<array{name: string, query: string}>>} the stored preferences, valid values only */
+    /** @return array{theme?: string, language?: string, mode?: string, saved_views?: array<string, list<array{name: string, query: string}>>} the stored preferences, valid values only */
     public static function of(User $user): array
     {
         $stored = is_array($user->admin_preferences) ? $user->admin_preferences : [];
@@ -52,6 +54,7 @@ final class AccountPreferencesController
         return array_filter([
             'theme' => in_array($stored['theme'] ?? null, self::THEMES, true) ? $stored['theme'] : null,
             'language' => in_array($stored['language'] ?? null, self::LANGUAGES, true) ? $stored['language'] : null,
+            'mode' => in_array($stored['mode'] ?? null, self::MODES, true) ? $stored['mode'] : null,
             'saved_views' => is_array($stored['saved_views'] ?? null) ? array_intersect_key($stored['saved_views'], array_flip(self::VIEW_LISTS)) : null,
         ]);
     }

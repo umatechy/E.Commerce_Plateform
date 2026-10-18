@@ -36,6 +36,14 @@ final class AccountPreferencesTest extends TestCase
         $this->assertSame(['theme' => 'slate'], $user->refresh()->admin_preferences);
     }
 
+    public function test_a_user_saves_light_dark_or_system(): void
+    {
+        $user = User::factory()->create();
+
+        $this->actingAs($user)->putJson('/api/v1/auth/preferences', ['mode' => 'dark'])->assertOk()->assertJsonPath('data.mode', 'dark');
+        $this->actingAs($user)->putJson('/api/v1/auth/preferences', ['mode' => 'neon'])->assertStatus(422)->assertJsonValidationErrors(['mode']);
+    }
+
     public function test_a_visitor_cannot_save_preferences(): void
     {
         $this->putJson('/api/v1/auth/preferences', ['theme' => 'slate'])->assertUnauthorized();

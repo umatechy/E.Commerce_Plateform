@@ -326,3 +326,113 @@
 .admin-root[lang='ur'] dd {
   unicode-bidi: plaintext;
 }
+
+/*
+ * UI-22 — the admin's dark mode. Tailwind's slate reads these channels;
+ * outside a dark admin they are Tailwind's own values. In dark mode the
+ * scale is turned around (slate-50 is the darkest, slate-900 the lightest),
+ * so every design-system class keeps its meaning: page, card, border, text.
+ */
+:root {
+  --slate-50: 248 250 252;
+  --slate-100: 241 245 249;
+  --slate-200: 226 232 240;
+  --slate-300: 203 213 225;
+  --slate-400: 148 163 184;
+  --slate-500: 100 116 139;
+  --slate-600: 71 85 105;
+  --slate-700: 51 65 85;
+  --slate-800: 30 41 59;
+  --slate-900: 15 23 42;
+  --slate-950: 2 6 23;
+}
+.admin-root[data-mode='dark'] {
+  color-scheme: dark;
+  --slate-50: 9 13 24;
+  --slate-100: 22 30 46;
+  --slate-200: 38 49 69;
+  --slate-300: 62 75 98;
+  --slate-400: 112 127 150;
+  --slate-500: 148 163 184;
+  --slate-600: 186 198 214;
+  --slate-700: 214 222 233;
+  --slate-800: 233 238 245;
+  --slate-900: 245 247 250;
+  --slate-950: 255 255 255;
+}
+/* Surfaces that are white in light mode. */
+.admin-root[data-mode='dark'] .bg-white { background-color: rgb(17 24 39); }
+.admin-root[data-mode='dark'] .bg-white\/85,
+.admin-root[data-mode='dark'] .bg-white\/90,
+.admin-root[data-mode='dark'] .bg-white\/95 { background-color: rgb(17 24 39 / 0.88); }
+.admin-root[data-mode='dark'] .hover\:bg-white:hover { background-color: rgb(17 24 39); }
+.admin-root[data-mode='dark'] .ring-white { --tw-ring-color: rgb(17 24 39); }
+.admin-root[data-mode='dark'] .text-slate-950 { color: rgb(9 13 24); }
+/* The theme colour's pale tints become deep ones; its dark text becomes light. */
+.admin-root[data-mode='dark'] .bg-brand-50 { background-color: rgb(var(--brand-500) / 0.16); }
+.admin-root[data-mode='dark'] .bg-brand-50\/50,
+.admin-root[data-mode='dark'] .bg-brand-50\/60,
+.admin-root[data-mode='dark'] .hover\:bg-brand-50\/50:hover { background-color: rgb(var(--brand-500) / 0.12); }
+.admin-root[data-mode='dark'] .bg-brand-100,
+.admin-root[data-mode='dark'] .hover\:bg-brand-100:hover,
+.admin-root[data-mode='dark'] .hover\:bg-brand-50:hover { background-color: rgb(var(--brand-500) / 0.26); }
+.admin-root[data-mode='dark'] .text-brand-700,
+.admin-root[data-mode='dark'] .text-brand-800,
+.admin-root[data-mode='dark'] .text-brand-900,
+.admin-root[data-mode='dark'] .hover\:text-brand-700:hover { color: rgb(var(--brand-300)); }
+.admin-root[data-mode='dark'] .text-brand-600 { color: rgb(var(--brand-400)); }
+.admin-root[data-mode='dark'] .border-brand-200,
+.admin-root[data-mode='dark'] .border-brand-300,
+.admin-root[data-mode='dark'] .ring-brand-100 { border-color: rgb(var(--brand-500) / 0.4); --tw-ring-color: rgb(var(--brand-500) / 0.4); }
+/* Status colours: pale backgrounds become deep tints, dark text becomes light. */
+.admin-root[data-mode='dark'] .bg-emerald-50,
+.admin-root[data-mode='dark'] .bg-green-50 { background-color: rgb(16 185 129 / 0.14); }
+.admin-root[data-mode='dark'] .bg-amber-50,
+.admin-root[data-mode='dark'] .bg-amber-50\/70 { background-color: rgb(245 158 11 / 0.14); }
+.admin-root[data-mode='dark'] .bg-red-50,
+.admin-root[data-mode='dark'] .bg-red-50\/80 { background-color: rgb(239 68 68 / 0.14); }
+.admin-root[data-mode='dark'] .bg-blue-50 { background-color: rgb(59 130 246 / 0.14); }
+.admin-root[data-mode='dark'] .bg-violet-50\/60 { background-color: rgb(139 92 246 / 0.12); }
+.admin-root[data-mode='dark'] .text-emerald-700,
+.admin-root[data-mode='dark'] .text-emerald-800,
+.admin-root[data-mode='dark'] .text-green-800 { color: rgb(110 231 183); }
+.admin-root[data-mode='dark'] .text-amber-700,
+.admin-root[data-mode='dark'] .text-amber-800,
+.admin-root[data-mode='dark'] .text-amber-900 { color: rgb(252 211 77); }
+.admin-root[data-mode='dark'] .text-red-700,
+.admin-root[data-mode='dark'] .text-red-800,
+.admin-root[data-mode='dark'] .text-red-900 { color: rgb(252 165 165); }
+.admin-root[data-mode='dark'] .text-blue-700,
+.admin-root[data-mode='dark'] .text-blue-800 { color: rgb(147 197 253); }
+.admin-root[data-mode='dark'] .text-violet-800 { color: rgb(196 181 253); }
+.admin-root[data-mode='dark'] .border-amber-200,
+.admin-root[data-mode='dark'] .border-amber-300,
+.admin-root[data-mode='dark'] .ring-amber-200 { border-color: rgb(245 158 11 / 0.35); --tw-ring-color: rgb(245 158 11 / 0.35); }
+.admin-root[data-mode='dark'] .border-red-200,
+.admin-root[data-mode='dark'] .border-red-300,
+.admin-root[data-mode='dark'] .ring-red-200 { border-color: rgb(239 68 68 / 0.35); --tw-ring-color: rgb(239 68 68 / 0.35); }
+.admin-root[data-mode='dark'] .ring-green-200,
+.admin-root[data-mode='dark'] .ring-emerald-200,
+.admin-root[data-mode='dark'] .border-emerald-200 { border-color: rgb(16 185 129 / 0.35); --tw-ring-color: rgb(16 185 129 / 0.35); }
+.admin-root[data-mode='dark'] .ring-blue-200 { --tw-ring-color: rgb(59 130 246 / 0.35); }
+.admin-root[data-mode='dark'] .border-violet-200 { border-color: rgb(139 92 246 / 0.35); }
+/* Shadows are barely visible on dark; borders carry the shape instead. */
+.admin-root[data-mode='dark'] .shadow-sm,
+.admin-root[data-mode='dark'] [class*='shadow-[0_1px'] { --tw-shadow: 0 1px 2px rgb(0 0 0 / 0.4); }
+/* Panels that are meant to be dark (recovery codes) stay dark. */
+.admin-root[data-mode='dark'] .bg-slate-950 { background-color: rgb(2 6 23); }
+/* Buttons that force a status colour with ! keep it readable on dark. */
+.admin-root[data-mode='dark'] .\!text-emerald-800 { color: rgb(110 231 183) !important; }
+.admin-root[data-mode='dark'] .\!border-emerald-200 { border-color: rgb(16 185 129 / 0.4) !important; }
+.admin-root[data-mode='dark'] .hover\:\!bg-emerald-50:hover { background-color: rgb(16 185 129 / 0.14) !important; }
+/* On the theme-coloured banner a white button stays white, with theme-coloured text. */
+.admin-root[data-mode='dark'] .bg-gradient-to-br .bg-white { background-color: rgb(255 255 255); }
+.admin-root[data-mode='dark'] .bg-gradient-to-br .text-brand-700 { color: rgb(var(--brand-700)); }
+/* Slate theme on dark: a lighter slate, so buttons and the avatar stand out from the page. */
+:root[data-admin-theme='slate'] .admin-root[data-mode='dark'] {
+  --brand-300: 203 213 225;
+  --brand-400: 148 163 184;
+  --brand-500: 120 136 160;
+  --brand-600: 87 102 126;
+  --brand-700: 71 85 105;
+}

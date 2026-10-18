@@ -8,6 +8,9 @@ export default {
       // CSS variables on the storefront root (StoreLayout); these are the
       // fallbacks when a store has not set one.
       colors: {
+        // UI-22: slate (the neutral) reads CSS variables so the admin's dark mode can turn its scale around
+        // (app.css). Outside a dark admin the values are Tailwind's own slate.
+        slate: Object.fromEntries([50, 100, 200, 300, 400, 500, 600, 700, 800, 900, 950].map((n) => [n, `rgb(var(--slate-${n}) / <alpha-value>)`])),
         // UI-7: the admin theme colour (Indigo, Emerald or Slate, chosen by each user; lib/theme.ts). CSS variables in app.css.
         brand: {
           50: 'rgb(var(--brand-50) / <alpha-value>)',

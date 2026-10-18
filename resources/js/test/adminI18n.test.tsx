@@ -123,3 +123,28 @@ describe('preferences kept with the account (UI-20)', () => {
     act(() => setAdminLanguage('en', false));
   });
 });
+
+describe('dark mode (UI-22)', () => {
+  it('switches the admin to dark from the account menu and back', () => {
+    window.localStorage.removeItem('ut.admin-mode');
+    setPage(owner, '/orders');
+    const { container } = render(<AuthenticatedLayout>content</AuthenticatedLayout>);
+    expect(container.querySelector('.admin-root')?.getAttribute('data-mode')).toBe('light');
+
+    fireEvent.click(screen.getByRole('button', { name: /GM Awan/ }));
+    act(() => fireEvent.click(screen.getByLabelText('Dark')));
+    expect(container.querySelector('.admin-root')?.getAttribute('data-mode')).toBe('dark');
+    expect(window.localStorage.getItem('ut.admin-mode')).toBe('dark');
+
+    act(() => fireEvent.click(screen.getByLabelText('Light')));
+    expect(container.querySelector('.admin-root')?.getAttribute('data-mode')).toBe('light');
+  });
+
+  it('opens dark when the account saved dark', () => {
+    window.localStorage.setItem('ut.admin-mode', 'light');
+    setPage({ ...owner, user: { ...owner.user!, preferences: { mode: 'dark' } } }, '/orders');
+    const { container } = render(<AuthenticatedLayout>content</AuthenticatedLayout>);
+    expect(container.querySelector('.admin-root')?.getAttribute('data-mode')).toBe('dark');
+    window.localStorage.removeItem('ut.admin-mode');
+  });
+});

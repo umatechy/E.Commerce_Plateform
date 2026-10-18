@@ -12,7 +12,7 @@ import StepUpDialog from '@/Components/StepUpDialog';
 import { HelpButton } from '@/Components/Help/HelpPanel';
 import AttentionBell from '@/Components/AttentionBell';
 import { setDisplayTimezone } from '@/lib/datetime';
-import { isThemeId, onThemeChange, setTheme, storedTheme, THEMES, type ThemeId } from '@/lib/adminTheme';
+import { isDark, isModeId, isThemeId, MODES, onModeChange, onThemeChange, setMode, setTheme, storedMode, storedTheme, THEMES, type ModeId, type ThemeId } from '@/lib/adminTheme';
 import { leave, stay, useLeaveGuard, usePendingLeave } from '@/lib/leaveGuard';
 import { ADMIN_LANGUAGES, setAdminLanguage, useAdminLanguage, useAdminT, type AdminTranslate } from '@/lib/adminI18n';
 import { loadFont } from '@/Storefront/fonts';
@@ -253,6 +253,7 @@ function AccountMenu({ auth, onLogout }: { auth: AuthProps; onLogout: () => void
             <p className="truncate text-xs text-slate-500">{auth.user.email}</p>
           </div>
           <ThemePicker />
+          <ModePicker />
           <LanguagePicker />
           <div className="border-t border-slate-100 pt-1">
             <Link href="/security" className={`flex items-center gap-2.5 rounded-lg px-3 py-2 text-slate-700 transition-colors hover:bg-slate-100 motion-reduce:transition-none ${FOCUS_RING}`} onClick={() => setOpen(false)}>
@@ -297,6 +298,44 @@ function ThemePicker() {
       </div>
     </fieldset>
   );
+}
+
+/** UI-22: light, dark or the device's setting (lib/adminTheme). */
+function ModePicker() {
+  const t = useAdminT();
+  const mode = useAdminMode();
+  const icons: Record<ModeId, Parameters<typeof Icon>[0]['name']> = { light: 'sun', dark: 'moon', system: 'monitor' };
+
+  return (
+    <fieldset className="border-t border-slate-100 px-3 py-2.5">
+      <legend className="sr-only">{t('Appearance')}</legend>
+      <p aria-hidden="true" className="mb-2 text-xs font-medium text-slate-500">{t('Appearance')}</p>
+      <div className="flex gap-1 rounded-lg bg-slate-100 p-1">
+        {MODES.map((option) => (
+          <label
+            key={option.id}
+            className={`flex flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-md px-2 py-1 text-xs font-semibold transition-colors motion-reduce:transition-none has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-brand-600 ${mode === option.id ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-800'}`}
+          >
+            <input type="radio" name="admin-mode" value={option.id} checked={mode === option.id} onChange={() => setMode(option.id)} className="sr-only" />
+            <Icon name={icons[option.id]} size={13} />
+            {t(option.label)}
+          </label>
+        ))}
+      </div>
+    </fieldset>
+  );
+}
+
+/** The admin mode, following changes (and the device's setting under "system"). */
+function useAdminMode(): ModeId {
+  const [mode, setCurrent] = useState<ModeId>('light');
+  useEffect(() => {
+    setCurrent(storedMode());
+
+    return onModeChange(setCurrent);
+  }, []);
+
+  return mode;
 }
 
 /** UI-18: the admin language, kept on this device (lib/adminI18n). */
@@ -417,6 +456,19 @@ export default function AuthenticatedLayout({ children }: PropsWithChildren) {
   const t = useAdminT();
   const language = useAdminLanguage();
   const urdu = language === 'ur';
+  // UI-22: dark when chosen, or when the device prefers it under "system" (and when that changes).
+  const mode = useAdminMode();
+  const [systemDark, setSystemDark] = useState(false);
+  useEffect(() => {
+    if (mode !== 'system' || typeof window.matchMedia !== 'function') return;
+    const query = window.matchMedia('(prefers-color-scheme: dark)');
+    setSystemDark(query.matches);
+    const changed = (event: MediaQueryListEvent) => setSystemDark(event.matches);
+    query.addEventListener?.('change', changed);
+
+    return () => query.removeEventListener?.('change', changed);
+  }, [mode]);
+  const dark = mode === 'system' ? systemDark : isDark(mode);
   // UI-19: the phone tab bar, for store users with the admin open.
   const tabBar = Boolean(auth.user) && access.hasStore && !locked;
   // UI-20: the account's saved theme and language win over this browser's (they follow the user to every device).
@@ -425,8 +477,9 @@ export default function AuthenticatedLayout({ children }: PropsWithChildren) {
   useEffect(() => {
     if (saved?.theme && isThemeId(saved.theme) && saved.theme !== storedTheme()) setTheme(saved.theme, false);
     if ((saved?.language === 'en' || saved?.language === 'ur') && saved.language !== language) setAdminLanguage(saved.language, false);
+    if (isModeId(saved?.mode) && saved.mode !== storedMode()) setMode(saved.mode, false);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [saved?.theme, saved?.language]);
+  }, [saved?.theme, saved?.language, saved?.mode]);
   // UI-18: Urdu is shown in Nastaliq, loaded only when chosen.
   useEffect(() => {
     if (urdu) loadFont('Noto Nastaliq Urdu');
@@ -498,7 +551,7 @@ export default function AuthenticatedLayout({ children }: PropsWithChildren) {
   );
 
   return (
-    <div dir={urdu ? 'rtl' : 'ltr'} lang={urdu ? 'ur' : 'en'} className="admin-root min-h-screen bg-slate-50 text-slate-900 antialiased">
+    <div dir={urdu ? 'rtl' : 'ltr'} lang={urdu ? 'ur' : 'en'} data-mode={dark ? 'dark' : 'light'} className="admin-root min-h-screen bg-slate-50 text-slate-900 antialiased">
       <a href="#main" className="sr-only focus:not-sr-only focus:fixed focus:start-2 focus:top-2 focus:z-[70] focus:rounded focus:bg-white focus:px-3 focus:py-2 focus:shadow">
         {t('Skip to content')}
       </a>

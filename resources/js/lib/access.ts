@@ -10,7 +10,7 @@ import { DEFAULT_CURRENCY, SUPPORTED_CURRENCIES } from './money';
  * about what the API allows; every call is authorized again server-side.
  */
 export type AuthProps = {
-  user: { id: string; name: string; email: string; is_platform_staff?: boolean; mfa_enabled?: boolean; preferences?: { theme?: string; language?: string; saved_views?: Partial<Record<'orders' | 'products' | 'customers', { name: string; query: string }[]>> } } | null;
+  user: { id: string; name: string; email: string; is_platform_staff?: boolean; mfa_enabled?: boolean; preferences?: { theme?: string; language?: string; mode?: string; saved_views?: Partial<Record<'orders' | 'products' | 'customers', { name: string; query: string }[]>> } } | null;
   activeStore: { id: number; name: string; slug: string; status?: string; retention_ends_at?: string | null } | null;
   timezone?: string | null;
   mfa_enrollment_required?: boolean;
