@@ -57,7 +57,7 @@ export default function Insights() {
   if (state.error || insights.length === 0) return null;
 
   return (
-    <Card title={t('Insights')} description={t('From your own figures, to help you decide what to do next.')}>
+    <Card title={t('Suggestions')} description={t('From your own figures, to help you decide what to do next.')}>
       <ul className="grid gap-3 md:grid-cols-2">
         {insights.map((insight) => {
           const w = words(t, insight);

@@ -16,6 +16,8 @@ import { isDark, isModeId, isThemeId, MODES, onModeChange, onThemeChange, setMod
 import { leave, stay, useLeaveGuard, usePendingLeave } from '@/lib/leaveGuard';
 import { ADMIN_LANGUAGES, setAdminLanguage, useAdminLanguage, useAdminT, type AdminTranslate } from '@/lib/adminI18n';
 import { loadFont } from '@/Storefront/fonts';
+import ErrorBoundary from '@/Components/ErrorBoundary';
+import { installErrorReporter } from '@/lib/errorReporter';
 import { ConfirmDialog } from '@/Components/ui/Dialog';
 
 /**
@@ -513,6 +515,10 @@ export default function AuthenticatedLayout({ children }: PropsWithChildren) {
   }, [auth.user, locked]);
 
   useEffect(() => setCollapsed(readCollapsed()), []);
+  // UI-25: script errors on admin pages are reported to Umar Techy (signed-in users only).
+  useEffect(() => {
+    if (auth.user) installErrorReporter();
+  }, [auth.user]);
   useLeaveGuard();
   // A changed store timezone reaches the page through the shared props.
   useEffect(() => setDisplayTimezone(auth.timezone ?? undefined), [auth.timezone]);
@@ -627,7 +633,23 @@ export default function AuthenticatedLayout({ children }: PropsWithChildren) {
 
         <main id="main" className={`mx-auto max-w-7xl px-4 py-6 sm:px-6 sm:py-8 lg:px-8 ${tabBar ? 'pb-28 lg:pb-8' : ''}`}>
           {/* Each page eases in (keyed by the address, so it runs on every visit). */}
-          <div key={path} className="motion-safe:animate-fade-in-up">{children}</div>
+          <div key={path} className="motion-safe:animate-fade-in-up">
+            <ErrorBoundary
+              fallback={(retry) => (
+                <div role="alert" className="mx-auto max-w-lg rounded-2xl border border-slate-200 bg-white p-8 text-center shadow-sm">
+                  <span className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-red-50 text-red-600"><Icon name="alert" size={26} /></span>
+                  <h1 className="mt-4 text-lg font-semibold text-slate-900">{t('This page could not be shown')}</h1>
+                  <p className="mt-1 text-sm text-slate-600">{t('Something went wrong while drawing it. Umar Techy has been told. Try again, or go back to the dashboard.')}</p>
+                  <div className="mt-5 flex flex-wrap justify-center gap-2">
+                    <button type="button" onClick={retry} className="inline-flex min-h-10 items-center rounded-lg bg-brand-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-brand-700">{t('Try again')}</button>
+                    <Link href="/" className="inline-flex min-h-10 items-center rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-800 hover:bg-slate-50">{t('Go to the dashboard')}</Link>
+                  </div>
+                </div>
+              )}
+            >
+              {children}
+            </ErrorBoundary>
+          </div>
         </main>
       </div>
 

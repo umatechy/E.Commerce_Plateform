@@ -469,7 +469,7 @@ export const adminUr: Record<string, string> = {
   English: 'انگریزی',
   'Roman Urdu': 'رومن اردو',
   // ---- Dashboard insights
-  Insights: 'مشورے',
+  Suggestions: 'مشورے',
   'From your own figures, to help you decide what to do next.': 'آپ کے اپنے اعداد و شمار سے، تاکہ آپ طے کر سکیں کہ آگے کیا کرنا ہے۔',
   'Selling fast, running low': 'تیزی سے بک رہے ہیں، اسٹاک کم ہے',
   '{name}: {sold} sold this week, {left} left': '{name}: اس ہفتے {sold} بکے، {left} باقی',
@@ -517,6 +517,9 @@ export const adminUr: Record<string, string> = {
   'Status changed': 'صورتحال بدلی',
   'Payment status changed': 'ادائیگی کی صورتحال بدلی',
   Help: 'مدد',
+  'This page could not be shown': 'یہ صفحہ نہیں دکھایا جا سکا',
+  'Something went wrong while drawing it. Umar Techy has been told. Try again, or go back to the dashboard.': 'اسے بناتے وقت کچھ غلط ہو گیا۔ Umar Techy کو اطلاع دے دی گئی ہے۔ دوبارہ کوشش کریں یا ڈیش بورڈ پر واپس جائیں۔',
+  'Go to the dashboard': 'ڈیش بورڈ پر جائیں',
   'Answers for the page you are on, or search the help center.': 'جس صفحے پر آپ ہیں اس کے جوابات، یا ہیلپ سینٹر میں تلاش کریں۔',
 
   // ---- Security

@@ -148,14 +148,51 @@ function Failures() {
   );
 }
 
+/** UI-25: script errors seen in the admin's browsers, most recent first (text, page and browser only). */
+type ClientErrorRow = { id: number; message: string; source: string | null; path: string; browser: string | null; occurrences: number; store_id: number | null; first_seen_at: string; last_seen_at: string };
+
+function BrowserErrors() {
+  const [page, setPage] = useState(1);
+  const list = usePagedApi<ClientErrorRow>('/super-admin/monitoring/client-errors', { page });
+  const columns: Column<ClientErrorRow>[] = [
+    { key: 'last', header: 'Last seen', render: (row) => formatDateTime(row.last_seen_at) },
+    {
+      key: 'message',
+      header: 'Error',
+      priority: true,
+      render: (row) => (
+        <div className="max-w-md">
+          <p className="break-words font-mono text-xs text-slate-900">{row.message}</p>
+          {row.source && <p className="mt-0.5 break-all font-mono text-[11px] text-slate-500">{row.source}</p>}
+        </div>
+      ),
+    },
+    { key: 'page', header: 'Page', render: (row) => <span className="font-mono text-xs">{row.path}</span> },
+    { key: 'count', header: 'Times', align: 'right', priority: true, render: (row) => row.occurrences.toLocaleString() },
+    {
+      key: 'store',
+      header: 'Store',
+      render: (row) => (row.store_id === null ? '—' : <Link href={`/super-admin/stores/${row.store_id}`} className={`rounded text-brand-700 hover:underline ${FOCUS_RING}`}>Store #{row.store_id}</Link>),
+    },
+    { key: 'browser', header: 'Browser', render: (row) => <span className="line-clamp-2 max-w-xs text-xs text-slate-500" title={row.browser ?? ''}>{row.browser ?? '—'}</span> },
+  ];
+
+  return (
+    <Card title="Browser errors" description="Script errors seen in the admin, counted per error and page. Kept 30 days after they were last seen; no form values or customer data.">
+      <DataTable caption="Browser errors" columns={columns} rows={list.rows} rowKey={(row) => row.id} loading={list.loading} error={list.error} onRetry={list.reload} empty={<p className="text-sm text-slate-600">No browser errors reported. All clear.</p>} />
+      <Pagination meta={list.meta} disabled={list.loading} onPage={setPage} />
+    </Card>
+  );
+}
+
 export default function Monitoring() {
   const [state, setState] = useUrlState({ tab: 'system' });
-  const tab = ['system', 'stores', 'failures'].includes(state.tab) ? state.tab : 'system';
+  const tab = ['system', 'stores', 'failures', 'browser'].includes(state.tab) ? state.tab : 'system';
 
   return (
     <AdminPage title="Monitoring" description="The state of the platform, as the server's own checks report it.">
-      <Tabs label="Monitoring sections" tabs={[{ id: 'system', label: 'System' }, { id: 'stores', label: 'Store health' }, { id: 'failures', label: 'Failures' }]} active={tab} onChange={(next) => setState({ tab: next })} />
-      <div role="tabpanel">{tab === 'system' ? <System /> : tab === 'stores' ? <StoreHealth /> : <Failures />}</div>
+      <Tabs label="Monitoring sections" tabs={[{ id: 'system', label: 'System' }, { id: 'stores', label: 'Store health' }, { id: 'failures', label: 'Failures' }, { id: 'browser', label: 'Browser errors' }]} active={tab} onChange={(next) => setState({ tab: next })} />
+      <div role="tabpanel">{tab === 'system' ? <System /> : tab === 'stores' ? <StoreHealth /> : tab === 'browser' ? <BrowserErrors /> : <Failures />}</div>
     </AdminPage>
   );
 }

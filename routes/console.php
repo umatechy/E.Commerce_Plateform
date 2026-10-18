@@ -39,6 +39,9 @@ Schedule::command('store-health:snapshot')->hourly()->withoutOverlapping();
 // Module 32 (Phase B22): audit retention; chains stay verifiable.
 Schedule::command('audit:prune')->dailyAt('03:10')->withoutOverlapping();
 
+// UI-25: browser errors are kept 30 days after they were last seen.
+Schedule::command('model:prune', ['--model' => [\App\Domain\Monitoring\Models\ClientError::class]])->dailyAt('03:20')->withoutOverlapping();
+
 // Module 29 (Phase B23): renewal invoices, period roll-over and dunning.
 // Hourly so a payment recorded late still renews within the hour; each
 // run is idempotent.

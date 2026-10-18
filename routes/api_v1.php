@@ -81,6 +81,8 @@ Route::post('/auth/password/reset', [\App\Domain\Identity\Http\Controllers\Staff
 Route::middleware(['auth:sanctum', 'session.track', 'staff.principal', 'required.mfa', 'store.operational'])->group(function () {
     Route::post('/auth/logout', [AuthController::class, 'logout']);
     Route::get('/auth/me', [AuthController::class, 'me']);
+    // UI-25: a script error seen in the admin (signed-in users; text, page path and browser only).
+    Route::post('/client-errors', [\App\Domain\Monitoring\Http\Controllers\ClientErrorController::class, 'store'])->middleware('throttle:30,1,client-errors');
     Route::put('/auth/preferences', [\App\Domain\Identity\Http\Controllers\AccountPreferencesController::class, 'update'])->middleware('throttle:30,1'); // UI-20
 
     // --- The signed-in user's own MFA and step-up (Module 32 §8, Module 30 §6 — Phase B29) ---
@@ -705,6 +707,7 @@ Route::middleware(['auth:sanctum', 'session.track', 'staff.principal', 'required
             Route::get('/audit-logs', [SuperAdminAuditController::class, 'index']);
             Route::get('/audit-logs/integrity', [SuperAdminAuditController::class, 'integrity']);
             Route::get('/monitoring/outbox', [SuperAdminMonitoringController::class, 'outbox']);
+            Route::get('/monitoring/client-errors', [\App\Domain\Monitoring\Http\Controllers\ClientErrorController::class, 'index']); // UI-25
 
             // Module 34 (Phase B26): the platform's support inbox.
             Route::get('/support/tickets', [\App\Domain\SuperAdmin\Http\Controllers\SuperAdminSupportController::class, 'index']);
