@@ -164,3 +164,32 @@ Fixes:
 - The product save bar meets the page edges at every width.
 
 Result: no script errors, no server errors, no sideways scrolling.
+
+# Third round: fifteen improvements (owner request, 2026-10-17/18)
+
+The owner lifted the feature freeze for these fifteen suggestions and asked for all of them in the proposed order.
+
+| # | What | Commit |
+| --- | --- | --- |
+| 1 | E2E sweep of every store admin page, desktop and phone: no script or server error, no sideways scrolling (`tests/e2e/pages.spec.ts`) | bd7cee8 |
+| 2 | ESLint keeps the admin on the design system: no `gray-*`, fixed `indigo-*`, bare `rounded border` or hand-made dark buttons | e6788d8 |
+| 3 | Unsaved changes are never lost: menu links ask "Leave without saving?"; dialogs ask before Escape, the backdrop or ✕ discard input (`lib/leaveGuard`) | 56393ca |
+| 5 | Ctrl+K finds orders, products and customers (only the lists the user may open) | eecf6d9 |
+| 7 | Order page "next step" bar; WhatsApp click-to-chat (wa.me, no provider) and call; printable packing slip `/orders/{id}/print`; same actions in each order row | f667ac0 |
+| 9 | Quick start for a new store: contact, first product with stock, open the store | b0c2573 |
+| 6 | Header bell, "Needs attention" (`GET /api/v1/attention`, per permission) | b043b5a |
+| 11 | Admin in Urdu, right to left, Nastaliq (`lib/adminI18n`, `lib/adminUr`); untranslated text stays English, isolated | f5f3c50 |
+| 10 | Phone tab bar and an installable admin app (`/admin.webmanifest`, no service worker) | 1321f51 |
+| 4 | Theme colour, language and mode kept with the account (`PUT /api/v1/auth/preferences`) | e311253 |
+| 8 | Price and stock changed in the product list; saved list views (orders, products, customers) | ecd9eb2 |
+| 12 | Dark mode: Light / Dark / System; slate turned around through CSS variables | 09d3ab9 |
+| 13 | Dashboard suggestions from the store's own figures (`GET /api/v1/insights`) | 352d1e2 |
+| 14 | First-year upgrades measured on the one-time prices | 8090ed2 |
+| 15 | Browser errors reported to Super Admin → Monitoring; a broken page keeps the frame (error boundary) | c2f186d |
+
+## Notes for later work
+
+- **Urdu:** the frame, shared components, dashboard, quick start, orders, security, bell and search are translated. The bodies of other pages stay English until their words are added to `lib/adminUr.ts`; `resources/js/test/adminI18n.test.tsx` lists any `t()` text without Urdu.
+- **WhatsApp:** messages open in the seller's own WhatsApp. Sending from the platform (the Meta adapter) still needs the owner's provider account; none is invented.
+- **Upgrade rule (14):** the proration rule is used, not the full difference of the one-time prices. Changing it is an owner decision (see `docs/architecture/pricing-one-time-renewal.md`).
+- **Dark mode:** it relies on the design-system classes. A page that sets its own colours (storefront theme previews) keeps them.
