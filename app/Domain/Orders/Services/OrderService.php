@@ -483,7 +483,8 @@ final class OrderService
             // no Inventory record for this SKU in the default warehouse
             // means it has never had opening stock set — treated as
             // out of stock rather than auto-vivifying a phantom record.
-            throw ValidationException::withMessages(['items' => 'One or more items are currently unavailable.']);
+            // Named, so the person sees which line to change (owner testing, 2026-10-18).
+            throw ValidationException::withMessages(['items' => sprintf('%s is out of stock.', $nameSnapshot)]);
         }
 
         return [

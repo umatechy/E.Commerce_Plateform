@@ -129,8 +129,15 @@ final class OrderController
                 'code' => 'usage_limit_exceeded',
             ], 403);
         } catch (InsufficientStockException $e) {
+            // Name the product and what is left, so the person knows which line to change.
+            $inventory = \App\Domain\Inventory\Models\Inventory::query()->with('product')->find($e->inventoryId);
+
             return response()->json([
-                'message' => 'One or more items in this order are out of stock.',
+                'message' => $inventory?->product === null
+                    ? 'One or more items in this order are out of stock.'
+                    : ($inventory->available() === 0
+                        ? "{$inventory->product->name} is out of stock."
+                        : "{$inventory->product->name}: only {$inventory->available()} left in stock."),
                 'code' => 'insufficient_stock',
             ], 422);
         }

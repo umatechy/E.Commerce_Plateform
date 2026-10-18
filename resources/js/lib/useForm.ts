@@ -62,7 +62,10 @@ export function useForm<T extends Record<string, unknown>>(initial: T) {
       if (wasCancelled(e)) return undefined;
       const fields = fieldErrors(e);
       setErrors(fields);
-      setFormError(Object.keys(fields).length > 0 ? 'Check the highlighted fields.' : adminErrorMessage(e));
+      // A message for a field this form has no input for ("items", "items.0.quantity") is
+      // shown at the top — otherwise "Check the highlighted fields" would point at nothing.
+      const unplaced = Object.entries(fields).filter(([field]) => !(field in valuesRef.current)).map(([, text]) => text);
+      setFormError(unplaced.length > 0 ? unplaced.join(' ') : Object.keys(fields).length > 0 ? 'Check the highlighted fields.' : adminErrorMessage(e));
 
       return undefined;
     } finally {

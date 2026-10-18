@@ -117,7 +117,21 @@ final class OrderCreationTest extends TestCase
             'idempotency_key' => 'order-oos',
         ]);
 
-        $response->assertStatus(422)->assertJsonPath('code', 'insufficient_stock');
+        $response->assertStatus(422)->assertJsonPath('code', 'insufficient_stock')
+            ->assertJsonPath('message', "{$product->name}: only 1 left in stock.");
+        $this->assertDatabaseCount('orders', 0);
+    }
+
+    public function test_a_product_that_never_had_stock_is_named_in_the_error(): void
+    {
+        [$store, $owner] = $this->setUpStoreWithProduct();
+        $new = Product::factory()->for($store)->create(['name' => 'Keyboard', 'price_minor' => 89900, 'currency' => 'USD']);
+
+        $this->actingAs($owner)->postJson('/api/v1/orders', [
+            'items' => [['product_id' => $new->id, 'quantity' => 1]],
+            'guest_name' => 'Jane', 'guest_email' => 'jane@example.com',
+            'idempotency_key' => 'order-never-stocked',
+        ])->assertStatus(422)->assertJsonPath('errors.items.0', 'Keyboard is out of stock.');
         $this->assertDatabaseCount('orders', 0);
     }
 
