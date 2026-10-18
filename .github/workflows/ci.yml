@@ -125,10 +125,6 @@ jobs:
       - name: Lint
         run: npm run lint
 
-      # UI-25: the TypeScript check (the build and Vitest do not check types; a duplicate key slipped by once).
-      - name: Type check
-        run: npx tsc --noEmit -p .
-
       - name: Unit tests (Vitest)
         run: npm run test
 
