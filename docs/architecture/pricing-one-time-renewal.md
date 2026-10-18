@@ -31,5 +31,7 @@ and the optional *One-time price (first period)*.
 
 ## Known limits
 
-- A package change in the middle of a period is prorated on the renewal prices (`PlanChangeService`). An upgrade during the first year does not charge the difference between the one-time prices. Umar Techy can issue that difference by hand if wanted.
+- An upgrade during the first billed year is measured on the one-time prices, by the time left (2026-10-18, `PlanChangeService`): what the new package costs for its first period, less what is left of the one-time price paid. After the first year, and for a next period already invoiced, upgrades use the renewal prices.
+  - Example: half a year left, Basic → Business = (45,000 − 20,000) × ½ = Rs 12,500.
+  - Charging the full difference instead, whatever the time left, would be a different rule. It is an owner decision.
 - The free trial still comes before the first paid period. The one-time invoice is issued a week before the trial ends, like any first invoice.

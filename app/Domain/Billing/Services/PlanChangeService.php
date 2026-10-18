@@ -45,6 +45,12 @@ use Illuminate\Support\Facades\DB;
  *
  * Integer maths only; one transaction with the subscription locked (the
  * same order as the billing run).
+ *
+ * UI-24 (owner pricing 2026-10-17): during the first billed period — the one
+ * paid with the one-time price that includes it — an upgrade is measured on
+ * the one-time prices (what was paid, against what the new package costs
+ * for its first period), by the time left. A next period already invoiced
+ * stays on the renewal prices.
  */
 final class PlanChangeService
 {
@@ -114,8 +120,16 @@ final class PlanChangeService
             return [...$base, 'direction' => $direction, 'timing' => null, 'blocked' => 'pay_open_invoice'];
         }
 
+        // In the first billed period the one-time prices are what was paid and what the new package costs.
+        $first = $currentInvoice !== null && $this->isFirstBilledPeriod($subscription, $currentInvoice);
+        $periodOld = $first && $currentPrice !== null ? $this->ledger->amountFor($subscription, $currentPrice, true) : (int) $currentAmount;
+        $periodNew = $first ? $this->ledger->amountFor($subscription, $targetPrice, true) : $targetAmount;
+
         return [...$base, 'direction' => $direction, 'timing' => 'now', 'effective_at' => now()->toIso8601String(),
-            'proration' => $this->proration($subscription, (int) $currentAmount, $targetAmount, $currentInvoice, $next !== null && $next->status !== InvoiceStatus::Void ? $next : null)];
+            'proration' => [
+                ...$this->proration($subscription, $periodOld, $periodNew, $currentInvoice, $next !== null && $next->status !== InvoiceStatus::Void ? $next : null, (int) $currentAmount, $targetAmount),
+                'first_period' => $first,
+            ]];
     }
 
     /**
@@ -187,7 +201,7 @@ final class PlanChangeService
      *
      * @return array{from: string, until: string, remaining_seconds: int, period_seconds: int, charge_minor: int, credit_minor: int, net_minor: int, tax_minor: int, total_minor: int}
      */
-    private function proration(Subscription $subscription, int $oldPrice, int $newPrice, ?Invoice $currentInvoice, ?Invoice $issuedNext): array
+    private function proration(Subscription $subscription, int $oldPrice, int $newPrice, ?Invoice $currentInvoice, ?Invoice $issuedNext, ?int $oldNext = null, ?int $newNext = null): array
     {
         $now = CarbonImmutable::now();
         $start = CarbonImmutable::instance($subscription->current_period_started_at ?? $subscription->current_period_ends_at);
@@ -202,8 +216,9 @@ final class PlanChangeService
         $credit = $paid ? $part($oldPrice) : 0;
         $until = $end;
         if ($issuedNext !== null) {
-            $charge += $newPrice;
-            $credit += $oldPrice;
+            // The next period is billed at the renewal prices.
+            $charge += $newNext ?? $newPrice;
+            $credit += $oldNext ?? $oldPrice;
             $until = CarbonImmutable::instance($issuedNext->period_end);
         }
         $net = max(0, $charge - $credit);
@@ -213,6 +228,17 @@ final class PlanChangeService
             'from' => $now->toIso8601String(), 'until' => $until->toIso8601String(), 'remaining_seconds' => $remaining, 'period_seconds' => $period,
             'charge_minor' => $charge, 'credit_minor' => $credit, 'net_minor' => $net, 'tax_minor' => $tax, 'total_minor' => $net + $tax,
         ];
+    }
+
+    /** Whether the current period is the subscription's first billed one (no earlier invoice that counts). */
+    private function isFirstBilledPeriod(Subscription $subscription, Invoice $currentInvoice): bool
+    {
+        return ! Invoice::query()->withoutTenantScope()->where('subscription_id', $subscription->id)
+            ->where('id', '!=', $currentInvoice->id)
+            ->where('status', '!=', InvoiceStatus::Void->value)
+            ->where('billing_reason', '!=', BillingReason::Proration->value)
+            ->where('period_start', '<', $currentInvoice->period_start)
+            ->exists();
     }
 
     /** The invoice that started the current period (not a proration). */

@@ -87,6 +87,34 @@ final class OneTimePriceTest extends TestCase
         $this->assertSame(2000000, $quote['total_minor']);
     }
 
+    public function test_an_upgrade_in_the_first_year_is_measured_on_the_one_time_prices(): void
+    {
+        config(['billing.tax_rate_bps' => 0]);
+        [$store, , $subscription, $package] = $this->billedStore(600000, periodEnd: $this->trialEnd, interval: 'yearly');
+        PackagePrice::query()->where('package_id', $package->id)->update(['first_period_amount_minor' => 2000000]);
+        $premium = Package::factory()->create(['name' => 'Premium', 'code' => 'premium-x']);
+        PackagePrice::query()->create(['package_id' => $premium->id, 'billing_interval' => 'yearly', 'currency' => 'USD', 'amount_minor' => 1000000, 'first_period_amount_minor' => 6000000]);
+
+        // The first year (one-time price) is invoiced, paid, and starts.
+        $this->travelTo($this->trialEnd->subDays(7));
+        $this->runBilling();
+        $this->pay($this->invoicesOf($subscription)->sole(), 'bank-ref-0001');
+        $this->travelTo($this->trialEnd);
+        $this->runBilling();
+        app(\App\Domain\Tenancy\Support\TenantContext::class)->resolveToStore($store->id);
+
+        $this->travelTo($this->trialEnd->addDays(182)); // about half the year is left
+        $preview = app(\App\Domain\Billing\Services\PlanChangeService::class)->preview($subscription->refresh(), $premium);
+
+        $period = $this->trialEnd->addYear()->getTimestamp() - $this->trialEnd->getTimestamp();
+        $remaining = $this->trialEnd->addYear()->getTimestamp() - now()->getTimestamp();
+        $part = fn (int $price) => intdiv(2 * $price * $remaining + $period, 2 * $period);
+        $this->assertTrue($preview['proration']['first_period']);
+        $this->assertSame($part(6000000), $preview['proration']['charge_minor']);
+        $this->assertSame($part(2000000), $preview['proration']['credit_minor']);
+        $this->assertSame($part(6000000) - $part(2000000), $preview['proration']['net_minor']);
+    }
+
     public function test_without_a_one_time_price_every_period_costs_the_renewal_price(): void
     {
         config(['billing.tax_rate_bps' => 0]);
