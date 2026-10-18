@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link, router } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import QuickStart from '@/Components/Dashboard/QuickStart';
+import Insights from '@/Components/Dashboard/Insights';
 import { useAdminLanguage, useAdminT, type AdminTranslate } from '@/lib/adminI18n';
 import { PageHeader, Card, StatCard, QueryState, EmptyPanel, UsageMeter, ErrorPanel, Skeleton } from '@/Components/ui/Page';
 import Button, { ButtonLink, FOCUS_RING } from '@/Components/ui/Button';
@@ -571,6 +572,7 @@ export default function Dashboard() {
 
       <div className="space-y-6">
         {access.can('storefront.manage') && <SetupSection onChanged={() => setVersion((v) => v + 1)} />}
+        {access.can('analytics.view') && <Insights key={`insights-${version}`} />}
         {access.can('analytics.view') && <SalesSection key={`sales-${version}`} currency={access.currency} financial={access.isOwner || access.can('analytics.financial')} />}
 
         <div className="grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">

@@ -437,6 +437,8 @@ Route::middleware(['auth:sanctum', 'session.track', 'staff.principal', 'required
     Route::get('/dashboard', [DashboardController::class, 'summary']);
     // UI-17: what needs attention now (the header bell); each entry only with its page's permission.
     Route::get('/attention', \App\Domain\Analytics\Http\Controllers\AttentionController::class);
+    // UI-23: suggestions from the store's own figures (dashboard).
+    Route::get('/insights', \App\Domain\Analytics\Http\Controllers\InsightsController::class);
     Route::get('/reports/sales', [ReportController::class, 'sales']);
     Route::get('/reports/products', [ReportController::class, 'products']);
     Route::get('/reports/customers', [ReportController::class, 'customers']);
