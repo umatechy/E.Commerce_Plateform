@@ -4,10 +4,10 @@ import Dialog from '@/Components/ui/Dialog';
 import { FormError, TextField } from '@/Components/ui/Form';
 import Icon, { type IconName } from '@/Components/ui/Icon';
 import { useAccess } from '@/lib/access';
-import { adminFetch, idempotencyKey } from '@/lib/adminApi';
+import { adminFetch } from '@/lib/adminApi';
 import { toMinor } from '@/lib/money';
 import { useForm } from '@/lib/useForm';
-import { readPage } from '@/lib/useApi';
+import { setOpeningStock } from '@/lib/stock';
 import { toast } from '@/Components/ui/toast';
 import { useAdminT } from '@/lib/adminI18n';
 
@@ -94,11 +94,7 @@ function ProductStep({ currency, onDone }: { currency: string; onDone: () => voi
     if (stock !== null && canStock) {
       // The stock is a second step: if it fails, the product stays and the seller is told where to finish.
       try {
-        const warehouses = readPage<{ id: string; internal_id: number; is_default: boolean }>(await adminFetch('/warehouses')).rows;
-        const warehouse = warehouses.find((w) => w.is_default) ?? warehouses[0];
-        if (!warehouse) throw new Error('This store has no warehouse yet.');
-        const record = await adminFetch<{ data: { id: string } }>('/inventory', { method: 'POST', body: { warehouse_id: warehouse.internal_id, product_id: saved.internal_id, product_variant_id: null } });
-        await adminFetch(`/inventory/${record.data.id}/opening-stock`, { method: 'POST', body: { quantity: stock, reason: 'Opening stock (quick start)', idempotency_key: idempotencyKey() } });
+        await setOpeningStock(saved.internal_id, stock, 'Opening stock (quick start)');
       } catch {
         toast.warning(t('The product is added, but its stock was not saved. Set it on the Inventory page.'));
       }

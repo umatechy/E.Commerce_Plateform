@@ -44,18 +44,22 @@ describe('Go to…', () => {
 });
 
 describe('menu groups', () => {
-  it('fold away and remember it, but the group of the open page stays open', () => {
+  it('UI-26: only the section of the open page shows its pages; another opens with its arrow', () => {
     setPage(owner, '/');
     render(<AuthenticatedLayout>content</AuthenticatedLayout>);
     const nav = screen.getByRole('navigation', { name: 'Admin' });
-    fireEvent.click(within(nav).getByRole('button', { name: 'Catalog' }));
-    expect(within(nav).queryByRole('link', { name: 'Products' })).toBeNull();
-    expect(window.localStorage.getItem('admin.sidebar.folded')).toBe('["Catalog"]');
+    expect(within(nav).queryByRole('link', { name: 'Stock' })).toBeNull();
+    fireEvent.click(within(nav).getByRole('button', { name: 'Show the pages of Products' }));
+    expect(within(nav).getByRole('link', { name: 'Stock' }).getAttribute('href')).toBe('/inventory');
     cleanup();
 
-    setPage(owner, '/products');
+    setPage(owner, '/inventory');
     render(<AuthenticatedLayout>content</AuthenticatedLayout>);
-    expect(within(screen.getByRole('navigation', { name: 'Admin' })).getByRole('link', { name: 'Products' })).toBeTruthy();
+    const here = screen.getByRole('navigation', { name: 'Admin' });
+    expect(within(here).getByRole('link', { name: 'Stock' }).getAttribute('aria-current')).toBe('page');
+    expect(within(here).getByRole('link', { name: 'All products' }).getAttribute('href')).toBe('/products');
+    // The other sections stay closed.
+    expect(within(here).queryByRole('link', { name: 'Returns' })).toBeNull();
   });
 });
 

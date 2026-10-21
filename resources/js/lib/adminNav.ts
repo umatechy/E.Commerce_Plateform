@@ -23,77 +23,116 @@ export type NavItem = {
   ownerOnly?: boolean;
 };
 
-export type NavGroup = { label: string; items: NavItem[] };
+/**
+ * UI-26 — a section's colour (set as --tone by `toneClass`): the sidebar
+ * chip, the page's eyebrow, the section tabs and the card headings use it,
+ * so the colour says which part of the store a page belongs to.
+ */
+export type Tone = 'brand' | 'blue' | 'emerald' | 'violet' | 'pink' | 'amber' | 'cyan' | 'slate';
+
+/** The class that sets a section's colour (app.css: .tone-*). */
+export function toneClass(tone: Tone | undefined): string {
+  return `tone-${tone ?? 'brand'}`;
+}
+
+/**
+ * A section of the menu. UI-26: the sidebar shows the section once (its
+ * icon and colour, opening its first page) and its pages only while it is
+ * open, and every page of the section shows the others as tabs. A `hub`
+ * section (Settings) opens one page that lists the others instead of a
+ * long list.
+ */
+export type NavGroup = { label: string; icon?: IconName; tone?: Tone; hub?: string; items: NavItem[] };
 
 export const storeNav: NavGroup[] = [
   {
-    label: 'Sell',
+    label: 'Orders',
+    icon: 'cart',
+    tone: 'blue',
     items: [
       { href: '/orders', label: 'Orders', description: 'Orders, their status, payments and deliveries.', permissions: ['orders.view'] },
-      { href: '/payments', label: 'Payments', description: 'Payments, confirmations and refunds.', permissions: ['payments.view'] },
-      { href: '/returns', label: 'Returns', description: 'Return requests, inspection, refunds and replacements.', permissions: ['returns.view'] },
       { href: '/shipments', label: 'Shipments', description: 'Deliveries and their tracking.', permissions: ['shipments.view'] },
-      { href: '/customers', label: 'Customers', description: 'Your customers, their orders, groups, tags and notes.', permissions: ['customers.view'] },
+      { href: '/returns', label: 'Returns', description: 'Return requests, inspection, refunds and replacements.', permissions: ['returns.view'] },
+      { href: '/payments', label: 'Payments', description: 'Payments received, confirmations and refunds.', permissions: ['payments.view'] },
     ],
   },
   {
-    label: 'Catalog',
+    label: 'Products',
+    icon: 'box',
+    tone: 'emerald',
     items: [
       { href: '/products', label: 'Products', description: 'Products, prices, variants and images.', permissions: ['products.view'] },
-      { href: '/collections', label: 'Collections', description: 'Hand-picked or rule-based groups of products.', permissions: ['collections.manage', 'products.view'] },
-      { href: '/badges', label: 'Badges', description: 'Labels on product cards: automatic and your own.', permissions: ['collections.manage', 'products.view'] },
-      { href: '/reviews', label: 'Reviews', description: 'Ratings and reviews from customers who bought.', permissions: ['reviews.manage'], feature: 'reviews.product' },
+      { href: '/inventory', label: 'Stock', description: 'How many of each product you have, and every change to it.', permissions: ['inventory.view'] },
       { href: '/categories', label: 'Categories', description: 'The category tree of your store.', permissions: ['categories.manage', 'products.view'] },
+      { href: '/collections', label: 'Collections', description: 'Hand-picked or rule-based groups of products.', permissions: ['collections.manage', 'products.view'] },
       { href: '/brands', label: 'Brands', description: 'The brands you sell.', permissions: ['brands.manage', 'products.view'] },
-      { href: '/attributes', label: 'Attributes', description: 'Options such as size and colour.', permissions: ['attributes.manage', 'products.view'] },
-      { href: '/inventory', label: 'Inventory', description: 'Stock levels, adjustments and movements.', permissions: ['inventory.view'] },
-      { href: '/warehouses', label: 'Warehouses', description: 'Where your stock is kept.', permissions: ['warehouses.manage', 'inventory.view'] },
+      { href: '/reviews', label: 'Reviews', description: 'Ratings and reviews from customers who bought.', permissions: ['reviews.manage'], feature: 'reviews.product' },
+      { href: '/badges', label: 'Badges', description: 'Labels on product cards: automatic and your own.', permissions: ['collections.manage', 'products.view'] },
+      { href: '/attributes', label: 'Product options', description: 'Options such as size and colour.', permissions: ['attributes.manage', 'products.view'] },
+      { href: '/warehouses', label: 'Stock locations', description: 'Where your stock is kept.', permissions: ['warehouses.manage', 'inventory.view'] },
+    ],
+  },
+  {
+    label: 'Customers',
+    icon: 'users',
+    tone: 'violet',
+    items: [
+      { href: '/customers', label: 'Customers', description: 'Your customers, their orders, groups, tags and notes.', permissions: ['customers.view'] },
+      { href: '/segments', label: 'Customer groups', description: 'Groups of customers, for campaigns and offers.', permissions: ['marketing.view'] },
+      { href: '/support', label: 'Support', description: 'Customer tickets and your requests to Umar Techy.', permissions: ['support.view', 'support.reply', 'support.manage', 'support.platform'] },
     ],
   },
   {
     label: 'Marketing',
+    icon: 'megaphone',
+    tone: 'pink',
     items: [
-      { href: '/promotions', label: 'Promotions', description: 'Discounts and coupon codes.', permissions: ['promotions.view'] },
+      { href: '/promotions', label: 'Discounts', description: 'Discounts and coupon codes.', permissions: ['promotions.view'] },
       { href: '/campaigns', label: 'Campaigns', description: 'Email campaigns to your customers.', permissions: ['marketing.view'] },
+      { href: '/notifications', label: 'Customer messages', description: 'Messages sent to customers: email, WhatsApp & SMS, and their templates.', permissions: ['notifications.view'] },
       { href: '/affiliates', label: 'Affiliates', description: 'People who promote your store and earn commission.', permissions: ['affiliates.view'], feature: 'affiliate.programs' },
-      { href: '/segments', label: 'Segments', description: 'Groups of customers for campaigns.', permissions: ['marketing.view'] },
-      { href: '/notifications', label: 'Messages', description: 'Sent messages, WhatsApp & SMS, and templates.', permissions: ['notifications.view'] },
     ],
   },
   {
-    label: 'Storefront',
+    label: 'Online store',
+    icon: 'palette',
+    tone: 'amber',
     items: [
-      { href: '/storefront/theme', label: 'Theme', description: 'Colours, branding and home page sections.', permissions: ['theme.view'] },
+      { href: '/storefront/theme', label: 'Theme', description: 'Colours, logo and home page sections.', permissions: ['theme.view'] },
       { href: '/content/pages', label: 'Pages', description: 'Content pages such as About or Returns.', permissions: ['seo.view'] },
-      { href: '/content/seo', label: 'SEO', description: 'Search engine titles and descriptions.', permissions: ['seo.view'] },
-      { href: '/content/redirects', label: 'Redirects', description: 'Send old addresses to new ones.', permissions: ['seo.view'] },
       { href: '/domains', label: 'Domains', description: 'Your store addresses.', permissions: ['domains.view'] },
       { href: '/storefront/app', label: 'Mobile app', description: 'Your shop on customers’ home screens, like an app.', permissions: ['theme.view'], feature: 'pwa.enabled' },
-      { href: '/shipping', label: 'Shipping setup', description: 'Zones, methods and rates.', permissions: ['shipping_config.manage'] },
+      { href: '/content/seo', label: 'SEO', description: 'Search engine titles and descriptions.', permissions: ['seo.view'] },
+      { href: '/content/redirects', label: 'Redirects', description: 'Send old addresses to new ones.', permissions: ['seo.view'] },
     ],
   },
   {
-    label: 'Insights',
+    label: 'Reports',
+    icon: 'chart',
+    tone: 'cyan',
     items: [
       { href: '/reports', label: 'Reports', description: 'Sales, products, payments and more.', permissions: ['analytics.view'] },
       { href: '/store-health', label: 'Store health', description: 'Health checks for your store.', permissions: ['store_health.view'] },
     ],
   },
   {
-    label: 'Store',
+    label: 'Settings',
+    icon: 'settings',
+    tone: 'slate',
+    hub: '/settings',
     items: [
+      { href: '/settings/general', label: 'Store details', description: 'Name, contact, currency, timezone, language and checkout.', permissions: ['settings.view'] },
+      { href: '/settings/payments', label: 'Payment methods', description: 'Cash on delivery, bank transfer, JazzCash and Easypaisa.', permissions: ['payments.view', 'payments.provider_config'] },
+      { href: '/shipping', label: 'Delivery', description: 'Where you deliver, delivery methods and charges.', permissions: ['shipping_config.manage'] },
+      { href: '/settings/tax', label: 'Tax', description: 'Tax classes, rates and how tax is charged.', permissions: ['tax.manage', 'settings.view'] },
       { href: '/team', label: 'Team', description: 'Invite staff, assign roles, suspend or remove members.', permissions: ['users.view'] },
       { href: '/team/roles', label: 'Roles', description: 'What each role may do.', permissions: ['roles.view'] },
-      { href: '/billing', label: 'Billing', description: 'Your package, subscription and invoices.', permissions: ['billing.view'] },
-      { href: '/settings', label: 'Settings', description: 'Currency, timezone and language.', permissions: ['settings.view'] },
-      { href: '/settings/payments', label: 'Payments setup', description: 'Cash on delivery, bank transfer, JazzCash and Easypaisa.', permissions: ['payments.view', 'payments.provider_config'] },
-      { href: '/settings/tax', label: 'Tax', description: 'Tax classes, rates and how tax is charged.', permissions: ['tax.manage', 'settings.view'] },
-      { href: '/settings/audit-log', label: 'Audit log', description: 'Who did what in your store.', permissions: ['audit.view'] },
+      { href: '/billing', label: 'Package & billing', description: 'Your package, subscription and invoices.', permissions: ['billing.view'] },
+      { href: '/backups', label: 'Backups', description: 'Backups of your store data.', permissions: ['backups.view'] },
       { href: '/apps', label: 'Apps', description: 'Connect your store to other services from the marketplace.', permissions: ['developer_platform.view'] },
       { href: '/settings/developer', label: 'Developer', description: 'API keys and webhooks.', permissions: ['developer_platform.view'] },
-      { href: '/backups', label: 'Backups', description: 'Backups of your store data.', permissions: ['backups.view'] },
+      { href: '/settings/audit-log', label: 'Audit log', description: 'Who did what in your store.', permissions: ['audit.view'] },
       { href: '/settings/close-store', label: 'Close store', description: 'Download your data, close or reopen the store.', ownerOnly: true },
-      { href: '/support', label: 'Support', description: 'Customer tickets and your requests to the platform.', permissions: ['support.view', 'support.reply', 'support.manage', 'support.platform'] },
     ],
   },
 ];
@@ -107,6 +146,8 @@ export const partnerNav: NavItem = { href: '/partner', label: 'Partner portal', 
 /** Umar Techy Super Admin: pages for platform staff only. The server refuses everyone else, whatever the menu shows. */
 export const platformNav: NavGroup = {
   label: 'Platform administration',
+  icon: 'shield',
+  tone: 'violet',
   items: [
     { href: '/super-admin', label: 'Platform overview', description: 'Stores, orders and payments across the platform.' },
     { href: '/super-admin/stores', label: 'Stores', description: 'Every store, its package and its health.' },
@@ -131,7 +172,7 @@ export const platformNav: NavGroup = {
 
 export type NavEntryState = 'open' | 'locked' | 'not_in_package';
 export type NavEntry = NavItem & { state: NavEntryState; reason?: string };
-export type ResolvedGroup = { label: string; platform: boolean; items: NavEntry[] };
+export type ResolvedGroup = { label: string; platform: boolean; icon?: IconName; tone?: Tone; hub?: string; items: NavEntry[] };
 
 export const LOCKED_REASON = 'Turn on two-step sign-in first';
 
@@ -147,8 +188,8 @@ function resolve(item: NavItem, access: Access, alwaysOpen = false): NavEntry {
 }
 
 /**
- * The menu for this user: Store Admin groups for a user with a store,
- * the platform group for platform staff, and the user's own account.
+ * The menu for this user: Store Admin sections for a user with a store,
+ * the platform section for platform staff, and the user's own account.
  * A page the user holds no permission for is left out.
  */
 export function navigationFor(access: Access, store: NavGroup[] = storeNav): ResolvedGroup[] {
@@ -159,13 +200,13 @@ export function navigationFor(access: Access, store: NavGroup[] = storeNav): Res
       const items = group.items
         .filter((item) => (item.ownerOnly ? access.isOwner : item.permissions === undefined || access.can(item.permissions)))
         .map((item) => resolve(item, access));
-      if (items.length > 0) groups.push({ label: group.label, platform: false, items });
+      if (items.length > 0) groups.push({ label: group.label, platform: false, icon: group.icon, tone: group.tone, hub: group.hub, items });
     }
   }
   if (access.isPlatformStaff) {
-    groups.push({ label: platformNav.label, platform: true, items: platformNav.items.map((item) => resolve(item, access)) });
+    groups.push({ label: platformNav.label, platform: true, icon: platformNav.icon, tone: platformNav.tone, items: platformNav.items.map((item) => resolve(item, access)) });
   }
-  groups.push({ label: 'Account', platform: false, items: [...(access.isReseller ? [resolve(partnerNav, access, true)] : []), resolve(accountNav, access, true)] });
+  groups.push({ label: 'Account', platform: false, icon: 'user', tone: 'slate', items: [...(access.isReseller ? [resolve(partnerNav, access, true)] : []), resolve(accountNav, access, true)] });
 
   return groups;
 }
@@ -181,15 +222,32 @@ export function activeHref(groups: ResolvedGroup[], path: string): string | null
   return best;
 }
 
-/** Breadcrumb trail for a path: Dashboard, the entry's group, the entry. */
+/** UI-26: the section a path belongs to — by its entry, or because it is the section's hub page. */
+export function sectionFor(groups: ResolvedGroup[], path: string): ResolvedGroup | null {
+  const hub = groups.find((group) => group.hub === path);
+  if (hub) return hub;
+  const href = activeHref(groups, path);
+
+  return href === null ? null : groups.find((group) => group.items.some((item) => item.href === href)) ?? null;
+}
+
+/** Where a section leads: its hub, or its first page the user can open. */
+export function sectionHref(group: ResolvedGroup): string | null {
+  return group.hub ?? group.items.find((item) => item.state === 'open')?.href ?? null;
+}
+
+/** Breadcrumb trail for a path: Dashboard, the entry's section (a link to it), the entry. */
 export function breadcrumbsFor(groups: ResolvedGroup[], path: string): { label: string; href?: string }[] {
   const href = activeHref(groups, path);
   if (href === null) return [];
   const group = groups.find((g) => g.items.some((item) => item.href === href));
   const item = group?.items.find((i) => i.href === href);
   if (!group || !item) return [];
+  const sectionLink = sectionHref(group);
+  // A section named like its page (Orders › Orders) is said once.
+  const section = group.label === item.label ? [] : [{ label: group.label, href: sectionLink !== null && sectionLink !== path ? sectionLink : undefined }];
 
-  return [{ label: 'Dashboard', href: '/' }, { label: group.label }, { label: item.label, href: path === href ? undefined : href }];
+  return [{ label: 'Dashboard', href: '/' }, ...section, { label: item.label, href: path === href ? undefined : href }];
 }
 
 /** UI-2: the icon of each menu entry (by its address); an entry without one shows none. */
@@ -197,10 +255,10 @@ export const NAV_ICONS: Record<string, IconName> = {
   '/': 'grid',
   '/orders': 'cart', '/payments': 'creditCard', '/returns': 'undo', '/shipments': 'truck', '/customers': 'users',
   '/products': 'box', '/collections': 'layers', '/badges': 'award', '/reviews': 'star', '/categories': 'folder', '/brands': 'tag', '/attributes': 'sliders', '/inventory': 'database', '/warehouses': 'warehouse',
-  '/promotions': 'percent', '/campaigns': 'megaphone', '/affiliates': 'handshake', '/segments': 'users', '/notifications': 'bell',
+  '/promotions': 'percent', '/campaigns': 'megaphone', '/affiliates': 'handshake', '/segments': 'users', '/notifications': 'chat',
   '/storefront/theme': 'palette', '/content/pages': 'file', '/content/seo': 'search', '/content/redirects': 'link', '/domains': 'globe', '/storefront/app': 'phone', '/shipping': 'truck',
   '/reports': 'chart', '/store-health': 'activity',
-  '/team': 'users', '/team/roles': 'key', '/billing': 'receipt', '/settings': 'settings', '/settings/payments': 'wallet', '/settings/tax': 'percent', '/settings/audit-log': 'clock',
+  '/team': 'users', '/team/roles': 'key', '/billing': 'receipt', '/settings': 'settings', '/settings/general': 'store', '/settings/payments': 'wallet', '/settings/tax': 'percent', '/settings/audit-log': 'clock',
   '/apps': 'puzzle', '/settings/developer': 'code', '/backups': 'database', '/settings/close-store': 'lock', '/support': 'lifebuoy',
   '/partner': 'handshake', '/security': 'shieldCheck',
   '/super-admin': 'grid', '/super-admin/stores': 'store', '/super-admin/users': 'users', '/super-admin/packages': 'box', '/super-admin/billing': 'receipt',

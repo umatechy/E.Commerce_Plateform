@@ -1,8 +1,9 @@
 import { FormEvent, useEffect, useRef, useState } from 'react';
 import Icon from '@/Components/ui/Icon';
-import { router } from '@inertiajs/react';
+import { router, usePage } from '@inertiajs/react';
+import type { AuthProps } from '@/lib/access';
 import AdminPage from '@/Components/AdminPage';
-import Button, { ButtonLink } from '@/Components/ui/Button';
+import Button, { ButtonLink, buttonClass, FOCUS_RING } from '@/Components/ui/Button';
 import { CheckboxField, FormError, SelectField, SwitchField, TextAreaField, TextField } from '@/Components/ui/Form';
 import Dialog, { ConfirmDialog } from '@/Components/ui/Dialog';
 import DataTable, { type Column } from '@/Components/ui/DataTable';
@@ -15,6 +16,7 @@ import { useAction, useForm, useUnsavedWarning } from '@/lib/useForm';
 import { adminErrorMessage, adminFetch, AdminApiError } from '@/lib/adminApi';
 import { fromMinor, money, toMinor } from '@/lib/money';
 import { options } from '@/lib/labels';
+import { parseStock, setOpeningStock } from '@/lib/stock';
 import CurrencyField from '@/Components/CurrencyField';
 import TranslationsPanel from '@/Components/TranslationsPanel';
 import RelatedProducts from '@/Components/Catalog/RelatedProducts';
@@ -71,7 +73,8 @@ type FormValues = {
 
 function blank(currency: string): FormValues {
   return {
-    type: 'simple', name: '', sku: '', short_description: '', description: '', status: 'draft', visibility: 'public',
+    // UI-26: a new product is for sale straight away (Draft stays one choice away, under More options).
+    type: 'simple', name: '', sku: '', short_description: '', description: '', status: 'active', visibility: 'public',
     brand_id: '', tax_class_id: '', primary_category_id: '', category_ids: [], price: '', sale_price: '', cost_price: '', currency,
     is_featured: false, tags: '', collection_ids: [], sort_priority: '0', badge_ids: [],
   };
@@ -131,6 +134,10 @@ function ProductForm({ product, onSaved }: { product: Product | null; onSaved: (
   const [amountErrors, setAmountErrors] = useState<Record<string, string>>({});
   const [limitReached, setLimitReached] = useState(false);
   const [tab, setTab] = useState('details');
+  // UI-26: the opening stock of a new product, saved right after it is created.
+  const canStock = access.can('inventory.adjust');
+  const [stockText, setStockText] = useState('');
+  const [stockError, setStockError] = useState<string | null>(null);
   // Phase B37: pictures chosen while creating; uploaded right after the product exists.
   const [pictures, setPictures] = useState<File[]>([]);
   const [dragging, setDragging] = useState(false);
@@ -160,6 +167,12 @@ function ProductForm({ product, onSaved }: { product: Product | null; onSaved: (
     setAmountErrors(problems);
     if (Object.keys(problems).length > 0) {
       setTab('pricing');
+
+      return;
+    }
+    const stock = product === null && values.type !== 'variable' && canStock ? parseStock(stockText) : null;
+    if (stock !== null && Number.isNaN(stock)) {
+      setStockError('Enter a whole number, such as 10.');
 
       return;
     }
@@ -213,6 +226,14 @@ function ProductForm({ product, onSaved }: { product: Product | null; onSaved: (
       if (failed > 0) toast.error(`${failed} of ${pictures.length} pictures could not be added. Add them again under Images.`);
       setPictures([]);
     }
+    if (saved && stock !== null) {
+      // The stock is a second step: if it fails, the product stays and the page says where to finish.
+      try {
+        await setOpeningStock(saved.data.internal_id, stock, 'Opening stock (new product)');
+      } catch {
+        toast.warning('The product is added, but its stock was not saved. Set it under Products → Stock.');
+      }
+    }
     if (saved) onSaved(saved.data);
   }
 
@@ -222,6 +243,204 @@ function ProductForm({ product, onSaved }: { product: Product | null; onSaved: (
     { id: 'pricing', label: 'Pricing' },
     { id: 'organisation', label: 'Organisation' },
   ];
+  const creating = product === null;
+  const hasVariants = values.type === 'variable';
+
+  const detailsFields = (
+    <div className="grid gap-4 sm:grid-cols-2">
+      <div className="sm:col-span-2">
+        <TextField label="Name" value={values.name} onChange={(v) => set('name', v)} error={errors.name} required maxLength={255} placeholder={creating ? 'For example: Lawn suit, 3 piece' : undefined} />
+      </div>
+      {!creating && (
+        <>
+          <TextField label="Type" value={values.type} onChange={() => undefined} disabled hint="Set when the product was created." />
+          <TextField label="SKU" optional value={values.sku} onChange={(v) => set('sku', v)} error={errors.sku} maxLength={64} />
+          <SelectField label="Status" value={values.status} onChange={(v) => set('status', v)} options={options(PRODUCT_STATUSES)} error={errors.status} hint="Only active products can be bought." />
+          <SelectField label="Visibility" value={values.visibility} onChange={(v) => set('visibility', v)} options={options(PRODUCT_VISIBILITIES)} error={errors.visibility} />
+        </>
+      )}
+      <div className="sm:col-span-2">
+        <TextAreaField label="Short description" optional value={values.short_description} onChange={(v) => set('short_description', v)} error={errors.short_description} rows={2} maxLength={500} hint="Up to 500 characters. Shown in product lists." />
+      </div>
+      <div className="sm:col-span-2">
+        <TextAreaField label="Description" optional value={values.description} onChange={(v) => set('description', v)} error={errors.description} rows={creating ? 4 : 8} hint="Plain text. It is shown as text on the product page." />
+      </div>
+      {creating && (
+        <div className="rounded-xl border border-slate-200 bg-slate-50/70 p-4 sm:col-span-2">
+          <SwitchField
+            label="This product comes in sizes or colours"
+            hint="Turn on for a product such as a shirt in S, M and L. You add the sizes or colours, each with its own price and stock, right after you create it."
+            checked={hasVariants}
+            onChange={(on) => set('type', on ? 'variable' : 'simple')}
+          />
+        </div>
+      )}
+    </div>
+  );
+
+  const priceFields = (
+    <div className="grid gap-4 sm:grid-cols-2">
+      {!creating && <CurrencyField value={values.currency} onChange={(v) => set('currency', v)} error={errors.currency} hint="New products start in your store currency." />}
+      <TextField label={`Price (${values.currency})`} optional={!creating} inputMode="decimal" value={values.price} onChange={(v) => set('price', v)} error={errors.price_minor} placeholder={creating ? '2500' : undefined} hint={hasVariants ? 'The starting price. Each size or colour can have its own.' : 'What the customer pays.'} />
+      <TextField label="Sale price" optional inputMode="decimal" value={values.sale_price} onChange={(v) => set('sale_price', v)} error={errors.sale_price_minor} hint="A lower price for a sale. Leave empty for none." />
+      {canCost && <TextField label="Cost price" optional inputMode="decimal" value={values.cost_price} onChange={(v) => set('cost_price', v)} error={errors.cost_price_minor} hint="What it costs you. Never shown to customers." />}
+    </div>
+  );
+
+  const picturesCard = (
+    <Card title="4. Pictures" icon="image" description="Optional. JPG or PNG from your computer; the first one is the main picture.">
+      {/* UI-3: drop pictures on the box, or click it to choose them. */}
+      <label
+        htmlFor="new-product-pictures"
+        onDragOver={(e) => { e.preventDefault(); setDragging(true); }}
+        onDragLeave={() => setDragging(false)}
+        onDrop={(e) => {
+          e.preventDefault();
+          setDragging(false);
+          addPictures(Array.from(e.dataTransfer.files));
+        }}
+        className={`flex cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed px-4 py-8 text-center transition-colors motion-reduce:transition-none ${dragging ? 'border-brand-500 bg-brand-50' : 'border-slate-300 bg-slate-50 hover:border-brand-400 hover:bg-brand-50/50'}`}
+      >
+        <span className="tone-chip flex h-12 w-12 items-center justify-center rounded-full"><Icon name="image" size={22} /></span>
+        <span className="text-sm font-medium text-slate-800">Drag pictures here, or <span className="text-brand-700 underline">choose files</span></span>
+        <span className="text-xs text-slate-500">JPG or PNG · up to 12 pictures, 5 MB each</span>
+      </label>
+      <input
+        id="new-product-pictures"
+        type="file"
+        multiple
+        accept="image/jpeg,image/png"
+        aria-label="Choose files (JPG, PNG)"
+        className="sr-only"
+        onChange={(e) => {
+          addPictures(Array.from(e.target.files ?? []));
+          e.target.value = '';
+        }}
+      />
+      {pictures.length > 0 && (
+        <ul className="mt-4 grid grid-cols-3 gap-3 sm:grid-cols-6">
+          {pictures.map((file, index) => (
+            <li key={`${file.name}-${index}`} className="relative rounded-xl border border-slate-200 p-1">
+              {index === 0 && <span className="absolute start-2 top-2 rounded-full bg-brand-600 px-2 py-0.5 text-[10px] font-semibold text-white">Main</span>}
+              <img src={previews[index]} alt={`Picture ${index + 1}: ${file.name}`} className="aspect-square w-full rounded-lg object-cover" />
+              <Button size="sm" variant="ghost" className="mt-1 w-full" onClick={() => setPictures((current) => current.filter((_, i) => i !== index))}>
+                Remove<span className="sr-only"> {file.name}</span>
+              </Button>
+            </li>
+          ))}
+        </ul>
+      )}
+    </Card>
+  );
+
+  const organisationFields = (
+    <>
+      <div className="grid gap-4 sm:grid-cols-2">
+        <SelectField
+          label="Brand"
+          optional
+          value={values.brand_id}
+          onChange={(v) => set('brand_id', v)}
+          error={errors.brand_id ?? (brands.error ? 'Brands could not be loaded.' : undefined)}
+          placeholder="No brand"
+          options={(brands.data?.data ?? []).map((brand) => ({ value: String(brand.id), label: brand.name }))}
+        />
+        {taxClasses.length > 0 && (
+          <SelectField
+            label="Tax class"
+            optional
+            value={values.tax_class_id}
+            onChange={(v) => set('tax_class_id', v)}
+            error={errors.tax_class_id}
+            placeholder={`Default (${taxClasses.find((c) => c.is_default)?.name ?? 'none'})`}
+            options={taxClasses.map((c) => ({ value: String(c.id), label: c.name }))}
+            hint="Which of your tax rates apply to this product."
+          />
+        )}
+        <SelectField
+          label="Main category"
+          optional
+          value={values.primary_category_id}
+          onChange={(v) => set('primary_category_id', v)}
+          error={errors.primary_category_id ?? (categories.error ? 'Categories could not be loaded.' : undefined)}
+          placeholder="No main category"
+          options={tree.map(({ category, depth }) => ({ value: String(category.id), label: `${'— '.repeat(depth)}${category.name}` }))}
+        />
+      </div>
+      <fieldset className="mt-4">
+        <legend className="text-sm font-semibold text-brand-700">Also listed in</legend>
+        {tree.length === 0 ? (
+          <p className="mt-1 text-sm text-slate-600">No categories yet. Create them under Products → Categories.</p>
+        ) : (
+          <div className="mt-2 grid gap-2 sm:grid-cols-2">
+            {tree.map(({ category, depth }) => (
+              <div key={category.id} style={{ paddingInlineStart: `${depth * 16}px` }}>
+                <CheckboxField
+                  label={category.name}
+                  checked={values.category_ids.includes(category.id)}
+                  onChange={(checked) => set('category_ids', checked ? [...values.category_ids, category.id] : values.category_ids.filter((id) => id !== category.id))}
+                />
+              </div>
+            ))}
+          </div>
+        )}
+        {errors.category_ids && <p role="alert" className="mt-1 text-xs font-medium text-red-700">{errors.category_ids}</p>}
+      </fieldset>
+    </>
+  );
+
+  const merchandisingFields = (
+    <div className="space-y-4">
+      <SwitchField label="Featured product" hint="Featured products can fill the “Featured products” section of your home page." checked={values.is_featured} onChange={(v) => set('is_featured', v)} />
+      <TextField
+        label="Sort priority"
+        optional
+        inputMode="numeric"
+        value={values.sort_priority}
+        onChange={(v) => set('sort_priority', v)}
+        error={errors.sort_priority}
+        hint="-1000 to 1000. In the “Featured” order, featured products come first, then higher priority, then newer."
+      />
+      {(badges.data?.data ?? []).length > 0 && (
+        <fieldset>
+          <legend className="text-sm font-semibold text-brand-700">Your badges</legend>
+          <div className="mt-2 grid gap-2 sm:grid-cols-3">
+            {(badges.data?.data ?? []).map((badge) => (
+              <CheckboxField
+                key={badge.id}
+                label={badge.is_active ? badge.label : `${badge.label} (hidden)`}
+                checked={values.badge_ids.includes(badge.id)}
+                onChange={(checked) => set('badge_ids', checked ? [...values.badge_ids, badge.id] : values.badge_ids.filter((id) => id !== badge.id))}
+              />
+            ))}
+          </div>
+        </fieldset>
+      )}
+      <TextField label="Tags" optional value={values.tags} onChange={(v) => set('tags', v)} error={errors.tags ?? errors['tags.0']} hint="Separate tags with commas, for example: Eid, Handmade. Up to 20, each up to 60 characters." />
+      {canCollections && (
+        <fieldset>
+          <legend className="text-sm font-semibold text-brand-700">Hand-picked collections</legend>
+          {collections.error ? (
+            <p className="mt-1 text-sm text-red-700">Collections could not be loaded.</p>
+          ) : manualCollections.length === 0 ? (
+            <p className="mt-1 text-sm text-slate-600">No hand-picked collections yet. Create them under Products → Collections. Rule-based collections pick their products by themselves.</p>
+          ) : (
+            <div className="mt-2 grid gap-2 sm:grid-cols-2">
+              {manualCollections.map((collection) => (
+                <CheckboxField
+                  key={collection.id}
+                  label={collection.name}
+                  checked={values.collection_ids.includes(collection.id)}
+                  onChange={(checked) => set('collection_ids', checked ? [...values.collection_ids, collection.id] : values.collection_ids.filter((id) => id !== collection.id))}
+                />
+              ))}
+            </div>
+          )}
+          {errors.collection_ids && <p role="alert" className="mt-1 text-xs font-medium text-red-700">{errors.collection_ids}</p>}
+        </fieldset>
+      )}
+    </div>
+  );
 
   return (
     <form onSubmit={save} noValidate>
@@ -236,201 +455,69 @@ function ProductForm({ product, onSaved }: { product: Product | null; onSaved: (
         <FormError message={form.formError} errors={errors} />
       </div>
 
-      <Tabs tabs={tabs} active={tab} onChange={setTab} label="Product sections" />
-
-      <div role="tabpanel" hidden={tab !== 'details'} className="space-y-4">
-        <Card>
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div className="sm:col-span-2">
-              <TextField label="Name" value={values.name} onChange={(v) => set('name', v)} error={errors.name} required maxLength={255} />
-            </div>
-            {product === null ? (
-              <SelectField label="Type" value={values.type} onChange={(v) => set('type', v)} options={options(PRODUCT_TYPES)} error={errors.type} hint="Cannot be changed after the product is created." />
+      {creating ? (
+        // UI-26: a new product on one page — what it is, its price, how many you have and its pictures; the rest is folded away.
+        <div className="space-y-5">
+          <Card title="1. What are you selling?" icon="box" description="The name and a few words customers read.">{detailsFields}</Card>
+          <Card title="2. Price" icon="cash" description={`In ${values.currency}, your store currency.`}>{priceFields}</Card>
+          <Card title="3. Stock" icon="database" description="How many you have now. Orders take from it, so you never sell what you do not have.">
+            {hasVariants ? (
+              <p className="flex items-start gap-2 text-sm text-slate-600"><Icon name="layers" size={16} className="mt-0.5 flex-none text-slate-400" />Each size or colour has its own stock. You set it when you add them, right after you create the product.</p>
+            ) : canStock ? (
+              <div className="max-w-xs">
+                <TextField label="How many do you have?" optional inputMode="numeric" value={stockText} onChange={(v) => { setStockText(v); setStockError(null); }} error={stockError} placeholder="10" hint="Leave empty if you do not count stock — the product then shows as out of stock until you add some." />
+              </div>
             ) : (
-              <TextField label="Type" value={values.type} onChange={() => undefined} disabled hint="Set when the product was created." />
-            )}
-            <TextField label="SKU" optional value={values.sku} onChange={(v) => set('sku', v)} error={errors.sku} maxLength={64} />
-            <SelectField label="Status" value={values.status} onChange={(v) => set('status', v)} options={options(PRODUCT_STATUSES)} error={errors.status} hint="Only active products can be bought." />
-            <SelectField label="Visibility" value={values.visibility} onChange={(v) => set('visibility', v)} options={options(PRODUCT_VISIBILITIES)} error={errors.visibility} />
-            <div className="sm:col-span-2">
-              <TextAreaField label="Short description" optional value={values.short_description} onChange={(v) => set('short_description', v)} error={errors.short_description} rows={2} maxLength={500} hint="Up to 500 characters. Shown in product lists." />
-            </div>
-            <div className="sm:col-span-2">
-              <TextAreaField label="Description" optional value={values.description} onChange={(v) => set('description', v)} error={errors.description} rows={8} hint="Plain text. It is shown as text on the product page." />
-            </div>
-          </div>
-        </Card>
-        {product === null && (
-          <Card title="Pictures" description="Choose JPG or PNG files from your computer. They are added when you create the product; the first one is the main picture.">
-            {/* UI-3: drop pictures on the box, or click it to choose them. */}
-            <label
-              htmlFor="new-product-pictures"
-              onDragOver={(e) => { e.preventDefault(); setDragging(true); }}
-              onDragLeave={() => setDragging(false)}
-              onDrop={(e) => {
-                e.preventDefault();
-                setDragging(false);
-                addPictures(Array.from(e.dataTransfer.files));
-              }}
-              className={`flex cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed px-4 py-8 text-center transition-colors motion-reduce:transition-none ${dragging ? 'border-brand-500 bg-brand-50' : 'border-slate-300 bg-slate-50 hover:border-brand-400 hover:bg-brand-50/50'}`}
-            >
-              <span className="flex h-12 w-12 items-center justify-center rounded-full bg-white text-brand-600 shadow-sm"><Icon name="box" size={22} /></span>
-              <span className="text-sm font-medium text-slate-800">Drag pictures here, or <span className="text-brand-700 underline">choose files</span></span>
-              <span className="text-xs text-slate-500">JPG or PNG · up to 12 pictures, 5 MB each</span>
-            </label>
-            <input
-              id="new-product-pictures"
-              type="file"
-              multiple
-              accept="image/jpeg,image/png"
-              aria-label="Choose files (JPG, PNG)"
-              className="sr-only"
-              onChange={(e) => {
-                addPictures(Array.from(e.target.files ?? []));
-                e.target.value = '';
-              }}
-            />
-            {pictures.length > 0 && (
-              <ul className="mt-4 grid grid-cols-3 gap-3 sm:grid-cols-6">
-                {pictures.map((file, index) => (
-                  <li key={`${file.name}-${index}`} className="relative rounded-xl border border-slate-200 p-1">
-                    {index === 0 && <span className="absolute left-2 top-2 rounded-full bg-brand-600 px-2 py-0.5 text-[10px] font-semibold text-white">Main</span>}
-                    <img src={previews[index]} alt={`Picture ${index + 1}: ${file.name}`} className="aspect-square w-full rounded-lg object-cover" />
-                    <Button size="sm" variant="ghost" className="mt-1 w-full" onClick={() => setPictures((current) => current.filter((_, i) => i !== index))}>
-                      Remove<span className="sr-only"> {file.name}</span>
-                    </Button>
-                  </li>
-                ))}
-              </ul>
+              <p className="text-sm text-slate-600">Your role cannot set stock. Someone who manages stock can add it under Products → Stock.</p>
             )}
           </Card>
-        )}
-      </div>
-
-      <div role="tabpanel" hidden={tab !== 'pricing'} className="space-y-4">
-        <Card description="Amounts are entered in the currency below and stored exactly.">
-          <div className="grid gap-4 sm:grid-cols-2">
-            <CurrencyField value={values.currency} onChange={(v) => set('currency', v)} error={errors.currency} hint="New products start in your store currency." />
-            <TextField label="Price" optional inputMode="decimal" value={values.price} onChange={(v) => set('price', v)} error={errors.price_minor} hint="The price of the product itself. Each variant has its own price." />
-            <TextField label="Sale price" optional inputMode="decimal" value={values.sale_price} onChange={(v) => set('sale_price', v)} error={errors.sale_price_minor} hint="Must be lower than the price." />
-            {canCost && <TextField label="Cost price" optional inputMode="decimal" value={values.cost_price} onChange={(v) => set('cost_price', v)} error={errors.cost_price_minor} hint="Never shown to customers." />}
-          </div>
-        </Card>
-      </div>
-
-      <div role="tabpanel" hidden={tab !== 'organisation'} className="space-y-4">
-        <Card>
-          <div className="grid gap-4 sm:grid-cols-2">
-            <SelectField
-              label="Brand"
-              optional
-              value={values.brand_id}
-              onChange={(v) => set('brand_id', v)}
-              error={errors.brand_id ?? (brands.error ? 'Brands could not be loaded.' : undefined)}
-              placeholder="No brand"
-              options={(brands.data?.data ?? []).map((brand) => ({ value: String(brand.id), label: brand.name }))}
-            />
-            {taxClasses.length > 0 && (
-              <SelectField
-                label="Tax class"
-                optional
-                value={values.tax_class_id}
-                onChange={(v) => set('tax_class_id', v)}
-                error={errors.tax_class_id}
-                placeholder={`Default (${taxClasses.find((c) => c.is_default)?.name ?? 'none'})`}
-                options={taxClasses.map((c) => ({ value: String(c.id), label: c.name }))}
-                hint="Which of your tax rates apply to this product."
-              />
-            )}
-            <SelectField
-              label="Main category"
-              optional
-              value={values.primary_category_id}
-              onChange={(v) => set('primary_category_id', v)}
-              error={errors.primary_category_id ?? (categories.error ? 'Categories could not be loaded.' : undefined)}
-              placeholder="No main category"
-              options={tree.map(({ category, depth }) => ({ value: String(category.id), label: `${'— '.repeat(depth)}${category.name}` }))}
-            />
-          </div>
-          <fieldset className="mt-4">
-            <legend className="text-sm font-medium text-slate-700">Also listed in</legend>
-            {tree.length === 0 ? (
-              <p className="mt-1 text-sm text-slate-600">No categories yet. Create them under Catalog → Categories.</p>
-            ) : (
-              <div className="mt-2 grid gap-2 sm:grid-cols-2">
-                {tree.map(({ category, depth }) => (
-                  <div key={category.id} style={{ paddingLeft: `${depth * 16}px` }}>
-                    <CheckboxField
-                      label={category.name}
-                      checked={values.category_ids.includes(category.id)}
-                      onChange={(checked) => set('category_ids', checked ? [...values.category_ids, category.id] : values.category_ids.filter((id) => id !== category.id))}
-                    />
-                  </div>
-                ))}
+          {picturesCard}
+          <details className="group rounded-2xl border border-slate-200/80 bg-white shadow-sm shadow-slate-900/5">
+            <summary className={`flex cursor-pointer list-none items-center gap-3 rounded-2xl px-5 py-4 text-start ${FOCUS_RING}`}>
+              <span aria-hidden="true" className="tone-chip flex h-9 w-9 flex-none items-center justify-center rounded-xl"><Icon name="sliders" size={18} /></span>
+              <span className="min-w-0 flex-1">
+                <span className="block text-base font-semibold text-slate-900">More options</span>
+                <span className="block text-[13px] text-slate-500">Optional: code (SKU), status, category, brand, tags and how it is featured.</span>
+              </span>
+              <Icon name="chevronDown" size={18} className="flex-none text-slate-400 transition-transform group-open:rotate-180 motion-reduce:transition-none" />
+            </summary>
+            <div className="space-y-6 border-t border-slate-100 p-5">
+              <div className="grid gap-4 sm:grid-cols-2">
+                <SelectField label="Type" value={values.type} onChange={(v) => set('type', v)} options={options(PRODUCT_TYPES)} error={errors.type} hint="Cannot be changed after the product is created." />
+                <TextField label="SKU" optional value={values.sku} onChange={(v) => set('sku', v)} error={errors.sku} maxLength={64} hint="Your own product code." />
+                <SelectField label="Status" value={values.status} onChange={(v) => set('status', v)} options={options(PRODUCT_STATUSES)} error={errors.status} hint="Active: customers can buy it now. Draft: only you see it." />
+                <SelectField label="Visibility" value={values.visibility} onChange={(v) => set('visibility', v)} options={options(PRODUCT_VISIBILITIES)} error={errors.visibility} />
+                <CurrencyField value={values.currency} onChange={(v) => set('currency', v)} error={errors.currency} hint="New products start in your store currency." />
               </div>
-            )}
-            {errors.category_ids && <p role="alert" className="mt-1 text-xs font-medium text-red-700">{errors.category_ids}</p>}
-          </fieldset>
-        </Card>
-        <Card title="Merchandising" description="How this product is grouped and highlighted on your storefront.">
-          <div className="space-y-4">
-            <SwitchField label="Featured product" hint="Featured products can fill the “Featured products” section of your home page." checked={values.is_featured} onChange={(v) => set('is_featured', v)} />
-            <TextField
-              label="Sort priority"
-              optional
-              inputMode="numeric"
-              value={values.sort_priority}
-              onChange={(v) => set('sort_priority', v)}
-              error={errors.sort_priority}
-              hint="-1000 to 1000. In the “Featured” order, featured products come first, then higher priority, then newer."
-            />
-            {(badges.data?.data ?? []).length > 0 && (
-              <fieldset>
-                <legend className="text-sm font-medium text-slate-700">Your badges</legend>
-                <div className="mt-2 grid gap-2 sm:grid-cols-3">
-                  {(badges.data?.data ?? []).map((badge) => (
-                    <CheckboxField
-                      key={badge.id}
-                      label={badge.is_active ? badge.label : `${badge.label} (hidden)`}
-                      checked={values.badge_ids.includes(badge.id)}
-                      onChange={(checked) => set('badge_ids', checked ? [...values.badge_ids, badge.id] : values.badge_ids.filter((id) => id !== badge.id))}
-                    />
-                  ))}
-                </div>
-              </fieldset>
-            )}
-            <TextField label="Tags" optional value={values.tags} onChange={(v) => set('tags', v)} error={errors.tags ?? errors['tags.0']} hint="Separate tags with commas, for example: Eid, Handmade. Up to 20, each up to 60 characters." />
-            {canCollections && (
-              <fieldset>
-                <legend className="text-sm font-medium text-slate-700">Hand-picked collections</legend>
-                {collections.error ? (
-                  <p className="mt-1 text-sm text-red-700">Collections could not be loaded.</p>
-                ) : manualCollections.length === 0 ? (
-                  <p className="mt-1 text-sm text-slate-600">No hand-picked collections yet. Create them under Catalog → Collections. Rule-based collections pick their products by themselves.</p>
-                ) : (
-                  <div className="mt-2 grid gap-2 sm:grid-cols-2">
-                    {manualCollections.map((collection) => (
-                      <CheckboxField
-                        key={collection.id}
-                        label={collection.name}
-                        checked={values.collection_ids.includes(collection.id)}
-                        onChange={(checked) => set('collection_ids', checked ? [...values.collection_ids, collection.id] : values.collection_ids.filter((id) => id !== collection.id))}
-                      />
-                    ))}
-                  </div>
-                )}
-                {errors.collection_ids && <p role="alert" className="mt-1 text-xs font-medium text-red-700">{errors.collection_ids}</p>}
-              </fieldset>
-            )}
+              {organisationFields}
+              {merchandisingFields}
+            </div>
+          </details>
+        </div>
+      ) : (
+        <>
+          <Tabs tabs={tabs} active={tab} onChange={setTab} label="Product sections" />
+
+          <div role="tabpanel" hidden={tab !== 'details'} className="space-y-4">
+            <Card title="Details" icon="box">{detailsFields}</Card>
           </div>
-        </Card>
-      </div>
+
+          <div role="tabpanel" hidden={tab !== 'pricing'} className="space-y-4">
+            <Card title="Price" icon="cash" description="Amounts are entered in the currency below and stored exactly.">{priceFields}</Card>
+          </div>
+
+          <div role="tabpanel" hidden={tab !== 'organisation'} className="space-y-4">
+            <Card title="Category and brand" icon="folder">{organisationFields}</Card>
+            <Card title="Merchandising" icon="sparkles" description="How this product is grouped and highlighted on your storefront.">{merchandisingFields}</Card>
+          </div>
+        </>
+      )}
 
       {/* UI-3: the save bar stays in view at the bottom while the form scrolls. */}
       <div className="sticky bottom-[calc(4.25rem+env(safe-area-inset-bottom))] z-10 -mx-4 mt-6 lg:bottom-0 flex flex-wrap items-center gap-3 border-t border-slate-200 bg-white/90 px-4 py-3 shadow-[0_-4px_12px_rgba(15,23,42,0.04)] backdrop-blur-md sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8">
         {canSave ? (
           <Button type="submit" variant="primary" busy={form.busy} busyLabel="Saving…">
-            {product === null ? 'Create product' : 'Save changes'}
+            {creating ? <><Icon name="check" size={16} />Create product</> : 'Save changes'}
           </Button>
         ) : (
           <p className="text-sm text-slate-600">Your role can view this product but not change it.</p>
@@ -535,7 +622,7 @@ function VariantsSection({ product, onChanged }: { product: Product; onChanged: 
   ];
 
   return (
-    <Card title="Variants" description="Sellable versions of this product, such as sizes or colours." actions={canEdit && <Button size="sm" onClick={() => open('new')}>Add variant</Button>}>
+    <Card title="Variants" icon="layers" description="Sellable versions of this product, such as sizes or colours." actions={canEdit && <Button size="sm" onClick={() => open('new')}>Add variant</Button>}>
       <DataTable
         caption="Variants"
         columns={columns}
@@ -659,7 +746,7 @@ function ImagesSection({ product }: { product: Product }) {
       {canEdit && (
         <form onSubmit={upload} className="mt-4 grid gap-3 border-t border-slate-200 pt-4 sm:grid-cols-[1fr_1fr_auto] sm:items-end" noValidate>
           <div>
-            <label htmlFor="product-image" className="block text-sm font-medium text-slate-700">Add an image</label>
+            <label htmlFor="product-image" className="block text-sm font-semibold text-brand-700">Add an image</label>
             <input id="product-image" ref={file} type="file" accept="image/jpeg,image/png,image/webp" className="mt-1 block w-full text-sm" />
             <p className="mt-1 text-xs text-slate-500">Choose a file: JPG, PNG or WebP.</p>
           </div>
@@ -691,12 +778,49 @@ function ImagesSection({ product }: { product: Product }) {
   );
 }
 
+/**
+ * UI-26 — right after a product is created: it is in the store, and the
+ * next things a seller usually does are one click away.
+ */
+function JustCreated({ product, onClose }: { product: Product; onClose: () => void }) {
+  const access = useAccess();
+  const store = usePage<{ auth: AuthProps }>().props.auth.activeStore;
+  const variable = product.type === 'variable';
+
+  return (
+    <div role="status" className="tone-emerald relative mb-6 overflow-hidden rounded-2xl border border-emerald-200 bg-gradient-to-br from-emerald-50 to-white p-5 shadow-sm motion-safe:animate-fade-in-up">
+      <button type="button" onClick={onClose} aria-label="Close" className={`absolute end-3 top-3 rounded-lg p-1.5 text-slate-400 hover:bg-white hover:text-slate-700 ${FOCUS_RING}`}>
+        <Icon name="x" size={16} />
+      </button>
+      <div className="flex flex-wrap items-start gap-4 pe-8">
+        <span aria-hidden="true" className="tone-solid flex h-11 w-11 flex-none items-center justify-center rounded-2xl shadow-sm"><Icon name="checkCircle" size={22} /></span>
+        <div className="min-w-0 flex-1">
+          <p className="text-base font-semibold text-slate-900">{variable ? `${product.name} is created. Now add its sizes or colours.` : `${product.name} is in your store.`}</p>
+          <p className="mt-0.5 text-sm text-slate-600">{variable ? 'Each size or colour gets its own price and stock. Customers can buy it once one is added.' : 'What would you like to do next?'}</p>
+          <div className="mt-4 flex flex-wrap gap-2">
+            {variable && <a href="#variants" className={buttonClass('primary', 'sm')}><Icon name="plus" size={14} />Add sizes or colours</a>}
+            {access.can('products.create') && <ButtonLink href="/products/new" size="sm" variant={variable ? 'secondary' : 'primary'}><Icon name="plus" size={14} />Add another product</ButtonLink>}
+            {store && product.status === 'active' && (
+              <a href={`/shop/${store.slug}/products/${product.slug}`} target="_blank" rel="noreferrer" className={buttonClass('secondary', 'sm')}>
+                <Icon name="externalLink" size={14} />See it in your store<span className="sr-only"> (opens in a new tab)</span>
+              </a>
+            )}
+            {!variable && access.can('orders.create') && <ButtonLink href="/orders/new" size="sm"><Icon name="cart" size={14} />Create an order</ButtonLink>}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function ProductEdit({ productId }: { productId: string | null }) {
   const access = useAccess();
   const canTranslate = access.can('products.update');
   const { busy, run } = useAction();
   const state = useApi<{ data: Product }>(productId === null ? null : `/products/${productId}`);
   const product = state.data?.data ?? null;
+  // UI-26: arrived here from "Create product".
+  const [justCreated, setJustCreated] = useState(() => new URLSearchParams(window.location.search).get('created') === '1');
 
   // A deleted or foreign product: say so once, then the list is the place to be.
   useEffect(() => {
@@ -705,8 +829,8 @@ export default function ProductEdit({ productId }: { productId: string | null })
 
   if (productId === null) {
     return (
-      <AdminPage title="Add product" trail={[{ label: 'New product' }]} description="Add the details and pictures. Variants are added after the product is created.">
-        <ProductForm product={null} onSaved={(created) => router.visit(`/products/${created.id}`)} />
+      <AdminPage title="Add product" trail={[{ label: 'New product' }]} description="Four short steps on one page. Only the name and the price are needed now; everything else can wait.">
+        <ProductForm product={null} onSaved={(created) => router.visit(`/products/${created.id}?created=1`)} />
       </AdminPage>
     );
   }
@@ -741,8 +865,9 @@ export default function ProductEdit({ productId }: { productId: string | null })
         <Skeleton lines={6} />
       ) : (
         <div className="space-y-6">
+          {justCreated && <JustCreated product={product} onClose={() => setJustCreated(false)} />}
           <ProductForm key={product.id} product={product} onSaved={(saved) => state.setData({ data: saved })} />
-          <VariantsSection product={product} onChanged={state.reload} />
+          <div id="variants" className="scroll-mt-24"><VariantsSection product={product} onChanged={state.reload} /></div>
           <ImagesSection product={product} />
           <SpecificationsCard key={`specs-${product.primary_category_id ?? 0}`} productId={product.id} canEdit={canTranslate} />
           <RelatedProducts productId={product.id} canEdit={canTranslate} />
@@ -750,10 +875,10 @@ export default function ProductEdit({ productId }: { productId: string | null })
           <Card title="Translations" description="How this product reads in your other storefront languages. A field left empty shows the original.">
             <TranslationsPanel type="product" id={product.id} canEdit={canTranslate} />
           </Card>
-          <Card title="Stock">
-            <p className="text-sm text-slate-700">Stock for this product and its variants is kept per warehouse.</p>
+          <Card title="Stock" icon="database">
+            <p className="text-sm text-slate-700">How many you have of this product and its sizes or colours, and every change to it.</p>
             <div className="mt-3">
-              <ButtonLink href="/inventory" size="sm">Open inventory</ButtonLink>
+              <ButtonLink href={`/inventory?product=${product.internal_id}`} size="sm">See and change the stock</ButtonLink>
             </div>
           </Card>
         </div>

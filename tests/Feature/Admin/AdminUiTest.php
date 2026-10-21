@@ -120,7 +120,7 @@ final class AdminUiTest extends TestCase
             '/reports' => 'Analytics/Reports', '/notifications' => 'Communication/Index',
             '/team' => 'Team/Index', '/team/roles' => 'Team/Roles', '/billing' => 'Billing/Overview',
             '/backups' => 'Backups/Index', '/store-health' => 'StoreHealth/Index', '/security' => 'Security/Index',
-            '/settings' => 'Settings/Index', '/settings/audit-log' => 'Settings/AuditLog', '/settings/developer' => 'Settings/Developer',
+            '/settings' => 'Settings/Hub', '/settings/general' => 'Settings/Index', '/settings/audit-log' => 'Settings/AuditLog', '/settings/developer' => 'Settings/Developer',
         ];
 
         foreach (array_keys($pages) as $path) {

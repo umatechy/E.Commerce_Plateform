@@ -18,7 +18,7 @@ Your **Dashboard** shows a setup checklist until every step is done. Each step h
 
 ## Required before you can launch
 
-- **A contact email for your store** in [Settings](/settings).
+- **A contact email for your store** in [Settings › Store details](/settings/general).
 - **At least one product** that is active, public and has a price. See [Add a product](help:add-a-product).
 - **A subscription** that is active or on trial.
 - **Your first payment to Umar Techy**, when Umar Techy asks for payment before launch. Press **Get my first invoice**, pay it, and the team confirms it. See [Pay your invoices](help:billing-invoices).

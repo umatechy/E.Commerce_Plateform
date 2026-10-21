@@ -81,7 +81,8 @@ describe('new product with pictures', () => {
     expect(screen.getAllByRole('img')).toHaveLength(2); // the GIF is left out
     fireEvent.click(screen.getByRole('button', { name: 'Create product' }));
 
-    await waitFor(() => expect(routerMock.visit).toHaveBeenCalledWith('/products/01JPRODUCT0000000000000001'));
+    // UI-26: the product page then says what to do next.
+    await waitFor(() => expect(routerMock.visit).toHaveBeenCalledWith('/products/01JPRODUCT0000000000000001?created=1'));
     expect(uploads).toEqual(['front.jpg', 'back.png']);
   });
 });

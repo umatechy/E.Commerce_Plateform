@@ -32,32 +32,95 @@ export function Breadcrumbs({ items }: { items: Crumb[] }) {
   );
 }
 
-/** The one <h1> of a page, with what the page is for and its main actions. */
-export function PageHeader({ title, description, actions, crumbs }: { title: string; description?: ReactNode; actions?: ReactNode; crumbs?: Crumb[] }) {
+/**
+ * The one <h1> of a page, with what the page is for and its main actions.
+ * UI-26: `icon` shows the page in its section's colour (the --tone around
+ * it), and `below` takes the section's tabs, under the heading.
+ */
+export function PageHeader({ title, description, actions, crumbs, icon, below }: { title: string; description?: ReactNode; actions?: ReactNode; crumbs?: Crumb[]; icon?: IconName; below?: ReactNode }) {
   const t = useAdminT();
   return (
     <div className="mb-6">
       {crumbs && <Breadcrumbs items={crumbs} />}
-      <div className="flex flex-wrap items-end justify-between gap-3">
-        <div className="min-w-0">
-          <h1 className="text-2xl font-semibold tracking-tight text-slate-900">{t(title)}</h1>
-          {description && <p className="mt-1 max-w-3xl text-sm text-slate-600">{typeof description === 'string' ? t(description) : description}</p>}
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex min-w-0 items-start gap-3.5">
+          {icon && (
+            <span aria-hidden="true" className="tone-chip mt-0.5 hidden h-11 w-11 flex-none items-center justify-center rounded-2xl sm:flex">
+              <Icon name={icon} size={22} />
+            </span>
+          )}
+          <div className="min-w-0">
+            <h1 className="text-2xl font-semibold tracking-tight text-slate-900">{t(title)}</h1>
+            {description && <p className="mt-1 max-w-3xl text-sm text-slate-600">{typeof description === 'string' ? t(description) : description}</p>}
+          </div>
         </div>
         {actions && <div className="flex flex-wrap items-center gap-2">{actions}</div>}
       </div>
+      {below}
     </div>
   );
 }
 
-export function Card({ title, description, actions, children, className = '' }: { title?: ReactNode; description?: ReactNode; actions?: ReactNode; children: ReactNode; className?: string }) {
+/**
+ * UI-26 — the other pages of this section, one click away: a row of links
+ * under the page heading, the current one filled in the section colour.
+ */
+export function SectionTabs({ items, current }: { items: { href: string; label: string; icon?: IconName; disabled?: boolean; reason?: string }[]; current: string | null }) {
+  const t = useAdminT();
+  if (items.length < 2) return null;
+
+  return (
+    <nav aria-label={t('In this section')} className="-mx-1 mt-5 overflow-x-auto overflow-y-hidden px-1 pb-1 [scrollbar-width:thin]">
+      <ul className="flex w-max gap-1 rounded-2xl border border-slate-200/80 bg-white p-1.5 shadow-sm shadow-slate-900/5">
+        {items.map((item) => {
+          const active = item.href === current;
+
+          return (
+            <li key={item.href}>
+              {item.disabled ? (
+                <span aria-disabled="true" title={item.reason} className="flex cursor-not-allowed items-center gap-2 whitespace-nowrap rounded-xl px-3.5 py-2 text-sm font-medium text-slate-400">
+                  {item.icon && <Icon name={item.icon} size={16} />}
+                  {t(item.label)}
+                </span>
+              ) : (
+                <Link
+                  href={item.href}
+                  aria-current={active ? 'page' : undefined}
+                  className={`flex items-center gap-2 whitespace-nowrap rounded-xl px-3.5 py-2 text-sm font-medium transition-colors motion-reduce:transition-none ${FOCUS_RING} ${active ? 'tone-solid shadow-sm' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'}`}
+                >
+                  {item.icon && <Icon name={item.icon} size={16} className={active ? '' : 'tone-text'} />}
+                  {t(item.label)}
+                </Link>
+              )}
+            </li>
+          );
+        })}
+      </ul>
+    </nav>
+  );
+}
+
+/**
+ * A block of one task on a page. UI-26: its heading stands out — a strip
+ * and a light wash in the section's colour, and an optional icon — so it
+ * is clear where one task ends and the next begins.
+ */
+export function Card({ title, description, actions, children, className = '', icon }: { title?: ReactNode; description?: ReactNode; actions?: ReactNode; children: ReactNode; className?: string; icon?: IconName }) {
   const t = useAdminT();
   return (
-    <section className={`rounded-2xl border border-slate-200/80 bg-white shadow-[0_1px_2px_rgba(15,23,42,0.04),0_1px_3px_rgba(15,23,42,0.04)] ${className}`}>
+    <section className={`rounded-2xl border border-slate-200/80 bg-white shadow-[0_1px_2px_rgba(15,23,42,0.04),0_2px_6px_rgba(15,23,42,0.04)] ${className}`}>
       {(title || actions) && (
-        <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 px-5 py-3.5">
-          <div className="min-w-0">
-            {title && <h2 className="text-[15px] font-semibold text-slate-900">{typeof title === 'string' ? t(title) : title}</h2>}
-            {description && <p className="mt-0.5 text-xs text-slate-500">{typeof description === 'string' ? t(description) : description}</p>}
+        <div className={`flex flex-wrap items-center justify-between gap-2 rounded-t-2xl border-b border-slate-100 px-5 py-4 ${title ? 'card-head' : ''}`}>
+          <div className="flex min-w-0 items-center gap-3">
+            {icon && (
+              <span aria-hidden="true" className="tone-chip flex h-9 w-9 flex-none items-center justify-center rounded-xl">
+                <Icon name={icon} size={18} />
+              </span>
+            )}
+            <div className="min-w-0">
+              {title && <h2 className="text-base font-semibold text-slate-900">{typeof title === 'string' ? t(title) : title}</h2>}
+              {description && <p className="mt-0.5 text-[13px] text-slate-500">{typeof description === 'string' ? t(description) : description}</p>}
+            </div>
           </div>
           {actions && <div className="flex flex-wrap gap-2">{actions}</div>}
         </div>
@@ -126,7 +189,7 @@ export function Tabs({ tabs, active, onChange, label }: { tabs: TabItem[]; activ
   }
 
   return (
-    <div role="tablist" aria-label={label} onKeyDown={onKeyDown} className="relative mb-4 flex gap-1 overflow-x-auto border-b border-slate-200">
+    <div role="tablist" aria-label={label} onKeyDown={onKeyDown} className="relative mb-4 flex gap-1 overflow-x-auto overflow-y-hidden border-b border-slate-200 [scrollbar-width:thin]">
       {tabs.map((tab) => (
         <button
           key={tab.id}
@@ -137,7 +200,7 @@ export function Tabs({ tabs, active, onChange, label }: { tabs: TabItem[]; activ
           tabIndex={tab.id === active ? 0 : -1}
           onClick={() => onChange(tab.id)}
           className={`-mb-px whitespace-nowrap border-b-2 px-3 py-2.5 text-sm font-medium transition-colors motion-reduce:transition-none ${FOCUS_RING} ${
-            tab.id === active ? 'border-brand-600 text-brand-700' : 'border-transparent text-slate-500 hover:border-slate-300 hover:text-slate-900'
+            tab.id === active ? 'border-brand-600 font-semibold text-brand-700' : 'border-transparent text-slate-500 hover:border-slate-300 hover:text-slate-900'
           }`}
         >
           {tab.label}

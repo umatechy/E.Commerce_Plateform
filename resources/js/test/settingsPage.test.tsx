@@ -20,7 +20,7 @@ const settings = [
 
 describe('store settings', () => {
   it('lists settings under their groups and opens a change dialog', async () => {
-    setPage(owner, '/settings');
+    setPage(owner, '/settings/general');
     vi.stubGlobal('fetch', routeFetch({ '/store/settings': () => json(200, { data: settings }) }));
     render(<Settings />);
 

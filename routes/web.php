@@ -146,7 +146,7 @@ Route::middleware(['auth', 'required.mfa'])->group(function () {
         '/notifications' => 'Communication/Index',
         '/team/roles' => 'Team/Roles',
         '/backups' => 'Backups/Index',
-        '/settings' => 'Settings/Index', '/settings/audit-log' => 'Settings/AuditLog', '/settings/developer' => 'Settings/Developer', '/settings/tax' => 'Settings/Tax', // tax: Phase B46
+        '/settings' => 'Settings/Hub', '/settings/general' => 'Settings/Index', '/settings/audit-log' => 'Settings/AuditLog', '/settings/developer' => 'Settings/Developer', '/settings/tax' => 'Settings/Tax', // tax: Phase B46
         '/settings/payments' => 'Settings/Payments', // Phase B48
         '/settings/close-store' => 'Settings/CloseStore', // Phase B51
     ] as $uri => $page) {

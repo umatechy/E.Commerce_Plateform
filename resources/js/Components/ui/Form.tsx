@@ -13,7 +13,7 @@ import { useAdminT } from '@/lib/adminI18n';
  * decides what is valid; its 422 messages are shown under each field.
  */
 const CONTROL =
-  'block min-h-10 w-full rounded-lg border bg-white px-3 py-2 text-sm text-slate-900 shadow-sm shadow-slate-900/5 transition-colors placeholder:text-slate-400 hover:border-slate-400 focus-visible:border-brand-500 disabled:bg-slate-100 disabled:text-slate-500 motion-reduce:transition-none';
+  'block min-h-11 w-full rounded-xl border bg-white px-3.5 py-2.5 text-sm text-slate-900 shadow-sm shadow-slate-900/5 transition-colors placeholder:text-slate-400 hover:border-brand-300 focus-visible:border-brand-500 disabled:bg-slate-100 disabled:text-slate-500 motion-reduce:transition-none';
 
 function controlClass(hasError: boolean, extra = ''): string {
   return `${CONTROL} ${hasError ? 'border-red-500' : 'border-slate-300'} ${FOCUS_RING} ${extra}`;
@@ -26,7 +26,7 @@ function FieldShell({ id, label, hint, error, optional, children }: Shell & { id
 
   return (
     <div>
-      <label htmlFor={id} className="block text-sm font-medium text-slate-700">
+      <label htmlFor={id} className="block text-sm font-semibold text-brand-700">
         {t(label)}
         {optional && <span className="ms-1 font-normal text-slate-500">{t('(optional)')}</span>}
       </label>

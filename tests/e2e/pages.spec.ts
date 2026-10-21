@@ -17,7 +17,7 @@ const PAGES = [
   '/promotions', '/campaigns', '/segments', '/affiliates', '/notifications',
   '/content/pages', '/content/redirects', '/content/seo', '/storefront/theme', '/domains', '/storefront/app',
   '/apps', '/reports', '/team', '/team/roles', '/billing', '/backups', '/store-health',
-  '/settings', '/settings/audit-log', '/settings/developer', '/settings/tax', '/settings/payments', '/settings/close-store',
+  '/settings', '/settings/general', '/settings/audit-log', '/settings/developer', '/settings/tax', '/settings/payments', '/settings/close-store',
   '/security', '/support', '/help',
 ];
 

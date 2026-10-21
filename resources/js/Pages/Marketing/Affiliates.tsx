@@ -526,7 +526,7 @@ export function PortalLinkDialog({ name, url, onClose }: { name: string; url: st
   return (
     <Dialog open title={`${name}’s private page`} description="We emailed this link to them. You can also send it yourself now: it is shown only this once." onClose={onClose} footer={<Button variant="primary" onClick={onClose}>Done</Button>}>
       <div className="space-y-3">
-        <label className="block text-sm font-medium text-slate-700" htmlFor="portal-link">Private link</label>
+        <label className="block text-sm font-semibold text-brand-700" htmlFor="portal-link">Private link</label>
         <div className="flex gap-2">
           <input id="portal-link" readOnly value={url} onFocus={(e) => e.currentTarget.select()} className="min-w-0 flex-1 rounded-md border border-slate-300 bg-slate-50 px-3 py-2 font-mono text-xs" />
           <Button

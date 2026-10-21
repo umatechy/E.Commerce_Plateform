@@ -301,19 +301,19 @@ function AuthorizeRestore({ job, onClose, onDone }: { job: RestoreJob; onClose: 
         <p className="text-sm text-slate-700">Put the platform into maintenance and stop the queue workers before you continue (runbook: “Production restore”).</p>
 
         <div>
-          <label htmlFor="reference" className="block text-sm font-medium text-slate-700">Incident or change reference</label>
+          <label htmlFor="reference" className="block text-sm font-semibold text-brand-700">Incident or change reference</label>
           <input id="reference" value={reference} onChange={(e) => setReference(e.target.value)} className={field} />
         </div>
         <div>
-          <label htmlFor="confirmation" className="block text-sm font-medium text-slate-700">Type the backup id to confirm</label>
+          <label htmlFor="confirmation" className="block text-sm font-semibold text-brand-700">Type the backup id to confirm</label>
           <input id="confirmation" value={confirmation} onChange={(e) => setConfirmation(e.target.value)} className={`${field} font-mono`} autoComplete="off" />
         </div>
         <div>
-          <label htmlFor="restore-password" className="block text-sm font-medium text-slate-700">Your password</label>
+          <label htmlFor="restore-password" className="block text-sm font-semibold text-brand-700">Your password</label>
           <input id="restore-password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} className={field} autoComplete="current-password" />
         </div>
         <div>
-          <label htmlFor="restore-code" className="block text-sm font-medium text-slate-700">Two-step code</label>
+          <label htmlFor="restore-code" className="block text-sm font-semibold text-brand-700">Two-step code</label>
           <input id="restore-code" value={code} onChange={(e) => setCode(e.target.value)} className={field} inputMode="numeric" autoComplete="one-time-code" />
         </div>
 

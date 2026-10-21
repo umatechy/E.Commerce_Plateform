@@ -167,7 +167,7 @@ function ResellersTab({ o, canManage, onChanged, goTiers }: { o: Overview; canMa
 function InvitationLinkDialog({ name, url, onClose }: { name: string; url: string; onClose: () => void }) {
   return (
     <Dialog open title={`Invitation for ${name}`} description="We emailed this link. You can also send it yourself now: it is shown only this once and works for 14 days." onClose={onClose} footer={<Button variant="primary" onClick={onClose}>Done</Button>}>
-      <label className="block text-sm font-medium text-slate-700" htmlFor="invitation-link">Invitation link</label>
+      <label className="block text-sm font-semibold text-brand-700" htmlFor="invitation-link">Invitation link</label>
       <div className="mt-1 flex gap-2">
         <input id="invitation-link" readOnly value={url} onFocus={(e) => e.currentTarget.select()} className="min-w-0 flex-1 rounded-md border border-slate-300 bg-slate-50 px-3 py-2 font-mono text-xs" />
         <Button onClick={() => void navigator.clipboard?.writeText(url).then(() => toast.success('Link copied.'))}>Copy</Button>

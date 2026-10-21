@@ -5,7 +5,7 @@ import CommandPalette, { paletteEntries } from '@/Components/CommandPalette';
 import { Link, usePage } from '@inertiajs/react';
 import { adminErrorMessage, adminFetch } from '@/lib/adminApi';
 import { accessFrom, type AuthProps } from '@/lib/access';
-import { activeHref, navigationFor, NAV_ICONS, type NavEntry, type ResolvedGroup } from '@/lib/adminNav';
+import { activeHref, LOCKED_REASON, navigationFor, NAV_ICONS, sectionFor, sectionHref, toneClass, type NavEntry, type ResolvedGroup } from '@/lib/adminNav';
 import { FOCUS_RING } from '@/Components/ui/Button';
 import { toast, Toaster } from '@/Components/ui/toast';
 import StepUpDialog from '@/Components/StepUpDialog';
@@ -57,15 +57,17 @@ function reasonText(t: AdminTranslate, reason: string | undefined): string | und
   return pkg ? t('Not included in your {package} package', { package: pkg[1] === 'current' ? t('current') : pkg[1] }) : reason && t(reason);
 }
 
-function NavLink({ item, active, onNavigate }: { item: NavEntry; active: boolean; onNavigate?: () => void }) {
+/** A section's own list, under a name that is not the section's again (Orders › All orders). */
+const ALL_OF: Record<string, string> = { Orders: 'All orders', Products: 'All products', Customers: 'All customers', Reports: 'All reports' };
+
+function NavLink({ item, active, onNavigate, label }: { item: NavEntry; active: boolean; onNavigate?: () => void; label?: string }) {
   const t = useAdminT();
   // An entry the user cannot use right now is shown closed, with the
   // reason, instead of a link that would only bounce back.
   if (item.state !== 'open') {
     return (
-      <span aria-disabled="true" title={reasonText(t, item.reason)} className="flex cursor-not-allowed items-center gap-3 rounded-lg px-3 py-2 text-sm text-slate-400">
-        {NAV_ICONS[item.href] && <Icon name={NAV_ICONS[item.href]} size={18} />}
-        <span className="flex-1">{t(item.label)}</span>
+      <span aria-disabled="true" title={reasonText(t, item.reason)} className="flex cursor-not-allowed items-center gap-2 rounded-lg px-3 py-1.5 text-sm text-slate-400">
+        <span className="flex-1 truncate">{t(label ?? item.label)}</span>
         <span className="rounded-full bg-slate-100 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-slate-500">{item.state === 'locked' ? t('Locked') : t('Upgrade')}</span>
         <span className="sr-only">. {reasonText(t, item.reason)}</span>
       </span>
@@ -77,49 +79,82 @@ function NavLink({ item, active, onNavigate }: { item: NavEntry; active: boolean
       href={item.href}
       onClick={onNavigate}
       aria-current={active ? 'page' : undefined}
-      className={`group relative flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors duration-150 motion-reduce:transition-none ${FOCUS_RING} ${active ? 'bg-brand-50 font-semibold text-brand-700 before:absolute before:inset-y-1.5 before:start-0 before:w-1 before:rounded-full before:bg-brand-600' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'}`}
+      className={`relative flex items-center rounded-lg px-3 py-1.5 text-sm transition-colors duration-150 motion-reduce:transition-none ${FOCUS_RING} ${active ? 'tone-text font-semibold' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'}`}
     >
-      {NAV_ICONS[item.href] && <Icon name={NAV_ICONS[item.href]} size={18} className={`transition-transform duration-150 group-hover:translate-x-0.5 rtl:group-hover:-translate-x-0.5 motion-reduce:transform-none ${active ? 'text-brand-600' : 'text-slate-400 group-hover:text-slate-600'}`} />}
-      <span className="truncate">{t(item.label)}</span>
+      {active && <span aria-hidden="true" className="tone-bar absolute -start-[13px] inset-y-1 w-[3px] rounded-full" />}
+      <span className="truncate">{t(label ?? item.label)}</span>
     </Link>
   );
 }
 
-const FOLDED_PREFERENCE = 'admin.sidebar.folded';
-
-function readFolded(): string[] {
-  try {
-    const value = JSON.parse(window.localStorage.getItem(FOLDED_PREFERENCE) ?? '[]');
-
-    return Array.isArray(value) ? value.filter((v): v is string => typeof v === 'string') : [];
-  } catch {
-    return [];
-  }
-}
-
-function SidebarNav({ groups, current, path, locked, onNavigate }: { groups: ResolvedGroup[]; current: string | null; path: string; locked: boolean; onNavigate?: () => void }) {
+/** One row of the sidebar: a section's icon in its colour, its name, and (when it has pages to show) a fold button. */
+function SectionRow({ group, active, open, onToggle, onNavigate, locked }: { group: ResolvedGroup; active: boolean; open: boolean; onToggle?: () => void; onNavigate?: () => void; locked: boolean }) {
   const t = useAdminT();
-  // UI-2: groups fold away; the choice is remembered on this device.
-  const [folded, setFolded] = useState<string[]>([]);
-  useEffect(() => setFolded(readFolded()), []);
-  function toggleFold(label: string) {
-    setFolded((current) => {
-      const next = current.includes(label) ? current.filter((l) => l !== label) : [...current, label];
-      try {
-        window.localStorage.setItem(FOLDED_PREFERENCE, JSON.stringify(next));
-      } catch {
-        // No storage: the choice lasts for this page only.
-      }
-
-      return next;
-    });
-  }
+  const href = sectionHref(group);
+  const icon = group.icon ?? 'layers';
+  const body = (
+    <>
+      <span aria-hidden="true" className={`flex h-8 w-8 flex-none items-center justify-center rounded-lg transition-transform duration-150 group-hover:scale-105 motion-reduce:transform-none ${active ? 'tone-solid shadow-sm' : 'tone-chip'}`}>
+        <Icon name={icon} size={17} />
+      </span>
+      <span className="truncate">{t(group.label)}</span>
+    </>
+  );
 
   return (
-    <nav aria-label="Admin" className="flex-1 space-y-6 overflow-y-auto px-3 py-5">
-      <div>
+    <div className={`flex items-center rounded-xl ${active ? 'tone-soft' : ''}`}>
+      {href === null || locked ? (
+        <span aria-disabled="true" title={locked ? t(LOCKED_REASON) : undefined} className="flex flex-1 cursor-not-allowed items-center gap-3 px-2 py-1.5 text-sm text-slate-400 opacity-70">{body}</span>
+      ) : (
+        <Link
+          href={href}
+          onClick={onNavigate}
+          aria-current={active && !onToggle ? 'page' : undefined}
+          className={`group flex min-w-0 flex-1 items-center gap-3 rounded-xl px-2 py-1.5 text-sm transition-colors duration-150 motion-reduce:transition-none ${FOCUS_RING} ${active ? 'tone-text font-semibold' : 'font-medium text-slate-700 hover:bg-slate-100 hover:text-slate-900'}`}
+        >
+          {body}
+        </Link>
+      )}
+      {onToggle && !locked && (
+        <button
+          type="button"
+          onClick={onToggle}
+          aria-expanded={open}
+          aria-label={open ? t('Hide the pages of {section}', { section: t(group.label) }) : t('Show the pages of {section}', { section: t(group.label) })}
+          className={`me-1 rounded-lg p-1.5 text-slate-400 transition-colors hover:bg-slate-200/60 hover:text-slate-700 motion-reduce:transition-none ${FOCUS_RING}`}
+        >
+          <Icon name="chevronDown" size={15} className={`transition-transform duration-200 motion-reduce:transition-none ${open ? '' : '-rotate-90 rtl:rotate-90'}`} />
+        </button>
+      )}
+    </div>
+  );
+}
+
+/**
+ * UI-26 — the sidebar: Dashboard, then one row per section (in its colour).
+ * Only the section the user is in shows its pages; another opens with its
+ * arrow. Settings opens one page that lists all settings. The user's own
+ * account (Security) sits at the bottom.
+ */
+function SidebarNav({ groups, current, path, locked, onNavigate }: { groups: ResolvedGroup[]; current: string | null; path: string; locked: boolean; onNavigate?: () => void }) {
+  const t = useAdminT();
+  const here = sectionFor(groups, path);
+  // Folded or unfolded by hand; otherwise only the current section is open.
+  const [toggled, setToggled] = useState<Record<string, boolean>>({});
+  // Arriving in another section forgets the hand-made choices.
+  useEffect(() => setToggled({}), [here?.label]);
+  const sections = groups.filter((group) => group.label !== 'Account');
+  // Security is in the account menu and on the Settings page; the sidebar shows it only while it is the one page open.
+  const accountGroup = groups.find((group) => group.label === 'Account');
+  const accountItems = (accountGroup?.items ?? []).filter((item) => item.href !== '/security' || locked);
+  const account = accountItems.length > 0 ? { ...accountGroup!, items: accountItems } : undefined;
+
+  return (
+    <nav aria-label="Admin" className="flex flex-1 flex-col overflow-y-auto px-3 py-4">
+      <div className="tone-brand mb-2">
         {locked ? (
-          <span aria-disabled="true" title={t('Turn on two-step sign-in first')} className="flex cursor-not-allowed items-center gap-3 rounded-lg px-3 py-2 text-sm text-slate-400">
+          <span aria-disabled="true" title={t('Turn on two-step sign-in first')} className="flex cursor-not-allowed items-center gap-3 rounded-xl px-2 py-1.5 text-sm text-slate-400">
+            <span className="tone-chip flex h-8 w-8 items-center justify-center rounded-lg opacity-70"><Icon name="grid" size={17} /></span>
             {t('Dashboard')}
           </span>
         ) : (
@@ -127,43 +162,62 @@ function SidebarNav({ groups, current, path, locked, onNavigate }: { groups: Res
             href="/"
             onClick={onNavigate}
             aria-current={path === '/' ? 'page' : undefined}
-            className={`group relative flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors duration-150 motion-reduce:transition-none ${FOCUS_RING} ${path === '/' ? 'bg-brand-50 font-semibold text-brand-700 before:absolute before:inset-y-1.5 before:start-0 before:w-1 before:rounded-full before:bg-brand-600' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'}`}
+            className={`group flex items-center gap-3 rounded-xl px-2 py-1.5 text-sm transition-colors duration-150 motion-reduce:transition-none ${FOCUS_RING} ${path === '/' ? 'tone-soft tone-text font-semibold' : 'font-medium text-slate-700 hover:bg-slate-100 hover:text-slate-900'}`}
           >
-            <Icon name="grid" size={18} className={path === '/' ? 'text-brand-600' : 'text-slate-400 group-hover:text-slate-600'} />
+            <span aria-hidden="true" className={`flex h-8 w-8 items-center justify-center rounded-lg ${path === '/' ? 'tone-solid shadow-sm' : 'tone-chip'}`}><Icon name="grid" size={17} /></span>
             <span>{t('Dashboard')}</span>
           </Link>
         )}
       </div>
-      {groups.map((group) => {
-        const holdsCurrent = group.items.some((item) => item.href === current);
-        const isFolded = !holdsCurrent && folded.includes(group.label);
 
-        return (
-          <div key={group.label} className={group.platform ? 'rounded-xl border border-violet-200 bg-violet-50/60 p-2' : ''}>
-            <h2 className={`text-[11px] font-semibold uppercase tracking-wider ${group.platform ? 'text-violet-800' : 'text-slate-400'}`}>
-              <button
-                type="button"
-                onClick={() => toggleFold(group.label)}
-                aria-expanded={!isFolded}
-                className={`flex w-full items-center justify-between rounded px-3 pb-1.5 text-start uppercase transition-colors hover:text-slate-700 motion-reduce:transition-none ${FOCUS_RING}`}
+      <ul className="space-y-1">
+        {sections.map((group) => {
+          const active = here?.label === group.label;
+          const foldable = !group.hub && group.items.length > 1;
+          const open = foldable && (toggled[group.label] ?? active);
+
+          return (
+            <li key={group.label} className={`${toneClass(group.tone)} ${group.platform ? 'mt-4 border-t border-slate-200 pt-4' : ''}`}>
+              {group.platform && <p className="mb-1.5 px-2 text-[11px] font-semibold uppercase tracking-wider text-violet-700">{t('Umar Techy staff only')}</p>}
+              <SectionRow
+                group={group}
+                active={active}
+                open={open}
+                locked={locked && !group.platform}
+                onNavigate={onNavigate}
+                onToggle={foldable ? () => setToggled((value) => ({ ...value, [group.label]: !(value[group.label] ?? active) })) : undefined}
+              />
+              {open && (
+                <ul className="mb-2 ms-[1.65rem] mt-1 space-y-0.5 border-s border-slate-200 ps-3 motion-safe:animate-fade-in">
+                  {group.items.map((item) => (
+                    <li key={item.href}>
+                      <NavLink item={item} active={current === item.href} onNavigate={onNavigate} label={item.label === group.label ? ALL_OF[group.label] : undefined} />
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </li>
+          );
+        })}
+      </ul>
+
+      {account && (
+        <ul className="tone-slate mt-auto space-y-0.5 border-t border-slate-200 pt-3">
+          {account.items.map((item) => (
+            <li key={item.href}>
+              <Link
+                href={item.href}
+                onClick={onNavigate}
+                aria-current={current === item.href ? 'page' : undefined}
+                className={`flex items-center gap-3 rounded-xl px-2 py-1.5 text-sm transition-colors motion-reduce:transition-none ${FOCUS_RING} ${current === item.href ? 'tone-soft tone-text font-semibold' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'}`}
               >
-                {t(group.label)}
-                <Icon name="chevronDown" size={14} className={`transition-transform motion-reduce:transition-none ${isFolded ? '-rotate-90 rtl:rotate-90' : ''}`} />
-              </button>
-            </h2>
-            {group.platform && !isFolded && <p className="px-3 pb-1 text-[11px] text-violet-800">{t('Umar Techy staff only. Acts across all stores.')}</p>}
-            {!isFolded && (
-              <ul className="space-y-0.5">
-                {group.items.map((item) => (
-                  <li key={item.href}>
-                    <NavLink item={item} active={current === item.href} onNavigate={onNavigate} />
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
-        );
-      })}
+                <span aria-hidden="true" className="tone-chip flex h-8 w-8 items-center justify-center rounded-lg"><Icon name={NAV_ICONS[item.href] ?? 'user'} size={17} /></span>
+                {t(item.label)}
+              </Link>
+            </li>
+          ))}
+        </ul>
+      )}
     </nav>
   );
 }

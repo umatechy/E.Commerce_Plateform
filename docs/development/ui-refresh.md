@@ -187,6 +187,44 @@ The owner lifted the feature freeze for these fifteen suggestions and asked for 
 | 14 | First-year upgrades measured on the one-time prices | 8090ed2 |
 | 15 | Browser errors reported to Super Admin → Monitoring; a broken page keeps the frame (error boundary) | c2f186d |
 
+## UI-26 — an easier admin: fewer entries, fewer clicks, clear sections (2026-10-21)
+
+Asked by the owner after testing: users got lost, some screens were not organised,
+and it was not always clear what to do on a page. Plan agreed in chat (stages A–D);
+this round does A1, A3, B1, B4-in-part and the shared look.
+
+- **Sidebar: 7 sections instead of 44 entries** (`lib/adminNav.ts`). Orders (blue),
+  Products (emerald), Customers (violet), Marketing (pink), Online store (amber),
+  Reports (cyan), Settings (slate). Only the section of the open page shows its pages;
+  another opens with its arrow. Settings is one entry that opens a page listing every
+  setting in four groups (`Pages/Settings/Hub.tsx`); the old general settings page is
+  now `/settings/general` ("Store details"). Security moved to the account menu and the
+  Settings page (the sidebar shows it only while two-step sign-in is owed).
+- **Merged and renamed:** Shipping setup → Settings › Delivery; Payments setup →
+  Payment methods; Billing → Package & billing; Inventory → Products › Stock;
+  Warehouses → Stock locations; Attributes → Product options; Promotions → Discounts;
+  Segments → Customers › Customer groups; Messages → Customer messages; Support under
+  Customers. No page is listed twice (tested).
+- **Every page of a section shows the others as tabs** under its heading
+  (`SectionTabs`, from `AdminPage`), so related pages are one click apart.
+- **Section colours** (`--tone`, `.tone-*` in `app.css`, light and dark): the page icon,
+  the section tabs and every card heading (a coloured strip and wash) use the colour of
+  the section, so it is clear where one task ends and the next begins.
+- **Shared controls:** field labels in the theme blue and semibold, taller rounded
+  inputs, gradient primary and danger buttons at the same height as inputs. Tab rows no
+  longer show a stray vertical scrollbar.
+- **Add product on one page:** 1. what you sell, 2. price, 3. stock ("How many do you
+  have?", saved in the default warehouse — `lib/stock.ts`, shared with the quick start),
+  4. pictures, then "More options" folded. New products are Active. "This product comes in
+  sizes or colours" replaces the type list for the common case. After creating, the
+  product page says what to do next (add sizes, add another, see it in the store, create
+  an order). This removes the "out of stock" surprise of a product created without stock.
+
+Still to do from the plan: orders worked by stage (B2 — the status chips already exist),
+guided setup centre (B3), stock shown while picking a product for an order (B4), the page
+pattern and empty states on the remaining pages (C1–C4), lighter Reports and Theme (C5),
+and testing with real users (D1).
+
 ## Notes for later work
 
 - **Urdu:** the frame, shared components, dashboard, quick start, orders, security, bell and search are translated. The bodies of other pages stay English until their words are added to `lib/adminUr.ts`; `resources/js/test/adminI18n.test.tsx` lists any `t()` text without Urdu.

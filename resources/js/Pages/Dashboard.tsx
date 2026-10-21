@@ -57,7 +57,7 @@ type Health = { status: HealthStatus; checked_at: string; checks: HealthCheck[] 
 type Usage = Record<string, { limit: number | null; current: number; unlimited: boolean }>;
 
 const SETUP_LINK: Record<string, string> = {
-  business_info: '/settings',
+  business_info: '/settings/general',
   products: '/products',
   categories: '/categories',
   subscription: '/billing',

@@ -34,7 +34,9 @@ describe('admin navigation', () => {
     const nav = screen.getByRole('navigation', { name: 'Admin' });
 
     expect(within(nav).getByRole('link', { name: 'Orders' }).getAttribute('href')).toBe('/orders');
-    expect(within(nav).getByRole('link', { name: 'Billing' })).toBeTruthy();
+    // UI-26: settings are one entry that opens the settings page, not a dozen entries.
+    expect(within(nav).getByRole('link', { name: 'Settings' }).getAttribute('href')).toBe('/settings');
+    expect(within(nav).queryByRole('link', { name: 'Billing' })).toBeNull();
     expect(within(nav).queryByText('Platform administration')).toBeNull();
     expect(within(nav).getByRole('link', { name: 'Dashboard' }).getAttribute('aria-current')).toBe('page');
   });
@@ -47,7 +49,8 @@ describe('admin navigation', () => {
     expect(within(nav).getByRole('link', { name: 'Orders' }).getAttribute('aria-current')).toBe('page');
     expect(within(nav).queryByText('Billing')).toBeNull();
     expect(within(nav).queryByText('Products')).toBeNull();
-    expect(within(nav).getByRole('link', { name: 'Security' })).toBeTruthy();
+    // UI-26: Security lives in the account menu and on the Settings page, not in the sidebar.
+    expect(within(nav).queryByRole('link', { name: 'Security' })).toBeNull();
   });
 
   it('keeps the platform pages in their own marked section, for platform staff only', () => {
@@ -55,8 +58,8 @@ describe('admin navigation', () => {
     render(<AuthenticatedLayout>content</AuthenticatedLayout>);
     const nav = screen.getByRole('navigation', { name: 'Admin' });
 
-    expect(within(nav).getByRole('heading', { name: 'Platform administration' })).toBeTruthy();
-    expect(within(nav).getByText('Umar Techy staff only. Acts across all stores.')).toBeTruthy();
+    expect(within(nav).getByRole('link', { name: 'Platform administration' })).toBeTruthy();
+    expect(within(nav).getByText('Umar Techy staff only')).toBeTruthy();
     expect(within(nav).getByRole('link', { name: 'Stores' }).getAttribute('aria-current')).toBe('page');
   });
 

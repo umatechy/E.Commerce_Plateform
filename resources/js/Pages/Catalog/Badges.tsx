@@ -100,7 +100,7 @@ export default function Badges() {
           </ul>
           <p className="mt-3 text-sm text-slate-700">
             Switch them on or off, set the days and thresholds and how many badges a card shows in{' '}
-            <Link href="/settings" className={`rounded text-brand-700 underline ${FOCUS_RING}`}>Settings</Link>.
+            <Link href="/settings/general" className={`rounded text-brand-700 underline ${FOCUS_RING}`}>Settings</Link>.
           </p>
         </Card>
       </div>

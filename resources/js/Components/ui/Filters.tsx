@@ -33,7 +33,7 @@ export function SearchField({ label, value, onChange, placeholder }: { label: st
 
   return (
     <div className="min-w-[12rem] flex-1">
-      <label htmlFor={id} className="block text-sm font-medium text-slate-700">
+      <label htmlFor={id} className="block text-sm font-semibold text-brand-700">
         {t(label)}
       </label>
       <div className="relative mt-1">

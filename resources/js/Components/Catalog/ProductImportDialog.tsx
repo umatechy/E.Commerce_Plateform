@@ -94,7 +94,7 @@ export default function ProductImportDialog({ onClose, onDone }: { onClose: () =
             Download an example file
           </a>
           <div>
-            <label htmlFor="product-import" className="block text-sm font-medium text-slate-700">CSV file</label>
+            <label htmlFor="product-import" className="block text-sm font-semibold text-brand-700">CSV file</label>
             <input id="product-import" ref={file} type="file" accept=".csv,text/csv" className="mt-1 block w-full text-sm" />
           </div>
           {error && <FormError message={error} />}

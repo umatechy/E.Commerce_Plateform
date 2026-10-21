@@ -60,7 +60,7 @@ export default function ImageUploadField({
 
   return (
     <div>
-      <label htmlFor={id} className="block text-sm font-medium text-slate-700">
+      <label htmlFor={id} className="block text-sm font-semibold text-brand-700">
         {label} <span className="font-normal text-slate-500">(optional)</span>
       </label>
       <div className="mt-1 flex items-start gap-3">

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { accessFrom, type AuthProps } from './access';
-import { activeHref, breadcrumbsFor, LOCKED_REASON, navigationFor, type NavGroup } from './adminNav';
+import { activeHref, breadcrumbsFor, LOCKED_REASON, navigationFor, sectionFor, sectionHref, type NavGroup } from './adminNav';
 
 const user = { id: '01JUSER', name: 'Sara', email: 'sara@example.com' };
 const store = { id: 5, name: 'Ittar Waly', slug: 'ittar-waly' };
@@ -47,7 +47,7 @@ describe('navigation', () => {
   it('shows an owner every store page and no platform page', () => {
     const shown = hrefs(auth({ is_owner: true }));
 
-    expect(shown).toEqual(expect.arrayContaining(['/orders', '/products', '/billing', '/settings', '/backups', '/team/roles']));
+    expect(shown).toEqual(expect.arrayContaining(['/orders', '/products', '/billing', '/settings/general', '/backups', '/team/roles']));
     expect(shown.some((href) => href.startsWith('/super-admin'))).toBe(false);
   });
 
@@ -83,7 +83,24 @@ describe('navigation', () => {
     expect(activeHref(groups, '/team/roles')).toBe('/team/roles'); // not /team
     expect(activeHref(groups, '/products/01JABC')).toBe('/products');
     expect(activeHref(groups, '/nowhere')).toBeNull();
-    expect(breadcrumbsFor(groups, '/products/01JABC')).toEqual([{ label: 'Dashboard', href: '/' }, { label: 'Catalog' }, { label: 'Products', href: '/products' }]);
-    expect(breadcrumbsFor(groups, '/products').at(-1)).toEqual({ label: 'Products', href: undefined });
+    expect(breadcrumbsFor(groups, '/products/01JABC')).toEqual([{ label: 'Dashboard', href: '/' }, { label: 'Products', href: '/products' }]);
+    // A section named like its page is said once.
+    expect(breadcrumbsFor(groups, '/products')).toEqual([{ label: 'Dashboard', href: '/' }, { label: 'Products', href: undefined }]);
+    expect(breadcrumbsFor(groups, '/inventory')).toEqual([{ label: 'Dashboard', href: '/' }, { label: 'Products', href: '/products' }, { label: 'Stock', href: undefined }]);
+  });
+
+  it('UI-26: seven store sections, each with a colour; Settings opens one page that lists the rest', () => {
+    const groups = navigationFor(accessFrom(auth({ is_owner: true })));
+
+    expect(groups.map((group) => group.label)).toEqual(['Orders', 'Products', 'Customers', 'Marketing', 'Online store', 'Reports', 'Settings', 'Account']);
+    expect(groups.every((group) => group.tone !== undefined)).toBe(true);
+    const settings = groups.find((group) => group.label === 'Settings')!;
+    expect(sectionHref(settings)).toBe('/settings');
+    expect(sectionFor(groups, '/settings')?.label).toBe('Settings'); // the hub itself
+    expect(sectionFor(groups, '/shipping')?.label).toBe('Settings'); // delivery is a setting now
+    expect(breadcrumbsFor(groups, '/settings/tax')).toEqual([{ label: 'Dashboard', href: '/' }, { label: 'Settings', href: '/settings' }, { label: 'Tax', href: undefined }]);
+    // No page is listed twice.
+    const all = groups.flatMap((group) => group.items.map((item) => item.href));
+    expect(new Set(all).size).toBe(all.length);
   });
 });

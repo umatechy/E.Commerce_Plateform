@@ -18,9 +18,9 @@ export type ButtonSize = 'sm' | 'md' | 'lg';
 export const FOCUS_RING = 'focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-600 focus-visible:ring-offset-2';
 
 const VARIANT: Record<ButtonVariant, string> = {
-  primary: 'border border-transparent bg-brand-600 text-white shadow-sm shadow-brand-900/10 hover:bg-brand-700 hover:shadow-md hover:shadow-brand-900/15',
+  primary: 'border border-brand-700/20 bg-gradient-to-b from-brand-500 to-brand-600 text-white shadow-md shadow-brand-600/25 hover:from-brand-600 hover:to-brand-700 hover:shadow-lg hover:shadow-brand-600/30',
   secondary: 'border border-slate-200 bg-white text-slate-800 shadow-sm shadow-slate-900/5 hover:border-slate-300 hover:bg-slate-50',
-  danger: 'border border-transparent bg-red-600 text-white shadow-sm shadow-red-900/10 hover:bg-red-700 hover:shadow-md',
+  danger: 'border border-red-700/20 bg-gradient-to-b from-red-500 to-red-600 text-white shadow-md shadow-red-600/20 hover:from-red-600 hover:to-red-700 hover:shadow-lg',
   ghost: 'border border-transparent bg-transparent text-slate-700 hover:bg-slate-100 hover:text-slate-900',
   soft: 'border border-transparent bg-brand-50 text-brand-700 hover:bg-brand-100',
   outline: 'border border-brand-200 bg-white text-brand-700 hover:border-brand-300 hover:bg-brand-50',
@@ -28,12 +28,12 @@ const VARIANT: Record<ButtonVariant, string> = {
 
 const SIZE: Record<ButtonSize, string> = {
   sm: 'min-h-8 px-3 py-1 text-xs sm:text-sm',
-  md: 'min-h-10 px-4 py-2 text-sm',
-  lg: 'min-h-11 px-5 py-2.5 text-base',
+  md: 'min-h-11 px-4 py-2 text-sm',
+  lg: 'min-h-12 px-6 py-2.5 text-base',
 };
 
 export function buttonClass(variant: ButtonVariant = 'secondary', size: ButtonSize = 'md', extra = ''): string {
-  return `inline-flex select-none items-center justify-center gap-2 rounded-lg font-semibold transition duration-150 ease-out hover:-translate-y-px active:translate-y-0 active:scale-[0.98] disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 motion-reduce:transform-none motion-reduce:transition-none ${FOCUS_RING} ${VARIANT[variant]} ${SIZE[size]} ${extra}`;
+  return `inline-flex select-none items-center justify-center gap-2 rounded-xl font-semibold transition duration-150 ease-out hover:-translate-y-px active:translate-y-0 active:scale-[0.98] disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 motion-reduce:transform-none motion-reduce:transition-none ${FOCUS_RING} ${VARIANT[variant]} ${SIZE[size]} ${extra}`;
 }
 
 /** A small spinner for busy buttons (decorative; the busy label says it in words). */

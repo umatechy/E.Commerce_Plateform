@@ -8,13 +8,13 @@ audience: merchant
 module: 33
 tags: settings, currency, timezone, language
 keywords: currency, timezone, time zone, urdu, english, language, business information, contact email
-contexts: /settings
+contexts: /settings/general, /settings
 related: setup-checklist, storefront-theme
 applies_from: 1.1
 owner: Configuration (Module 33)
 review_due_on: 2027-04-30
 ---
-Open [Settings](/settings). Who can change settings depends on their role.
+Open [Settings › Store details](/settings/general). Who can change settings depends on their role.
 
 ## Business information
 
