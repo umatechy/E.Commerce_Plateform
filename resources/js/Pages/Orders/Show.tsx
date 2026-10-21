@@ -258,7 +258,8 @@ export default function Show({ orderId }: { orderId: string }) {
   const state = useApi<{ data: Order }>(`/orders/${orderId}`);
   const [cancelling, setCancelling] = useState(false);
   const [version, setVersion] = useState(0);
-  const [shipRequest, setShipRequest] = useState(0);
+  // UI-26: from the order list's "Ship" button (/orders/{id}?ship=1) the shipment form opens at once.
+  const [shipRequest, setShipRequest] = useState(() => (new URLSearchParams(window.location.search).get('ship') === '1' && access.can('shipments.fulfill') ? 1 : 0));
   const order = state.data?.data ?? null;
 
   const refresh = () => {

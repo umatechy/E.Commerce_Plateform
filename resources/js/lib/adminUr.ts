@@ -599,4 +599,7 @@ export const adminUr: Record<string, string> = {
   'Closing the store': 'اسٹور بند کرنا',
   'Download everything, close or reopen the store.': 'سب کچھ ڈاؤن لوڈ کریں، اسٹور بند کریں یا دوبارہ کھولیں۔',
   'Recommended': 'تجویز کردہ',
+  'To pack': 'پیک کرنے ہیں',
+  'Packing': 'پیکنگ جاری',
+  'Ship': 'بھیجیں',
 };

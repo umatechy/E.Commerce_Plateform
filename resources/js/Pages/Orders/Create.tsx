@@ -174,7 +174,7 @@ export default function Create() {
         <FormError message={form.formError} errors={form.errors} />
 
         <Card title="Products">
-          <ProductPicker onPick={add} label="Add a product" />
+          <ProductPicker onPick={add} label="Add a product" forSale />
           {lines.length > 0 && (
             <ul className="mt-4 divide-y divide-slate-100 rounded-md border border-slate-200">
               {lines.map((line, index) => {
@@ -186,6 +186,10 @@ export default function Create() {
                       <span className="font-medium">{line.product.name}</span>
                       {line.variant && <span className="text-slate-600"> — {variantLabel(line.variant)}</span>}
                       <p className="text-xs text-slate-500">{price === null ? 'No price set' : `Catalog price ${money(price, line.product.currency ?? access.currency)}`}</p>
+                      {/* UI-26: said before the order is placed, not after (the server checks again). */}
+                      {line.variant === null && line.product.stock_available !== undefined && Number(line.quantity) > line.product.stock_available && (
+                        <p role="alert" className="mt-0.5 text-xs font-medium text-red-700">Only {line.product.stock_available} in stock.</p>
+                      )}
                     </div>
                     <TextField label="Quantity" type="number" min={1} value={line.quantity} onChange={(quantity) => setLines((current) => current.map((item, i) => (i === index ? { ...item, quantity } : item)))} />
                     <Button variant="ghost" size="sm" onClick={() => setLines((current) => current.filter((_, i) => i !== index))}>

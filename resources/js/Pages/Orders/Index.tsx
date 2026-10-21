@@ -13,7 +13,8 @@ import { FilterBar, SearchField } from '@/Components/ui/Filters';
 import { StatusBadge } from '@/Components/ui/Badge';
 import { EmptyPanel } from '@/Components/ui/Page';
 import { useAccess, useAuth } from '@/lib/access';
-import { usePagedApi } from '@/lib/useApi';
+import { useApi, usePagedApi } from '@/lib/useApi';
+import Icon from '@/Components/ui/Icon';
 import { useUrlState } from '@/lib/useUrlState';
 import { money } from '@/lib/money';
 import { formatDateTime } from '@/lib/datetime';
@@ -31,17 +32,23 @@ import { ORDER_PAYMENT_STATUSES, ORDER_STATUSES, orderCustomer, type Order } fro
  */
 const FILTER_DEFAULTS = { search: '', status: '', payment_status: '', page: '1' };
 
-/** UI-3: the statuses a store looks at most, one click away (the Status filter still has them all). */
-// t('All') t('To confirm') t('Confirmed') t('Processing') t('Shipped') t('Delivered') t('Cancelled')
-const QUICK: { status: string; label: string }[] = [
+/**
+ * UI-3: the statuses a store looks at most, one click away (the Status filter still has them all).
+ * UI-26: named by the work they wait for, each with how many orders it holds (GET /orders/counts).
+ */
+// t('All') t('To confirm') t('To pack') t('Packing') t('Shipped') t('Delivered') t('Cancelled')
+const QUICK: { status: string; label: string; urgent?: boolean }[] = [
   { status: '', label: 'All' },
-  { status: 'pending_confirmation', label: 'To confirm' },
-  { status: 'confirmed', label: 'Confirmed' },
-  { status: 'processing', label: 'Processing' },
+  { status: 'pending_confirmation', label: 'To confirm', urgent: true },
+  { status: 'confirmed', label: 'To pack', urgent: true },
+  { status: 'processing', label: 'Packing' },
   { status: 'shipped', label: 'Shipped' },
   { status: 'delivered', label: 'Delivered' },
   { status: 'cancelled', label: 'Cancelled' },
 ];
+
+/** UI-26: orders waiting to be packed and sent; their row offers "Ship" (it opens the order with the shipment form). */
+const TO_SHIP = ['confirmed', 'processing', 'ready_to_fulfill'];
 
 export default function Index() {
   const access = useAccess();
@@ -51,6 +58,9 @@ export default function Index() {
   const [filters, setFilters] = useUrlState(FILTER_DEFAULTS);
   const list = usePagedApi<Order>('/orders', { search: filters.search, status: filters.status, payment_status: filters.payment_status, page: filters.page });
   const filtered = filters.search !== '' || filters.status !== '' || filters.payment_status !== '';
+  const counts = useApi<{ data: { all: number; by_status: Record<string, number> } }>('/orders/counts');
+  const countOf = (status: string): number | null => (counts.data ? (status === '' ? counts.data.data.all : counts.data.data.by_status[status] ?? 0) : null);
+  const canShip = access.can('shipments.view') && access.can('shipments.fulfill');
 
   const columns: Column<Order>[] = [
     {
@@ -89,6 +99,12 @@ export default function Index() {
         const phone = orderPhone(order);
 
         return (
+          <div className="flex items-center justify-end gap-1">
+            {canShip && TO_SHIP.includes(order.status) && (
+              <ButtonLink href={`/orders/${order.id}?ship=1`} size="sm" variant="soft">
+                <Icon name="truck" size={14} />{t('Ship')}<span className="sr-only"> {order.order_number}</span>
+              </ButtonLink>
+            )}
           <RowMenu
             label={t('Actions for {name}', { name: order.order_number })}
             actions={[
@@ -102,6 +118,7 @@ export default function Index() {
               { label: t('Print packing slip'), icon: 'printer', onSelect: () => window.open(`/orders/${order.id}/print?print=1`, '_blank', 'noopener') },
             ]}
           />
+          </div>
         );
       },
     },
@@ -115,6 +132,8 @@ export default function Index() {
       <nav aria-label={t('Order status')} className="relative -mx-1 mb-3 flex gap-1 overflow-x-auto px-1 pb-1">
         {QUICK.map((q) => {
           const active = filters.status === q.status;
+          const count = countOf(q.status);
+          const waiting = q.urgent && count !== null && count > 0;
 
           return (
             <button
@@ -122,9 +141,12 @@ export default function Index() {
               type="button"
               aria-pressed={active}
               onClick={() => setFilters({ status: q.status, page: '1' })}
-              className={`whitespace-nowrap rounded-full px-3.5 py-1.5 text-sm font-medium ${FOCUS_RING} ${active ? 'bg-brand-600 text-white shadow-sm' : 'bg-white text-slate-600 ring-1 ring-slate-200 hover:bg-slate-50 hover:text-slate-900'}`}
+              className={`inline-flex items-center gap-2 whitespace-nowrap rounded-full py-1.5 pe-2 ps-3.5 text-sm font-medium transition-colors motion-reduce:transition-none ${FOCUS_RING} ${active ? 'tone-solid shadow-sm' : 'bg-white text-slate-600 ring-1 ring-slate-200 hover:bg-slate-50 hover:text-slate-900'} ${count === null ? 'pe-3.5' : ''}`}
             >
               {t(q.label)}
+              {count !== null && (
+                <span className={`min-w-6 rounded-full px-1.5 py-0.5 text-center text-xs font-semibold tabular-nums ${active ? 'bg-white/25 text-white' : waiting ? 'bg-amber-100 text-amber-800' : 'bg-slate-100 text-slate-600'}`}>{count}</span>
+              )}
             </button>
           );
         })}

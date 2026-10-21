@@ -319,6 +319,8 @@ Route::middleware(['auth:sanctum', 'session.track', 'staff.principal', 'required
     Route::post('/reservations/{reservation}/release', [ReservationController::class, 'release']);
 
     // --- Orders (Module 09, Phase B5) ---
+    // UI-26: before the resource, so 'counts' is not read as an order id.
+    Route::get('/orders/counts', [OrderController::class, 'counts']);
     Route::apiResource('orders', OrderController::class)->only(['index', 'show']);
     // Phase B53 (SRS API-007): 'idempotent' honours the Idempotency-Key header on retry-sensitive writes.
     Route::post('/orders', [OrderController::class, 'store'])->middleware('idempotent')->name('orders.store');

@@ -61,6 +61,20 @@ final class OrderController
         );
     }
 
+    /**
+     * UI-26: how many orders are at each status, for the status chips of the
+     * order list (this store only, through the tenant scope; the same
+     * permission as the list).
+     */
+    public function counts(Request $request): JsonResponse
+    {
+        Gate::forUser($request->user())->authorize('viewAny', Order::class);
+
+        $byStatus = Order::query()->toBase()->selectRaw('status, COUNT(*) as aggregate')->groupBy('status')->pluck('aggregate', 'status')->map(fn ($n) => (int) $n);
+
+        return response()->json(['data' => ['all' => (int) $byStatus->sum(), 'by_status' => (object) $byStatus->all()]]);
+    }
+
     public function show(Request $request, Order $order): OrderResource
     {
         Gate::forUser($request->user())->authorize('view', $order);

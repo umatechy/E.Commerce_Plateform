@@ -2,6 +2,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import ProductEdit from '@/Pages/Catalog/ProductEdit';
 import SettingsHub from '@/Pages/Settings/Hub';
+import CreateOrder from '@/Pages/Orders/Create';
+import OrdersIndex from '@/Pages/Orders/Index';
 import { clearToasts } from '@/Components/ui/toast';
 import { json, owner, routeFetch, routerMock, setPage } from '@/test/inertiaMock';
 
@@ -78,6 +80,59 @@ describe('a new product', () => {
     fireEvent.click(screen.getByRole('switch', { name: 'This product comes in sizes or colours' }));
     expect(screen.queryByLabelText(/How many do you have/)).toBeNull();
     expect(screen.getByText(/Each size or colour has its own stock/)).toBeTruthy();
+  });
+});
+
+describe('a new order', () => {
+  it('shows each product with its price and stock; one with none offers "Add stock" instead of Choose', async () => {
+    setPage({ ...owner, currency: 'PKR' }, '/orders/new');
+    window.history.replaceState(null, '', '/orders/new');
+    const page = (rows: unknown[]) => json(200, { data: rows, meta: { current_page: 1, last_page: 1, per_page: 25, total: rows.length } });
+    vi.stubGlobal('fetch', routeFetch({
+      '/products': () => page([
+        { id: 'p1', internal_id: 11, name: 'Keyboard', sku: null, status: 'active', effective_price_minor: 89900, currency: 'PKR', stock_available: 0, variants: [] },
+        { id: 'p2', internal_id: 12, name: 'Keyboard Pro', sku: null, status: 'active', effective_price_minor: 149900, currency: 'PKR', stock_available: 3, variants: [] },
+      ]),
+      '/attention': () => json(200, { data: [] }),
+    }));
+    render(<CreateOrder />);
+
+    fireEvent.change(screen.getByLabelText('Add a product'), { target: { value: 'Key' } });
+    expect(await screen.findByText('Out of stock')).toBeTruthy();
+    expect(screen.getByText('3 in stock')).toBeTruthy();
+    expect(screen.getByRole('link', { name: 'Add stock for Keyboard' }).getAttribute('href')).toBe('/inventory?product=11');
+    expect(screen.queryByRole('button', { name: 'Choose Keyboard' })).toBeNull();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Choose Keyboard Pro' }));
+    fireEvent.change(screen.getByLabelText('Quantity'), { target: { value: '5' } });
+    expect(screen.getByText('Only 3 in stock.')).toBeTruthy();
+  });
+});
+
+describe('the order list', () => {
+  it('names the stages by the work they wait for, with their counts, and offers Ship on an order to pack', async () => {
+    setPage(owner, '/orders');
+    window.history.replaceState(null, '', '/orders');
+    vi.stubGlobal('fetch', routeFetch({
+      '/orders/counts': () => json(200, { data: { all: 9, by_status: { confirmed: 4, delivered: 5 } } }),
+      '/orders': () => json(200, {
+        data: [
+          { id: '01JORDER000000000000000001', order_number: 'ORD-000041', status: 'confirmed', payment_status: 'pending', fulfillment_status: 'unfulfilled', currency: 'PKR', grand_total_minor: 250000, is_guest_order: true, guest_name: 'Sana', customer: null, created_at: '2026-10-20T10:00:00Z' },
+          { id: '01JORDER000000000000000002', order_number: 'ORD-000040', status: 'delivered', payment_status: 'paid', fulfillment_status: 'fulfilled', currency: 'PKR', grand_total_minor: 99000, is_guest_order: true, guest_name: 'Ali', customer: null, created_at: '2026-10-19T10:00:00Z' },
+        ],
+        meta: { current_page: 1, last_page: 1, per_page: 25, total: 2 },
+      }),
+      '/attention': () => json(200, { data: [] }),
+    }));
+    render(<OrdersIndex />);
+
+    const stages = screen.getByRole('navigation', { name: 'Order status' });
+    expect(await within(stages).findByRole('button', { name: 'To pack 4' })).toBeTruthy();
+    expect(within(stages).getByRole('button', { name: 'All 9' })).toBeTruthy();
+    expect(within(stages).getByRole('button', { name: 'To confirm 0' })).toBeTruthy();
+
+    expect((await screen.findByRole('link', { name: 'Ship ORD-000041' })).getAttribute('href')).toBe('/orders/01JORDER000000000000000001?ship=1');
+    expect(screen.queryByRole('link', { name: 'Ship ORD-000040' })).toBeNull(); // delivered
   });
 });
 
