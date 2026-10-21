@@ -16,7 +16,9 @@ use Tests\TestCase;
 
 /**
  * Owner decisions of 2026-10-01 on top of Phase B29:
- * - Store Owners must have MFA; store staff stay optional.
+ * - Store Owners must have MFA; store staff stay optional. Since the owner
+ *   decision of 2026-10-21 that rule is off by default (owners choose); these
+ *   tests turn it on to keep it working for a platform that wants it.
  * - A lost authenticator plus lost recovery codes is recovered only by
  *   the server-side emergency reset, never through the application.
  */
@@ -119,6 +121,33 @@ final class RequiredMfaTest extends TestCase
         $this->actingAs($owner->refresh());
         $this->getJson('/api/v1/team/summary')->assertStatus(403)->assertJsonPath('code', 'mfa_verification_required');
         $this->withoutVite()->get('/orders')->assertRedirect('/login');
+    }
+
+    /**
+     * Owner decision 2026-10-21: by default an owner manages the store with a
+     * password alone and turns two-step sign-in on from Security; once on, the
+     * code is asked at every sign-in. Platform staff still must use it.
+     */
+    public function test_by_default_an_owner_may_choose_two_step_sign_in(): void
+    {
+        $this->seed(\Database\Seeders\PermissionSeeder::class);
+        // The shipped default (phpunit.xml sets the variable for every test, so read the file).
+        $this->assertStringContainsString("env('MFA_REQUIRED_FOR_STORE_OWNERS', false)", (string) file_get_contents(config_path('security.php')));
+        // setUp() turns the old rule on for the other tests; this one uses the default.
+        config(['security.mfa.required_for_store_owners' => false]);
+
+        $owner = $this->member(Store::factory()->create(), 'owner');
+        $this->signIn($owner)->assertOk()->assertJsonMissingPath('data.mfa_required');
+        $this->getJson('/api/v1/orders')->assertOk();
+        $this->withoutVite()->get('/')->assertOk()->assertInertia(fn ($page) => $page->where('auth.mfa_enrollment_required', false));
+        $this->getJson('/api/v1/auth/mfa')->assertOk()->assertJsonPath('data.required', false)->assertJsonPath('data.enabled', false);
+
+        // Turned on by choice: the next sign-in asks for the code.
+        $this->postJson('/api/v1/auth/mfa/setup', ['password' => self::PASSWORD])->assertOk();
+        $this->postJson('/api/v1/auth/mfa/confirm', ['code' => $this->code($owner)])->assertOk();
+        $this->signOut();
+        $this->signIn($owner)->assertStatus(202)->assertJsonPath('data.mfa_required', true);
+        $this->getJson('/api/v1/orders')->assertUnauthorized();
     }
 
     public function test_store_staff_are_not_required_to_use_mfa(): void

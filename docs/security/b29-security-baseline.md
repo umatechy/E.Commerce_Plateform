@@ -11,7 +11,7 @@ API-011, SEC-013, SEC-014, SEC-015.
 | MFA with an authenticator app (TOTP) | AUTH-006, M32 §8.1–8.2 | `MfaService`, `MfaController`, `/security` page |
 | Single-use recovery codes | AUTH-007, M32 §8.3–8.4 | `user_mfa_recovery_codes` |
 | MFA mandatory for platform staff | AUTH-012, M32 §65.2–65.3 | `EnsurePrivilegedMfa` on both Super Admin route groups |
-| MFA mandatory for Store Owners | Owner decision 2026-10-01, M32 §8.1 | `EnsureRequiredMfa` on the staff API group and the admin pages |
+| MFA optional for Store Owners (was mandatory until 2026-10-21) | Owner decision 2026-10-21, AUTH-006, M32 §8.1 | `EnsureRequiredMfa`, off unless `MFA_REQUIRED_FOR_STORE_OWNERS=true` |
 | Emergency MFA reset | Owner decision 2026-10-01, M32 §8.3, §66 | `mfa:emergency-reset` console command |
 | Step-up for sensitive actions | SA-004, M30 §6, M32 §65.5 | `RequireStepUp`, `POST /api/v1/auth/step-up` |
 | Request / correlation IDs | API-011, M32 §63.3 | `AssignRequestId`, `audit_logs.request_id` |
@@ -49,7 +49,16 @@ TOTP and recovery codes together.
 account that must have MFA can still turn it off, and is then sent straight
 back to enrollment; it cannot use anything else in between.
 
-**Store Owners must have MFA** (owner decision 2026-10-01). An owner is an
+> **Changed 2026-10-21 (owner decision):** two-step sign-in is now optional for
+> Store Owners — they turn it on themselves from Security (also listed on the
+> Settings page), so a new owner goes straight to the dashboard. SRS AUTH-006 and
+> Module 32 §8.1 require MFA to be *supported*, not mandatory, for tenant
+> owners. Platform staff still must use it (Module 32 §65.3), step-up (password
+> again before sensitive actions) is unchanged, an owner who turned MFA on is
+> always asked for the code at sign-in, and `MFA_REQUIRED_FOR_STORE_OWNERS=true`
+> restores the rule below.
+
+**Store Owners must have MFA** (owner decision 2026-10-01, replaced 2026-10-21 — see above). An owner is an
 account that holds the Owner role in at least one store with an active
 membership; the rule is per account because MFA is per account. Without MFA
 an owner reaches only its own `/auth/*` endpoints, the store switch and the

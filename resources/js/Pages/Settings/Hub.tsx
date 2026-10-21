@@ -20,7 +20,7 @@ const GROUPS: { title: string; description: string; icon: IconName; tone: Tone; 
   { title: 'Closing the store', description: 'Download everything, close or reopen the store.', icon: 'lock', tone: 'pink', hrefs: ['/settings/close-store'] },
 ];
 
-function SettingCard({ item }: { item: NavEntry }) {
+function SettingCard({ item, recommended = false }: { item: NavEntry; recommended?: boolean }) {
   const t = useAdminT();
   const icon = NAV_ICONS[item.href] ?? 'settings';
   const inner = (
@@ -32,6 +32,7 @@ function SettingCard({ item }: { item: NavEntry }) {
         <span className="flex items-center gap-2 text-[15px] font-semibold text-slate-900">
           {t(item.label)}
           {item.state === 'not_in_package' && <span className="rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-700">{t('Upgrade')}</span>}
+          {recommended && <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-emerald-700">{t('Recommended')}</span>}
         </span>
         <span className="mt-0.5 block text-sm text-slate-600">{t(item.description)}</span>
       </span>
@@ -77,7 +78,7 @@ export default function SettingsHub() {
               <ul className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
                 {items.map((item) => (
                   <li key={item.href}>
-                    <SettingCard item={item} />
+                    <SettingCard item={item} recommended={item.href === accountNav.href && page.props.auth.user?.mfa_enabled === false} />
                   </li>
                 ))}
               </ul>

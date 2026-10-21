@@ -598,4 +598,5 @@ export const adminUr: Record<string, string> = {
   'Backups, apps, the API and the record of changes.': 'بیک اپس، ایپس، API اور تبدیلیوں کا ریکارڈ۔',
   'Closing the store': 'اسٹور بند کرنا',
   'Download everything, close or reopen the store.': 'سب کچھ ڈاؤن لوڈ کریں، اسٹور بند کریں یا دوبارہ کھولیں۔',
+  'Recommended': 'تجویز کردہ',
 };

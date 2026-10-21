@@ -16,9 +16,13 @@ return [
         // surface without MFA. Turn off only for local development.
         'required_for_platform_staff' => (bool) env('MFA_REQUIRED_FOR_PLATFORM_STAFF', true),
 
-        // Owner decision 2026-10-01: a Store Owner cannot use the Store
-        // Admin surface with a password alone. Store staff stay optional.
-        'required_for_store_owners' => (bool) env('MFA_REQUIRED_FOR_STORE_OWNERS', true),
+        // Owner decision 2026-10-21 (replaces the one of 2026-10-01): two-step
+        // sign-in is the Store Owner's own choice, turned on from Security, so a
+        // new owner reaches the dashboard straight after registering. SRS
+        // AUTH-006 and Module 32 §8.1 ask for MFA to be supported, not required.
+        // Sensitive actions still ask for the password again (step-up below).
+        // Set MFA_REQUIRED_FOR_STORE_OWNERS=true to require it of every owner again.
+        'required_for_store_owners' => (bool) env('MFA_REQUIRED_FOR_STORE_OWNERS', false),
 
         'recovery_codes' => 10,
 
