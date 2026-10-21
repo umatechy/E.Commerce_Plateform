@@ -174,7 +174,7 @@ export default function Segments() {
   ];
 
   return (
-    <AdminPage title="Segments" description="Groups of customers you can send a campaign to." actions={canManage && <Button variant="primary" onClick={() => setCreating(true)}>Add segment</Button>}>
+    <AdminPage title="Customer groups" description="Groups of customers you can send a campaign to." actions={canManage && <Button variant="primary" onClick={() => setCreating(true)}>Add segment</Button>}>
       <DataTable
         caption="Segments"
         columns={columns}

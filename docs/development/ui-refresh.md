@@ -220,10 +220,27 @@ this round does A1, A3, B1, B4-in-part and the shared look.
   product page says what to do next (add sizes, add another, see it in the store, create
   an order). This removes the "out of stock" surprise of a product created without stock.
 
-Still to do from the plan: orders worked by stage (B2 — the status chips already exist),
-guided setup centre (B3), stock shown while picking a product for an order (B4), the page
-pattern and empty states on the remaining pages (C1–C4), lighter Reports and Theme (C5),
-and testing with real users (D1).
+Second part (same day):
+
+- **Two-step sign-in is the store owner's choice** (owner decision 2026-10-21,
+  `config/security.php`; see `docs/security/b29-security-baseline.md`). The Settings page
+  marks Security "Recommended" while it is off. Platform staff still must use it.
+- **Orders by stage (B2):** chips named by the work (To confirm, To pack, Packing, Shipped,
+  Delivered, Cancelled) with counts (`GET /api/v1/orders/counts`); an order to pack has a
+  "Ship" button that opens it with the shipment form (`/orders/{id}?ship=1`).
+- **Stock while ordering (B4):** the order product search shows price and stock left; a
+  product with none offers "Add stock" instead of Choose; a quantity above the stock is
+  flagged on the line.
+- **Delivery as three steps (B3, C2):** where you deliver → how → what it costs, with a
+  "Delivery is ready / not ready" bar, empty states that add the first one, couriers last.
+  Dashboard setup steps open the page that does the job (Add product, Payment methods).
+- **Same names everywhere (A3):** page titles, report tabs and in-app hints use the new
+  menu names (Stock, Discounts, Delivery, Payment methods, Package & billing, ...).
+- **Reports (C5):** the sales report starts with four figures for the period (orders,
+  revenue, average order, best day), added from the server's daily figures.
+- Settings has its own colour (teal).
+
+Still to do: the remaining pages' bodies in Urdu, and testing with real users (D1).
 
 ## Notes for later work
 

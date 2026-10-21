@@ -277,7 +277,7 @@ export default function Index() {
 
   return (
     <AdminPage
-      title="Inventory"
+      title="Stock"
       description="Stock per product and warehouse. Available is on hand minus reserved. Damaged units are counted apart and are never sold."
       actions={
         <>

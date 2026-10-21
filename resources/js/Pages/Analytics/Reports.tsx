@@ -5,7 +5,7 @@ import DataTable, { Pagination, type Column } from '@/Components/ui/DataTable';
 import { SelectField, TextField } from '@/Components/ui/Form';
 import { FilterBar } from '@/Components/ui/Filters';
 import { StatusBadge, humanize } from '@/Components/ui/Badge';
-import { QueryState, StatCard, Tabs } from '@/Components/ui/Page';
+import { EmptyPanel, QueryState, StatCard, Tabs } from '@/Components/ui/Page';
 import { useAccess } from '@/lib/access';
 import { readPage, useApi } from '@/lib/useApi';
 import { useUrlState } from '@/lib/useUrlState';
@@ -31,11 +31,11 @@ const REPORTS: { id: ReportId; label: string; financial?: boolean }[] = [
   { id: 'products', label: 'Products' },
   { id: 'customers', label: 'Customers' },
   { id: 'payments', label: 'Payments', financial: true },
-  { id: 'shipping', label: 'Shipping' },
-  { id: 'promotions', label: 'Promotions', financial: true },
+  { id: 'shipping', label: 'Delivery' },
+  { id: 'promotions', label: 'Discounts', financial: true },
   { id: 'marketing', label: 'Campaigns' },
-  { id: 'notifications', label: 'Messages' },
-  { id: 'inventory', label: 'Inventory' },
+  { id: 'notifications', label: 'Customer messages' },
+  { id: 'inventory', label: 'Stock' },
 ];
 
 type Range = { date_filter: string; start: string; end: string };
@@ -73,7 +73,24 @@ function SalesReport({ range, currency }: { range: Range; currency: string }) {
           },
         ];
 
-        return <DataTable caption="Sales per day" columns={columns} rows={data} rowKey={(day) => day.date} empty={<p className="text-sm text-slate-600">No orders in this period.</p>} />;
+        // UI-26: the period at a glance, added up from the server's own daily figures (whole minor units, exact).
+        const orders = data.reduce((sum, day) => sum + day.order_count, 0);
+        const revenue = data.reduce((sum, day) => sum + day.revenue_minor, 0);
+        const best = data.reduce<(typeof data)[number] | null>((top, day) => (top === null || day.revenue_minor > top.revenue_minor ? day : top), null);
+
+        return (
+          <div className="space-y-4">
+            {data.length > 0 && (
+              <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+                <StatCard label="Orders" icon="cart" value={orders.toLocaleString()} hint="In this period" />
+                <StatCard label="Revenue" icon="cash" value={money(revenue, currency)} hint="In this period" />
+                <StatCard label="Average order" icon="receipt" value={orders > 0 ? money(Math.round(revenue / orders), currency) : null} hint="Revenue per order" />
+                <StatCard label="Best day" icon="trendUp" value={best ? money(best.revenue_minor, currency) : null} hint={best?.date} />
+              </div>
+            )}
+            <DataTable caption="Sales per day" columns={columns} rows={data} rowKey={(day) => day.date} empty={<EmptyPanel icon="chart" title="No orders in this period" description="Choose a longer period above, or come back once orders arrive." />} />
+          </div>
+        );
       }}
     </QueryState>
   );

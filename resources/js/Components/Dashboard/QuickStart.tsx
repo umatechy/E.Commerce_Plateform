@@ -96,7 +96,7 @@ function ProductStep({ currency, onDone }: { currency: string; onDone: () => voi
       try {
         await setOpeningStock(saved.internal_id, stock, 'Opening stock (quick start)');
       } catch {
-        toast.warning(t('The product is added, but its stock was not saved. Set it on the Inventory page.'));
+        toast.warning(t('The product is added, but its stock was not saved. Set it under Products → Stock.'));
       }
     }
     onDone();

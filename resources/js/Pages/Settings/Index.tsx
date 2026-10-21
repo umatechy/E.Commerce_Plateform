@@ -121,7 +121,7 @@ export default function Index() {
   );
 
   return (
-    <AdminPage title="Settings" description="Your business details, money and time, languages, catalog, badges and returns.">
+    <AdminPage title="Store details" description="Your business details, money and time, languages, catalog, badges and returns.">
       <SettingsEditor
         listPath="/store/settings"
         updatePath="/store/settings"

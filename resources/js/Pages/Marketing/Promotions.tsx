@@ -163,7 +163,7 @@ function Targets({ scope, ids, known, onChange }: { scope: string; ids: number[]
       ) : source.data === null ? (
         <p className="text-sm text-slate-500">Loading…</p>
       ) : list.length === 0 ? (
-        <p className="text-sm text-slate-600">There are none yet. Add them under Catalog first.</p>
+        <p className="text-sm text-slate-600">There are none yet. Add them under Products first.</p>
       ) : (
         <div className="mt-2 grid gap-2 sm:grid-cols-2">
           {list.map((item) => (
@@ -388,7 +388,7 @@ export default function Promotions() {
 
   return (
     <AdminPage
-      title="Promotions"
+      title="Discounts"
       description="Discounts for your customers, with or without a coupon code. To retire a promotion, set its status to Archived."
       actions={canManage && <Button variant="primary" onClick={() => setEditing('new')}>Add promotion</Button>}
     >

@@ -451,6 +451,7 @@
 .tone-pink { --tone: 219 39 119; --tone-ink: 190 24 93; }
 .tone-amber { --tone: 217 119 6; --tone-ink: 180 83 9; }
 .tone-cyan { --tone: 8 145 178; --tone-ink: 14 116 144; }
+.tone-teal { --tone: 13 148 136; --tone-ink: 15 118 110; }
 .tone-slate { --tone: 71 85 105; --tone-ink: 51 65 85; }
 .admin-root[data-mode='dark'],
 .admin-root[data-mode='dark'] .tone-brand { --tone: var(--brand-500); --tone-ink: var(--brand-300); }
@@ -460,6 +461,7 @@
 .admin-root[data-mode='dark'] .tone-pink { --tone: 236 72 153; --tone-ink: 249 168 212; }
 .admin-root[data-mode='dark'] .tone-amber { --tone: 245 158 11; --tone-ink: 252 211 77; }
 .admin-root[data-mode='dark'] .tone-cyan { --tone: 6 182 212; --tone-ink: 103 232 249; }
+.admin-root[data-mode='dark'] .tone-teal { --tone: 20 184 166; --tone-ink: 94 234 212; }
 .admin-root[data-mode='dark'] .tone-slate { --tone: 148 163 184; --tone-ink: 203 213 225; }
 
 .tone-chip { background-color: rgb(var(--tone) / 0.12); color: rgb(var(--tone-ink)); }

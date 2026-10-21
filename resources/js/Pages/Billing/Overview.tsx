@@ -168,7 +168,7 @@ export default function Overview() {
   }
 
   return (
-    <AdminPage title="Plan and billing" description="Your package, what it includes, and your invoices from the platform.">
+    <AdminPage title="Package & billing" description="Your package, what it includes, and your invoices from the platform.">
       <QueryState state={billing} lines={5}>
         {({ data }) => {
           const subscription = data.subscription;

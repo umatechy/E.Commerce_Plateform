@@ -168,7 +168,7 @@ export default function Index() {
   const tab = TABS.some((t) => t.id === state.tab) ? state.tab : 'messages';
 
   return (
-    <AdminPage title="Messages" description="What your store sent to customers, how it reaches them, and the wording it uses.">
+    <AdminPage title="Customer messages" description="What your store sent to customers, how it reaches them, and the wording it uses.">
       <Tabs label="Messages sections" tabs={TABS} active={tab} onChange={(next) => setState({ tab: next })} />
       <div role="tabpanel">{tab === 'templates' ? <Templates canManage={access.can('notifications.manage')} /> : tab === 'channels' ? <StoreMessaging /> : <Messages />}</div>
     </AdminPage>

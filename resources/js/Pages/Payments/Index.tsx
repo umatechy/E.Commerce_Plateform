@@ -50,7 +50,7 @@ export default function Index() {
     <AdminPage
       title="Payments"
       description="Payments for your orders. Open one to see its transactions and online attempts, record a payment received, or refund."
-      actions={<ButtonLink href="/settings/payments" size="sm">Payments setup</ButtonLink>}
+      actions={<ButtonLink href="/settings/payments" size="sm">Payment methods</ButtonLink>}
     >
       <Tabs
         label="Payment views"

@@ -95,7 +95,7 @@ export default function Products() {
     try {
       const records = (await adminFetch<{ data: { id: string; on_hand: number; reserved: number }[] }>('/inventory', { query: { product: product.internal_id } })).data;
       if (records.length > 1) {
-        toast.warning(t('This product has stock in several warehouses. Change it on the Inventory page.'));
+        toast.warning(t('This product has stock in several warehouses. Change it under Products → Stock.'));
 
         return false;
       }

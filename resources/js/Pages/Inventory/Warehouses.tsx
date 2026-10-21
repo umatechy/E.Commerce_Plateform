@@ -85,7 +85,7 @@ export default function Warehouses() {
 
   return (
     <AdminPage
-      title="Warehouses"
+      title="Stock locations"
       description="Where your stock is kept and shipped from."
       actions={
         canManage && (

@@ -88,7 +88,7 @@ export default function Attributes() {
   ];
 
   return (
-    <AdminPage title="Attributes" description="Properties of your products, such as size, colour or RAM. Categories choose which ones apply and which shoppers can filter by." actions={canManage && <Button variant="primary" onClick={() => setEditing('new')}>Add attribute</Button>}>
+    <AdminPage title="Product options" description="Properties of your products, such as size, colour or RAM. Categories choose which ones apply and which shoppers can filter by." actions={canManage && <Button variant="primary" onClick={() => setEditing('new')}>Add attribute</Button>}>
       <DataTable
         caption="Attributes"
         columns={columns}

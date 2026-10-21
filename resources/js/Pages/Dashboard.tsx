@@ -58,11 +58,11 @@ type Usage = Record<string, { limit: number | null; current: number; unlimited: 
 
 const SETUP_LINK: Record<string, string> = {
   business_info: '/settings/general',
-  products: '/products',
+  products: '/products/new',
   categories: '/categories',
   subscription: '/billing',
   payment: '/billing',
-  payment_methods: '/payments',
+  payment_methods: '/settings/payments',
   policies: '/content/pages',
   test_order: '/orders/new',
   seo: '/content/seo',

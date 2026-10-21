@@ -51,7 +51,7 @@ export default function Payments() {
   const state = useApi<{ data: Settings }>('/payment-settings');
 
   return (
-    <AdminPage title="Payments setup" description="Choose how your customers pay. Changes apply at checkout straight away; orders already placed keep their payment method.">
+    <AdminPage title="Payment methods" description="Choose how your customers pay. Changes apply at checkout straight away; orders already placed keep their payment method.">
       <QueryState state={state} lines={8}>
         {({ data }) => (
           <div className="space-y-6">

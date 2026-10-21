@@ -28,7 +28,7 @@ export type NavItem = {
  * chip, the page's eyebrow, the section tabs and the card headings use it,
  * so the colour says which part of the store a page belongs to.
  */
-export type Tone = 'brand' | 'blue' | 'emerald' | 'violet' | 'pink' | 'amber' | 'cyan' | 'slate';
+export type Tone = 'brand' | 'blue' | 'emerald' | 'violet' | 'pink' | 'amber' | 'cyan' | 'teal' | 'slate';
 
 /** The class that sets a section's colour (app.css: .tone-*). */
 export function toneClass(tone: Tone | undefined): string {
@@ -118,7 +118,7 @@ export const storeNav: NavGroup[] = [
   {
     label: 'Settings',
     icon: 'settings',
-    tone: 'slate',
+    tone: 'teal',
     hub: '/settings',
     items: [
       { href: '/settings/general', label: 'Store details', description: 'Name, contact, currency, timezone, language and checkout.', permissions: ['settings.view'] },

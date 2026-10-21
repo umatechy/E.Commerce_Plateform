@@ -5,7 +5,8 @@ import DataTable, { type Column } from '@/Components/ui/DataTable';
 import Dialog from '@/Components/ui/Dialog';
 import { CheckboxField, FormError, SelectField, TextField } from '@/Components/ui/Form';
 import Badge, { humanize } from '@/Components/ui/Badge';
-import { Card } from '@/Components/ui/Page';
+import { Card, EmptyPanel } from '@/Components/ui/Page';
+import Icon from '@/Components/ui/Icon';
 import { useAccess } from '@/lib/access';
 import { useApi } from '@/lib/useApi';
 import { useForm } from '@/lib/useForm';
@@ -146,6 +147,40 @@ function RateDialog({ zones, methods, currency, onClose, onDone }: { zones: Zone
   );
 }
 
+/** UI-26 — whether customers can check out with delivery yet, and the step that is missing. */
+function DeliveryProgress({ zones, methods, rates }: { zones: number | null; methods: number | null; rates: number | null }) {
+  if (zones === null || methods === null || rates === null) return null;
+  const steps = [
+    { label: 'Where you deliver', done: zones > 0 },
+    { label: 'How you deliver', done: methods > 0 },
+    { label: 'What it costs', done: rates > 0 },
+  ];
+  const ready = steps.every((step) => step.done);
+
+  return (
+    <div role="status" className={`flex flex-wrap items-center justify-between gap-4 rounded-2xl border p-4 ${ready ? 'border-emerald-200 bg-emerald-50/70' : 'border-amber-200 bg-amber-50/70'}`}>
+      <div className="flex items-center gap-3">
+        <span aria-hidden="true" className={`flex h-10 w-10 items-center justify-center rounded-xl ${ready ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}`}>
+          <Icon name={ready ? 'checkCircle' : 'truck'} size={20} />
+        </span>
+        <div>
+          <p className="font-semibold text-slate-900">{ready ? 'Delivery is ready' : 'Delivery is not ready yet'}</p>
+          <p className="text-sm text-slate-600">{ready ? 'Customers choose a delivery method at checkout and see its charge.' : 'Customers cannot choose delivery at checkout until the three steps below are done.'}</p>
+        </div>
+      </div>
+      <ol className="flex flex-wrap gap-2">
+        {steps.map((step, index) => (
+          <li key={step.label} className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium ${step.done ? 'bg-emerald-100 text-emerald-800' : 'bg-white text-slate-600 ring-1 ring-slate-200'}`}>
+            {step.done ? <Icon name="check" size={12} /> : <span aria-hidden="true">{index + 1}.</span>}
+            {step.label}
+            <span className="sr-only">{step.done ? ' — done' : ' — to do'}</span>
+          </li>
+        ))}
+      </ol>
+    </div>
+  );
+}
+
 export default function Settings() {
   const access = useAccess();
   const zones = useApi<{ data: Zone[] }>('/shipping/zones');
@@ -177,26 +212,45 @@ export default function Settings() {
   ];
 
   return (
-    <AdminPage title="Shipping setup" description="Where you deliver, how, and what it costs. Customers choose from these at checkout.">
-      <div className="space-y-4">
-        {/* Phase B49: couriers, parcel weight and the customer tracking link. */}
-        <CouriersCard />
-        <Card title="Zones" actions={<Button size="sm" onClick={() => setDialog('zone')}>Add zone</Button>}>
-          <DataTable caption="Shipping zones" columns={zoneColumns} rows={zoneList} rowKey={(zone) => zone.id} loading={zones.loading} error={zones.error} onRetry={zones.reload} empty={<p className="text-sm text-slate-600">No zones yet.</p>} />
+    <AdminPage title="Delivery" description="Where you deliver, how, and what it costs. Customers choose from these at checkout.">
+      <div className="space-y-5">
+        {/* UI-26: the three steps that let customers check out, in order, and how far along the store is. */}
+        <DeliveryProgress zones={zoneList?.length ?? null} methods={methodList?.length ?? null} rates={rates.data?.data.length ?? null} />
+        <Card title="1. Where you deliver" icon="globe" description="Zones: the cities or areas you send parcels to, for example Lahore, or All of Pakistan." actions={<Button size="sm" variant="primary" onClick={() => setDialog('zone')}><Icon name="plus" size={14} />Add zone</Button>}>
+          <DataTable caption="Shipping zones" columns={zoneColumns} rows={zoneList} rowKey={(zone) => zone.id} loading={zones.loading} error={zones.error} onRetry={zones.reload} empty={<EmptyPanel icon="globe" title="No zones yet" description="Start with one zone, such as All of Pakistan. You can add cities with their own charges later." action={<Button variant="primary" size="sm" onClick={() => setDialog('zone')}>Add your first zone</Button>} />} />
         </Card>
-        <Card title="Methods" actions={<Button size="sm" onClick={() => setDialog('method')}>Add method</Button>}>
-          <DataTable caption="Shipping methods" columns={methodColumns} rows={methodList} rowKey={(method) => method.id} loading={methods.loading} error={methods.error} onRetry={methods.reload} empty={<p className="text-sm text-slate-600">No methods yet.</p>} />
+        <Card title="2. How you deliver" icon="truck" description="Methods: the choices a customer sees at checkout, for example Standard delivery or Same day." actions={<Button size="sm" variant="primary" onClick={() => setDialog('method')}><Icon name="plus" size={14} />Add method</Button>}>
+          <DataTable caption="Shipping methods" columns={methodColumns} rows={methodList} rowKey={(method) => method.id} loading={methods.loading} error={methods.error} onRetry={methods.reload} empty={<EmptyPanel icon="truck" title="No delivery methods yet" description="Most stores start with one: Standard delivery." action={<Button variant="primary" size="sm" onClick={() => setDialog('method')}>Add your first method</Button>} />} />
         </Card>
         <Card
-          title="Rates"
+          title="3. What it costs"
+          icon="cash"
+          description="Rates: the delivery charge of each method in each zone. Without a rate, a method is not offered there."
           actions={
-            <Button size="sm" onClick={() => setDialog('rate')} disabled={!zoneList?.length || !methodList?.length} title={!zoneList?.length || !methodList?.length ? 'Add a zone and a method first' : undefined}>
-              Set a rate
+            <Button size="sm" variant="primary" onClick={() => setDialog('rate')} disabled={!zoneList?.length || !methodList?.length} title={!zoneList?.length || !methodList?.length ? 'Add a zone and a method first' : undefined}>
+              <Icon name="plus" size={14} />Set a rate
             </Button>
           }
         >
-          <DataTable caption="Shipping rates" columns={rateColumns} rows={rates.data?.data ?? null} rowKey={(rate) => rate.id} loading={rates.loading} error={rates.error} onRetry={rates.reload} empty={<p className="text-sm text-slate-600">No rates yet. Without a rate a method cannot be offered in a zone.</p>} />
+          <DataTable
+            caption="Shipping rates"
+            columns={rateColumns}
+            rows={rates.data?.data ?? null}
+            rowKey={(rate) => rate.id}
+            loading={rates.loading}
+            error={rates.error}
+            onRetry={rates.reload}
+            empty={
+              !zoneList?.length || !methodList?.length ? (
+                <EmptyPanel icon="cash" title="Add a zone and a method first" description="Then set what delivery costs here." />
+              ) : (
+                <EmptyPanel icon="cash" title="No delivery charges yet" description="Set the charge of your method in your zone — then customers can check out." action={<Button variant="primary" size="sm" onClick={() => setDialog('rate')}>Set the first rate</Button>} />
+              )
+            }
+          />
         </Card>
+        {/* Phase B49: couriers, parcel weight and the customer tracking link. */}
+        <CouriersCard />
       </div>
 
       {dialog === 'zone' && <ZoneDialog onClose={() => setDialog(null)} onDone={() => { setDialog(null); zones.reload(); }} />}
