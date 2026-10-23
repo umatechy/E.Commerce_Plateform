@@ -183,7 +183,7 @@ jobs:
       - name: Smoke test through the published port
         run: |
           base=http://127.0.0.1:18085
-          curl -fsS "$base/api/v1/health" | tee /dev/stderr | grep -q '"status":"ok"'
+          curl -fsS "$base/api/v1/public/health" | tee /dev/stderr | grep -q '"status":"ok"'
           curl -fsS -o login.html -w '%{http_code}\n' "$base/login"
           css="$(grep -oE '/build/assets/[^"]+\.css' login.html | head -1)"
           test -n "$css"

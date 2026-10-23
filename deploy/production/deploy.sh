@@ -63,7 +63,7 @@ IMAGE_TAG="$tag" "${COMPOSE[@]}" up -d --wait app worker scheduler web
 
 # --- Check through the published port, as the server's Nginx will ------------
 for attempt in $(seq 1 20); do
-    if curl -fsS "http://127.0.0.1:${port}/api/v1/health" >/dev/null; then
+    if curl -fsS "http://127.0.0.1:${port}/api/v1/public/health" >/dev/null; then
         echo "$tag" > .deployed-tag
         [ -n "$previous" ] && [ "$previous" != "$tag" ] && echo "$previous" > .previous-tag
         echo "deploy: $tag is up and healthy on 127.0.0.1:${port}"

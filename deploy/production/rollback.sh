@@ -22,4 +22,4 @@ IMAGE_TAG="$tag" "${COMPOSE[@]}" up -d --wait --no-build app worker scheduler we
 "${COMPOSE[@]}" exec -T app php artisan queue:restart >/dev/null
 echo "$tag" > .deployed-tag
 port="$(grep '^ECOM_HTTP_PORT=' .env | cut -d= -f2)"
-curl -fsS "http://127.0.0.1:${port}/api/v1/health" >/dev/null && echo "rollback: $tag is running and healthy" || echo "rollback: $tag is running; the health check did not pass yet" >&2
+curl -fsS "http://127.0.0.1:${port}/api/v1/public/health" >/dev/null && echo "rollback: $tag is running and healthy" || echo "rollback: $tag is running; the health check did not pass yet" >&2

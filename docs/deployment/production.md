@@ -103,14 +103,14 @@ any `-v` on `down`, anything in School ERP's folders, firewall or SSH changes.
 4. **DNS (A4).** A record for the shop subdomain.
 5. **Start (A5).** `bash deploy/production/deploy.sh --first-install`. It builds,
    starts MySQL/Redis, migrates, seeds reference data, starts the app and
-   checks `http://127.0.0.1:<port>/api/v1/health`.
+   checks `http://127.0.0.1:<port>/api/v1/public/health`.
    Then compare School ERP with the baseline (same containers, same uptime,
    URL answers).
 6. **Nginx site (A6) and certificate (A7).** From
    `deploy/nginx/ecommerce-site.conf.example`: HTTP part first, `nginx -t`,
    reload, certificate, then the HTTPS part, `nginx -t`, reload. After each
    reload: School ERP URL, then the shop URL.
-7. **Verify from outside.** `https://<shop>/api/v1/health` = ok; sign-in page
+7. **Verify from outside.** `https://<shop>/api/v1/public/health` = ok; sign-in page
    loads with styling; register a test store; upload a product picture; place a
    cash-on-delivery order; Super Admin → Monitoring shows no errors.
    Confirm the client IP in the audit log is the visitor's, not 172.30.x.x.
@@ -149,7 +149,7 @@ minutes; build outside ERP's busy hours.
 - **Logs:** `docker compose -p umartechy-ecom -f docker-compose.prod.yml logs -f app web worker`;
   audit log in the `storage_logs` volume; the site's Nginx logs in
   `/var/log/nginx/umartechy-ecommerce.*`.
-- **Monitoring:** `/api/v1/health` (database, Redis, storage) for an external
+- **Monitoring:** `/api/v1/public/health` (database, Redis, storage) for an external
   uptime check; container health in `docker ps`; Super Admin → Monitoring
   (store health, failures, browser errors).
 
