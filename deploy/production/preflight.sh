@@ -32,6 +32,12 @@ echo
 echo "Memory and CPU in use now:"
 docker stats --no-stream --format 'table {{.Name}}\t{{.CPUPerc}}\t{{.MemUsage}}' 2>/dev/null
 
+section "Compose projects"
+docker compose ls 2>/dev/null
+
+section "Docker daemon settings (address pools, userland proxy)"
+if [ -r /etc/docker/daemon.json ]; then cat /etc/docker/daemon.json; else echo "no /etc/docker/daemon.json (defaults)"; fi
+
 section "Docker networks and their subnets"
 for net in $(docker network ls -q 2>/dev/null); do
     docker network inspect -f '{{.Name}}  {{range .IPAM.Config}}{{.Subnet}} {{end}}' "$net" 2>/dev/null
@@ -46,10 +52,28 @@ ss -tlnp 2>/dev/null | awk 'NR==1 || /LISTEN/'
 section "Web server"
 if command -v nginx >/dev/null 2>&1; then
     echo "Nginx on the host: $(nginx -v 2>&1)"
-    ls -1 /etc/nginx/sites-enabled /etc/nginx/conf.d 2>/dev/null
+    systemctl is-active nginx 2>/dev/null | sed 's/^/service: /'
+    ls -l /etc/nginx/sites-enabled /etc/nginx/conf.d 2>/dev/null
+    echo
+    echo "Sites (listen and server_name only; nothing else of the configuration is shown):"
+    nginx -T 2>/dev/null | grep -E '^# configuration file|^\s*(listen|server_name)\s' | sed 's/^\s*/  /'
+    echo
+    echo "Configuration test (read-only):"
+    nginx -t 2>&1 | sed 's/^/  /'
 else
     echo "No Nginx on the host. A container may hold ports 80/443 (see Docker above)."
+    # Only containers that publish 80 or 443 are looked into (read-only commands).
+    for c in $(docker ps --format '{{.Names}} {{.Ports}}' 2>/dev/null | grep -E ':(80|443)->' | awk '{print $1}'); do
+        if docker exec "$c" sh -c 'command -v nginx' >/dev/null 2>&1; then
+            echo "Nginx container: $c"
+            docker exec "$c" nginx -T 2>/dev/null | grep -E '^# configuration file|^\s*(listen|server_name)\s' | sed 's/^\s*/  /'
+            docker inspect -f '  mounts: {{range .Mounts}}{{.Source}} -> {{.Destination}}; {{end}}' "$c" 2>/dev/null
+        fi
+    done
 fi
+echo
+echo "Certificates present (names only):"
+ls -1 /etc/letsencrypt/live 2>/dev/null | sed 's/^/  /' || echo "  none in /etc/letsencrypt/live"
 command -v certbot >/dev/null 2>&1 && echo "certbot: $(certbot --version 2>&1)" || echo "certbot: not on the host"
 
 section "Verdict"
