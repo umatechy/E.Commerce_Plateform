@@ -88,6 +88,8 @@ final class AppServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
+        $this->trustConfiguredProxies();
+
         // App\Domain\* models live outside App\Models, so Laravel's default
         // factory guess (Database\Factories\Domain\...\StoreFactory) never
         // matches the flat database/factories/ layout. Every Model::factory()
@@ -210,5 +212,18 @@ final class AppServiceProvider extends ServiceProvider
 
             return \Illuminate\Cache\RateLimiting\Limit::perMinute($perMinute)->by((string) $context->get()->id);
         });
+    }
+
+    /**
+     * Deployment: behind the production reverse proxies (config
+     * security.trusted_proxies), the client's IP and HTTPS come from their
+     * X-Forwarded-For and X-Forwarded-Proto headers — so rate limits and the
+     * audit trail see the real visitor, and HTTPS is recognised (HSTS,
+     * secure URLs). X-Forwarded-Host, -Port and -Prefix are never trusted:
+     * the Host header picks the store. Nothing configured: nothing trusted.
+     */
+    private function trustConfiguredProxies(): void
+    {
+        \App\Support\TrustedProxies::apply((string) config('security.trusted_proxies'));
     }
 }

@@ -1,41 +1,87 @@
-# Module 20 Phase 43 "Docker Readiness" — architecture-ready, NOT
-# mandatory on day one (Hostinger-compatible managed hosting/VPS
-# remains the initial target). Multi-stage: Node build stage for the
-# React/TypeScript/Inertia frontend, then a PHP-FPM runtime stage.
-# NOT EXECUTED — ENVIRONMENT LIMITATION: this image has never been
-# built or run in this Claude App sandbox (no Docker daemon available).
+# syntax=docker/dockerfile:1
+#
+# Umar Techy E-Commerce — production images (docs/deployment/production.md).
+#
+#   docker build --target app -t umartechy-ecom-app .   PHP-FPM: the app, queue worker and scheduler
+#   docker build --target web -t umartechy-ecom-web .   Nginx: static files, PHP to the app container
+#
+# Nothing secret is built in: .dockerignore keeps .env and keys out, and every
+# production value comes from the server's environment at run time.
 
-# --- Stage 1: frontend build ---
-FROM node:22-alpine AS frontend-build
+ARG PHP_VERSION=8.3
+ARG NODE_VERSION=22
+
+# --- Frontend: React/TypeScript/Inertia, Tailwind through PostCSS ---------
+FROM node:${NODE_VERSION}-bookworm-slim AS frontend
 WORKDIR /app
 COPY package.json package-lock.json ./
-RUN npm ci
+RUN npm ci --no-audit --no-fund
 COPY resources/ resources/
-COPY vite.config.* tsconfig*.json ./
+# The Tailwind and PostCSS configs are needed, or app.css ships unprocessed.
+COPY vite.config.ts tsconfig.json tailwind.config.ts postcss.config.js ./
 RUN npm run build
 
-# --- Stage 2: PHP-FPM runtime ---
-FROM php:8.3-fpm-alpine AS app
+# --- PHP runtime with the extensions the app uses --------------------------
+FROM php:${PHP_VERSION}-fpm-bookworm AS php-base
+# gd with JPEG/PNG/WebP (uploaded images are re-encoded), pdo_mysql, intl,
+# zip (CSV/exports), bcmath, opcache, pcntl (queue worker signals), exif,
+# redis. sodium and mbstring are built into the official image.
+# default-mysql-client: mysqldump/mysql for the platform's own backups and
+# restore rehearsals. libfcgi-bin: cgi-fcgi for the PHP-FPM health check.
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends \
+        libfreetype6-dev libjpeg62-turbo-dev libpng-dev libwebp-dev libzip-dev libicu-dev \
+        default-mysql-client libfcgi-bin unzip \
+    && docker-php-ext-configure gd --with-freetype --with-jpeg --with-webp \
+    && docker-php-ext-install -j"$(nproc)" pdo_mysql gd zip bcmath intl opcache pcntl exif \
+    && pecl install redis-6.1.0 \
+    && docker-php-ext-enable redis \
+    && rm -rf /var/lib/apt/lists/* /tmp/pear
+COPY --from=composer:2.8 /usr/bin/composer /usr/bin/composer
 
-RUN apk add --no-cache \
-        libpng-dev libzip-dev icu-dev oniguruma-dev \
-    && docker-php-ext-install pdo_mysql mbstring gd zip bcmath intl opcache \
-    && pecl install redis && docker-php-ext-enable redis
-
+# --- The application --------------------------------------------------------
+FROM php-base AS app
 WORKDIR /var/www/html
+ENV COMPOSER_ALLOW_SUPERUSER=1 \
+    PHP_FPM_MAX_CHILDREN=12 \
+    PHP_FPM_START_SERVERS=3 \
+    PHP_FPM_MIN_SPARE=2 \
+    PHP_FPM_MAX_SPARE=5
 
 COPY composer.json composer.lock ./
-RUN php -r "readfile('https://getcomposer.org/installer');" | php -- --install-dir=/usr/local/bin --filename=composer \
-    && composer install --no-dev --no-interaction --prefer-dist --optimize-autoloader --no-scripts
+RUN composer install --no-dev --no-interaction --prefer-dist --no-progress --no-scripts --no-autoloader
 
 COPY . .
-COPY --from=frontend-build /app/public/build public/build
+COPY --from=frontend /app/public/build public/build
 
-# Non-root deployment user (Module 20 Phase 35 "SSH / Server Access" —
-# least-privilege principle extended to the container process too).
-RUN addgroup -g 1000 umartechy && adduser -D -u 1000 -G umartechy umartechy \
-    && chown -R umartechy:umartechy /var/www/html/storage /var/www/html/bootstrap/cache
+RUN composer dump-autoload --no-dev --optimize \
+    && php artisan package:discover --ansi \
+    && rm -rf public/storage public/hot \
+    && ln -s ../storage/app/public public/storage \
+    && mkdir -p storage/app/public storage/app/private storage/framework/cache/data \
+        storage/framework/sessions storage/framework/views storage/logs bootstrap/cache \
+    && groupadd --gid 1000 umartechy \
+    && useradd --uid 1000 --gid umartechy --create-home --shell /usr/sbin/nologin umartechy \
+    && chown -R umartechy:umartechy storage bootstrap/cache
+
+COPY docker/php/php.ini /usr/local/etc/php/conf.d/zz-umartechy.ini
+COPY docker/php/www.conf /usr/local/etc/php-fpm.d/zz-umartechy.conf
+COPY docker/entrypoint.sh /usr/local/bin/umartechy-entrypoint
+# A checkout on Windows may carry CRLF line endings; the shell needs LF.
+RUN sed -i 's/\r$//' /usr/local/bin/umartechy-entrypoint && chmod 0755 /usr/local/bin/umartechy-entrypoint
+
 USER umartechy
-
 EXPOSE 9000
+ENTRYPOINT ["umartechy-entrypoint"]
 CMD ["php-fpm"]
+
+# --- Web server: Nginx in front of the app container ------------------------
+FROM nginx:1.27-alpine AS web
+COPY docker/nginx/default.conf /etc/nginx/conf.d/default.conf
+COPY public/ /var/www/html/public/
+COPY --from=frontend /app/public/build /var/www/html/public/build
+# Uploaded files: the app's storage volume is mounted read-only at
+# /var/www/html/storage/app (docker-compose.prod.yml).
+RUN rm -rf /var/www/html/public/storage /var/www/html/public/hot \
+    && ln -s /var/www/html/storage/app/public /var/www/html/public/storage
+EXPOSE 8080

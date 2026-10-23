@@ -27,3 +27,9 @@ yarn-error.log
 # Phase B53: Playwright end-to-end results
 /test-results/
 /playwright-report/
+
+# Production server files (deploy/production): secrets, dumps, release markers.
+/mysql.env
+/backups
+/.deployed-tag
+/.previous-tag

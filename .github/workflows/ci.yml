@@ -135,6 +135,95 @@ jobs:
       - name: Lint the OpenAPI description
         run: npx --yes @redocly/cli@2.63.0 lint docs/api/openapi-developer-v1.json
 
+  # Deployment: the production images and Compose project, built and run as
+  # on the server (deploy/production/deploy.sh), with CI-only secrets. Checks
+  # the image (extensions, MySQL client, no .env inside, non-root), the health
+  # endpoint through the web container, compiled CSS, public storage, and a
+  # real encrypted backup made by the queue worker, verified and rehearsed.
+  docker:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Production settings with throwaway CI secrets
+        run: |
+          cp deploy/production/env.production.example .env
+          set_env() { sed -i "s#^$1=.*#$1=$2#" .env; }
+          set_env ECOM_HTTP_PORT 18085
+          set_env APP_URL http://127.0.0.1:18085
+          set_env APP_KEY "base64:$(openssl rand -base64 32)"
+          set_env DB_PASSWORD "$(openssl rand -hex 20)"
+          set_env REDIS_PASSWORD "$(openssl rand -hex 20)"
+          set_env BACKUP_ENCRYPTION_KEY "$(openssl rand -base64 32)"
+          set_env SANCTUM_STATEFUL_DOMAINS 127.0.0.1:18085
+          set_env PLATFORM_BASE_DOMAIN stores.ci.invalid
+          set_env STOREFRONT_BASE_URL http://127.0.0.1:18085/shop
+          set_env MAIL_FROM_ADDRESS ci@umartechy.invalid
+          # Plain HTTP in CI only.
+          set_env SESSION_SECURE_COOKIE false
+          echo "MYSQL_ROOT_PASSWORD=$(openssl rand -hex 20)" > mysql.env
+          chmod 600 .env mysql.env
+
+      - name: Read-only preflight (as on the server)
+        run: bash deploy/production/preflight.sh 18085 172.30.240.0/24
+
+      - name: Deploy (first install) with the production script
+        run: bash deploy/production/deploy.sh --first-install
+
+      - name: The image
+        run: |
+          tag="$(cat .deployed-tag)"
+          docker run --rm --entrypoint php "umartechy-ecom-app:$tag" -r '
+            $gd = gd_info();
+            foreach (["pdo_mysql", "redis", "sodium", "intl", "pcntl", "zip", "bcmath", "gd", "exif", "mbstring", "Zend OPcache"] as $ext) { if (! extension_loaded($ext)) { fwrite(STDERR, "missing $ext\n"); exit(1); } }
+            if (! $gd["JPEG Support"] || ! $gd["PNG Support"] || ! $gd["WebP Support"]) { fwrite(STDERR, "gd without JPEG/PNG/WebP\n"); exit(1); }
+            echo "extensions ok\n";'
+          docker run --rm --entrypoint sh "umartechy-ecom-app:$tag" -c 'mysqldump --version && mysql --version && test ! -e .env && test ! -e mysql.env && test "$(id -u)" = 1000 && echo "image ok"'
+
+      - name: Smoke test through the published port
+        run: |
+          base=http://127.0.0.1:18085
+          curl -fsS "$base/api/v1/health" | tee /dev/stderr | grep -q '"status":"ok"'
+          curl -fsS -o login.html -w '%{http_code}\n' "$base/login"
+          css="$(grep -oE '/build/assets/[^"]+\.css' login.html | head -1)"
+          test -n "$css"
+          curl -fsS "$base$css" -o app.css
+          ! grep -q '@tailwind' app.css
+          grep -q -- '--tw-' app.css
+          echo "compiled CSS ok ($css)"
+          # Public uploads are served from the shared storage volume.
+          docker compose -p umartechy-ecom -f docker-compose.prod.yml exec -T app sh -c 'echo ci-upload > storage/app/public/ci-check.txt'
+          curl -fsS "$base/storage/ci-check.txt" | grep -q ci-upload
+          # Nothing but the front controller runs PHP; dotfiles are refused.
+          test "$(curl -s -o /dev/null -w '%{http_code}' "$base/.env")" = 403
+          test "$(curl -s -o /dev/null -w '%{http_code}' "$base/server.php")" = 404
+
+      - name: A real backup by the worker, verified and rehearsed
+        run: |
+          dc="docker compose -p umartechy-ecom -f docker-compose.prod.yml"
+          id="$($dc exec -T app php artisan tinker --execute 'echo app(\App\Domain\DataProtection\Services\BackupService::class)->requestScheduled(now("UTC"))["backup"]->public_id;' | tail -1)"
+          echo "backup $id"
+          for i in $(seq 1 60); do
+            status="$($dc exec -T app php artisan tinker --execute "echo \App\Domain\DataProtection\Models\Backup::query()->where('public_id', '$id')->first()->status->value;" | tail -1)"
+            echo "status: $status"
+            [ "$status" = verified ] && break
+            [ "$status" = failed ] && exit 1
+            sleep 5
+          done
+          test "$status" = verified
+          $dc exec -T app php artisan backups:verify --deep
+          $dc exec -T app php artisan backups:rehearse --backup="$id" --force
+
+      - name: Second deploy (update path, with the pre-deploy dump)
+        run: |
+          bash deploy/production/deploy.sh
+          ls -l backups/
+          test -s "$(ls backups/pre-deploy-*.sql.gz | head -1)"
+
+      - name: Logs when something failed
+        if: failure()
+        run: docker compose -p umartechy-ecom -f docker-compose.prod.yml logs --tail=200
+
   # Phase B53 (SRS TEST-009; Module 31 §65): the critical journeys in a real
   # browser against the running app — guest checkout, customer account,
   # owner sign-in with two-step code, developer API — on the built assets.

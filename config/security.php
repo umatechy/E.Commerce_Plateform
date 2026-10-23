@@ -34,6 +34,14 @@ return [
         'lockout_minutes' => 15,
     ],
 
+    // Deployment: the reverse proxies in front of the app (comma-separated IPs
+    // or CIDR ranges, e.g. the Docker network of the production Compose
+    // project). Empty: no proxy is trusted. Only X-Forwarded-For (the
+    // client's IP, for rate limits and audit) and X-Forwarded-Proto (HTTPS)
+    // are read from them — never X-Forwarded-Host: the Host header decides
+    // which store a request belongs to, so it must come from the request.
+    'trusted_proxies' => env('TRUSTED_PROXIES', ''),
+
     'step_up' => [
         // Module 30 §6: sensitive actions need a recent re-authentication.
         'enabled' => (bool) env('STEP_UP_ENABLED', true),

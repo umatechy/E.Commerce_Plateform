@@ -1,0 +1,71 @@
+# Umar Techy E-Commerce — a NEW, separate site for the server's existing Nginx
+# (docs/deployment/production.md, step "Nginx site"). It adds one domain and
+# changes nothing else: no default_server, no catch-all, no edit to any other
+# site file.
+#
+# Replace SHOP_DOMAIN (the e-commerce subdomain) and ECOM_HTTP_PORT (the
+# value in /opt/umartechy-ecommerce/.env). Then, and only with approval:
+#   sudo cp ecommerce-site.conf.example /etc/nginx/sites-available/umartechy-ecommerce.conf
+#   sudo ln -s ../sites-available/umartechy-ecommerce.conf /etc/nginx/sites-enabled/
+#   sudo nginx -t && sudo systemctl reload nginx     # reload is graceful; -t failing means: do not reload
+# The certificate: sudo certbot certonly --webroot -w /var/www/certbot -d SHOP_DOMAIN
+# (or the --nginx plugin limited to this domain), then enable the 443 block.
+# If the existing Nginx runs in a container instead, the same server blocks go
+# into that container's conf.d through its own mounted folder — see the doc.
+
+server {
+    listen 80;
+    listen [::]:80;
+    server_name SHOP_DOMAIN;
+
+    # Let's Encrypt HTTP challenge.
+    location ^~ /.well-known/acme-challenge/ {
+        root /var/www/certbot;
+    }
+
+    location / {
+        return 301 https://$host$request_uri;
+    }
+}
+
+server {
+    listen 443 ssl;
+    listen [::]:443 ssl;
+    http2 on;
+    server_name SHOP_DOMAIN;
+
+    ssl_certificate     /etc/letsencrypt/live/SHOP_DOMAIN/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/SHOP_DOMAIN/privkey.pem;
+    ssl_protocols TLSv1.2 TLSv1.3;
+    ssl_session_cache shared:umartechy_ecom_ssl:10m;
+    ssl_session_timeout 1d;
+
+    # Product pictures and imports (the app allows up to 24 MB per request).
+    client_max_body_size 24m;
+
+    access_log /var/log/nginx/umartechy-ecommerce.access.log;
+    error_log  /var/log/nginx/umartechy-ecommerce.error.log warn;
+
+    location / {
+        proxy_pass http://127.0.0.1:ECOM_HTTP_PORT;
+        proxy_http_version 1.1;
+
+        # The app reads only these two from its trusted proxies (TRUSTED_PROXIES).
+        # Both are SET here, never passed through from the visitor.
+        proxy_set_header X-Forwarded-For $remote_addr;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        # The Host decides the store; pass the one the visitor asked for.
+        proxy_set_header Host $host;
+        # A visitor's own forwarding headers are dropped.
+        proxy_set_header X-Forwarded-Host "";
+        proxy_set_header X-Forwarded-Port "";
+        proxy_set_header X-Forwarded-Prefix "";
+        proxy_set_header X-Real-IP $remote_addr;
+
+        proxy_connect_timeout 10s;
+        proxy_read_timeout 130s;
+        proxy_send_timeout 130s;
+        proxy_buffers 16 16k;
+        proxy_buffer_size 32k;
+    }
+}

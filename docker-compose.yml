@@ -1,5 +1,6 @@
 # Module 20 Phase 38 "Staging Environment" / Phase 43 "Docker Readiness"
-# — local/staging parity only. NOT a production deployment
+# — local/staging parity only. NOT a production deployment (production:
+# docker-compose.prod.yml and docs/deployment/production.md)
 # specification (production is documented separately — see
 # docs/architecture/b20-deployment.md — since a single-host Compose
 # file is not how this platform's production VPS/managed-hosting
@@ -7,7 +8,7 @@
 # run in this Claude App sandbox.
 services:
   app:
-    build: .
+    build: { context: ., target: app }
     depends_on: [mysql, redis]
     environment:
       DB_HOST: mysql
@@ -17,7 +18,7 @@ services:
     networks: [umartechy]
 
   queue-worker:
-    build: .
+    build: { context: ., target: app }
     command: php artisan queue:work --tries=3 --timeout=120
     depends_on: [mysql, redis]
     environment:
@@ -26,7 +27,7 @@ services:
     networks: [umartechy]
 
   scheduler:
-    build: .
+    build: { context: ., target: app }
     # Module 20 Phase 12 — Laravel's own scheduler, run via a 1-minute
     # loop inside the container rather than host cron (Compose has no
     # native cron equivalent); a real VPS/managed-hosting deployment

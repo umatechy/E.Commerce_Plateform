@@ -1,0 +1,175 @@
+# Umar Techy E-Commerce — production on a shared server (docs/deployment/production.md).
+#
+# One Compose project ("umartechy-ecom") with its own containers, networks
+# and volumes, so nothing here can touch another application on the server:
+#   - only "web" publishes a port, and only on 127.0.0.1 (the server's own
+#     Nginx forwards the e-commerce domain to it);
+#   - MySQL and Redis sit on an internal network with no route out and no
+#     published port;
+#   - every service has CPU and memory limits and rotated logs.
+#
+# Settings come from the .env file next to this file (never committed; see
+# deploy/production/env.production.example). Run it only through
+# deploy/production/deploy.sh, or with "-p umartechy-ecom -f docker-compose.prod.yml".
+
+name: umartechy-ecom
+
+x-logging: &logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "5"
+
+x-php: &php
+  image: umartechy-ecom-app:${IMAGE_TAG:-current}
+  env_file: .env
+  environment:
+    DB_CONNECTION: mysql
+    DB_HOST: mysql
+    DB_PORT: "3306"
+    REDIS_HOST: redis
+    REDIS_PORT: "6379"
+  volumes:
+    - storage_app:/var/www/html/storage/app
+    - storage_logs:/var/www/html/storage/logs
+  networks: [app, data]
+  restart: unless-stopped
+  logging: *logging
+  security_opt: ["no-new-privileges:true"]
+  depends_on:
+    mysql:
+      condition: service_healthy
+    redis:
+      condition: service_healthy
+
+services:
+  app:
+    <<: *php
+    build:
+      context: .
+      target: app
+    healthcheck:
+      test: ["CMD-SHELL", "SCRIPT_NAME=/fpm-ping SCRIPT_FILENAME=/fpm-ping REQUEST_METHOD=GET cgi-fcgi -bind -connect 127.0.0.1:9000 | grep -q pong"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 40s
+    deploy:
+      resources:
+        limits: { cpus: "${APP_CPUS:-1.0}", memory: "${APP_MEMORY:-768M}" }
+
+  worker:
+    <<: *php
+    pull_policy: never
+    command: ["php", "artisan", "queue:work", "redis", "--sleep=3", "--tries=3", "--max-time=3600", "--memory=256"]
+    stop_grace_period: 60s
+    deploy:
+      resources:
+        limits: { cpus: "${WORKER_CPUS:-0.5}", memory: "${WORKER_MEMORY:-512M}" }
+
+  scheduler:
+    <<: *php
+    pull_policy: never
+    command: ["php", "artisan", "schedule:work"]
+    deploy:
+      resources:
+        limits: { cpus: "${SCHEDULER_CPUS:-0.25}", memory: "${SCHEDULER_MEMORY:-256M}" }
+
+  web:
+    image: umartechy-ecom-web:${IMAGE_TAG:-current}
+    build:
+      context: .
+      target: web
+    ports:
+      - "127.0.0.1:${ECOM_HTTP_PORT:?set ECOM_HTTP_PORT to a free port checked on the server}:8080"
+    volumes:
+      - storage_app:/var/www/html/storage/app:ro
+    networks: [app]
+    restart: unless-stopped
+    logging: *logging
+    security_opt: ["no-new-privileges:true"]
+    depends_on:
+      app:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O /dev/null http://127.0.0.1:8080/nginx-health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+    deploy:
+      resources:
+        limits: { cpus: "${WEB_CPUS:-0.5}", memory: "${WEB_MEMORY:-128M}" }
+
+  mysql:
+    image: mysql:8.0
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+      - --innodb-buffer-pool-size=${MYSQL_BUFFER_POOL:-256M}
+      - --max-connections=100
+      - --skip-name-resolve
+    # The root password is only in mysql.env, which no other container reads.
+    env_file: mysql.env
+    environment:
+      MYSQL_DATABASE: ${DB_DATABASE:?set DB_DATABASE}
+      MYSQL_USER: ${DB_USERNAME:?set DB_USERNAME}
+      MYSQL_PASSWORD: ${DB_PASSWORD:?set DB_PASSWORD}
+    volumes:
+      - mysql_data:/var/lib/mysql
+      # Runs only when the volume is new: lets the app account run restore rehearsals.
+      - ./docker/mysql/init:/docker-entrypoint-initdb.d:ro
+    networks: [data]
+    restart: unless-stopped
+    logging: *logging
+    security_opt: ["no-new-privileges:true"]
+    healthcheck:
+      # Answers even without credentials, so no password appears here.
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "--silent"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 60s
+    deploy:
+      resources:
+        limits: { cpus: "${MYSQL_CPUS:-1.0}", memory: "${MYSQL_MEMORY:-1G}" }
+
+  redis:
+    image: redis:7.4-alpine
+    # Queued jobs and sessions live here: kept on disk (append-only file), and
+    # never evicted to make room (a full Redis refuses writes instead).
+    command: ["sh", "-c", "exec redis-server --appendonly yes --maxmemory 192mb --maxmemory-policy noeviction --requirepass \"$$REDIS_PASSWORD\""]
+    environment:
+      REDIS_PASSWORD: ${REDIS_PASSWORD:?set REDIS_PASSWORD}
+    volumes:
+      - redis_data:/data
+    networks: [data]
+    restart: unless-stopped
+    logging: *logging
+    security_opt: ["no-new-privileges:true"]
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli -a \"$$REDIS_PASSWORD\" --no-auth-warning ping | grep -q PONG"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    deploy:
+      resources:
+        limits: { cpus: "${REDIS_CPUS:-0.25}", memory: "${REDIS_MEMORY:-256M}" }
+
+networks:
+  # The app containers and the web server. The subnet is fixed so that
+  # TRUSTED_PROXIES can name it; check it is free on the server first.
+  app:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: ${ECOM_APP_SUBNET:-172.30.240.0/24}
+  # MySQL and Redis: reachable only from the app containers, no way out.
+  data:
+    driver: bridge
+    internal: true
+
+volumes:
+  mysql_data:
+  redis_data:
+  storage_app:
+  storage_logs:

@@ -1,0 +1,47 @@
+# Deployment: what never goes into a Docker image. Secrets first — the
+# production values come from the server's own .env at run time, never
+# from the build context.
+.env
+.env.*
+mysql.env
+backups
+.deployed-tag
+.previous-tag
+!.env.example
+**/*.pem
+**/*.key
+auth.json
+
+# Built or installed inside the image instead (Dockerfile stages).
+node_modules
+vendor
+public/build
+public/hot
+public/storage
+public/stores
+
+# Runtime data: lives in named volumes on the server, never in an image.
+storage/app/*
+storage/framework/cache/*
+storage/framework/sessions/*
+storage/framework/testing/*
+storage/framework/views/*
+storage/logs/*
+bootstrap/cache/*.php
+
+# Development and CI only.
+.git
+.github
+.idea
+.vscode
+.claude
+tests
+test-results
+playwright-report
+coverage
+.phpunit.result.cache
+.phpunit.cache
+tsconfig.tsbuildinfo
+docs
+*.log
+docker-compose*.yml

@@ -34,8 +34,10 @@ server {
     # Non-Negotiable: never expose .env, Git metadata, private storage,
     # or backup artifacts.
     location ~ /\.(env|git) { deny all; return 404; }
+    # Only public/ is served; storage (with the backups in storage/app/private)
+    # is outside the web root. There is deliberately no "/backups/" rule: it
+    # would block the backup API (/api/v1/backups/..., /api/v1/super-admin/backups/...).
     location ~ ^/storage/app/(?!public/) { deny all; return 404; }
-    location ~ /backups/ { deny all; return 404; }
 
     location / {
         try_files $uri $uri/ /index.php?$query_string;
