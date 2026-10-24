@@ -237,11 +237,17 @@ jobs:
 
       - name: Off-server backups to an S3-compatible bucket (S3Mock standing in for Hetzner Object Storage)
         run: |
-          docker run -d --name ci-s3 --network umartechy-ecom_data -e initialBuckets=ci-backups adobe/s3mock:latest
+          docker run -d --name ci-s3 --network umartechy-ecom_data adobe/s3mock:latest
+          curl_s3() { docker run --rm --network umartechy-ecom_data curlimages/curl:8.11.1 "$@"; }
+          ready=0
           for i in $(seq 1 45); do
-            docker run --rm --network umartechy-ecom_data curlimages/curl:8.11.1 -fsS http://ci-s3:9090/ci-backups >/dev/null && break
+            if curl_s3 -fsS -o /dev/null http://ci-s3:9090/; then ready=1; break; fi
             sleep 2
           done
+          test "$ready" = 1
+          # Create the bucket (S3 CreateBucket, path style), then make sure it is there.
+          curl_s3 -fsS -X PUT http://ci-s3:9090/ci-backups
+          curl_s3 -fsS -o /dev/null http://ci-s3:9090/ci-backups
           # Settings as on the server; the keys through set-secret.sh, as the owner will enter them.
           sed -i 's#^BACKUP_DISK=.*#BACKUP_DISK=backups_s3#' .env
           printf '%s\n' 'BACKUP_S3_ENDPOINT=http://ci-s3:9090' 'BACKUP_S3_REGION=us-east-1' 'BACKUP_S3_BUCKET=ci-backups' 'BACKUP_S3_PATH_STYLE=true' >> .env
