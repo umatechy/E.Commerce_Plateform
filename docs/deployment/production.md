@@ -1,9 +1,18 @@
 # Production deployment — Umar Techy E-Commerce on the shared Umar Techy server
 
-Status: **prepared, not deployed.** Nothing in this document has been run on the
-server. Every server step below needs the owner's explicit approval first
-(see "Approvals"). The images and the Compose project are built, started and
-smoke-tested in CI (`docker` job in `.github/workflows/ci.yml`) on every push.
+Status: **live at https://store.umartechy.com since 2026-10-24** (release
+`v1.1.0-rc.1`, commit 8a6d87d). Done with the owner's approval: A1 preflight,
+A2 clone, A3 settings, A4 DNS, A5 first install, A6 site file
+(`/opt/utschoolerp/deploy/nginx/conf.d/20-umartechy-shop.conf`; the HTTP-only
+version is kept in `/root/20-umartechy-shop.conf.phase1`), A7 certificate
+(Let's Encrypt, renewed by School ERP's daily job). Open: A8 super admins, A9
+off-server backups and SMTP. Every further server step still needs the owner's
+explicit approval. The images and the Compose project are smoke-tested in CI
+(`docker` job in `.github/workflows/ci.yml`) on every push.
+
+Note for scripted server steps: `docker compose run` reads standard input, so
+in a script fed through `ssh … bash -s` give it `< /dev/null` (or it consumes
+the rest of the script).
 
 The server already runs **School ERP** with real data (Docker + Nginx +
 PostgreSQL). School ERP's availability and data come first: this deployment
