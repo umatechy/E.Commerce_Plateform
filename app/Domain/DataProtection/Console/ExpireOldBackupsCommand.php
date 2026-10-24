@@ -133,6 +133,7 @@ final class ExpireOldBackupsCommand extends Command
         }
 
         // The artifact first: a backup is only "deleted" once its file is gone.
+        $storage = $storage->forBackup($backup); // where it was stored, even if BACKUP_DISK changed since
         if ($backup->storage_path !== null && $storage->exists($backup->storage_path)) {
             $storage->delete($backup->storage_path);
         }

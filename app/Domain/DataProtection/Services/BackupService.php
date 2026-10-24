@@ -284,6 +284,9 @@ final class BackupService
      */
     public function assertArtifactIntact(Backup $backup, BackupStorageAdapter $storage, bool $deep): void
     {
+        // Where this backup was stored, even if BACKUP_DISK has changed since.
+        $storage = $storage->forBackup($backup);
+
         if ($backup->storage_path === null || ! $storage->exists($backup->storage_path)) {
             throw new BackupIntegrityException('Stored artifact is missing.');
         }

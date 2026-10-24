@@ -55,6 +55,12 @@ final class FlakyBackupStorageAdapter implements BackupStorageAdapter
         $this->real->delete($storagePath);
     }
 
+    /** One disk in these tests; staying the same object keeps the simulated failures. */
+    public function forBackup(\App\Domain\DataProtection\Models\Backup $backup): BackupStorageAdapter
+    {
+        return $this;
+    }
+
     public function diskName(): string
     {
         return $this->real->diskName();

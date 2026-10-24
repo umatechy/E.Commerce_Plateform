@@ -103,7 +103,7 @@ final class RestoreRehearsalService
             $this->backups->assertArtifactIntact($backup, $this->storage, deep: false);
 
             // 2. Decode (decrypt, decompress) to the plain dump.
-            $workFiles[] = $artifact = $this->storage->retrieveToLocalPath($backup->storage_path);
+            $workFiles[] = $artifact = $this->storage->forBackup($backup)->retrieveToLocalPath($backup->storage_path);
             $workFiles[] = $plainSql = $this->codec->decode($artifact, (bool) $backup->is_encrypted, $backup->compression);
             $report['prepare_ms'] = $this->elapsedMs($started);
 

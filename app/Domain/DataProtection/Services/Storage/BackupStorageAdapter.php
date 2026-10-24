@@ -32,4 +32,12 @@ interface BackupStorageAdapter
 
     /** The name of the storage location, recorded with the backup. Never a path or a credential. */
     public function diskName(): string;
+
+    /**
+     * Storage for an EXISTING backup: the location recorded with it
+     * (backups.storage_disk), so backups made before BACKUP_DISK changed
+     * (local → off-server) can still be verified, restored and expired.
+     * New backups always go to the current location.
+     */
+    public function forBackup(\App\Domain\DataProtection\Models\Backup $backup): self;
 }

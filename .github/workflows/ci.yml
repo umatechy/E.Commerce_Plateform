@@ -235,6 +235,44 @@ jobs:
           ls -l backups/
           test -s "$(ls backups/pre-deploy-*.sql.gz | head -1)"
 
+      - name: Off-server backups to an S3-compatible bucket (MinIO standing in for Hetzner Object Storage)
+        run: |
+          docker run -d --name ci-minio --network umartechy-ecom_data \
+            -e MINIO_ROOT_USER=ciaccesskey -e MINIO_ROOT_PASSWORD=ci-secret-key-123456 \
+            minio/minio:latest server /data
+          for i in $(seq 1 30); do
+            docker run --rm --network umartechy-ecom_data --entrypoint sh minio/mc:latest -c \
+              'mc alias set ci http://ci-minio:9000 ciaccesskey ci-secret-key-123456 >/dev/null && mc mb --ignore-existing ci/ci-backups' && break
+            sleep 2
+          done
+          # Settings as on the server; the keys through set-secret.sh, as the owner will enter them.
+          sed -i 's#^BACKUP_DISK=.*#BACKUP_DISK=backups_s3#' .env
+          printf '%s\n' 'BACKUP_S3_ENDPOINT=http://ci-minio:9000' 'BACKUP_S3_REGION=us-east-1' 'BACKUP_S3_BUCKET=ci-backups' 'BACKUP_S3_PATH_STYLE=true' >> .env
+          printf 'ciaccesskey\r\n' | bash deploy/production/set-secret.sh BACKUP_S3_ACCESS_KEY
+          printf 'ci-secret-key-123456\n' | bash deploy/production/set-secret.sh BACKUP_S3_SECRET_KEY
+          stat -c '%a' .env | grep -qx 600
+          bash deploy/production/deploy.sh
+          dc="docker compose -p umartechy-ecom -f docker-compose.prod.yml"
+          # A manual platform backup (today's scheduled one already exists), made by the worker.
+          id="$($dc exec -T app php artisan tinker --execute 'echo app(\App\Domain\DataProtection\Services\BackupService::class)->requestBackup(\App\Domain\DataProtection\Models\BackupScope::Platform, null, \App\Domain\DataProtection\Models\BackupInitiator::Manual, null)->public_id;' | tail -1)"
+          echo "s3 backup $id"
+          for i in $(seq 1 60); do
+            status="$($dc exec -T app php artisan tinker --execute "echo \App\Domain\DataProtection\Models\Backup::query()->where('public_id', '$id')->first()->status->value;" | tail -1)"
+            echo "status: $status"
+            [ "$status" = verified ] && break
+            [ "$status" = failed ] && { $dc logs --tail=50 worker; exit 1; }
+            sleep 5
+          done
+          test "$status" = verified
+          disk="$($dc exec -T app php artisan tinker --execute "echo \App\Domain\DataProtection\Models\Backup::query()->where('public_id', '$id')->value('storage_disk') ?? config('backup.disk');" | tail -1)"
+          echo "stored on: $disk"
+          $dc exec -T app php artisan backups:verify --deep
+          $dc exec -T app php artisan backups:rehearse --backup="$id" --force
+          # The artifact is really in the bucket.
+          docker run --rm --network umartechy-ecom_data --entrypoint sh minio/mc:latest -c \
+            'mc alias set ci http://ci-minio:9000 ciaccesskey ci-secret-key-123456 >/dev/null && mc ls --recursive ci/ci-backups' | tee bucket.txt
+          test -s bucket.txt
+
       - name: Logs when something failed
         if: failure()
         run: docker compose -p umartechy-ecom -f docker-compose.prod.yml logs --tail=200

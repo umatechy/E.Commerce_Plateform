@@ -20,6 +20,16 @@ use Illuminate\Support\Facades\Storage;
  */
 final class LocalBackupStorageAdapter implements BackupStorageAdapter
 {
+    /** @param string|null $disk a fixed disk (an existing backup's); null: the current config('backup.disk') */
+    public function __construct(private readonly ?string $disk = null) {}
+
+    public function forBackup(\App\Domain\DataProtection\Models\Backup $backup): BackupStorageAdapter
+    {
+        $recorded = (string) ($backup->storage_disk ?? '');
+
+        return $recorded === '' || $recorded === $this->diskName() ? $this : new self($recorded);
+    }
+
     public function store(string $localTempFilePath, string $storagePath): void
     {
         $stream = fopen($localTempFilePath, 'rb') ?: throw new BackupIntegrityException('The backup working file could not be read.');
@@ -84,7 +94,7 @@ final class LocalBackupStorageAdapter implements BackupStorageAdapter
 
     public function diskName(): string
     {
-        return (string) config('backup.disk', 'local');
+        return $this->disk ?? (string) config('backup.disk', 'local');
     }
 
     private function disk(): Filesystem

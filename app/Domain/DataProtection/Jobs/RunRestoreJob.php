@@ -59,7 +59,7 @@ final class RunRestoreJob implements ShouldQueue
         try {
             $audit->record('restore.started', ['restore_job_id' => $restoreJob->id, 'backup_id' => $backup->public_id, 'reference' => $restoreJob->reference], $restoreJob, $backup->store_id);
 
-            $workFiles[] = $artifact = $storage->retrieveToLocalPath($backup->storage_path);
+            $workFiles[] = $artifact = $storage->forBackup($backup)->retrieveToLocalPath($backup->storage_path);
             $workFiles[] = $plainSql = $codec->decode($artifact, (bool) $backup->is_encrypted, $backup->compression);
 
             $restorer->restore($plainSql);

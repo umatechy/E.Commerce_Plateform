@@ -206,6 +206,11 @@ final class ScheduledBackupTest extends TestCase
                 $this->real = new \App\Domain\DataProtection\Services\Storage\LocalBackupStorageAdapter();
             }
 
+            public function forBackup(\App\Domain\DataProtection\Models\Backup $backup): BackupStorageAdapter
+            {
+                return $this;
+            }
+
             public function store(string $localTempFilePath, string $storagePath): void
             {
                 $damaged = (string) file_get_contents($localTempFilePath);
