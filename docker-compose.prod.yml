@@ -2,7 +2,7 @@
 #
 # One Compose project ("umartechy-ecom") with its own containers, networks
 # and volumes, so nothing here can touch another application on the server:
-#   - only "web" publishes a port, and only on 127.0.0.1 (the server's own
+#   - only "shop-web" publishes a port, and only on 127.0.0.1 (the server's own
 #     Nginx forwards the e-commerce domain to it);
 #   - MySQL and Redis sit on an internal network with no route out and no
 #     published port;
@@ -75,7 +75,10 @@ services:
       resources:
         limits: { cpus: "${SCHEDULER_CPUS:-0.25}", memory: "${SCHEDULER_MEMORY:-256M}" }
 
-  web:
+  # "shop-web", not "web": on a shared proxy network (deploy/production/
+  # compose.shared-proxy.yml) a generic name would collide with another
+  # application's service of that name — School ERP's Nginx proxies to "web".
+  shop-web:
     image: umartechy-ecom-web:${IMAGE_TAG:-current}
     build:
       context: .
@@ -84,7 +87,8 @@ services:
       - "127.0.0.1:${ECOM_HTTP_PORT:?set ECOM_HTTP_PORT to a free port checked on the server}:8080"
     volumes:
       - storage_app:/var/www/html/storage/app:ro
-    networks: [app]
+    networks:
+      app: {}
     restart: unless-stopped
     logging: *logging
     security_opt: ["no-new-privileges:true"]

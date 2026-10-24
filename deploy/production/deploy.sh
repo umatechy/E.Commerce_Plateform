@@ -13,6 +13,12 @@ set -euo pipefail
 
 PROJECT=umartechy-ecom
 COMPOSE=(docker compose -p "$PROJECT" -f docker-compose.prod.yml)
+# The server's web server is a container on another project's network: the shop's
+# web container joins it too (deploy/production/compose.shared-proxy.yml).
+SHARED_PROXY_NETWORK="$(grep -E '^SHARED_PROXY_NETWORK=' .env 2>/dev/null | cut -d= -f2- || true)"
+if [ -n "$SHARED_PROXY_NETWORK" ]; then
+    COMPOSE+=(-f deploy/production/compose.shared-proxy.yml)
+fi
 FIRST_INSTALL=0
 [ "${1:-}" = "--first-install" ] && FIRST_INSTALL=1
 
@@ -29,6 +35,9 @@ done
 grep -q '^APP_ENV=production' .env || die "APP_ENV must be production"
 grep -q '^APP_DEBUG=false' .env || die "APP_DEBUG must be false"
 "${COMPOSE[@]}" config --quiet || die "the Compose configuration is not valid"
+if [ -n "$SHARED_PROXY_NETWORK" ]; then
+    docker network inspect "$SHARED_PROXY_NETWORK" >/dev/null 2>&1 || die "SHARED_PROXY_NETWORK=$SHARED_PROXY_NETWORK does not exist on this server"
+fi
 
 port="$(grep '^ECOM_HTTP_PORT=' .env | cut -d= -f2)"
 tag="$(git rev-parse --short HEAD)"
@@ -36,7 +45,7 @@ previous="$(cat .deployed-tag 2>/dev/null || true)"
 echo "deploy: building $tag (running now: ${previous:-none})"
 
 # --- Build -------------------------------------------------------------------
-IMAGE_TAG="$tag" "${COMPOSE[@]}" build app web
+IMAGE_TAG="$tag" "${COMPOSE[@]}" build app shop-web
 
 # --- Database and Redis ------------------------------------------------------
 IMAGE_TAG="$tag" "${COMPOSE[@]}" up -d --wait mysql redis
@@ -58,7 +67,7 @@ if [ "$FIRST_INSTALL" = 1 ]; then
 fi
 
 # --- Application -------------------------------------------------------------
-IMAGE_TAG="$tag" "${COMPOSE[@]}" up -d --wait app worker scheduler web
+IMAGE_TAG="$tag" "${COMPOSE[@]}" up -d --wait app worker scheduler shop-web
 "${COMPOSE[@]}" exec -T app php artisan queue:restart >/dev/null
 
 # --- Check through the published port, as the server's Nginx will ------------
@@ -73,4 +82,4 @@ for attempt in $(seq 1 20); do
     sleep 3
 done
 "${COMPOSE[@]}" ps
-die "the health check did not pass; see: docker compose -p $PROJECT -f docker-compose.prod.yml logs --tail=100 app web"
+die "the health check did not pass; see: docker compose -p $PROJECT -f docker-compose.prod.yml logs --tail=100 app shop-web"

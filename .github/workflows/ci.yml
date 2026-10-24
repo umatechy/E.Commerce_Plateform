@@ -161,6 +161,9 @@ jobs:
           set_env MAIL_FROM_ADDRESS ci@umartechy.invalid
           # Plain HTTP in CI only.
           set_env SESSION_SECURE_COOKIE false
+          # As on the server: an existing proxy's network the shop's web container joins.
+          set_env SHARED_PROXY_NETWORK ci_shared_proxy
+          docker network create ci_shared_proxy
           echo "MYSQL_ROOT_PASSWORD=$(openssl rand -hex 20)" > mysql.env
           chmod 600 .env mysql.env
 
@@ -197,6 +200,18 @@ jobs:
           # Nothing but the front controller runs PHP; dotfiles are refused.
           test "$(curl -s -o /dev/null -w '%{http_code}' "$base/.env")" = 403
           test "$(curl -s -o /dev/null -w '%{http_code}' "$base/server.php")" = 404
+
+      - name: Reached from the shared proxy network, without taking another app's names
+        run: |
+          # How School ERP's Nginx container reaches the shop.
+          docker run --rm --network ci_shared_proxy curlimages/curl:8.11.1 -fsS http://umartechy-shop-web:8080/api/v1/public/health | grep -q '"status":"ok"'
+          # Generic names must not appear there (School ERP's Nginx proxies to "web").
+          for name in web app mysql redis worker scheduler; do
+            if docker run --rm --network ci_shared_proxy alpine:3.20 getent hosts "$name" >/dev/null; then
+              echo "\"$name\" resolves on the shared network"; exit 1
+            fi
+          done
+          echo "shared network ok"
 
       - name: A real backup by the worker, verified and rehearsed
         run: |

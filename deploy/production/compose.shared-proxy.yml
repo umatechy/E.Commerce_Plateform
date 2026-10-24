@@ -1,0 +1,26 @@
+# Umar Techy E-Commerce — when the server's existing web server is itself a
+# container (School ERP's Nginx on the shared server), it cannot reach
+# 127.0.0.1:<port> on the host, and the host firewall (UFW: deny incoming)
+# stands between its network and the host. Instead, ONLY the shop's web
+# container also joins that proxy's network, under one unmistakable name.
+#
+#   - Nothing of the other application is changed or restarted: joining an
+#     existing network only adds this container to it.
+#   - Only "shop-web" (Nginx with static files) joins; the app, the worker,
+#     MySQL and Redis stay on this project's own networks.
+#   - The other Nginx reaches it as http://umartechy-shop-web:8080.
+#
+# Used by deploy.sh and rollback.sh when SHARED_PROXY_NETWORK is set in .env
+# (on the Umar Techy server: utschoolerp_internal, read by preflight.sh).
+# TRUSTED_PROXIES must then also list that network's subnet.
+
+services:
+  shop-web:
+    networks:
+      shared-proxy:
+        aliases: [umartechy-shop-web]
+
+networks:
+  shared-proxy:
+    external: true
+    name: ${SHARED_PROXY_NETWORK:?set SHARED_PROXY_NETWORK in .env}

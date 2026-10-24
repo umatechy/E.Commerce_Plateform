@@ -1,0 +1,81 @@
+# Umar Techy E-Commerce — a NEW site file for an existing Nginx that runs in a
+# container (on the Umar Techy server: School ERP's utschoolerp-nginx-1, whose
+# conf.d is /opt/utschoolerp/deploy/nginx/conf.d on the host).
+# docs/deployment/production.md, steps A6–A7. Replace SHOP_DOMAIN.
+#
+# It only ADDS server blocks for SHOP_DOMAIN: no default_server, no change to
+# any other file. The shop's web container joins that Nginx's network
+# (deploy/production/compose.shared-proxy.yml) as "umartechy-shop-web".
+#
+# Safety for the other application:
+#   - The upstream is a variable resolved by Docker's DNS at request time, so
+#     this Nginx still starts (and reloads) when the shop's container is down
+#     — only the shop then answers 502.
+#   - This server block has its own add_header, so the other application's
+#     global headers (its CSP and Permissions-Policy "payment=()", from
+#     conf.d/01-security-headers.conf) are NOT applied to the shop; the shop
+#     sends its own security headers (Laravel, AddSecurityHeaders).
+#   - The HTTPS block (PHASE 2) refers to a certificate file; enable it only
+#     after the certificate exists, or the whole Nginx would refuse to start.
+#
+# Apply (each step only with approval; check, then reload — never restart):
+#   cp shop-in-proxy-container.conf /opt/utschoolerp/deploy/nginx/conf.d/20-umartechy-shop.conf
+#   docker exec utschoolerp-nginx-1 nginx -t && docker exec utschoolerp-nginx-1 nginx -s reload
+# Undo: remove the file, then the same two commands.
+
+# ---- PHASE 1: HTTP — certificate challenge, then redirect ------------------
+server {
+    listen 80;
+    listen [::]:80;
+    server_name SHOP_DOMAIN;
+
+    location /.well-known/acme-challenge/ {
+        root /var/www/certbot;
+    }
+
+    location / {
+        return 301 https://$host$request_uri;
+    }
+}
+
+# ---- PHASE 2: HTTPS — uncomment once /etc/letsencrypt/live/SHOP_DOMAIN exists ----
+#server {
+#    listen 443 ssl;
+#    listen [::]:443 ssl;
+#    http2 on;
+#    server_name SHOP_DOMAIN;
+#
+#    ssl_certificate     /etc/letsencrypt/live/SHOP_DOMAIN/fullchain.pem;
+#    ssl_certificate_key /etc/letsencrypt/live/SHOP_DOMAIN/privkey.pem;
+#    ssl_protocols TLSv1.2 TLSv1.3;
+#
+#    # Its own header list: the other application's global headers stop here.
+#    add_header X-Content-Type-Options "nosniff" always;
+#
+#    # Product pictures and imports (the shop allows up to 24 MB per request).
+#    client_max_body_size 24m;
+#
+#    # Docker's DNS; the name is looked up per request (see "Safety" above).
+#    resolver 127.0.0.11 valid=10s ipv6=off;
+#    set $umartechy_shop http://umartechy-shop-web:8080;
+#
+#    location / {
+#        proxy_pass $umartechy_shop;
+#        proxy_http_version 1.1;
+#
+#        # The shop believes only these two from this proxy (TRUSTED_PROXIES), and
+#        # both are SET here — never passed through from the visitor.
+#        proxy_set_header X-Forwarded-For $remote_addr;
+#        proxy_set_header X-Forwarded-Proto $scheme;
+#        # The Host picks the store.
+#        proxy_set_header Host $host;
+#        proxy_set_header X-Forwarded-Host "";
+#        proxy_set_header X-Forwarded-Port "";
+#        proxy_set_header X-Forwarded-Prefix "";
+#        proxy_set_header X-Real-IP $remote_addr;
+#
+#        proxy_connect_timeout 10s;
+#        proxy_read_timeout 130s;
+#        proxy_send_timeout 130s;
+#    }
+#}
