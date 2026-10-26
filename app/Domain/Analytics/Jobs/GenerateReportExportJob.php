@@ -85,6 +85,7 @@ final class GenerateReportExportJob implements ShouldQueue
             ReportType::Marketing => $reports->marketingReport($start, $end),
             ReportType::Notifications => $reports->notificationsReport($start, $end),
             ReportType::Inventory => [$reports->inventoryReport()],
+            ReportType::Categories => $reports->categoriesReport($start, $end),
             ReportType::Products => $reports->productsReport($start, $end, perPage: 1000)->items(),
         };
     }

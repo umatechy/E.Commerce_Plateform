@@ -460,6 +460,8 @@ Route::middleware(['auth:sanctum', 'session.track', 'staff.principal', 'required
     Route::get('/reports/marketing', [ReportController::class, 'marketing']);
     Route::get('/reports/notifications', [ReportController::class, 'notifications']);
     Route::get('/reports/inventory', [ReportController::class, 'inventory']);
+    Route::get('/reports/categories', [ReportController::class, 'categories']); // Phase P3 (Module 22 §18)
+    Route::get('/analytics/overview', [\App\Domain\Analytics\Http\Controllers\AdvancedAnalyticsController::class, 'overview']); // Phase P3: Premium analytics
     Route::post('/exports', [ReportExportController::class, 'store']);
     Route::get('/exports/{export}', [ReportExportController::class, 'show']);
 

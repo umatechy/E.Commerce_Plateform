@@ -619,4 +619,10 @@ export const adminUr: Record<string, string> = {
   'Bonus rewards': 'بونس انعامات',
   'Tiers': 'درجے',
   'Example': 'مثال',
+  'Analytics': 'تجزیات',
+  'Compare periods, customers who come back, carts that become orders.': 'ادوار کا موازنہ، واپس آنے والے گاہک، آرڈر بننے والی کارٹس۔',
+  'Categories & brands': 'زمرے اور برانڈز',
+  'Net sales': 'خالص فروخت',
+  'Customers who ordered': 'آرڈر کرنے والے گاہک',
+  'Returning customers': 'واپس آنے والے گاہک',
 };

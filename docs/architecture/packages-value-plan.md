@@ -97,12 +97,58 @@ whose shipments are all delivered stays `confirmed`, so a commission that
 requires delivery waits until staff move the order. Loyalty accepts both;
 the affiliate rule should do the same — proposed as a small follow-up.
 
-## P3 — Advanced analytics (Premium) and advanced reports (Business)
+## P3 — Advanced analytics (Premium) and advanced reports (Business) — done
 
 Blueprint: Module 22 §19 customer analytics (new vs returning, repeat purchase
 rate, lifetime value, retention), §21 cart and checkout analytics, §22
 conversion definitions with their denominators, §13 comparative periods;
 Rule 24: package entitlements control advanced analytics.
+`advanced_analytics.enabled` left `COMING_SOON` and is on the public pricing.
+
+**What each package gets** (`App\Domain\Analytics\Support\ReportAccess`; the
+exact split is not in the blueprints — this is the proposal built, for the
+owner to change):
+- every package: the dashboard and the core reports — sales, products,
+  customers, stock;
+- Business and Premium (`reports.advanced`, Module 04 §8 "Advanced Reports"):
+  payments, delivery, discounts, campaigns, customer messages and the new
+  **categories & brands** report (§18: revenue, units, orders by main category
+  and by brand, as the taxonomy is now — orders keep no category snapshot);
+- Premium (`advanced_analytics.enabled`): Reports → **Analytics**.
+
+The API refuses a report outside the package with `403 feature_not_entitled`;
+the page shows the package notice instead of asking. Exports follow the same
+rules. **Fixed on the way:** an export of a money report (sales, payments,
+discounts) only checked `analytics.export`, so staff without
+`analytics.financial` could download what they may not view; exports now ask
+for the report's own permission too.
+
+**Analytics** (`AdvancedAnalyticsService`, `GET /analytics/overview`,
+`compare_with` = `previous_period` | `previous_year`; `analytics.view`, money
+figures only with `analytics.financial`, null otherwise):
+- KPIs against the comparison period, named with the result (§13): net sales,
+  orders, average order, customers who ordered, new and returning customers;
+  a change with no earlier figure is null, never 0%.
+- Where the money comes from (§15): products sold − discounts − refunds = net
+  sales; delivery and tax; orders total. Refunds are those made in the period
+  (payment refunds and returns refunded as store credit). Only the store's
+  currency (§14).
+- Who buys (§19): new (first order ever in the period), returning, guests by
+  email; orders with an account vs guest; repeat customers; orders per
+  customer; average lifetime spend.
+- Retention cohorts: customers by month of first order (store time zone), the
+  share ordering again in each of the next five months.
+- From cart to order (§21–22): carts with a product started in the period, the
+  share that became an order (denominator stated), carts left untouched for
+  24 h, online payment failures.
+- Products (§17): in stock but not sold in the period; return rate per product
+  (units accepted back ÷ units sold).
+- Each section has "How is this counted?" with its definition.
+
+**Not measured, said on the page:** product views and checkout visits are not
+recorded, so no view-to-order or checkout conversion is shown (the cart status
+`checkout_started` exists but nothing sets it). Saved, scheduled and custom
+reports (§39–42) are not built.
 
 ## P4 — Business: advanced inventory, marketing and integrations
 

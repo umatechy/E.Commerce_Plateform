@@ -5,7 +5,9 @@ import DataTable, { Pagination, type Column } from '@/Components/ui/DataTable';
 import { SelectField, TextField } from '@/Components/ui/Form';
 import { FilterBar } from '@/Components/ui/Filters';
 import { StatusBadge, humanize } from '@/Components/ui/Badge';
-import { EmptyPanel, QueryState, StatCard, Tabs } from '@/Components/ui/Page';
+import { EmptyPanel, PackageNotice, QueryState, StatCard, Tabs } from '@/Components/ui/Page';
+import { Link } from '@inertiajs/react';
+import { FOCUS_RING } from '@/Components/ui/Button';
 import { useAccess } from '@/lib/access';
 import { readPage, useApi } from '@/lib/useApi';
 import { useUrlState } from '@/lib/useUrlState';
@@ -24,18 +26,20 @@ import { CARRIER_LABELS, PAYMENT_METHOD_LABELS } from '@/lib/orders';
  * reports (sales, payments, promotions) need the financial permission;
  * without it their tabs are not offered and the API refuses them.
  */
-type ReportId = 'sales' | 'products' | 'customers' | 'payments' | 'shipping' | 'promotions' | 'marketing' | 'notifications' | 'inventory';
+type ReportId = 'sales' | 'products' | 'customers' | 'payments' | 'shipping' | 'promotions' | 'marketing' | 'notifications' | 'inventory' | 'categories';
 
-const REPORTS: { id: ReportId; label: string; financial?: boolean }[] = [
+/** Phase P3: `advanced` reports need `reports.advanced` (Business and Premium); the server refuses them otherwise. */
+const REPORTS: { id: ReportId; label: string; financial?: boolean; advanced?: boolean }[] = [
   { id: 'sales', label: 'Sales', financial: true },
   { id: 'products', label: 'Products' },
   { id: 'customers', label: 'Customers' },
-  { id: 'payments', label: 'Payments', financial: true },
-  { id: 'shipping', label: 'Delivery' },
-  { id: 'promotions', label: 'Discounts', financial: true },
-  { id: 'marketing', label: 'Campaigns' },
-  { id: 'notifications', label: 'Customer messages' },
   { id: 'inventory', label: 'Stock' },
+  { id: 'categories', label: 'Categories & brands', financial: true, advanced: true },
+  { id: 'payments', label: 'Payments', financial: true, advanced: true },
+  { id: 'shipping', label: 'Delivery', advanced: true },
+  { id: 'promotions', label: 'Discounts', financial: true, advanced: true },
+  { id: 'marketing', label: 'Campaigns', advanced: true },
+  { id: 'notifications', label: 'Customer messages', advanced: true },
 ];
 
 type Range = { date_filter: string; start: string; end: string };
@@ -203,6 +207,44 @@ function GroupedReport({ id, range, currency }: { id: 'payments' | 'shipping' | 
   );
 }
 
+/** Phase P3 — Module 22 §18: revenue, units and orders by main category and by brand. */
+function CategoriesReport({ range, currency }: { range: Range; currency: string }) {
+  type Line = { id: number | null; name: string | null; revenue_minor: number; units: number; orders: number };
+  const state = useApi<{ data: { categories: Line[]; brands: Line[] } }>(rangeReady(range) ? '/reports/categories' : null, rangeQuery(range));
+  const table = (caption: string, title: string, rows: Line[], none: string) => {
+    const highest = Math.max(1, ...rows.map((row) => row.revenue_minor));
+    const columns: Column<Line>[] = [
+      { key: 'name', header: title, render: (row) => <span className="font-medium">{row.name ?? none}</span> },
+      { key: 'orders', header: 'Orders', align: 'right', render: (row) => row.orders.toLocaleString() },
+      { key: 'units', header: 'Units', align: 'right', priority: true, render: (row) => row.units.toLocaleString() },
+      { key: 'revenue', header: 'Revenue', align: 'right', priority: true, render: (row) => <span className="font-medium">{money(row.revenue_minor, currency)}</span> },
+      {
+        key: 'bar',
+        header: 'Share of the top one',
+        render: (row) => (
+          <span className="block h-2 w-32 rounded bg-slate-100" aria-hidden="true" title={money(row.revenue_minor, currency)}>
+            <span className="block h-2 rounded bg-brand-600" style={{ width: `${Math.round((row.revenue_minor / highest) * 100)}%` }} />
+          </span>
+        ),
+      },
+    ];
+
+    return <DataTable caption={caption} columns={columns} rows={rows} rowKey={(row) => String(row.id)} empty={<p className="text-sm text-slate-600">Nothing was sold in this period.</p>} />;
+  };
+
+  return (
+    <QueryState state={state}>
+      {({ data }) => (
+        <div className="space-y-6">
+          {table('Sales by category', 'Category', data.categories, 'No category')}
+          {table('Sales by brand', 'Brand', data.brands, 'No brand')}
+          <p className="text-xs text-slate-600">Each product counts under its main category and its brand as they are now. Cancelled orders do not count.</p>
+        </div>
+      )}
+    </QueryState>
+  );
+}
+
 type Export = { id: string; status: string; row_count: number | null; failure_reason: string | null; expires_at: string | null; download_url: string | null };
 
 /** Asks the server to prepare a CSV, then looks a few times until it is ready. */
@@ -254,13 +296,21 @@ function ExportButton({ report, range }: { report: ReportId; range: Range }) {
 export default function Reports() {
   const access = useAccess();
   const available = REPORTS.filter((report) => !report.financial || access.can('analytics.financial'));
+  const advancedIncluded = access.feature('reports.advanced') === true;
+  const tabs = available.map((item) => ({ id: item.id, label: item.label }));
   const [filters, setFilters] = useUrlState({ report: (available[0]?.id ?? 'products') as string, date_filter: 'this_month', start: '', end: '' });
   const report = (available.find((item) => item.id === filters.report)?.id ?? available[0]?.id ?? 'products') as ReportId;
   const range: Range = { date_filter: filters.date_filter, start: filters.start, end: filters.end };
 
   return (
     <AdminPage title="Reports" description={`Figures for your store. Days follow your store's timezone (${displayTimezoneName()}).`}>
-      <Tabs label="Reports" tabs={available} active={report} onChange={(id) => setFilters({ report: id })} />
+      {access.feature('advanced_analytics.enabled') === true ? (
+        <Link href="/analytics" className={`group mb-4 flex items-center justify-between gap-3 rounded-2xl border border-brand-200 bg-brand-50 px-4 py-3 text-sm text-brand-900 transition hover:border-brand-400 hover:shadow-sm ${FOCUS_RING}`}>
+          <span><strong>Analytics</strong> — compare periods, new and returning customers, carts that became orders.</span>
+          <span aria-hidden="true" className="transition-transform group-hover:translate-x-1">→</span>
+        </Link>
+      ) : null}
+      <Tabs label="Reports" tabs={tabs} active={report} onChange={(id) => setFilters({ report: id })} />
 
       {report !== 'inventory' && (
         <FilterBar>
@@ -273,12 +323,16 @@ export default function Reports() {
               <div className="w-44"><TextField label="To" type="date" value={filters.end} onChange={(end) => setFilters({ end })} hint="At most 366 days." /></div>
             </>
           )}
-          {access.can('analytics.export') && <ExportButton report={report} range={range} />}
+          {access.can('analytics.export') && (!REPORTS.find((item) => item.id === report)?.advanced || advancedIncluded) && <ExportButton report={report} range={range} />}
         </FilterBar>
       )}
 
       <div role="tabpanel">
-        {!rangeReady(range) && report !== 'inventory' ? (
+        {REPORTS.find((item) => item.id === report)?.advanced && !advancedIncluded ? (
+          <PackageNotice title="This report is part of the advanced reports" packageName={access.packageName} canSeeBilling={access.can('billing.view')}>
+            Payments, delivery, discounts, campaigns, customer messages and sales by category and brand come with the Business and Premium packages.
+          </PackageNotice>
+        ) : !rangeReady(range) && report !== 'inventory' ? (
           <p className="text-sm text-slate-600">Choose the first and the last day.</p>
         ) : report === 'sales' ? (
           <SalesReport range={range} currency={access.currency} />
@@ -288,6 +342,8 @@ export default function Reports() {
           <CustomersReport range={range} />
         ) : report === 'inventory' ? (
           <InventoryReport />
+        ) : report === 'categories' ? (
+          <CategoriesReport range={range} currency={access.currency} />
         ) : (
           <GroupedReport id={report} range={range} currency={access.currency} />
         )}

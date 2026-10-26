@@ -16,7 +16,7 @@ final class RequestExportRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'report_type' => ['required', 'in:sales,products,customers,payments,shipping,promotions,marketing,notifications,inventory'],
+            'report_type' => ['required', 'in:sales,products,customers,payments,shipping,promotions,marketing,notifications,inventory,categories'],
             'date_filter' => ['sometimes', 'in:today,yesterday,last_7_days,last_30_days,this_week,last_week,this_month,last_month,this_quarter,this_year,custom'],
             'start' => ['required_if:date_filter,custom', 'nullable', 'date'],
             'end' => ['required_if:date_filter,custom', 'nullable', 'date'],

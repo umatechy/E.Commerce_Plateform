@@ -145,6 +145,7 @@ Route::middleware(['auth', 'required.mfa'])->group(function () {
         '/loyalty' => 'Marketing/Loyalty', // Phase P2: loyalty points
         '/partner' => 'Partner/Portal', // Phase B58: a reseller's partner portal (its API checks the reseller and two-step sign-in)
         '/reports' => 'Analytics/Reports',
+        '/analytics' => 'Analytics/Advanced', // Phase P3: Premium analytics
         '/notifications' => 'Communication/Index',
         '/team/roles' => 'Team/Roles',
         '/backups' => 'Backups/Index',

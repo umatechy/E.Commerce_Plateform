@@ -12,14 +12,13 @@ namespace App\Domain\Packages\Support;
  * the public pricing never names it.
  *
  * When a feature is built, it leaves this list in the same change.
- *   - advanced_analytics.enabled: phase P3 (loyalty.points was built in P2)
+ *   - (loyalty.points was built in P2, advanced_analytics.enabled in P3)
  *   - inventory.advanced, marketing.advanced, integrations.advanced: phase P4
  *   - ai.recommendations, ai.chatbot: later (owner decision: AI afterwards)
  */
 final class FeatureAvailability
 {
     public const COMING_SOON = [
-        'advanced_analytics.enabled',
         'inventory.advanced',
         'marketing.advanced',
         'integrations.advanced',

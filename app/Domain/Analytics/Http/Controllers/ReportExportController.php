@@ -10,6 +10,7 @@ use App\Domain\Analytics\Models\ReportExport;
 use App\Domain\Analytics\Models\ReportType;
 use App\Domain\Analytics\Policies\AnalyticsPolicy;
 use App\Domain\Analytics\Services\ReportExportService;
+use App\Domain\Analytics\Support\ReportAccess;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -24,6 +25,12 @@ final class ReportExportController
     public function store(RequestExportRequest $request, ReportExportService $exports): JsonResponse
     {
         abort_unless(app(AnalyticsPolicy::class)->export($request->user()), 403);
+        // Phase P3: an export shows what the report shows — the same permission (financial reports) and package.
+        $report = $request->string('report_type')->toString();
+        abort_unless(ReportAccess::permitted($request->user(), $report), 403);
+        if (! ReportAccess::entitled($report)) {
+            return response()->json(['message' => ReportAccess::REFUSAL, 'code' => 'feature_not_entitled'], 403);
+        }
 
         $export = $exports->requestExport(
             ReportType::from($request->string('report_type')->toString()),

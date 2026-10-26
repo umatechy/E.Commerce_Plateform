@@ -82,6 +82,34 @@ final class ReportService
             ->paginate($perPage);
     }
 
+    /**
+     * Phase P3 — Module 22 §18 "Category / Brand Analytics": revenue, units
+     * and orders by the product's main category and by its brand. The
+     * taxonomy is the product's as it is now (Module 07 stays authoritative;
+     * orders keep no category snapshot). Products without one, or no longer
+     * in the catalog, are counted under null so the totals add up.
+     *
+     * @return array{categories: list<array{id: ?int, name: ?string, revenue_minor: int, units: int, orders: int}>, brands: list<array{id: ?int, name: ?string, revenue_minor: int, units: int, orders: int}>}
+     */
+    public function categoriesReport(Carbon $start, Carbon $end): array
+    {
+        $by = function (string $table, string $column) use ($start, $end): array {
+            return OrderItem::query()
+                ->join('orders', 'orders.id', '=', 'order_items.order_id')
+                ->leftJoin('products', 'products.id', '=', 'order_items.product_id')
+                ->leftJoin($table, "{$table}.id", '=', "products.{$column}")
+                ->whereBetween('orders.created_at', [$start, $end])
+                ->where('orders.status', '!=', OrderStatus::Cancelled->value)
+                ->selectRaw("{$table}.id as id, {$table}.name as name, SUM(order_items.line_total_minor) as revenue_minor, SUM(order_items.quantity) as units, COUNT(DISTINCT orders.id) as orders")
+                ->groupBy("{$table}.id", "{$table}.name")
+                ->orderByDesc('revenue_minor')
+                ->toBase()->get()
+                ->map(fn ($row) => ['id' => $row->id === null ? null : (int) $row->id, 'name' => $row->name, 'revenue_minor' => (int) $row->revenue_minor, 'units' => (int) $row->units, 'orders' => (int) $row->orders])
+                ->all();
+        };
+        return ['categories' => $by('categories', 'primary_category_id'), 'brands' => $by('brands', 'brand_id')];
+    }
+
     /** Module 22 §19 "Customer Analytics". */
     public function customersReport(Carbon $start, Carbon $end): array
     {

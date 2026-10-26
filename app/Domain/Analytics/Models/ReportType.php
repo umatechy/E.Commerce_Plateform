@@ -16,4 +16,5 @@ enum ReportType: string
     case Marketing = 'marketing';
     case Notifications = 'notifications';
     case Inventory = 'inventory';
+    case Categories = 'categories'; // Phase P3 (Module 22 §18)
 }

@@ -25,7 +25,7 @@ final class PublicPlans
         'payment.cod', 'payment.online', 'payment.bank_transfer', 'products.variants', 'promotions.basic', 'wishlist.basic',
         'pwa.enabled', 'domains.custom_domain', 'seo.basic', 'marketing.basic',
         // Growing
-        'reviews.product', 'products.units_sold', 'customers.advanced', 'affiliate.programs', 'reports.advanced',
+        'reviews.product', 'products.units_sold', 'customers.advanced', 'affiliate.programs', 'reports.advanced', 'advanced_analytics.enabled',
         'inventory.multi_warehouse', 'custom_roles.enabled', 'integrations.api', 'loyalty.points',
         // Design
         'themes.business', 'homepage.advanced_sections', 'animation.advanced', 'theme.custom_css',

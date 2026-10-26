@@ -113,6 +113,7 @@ export const storeNav: NavGroup[] = [
     tone: 'cyan',
     items: [
       { href: '/reports', label: 'Reports', description: 'Sales, products, payments and more.', permissions: ['analytics.view'] },
+      { href: '/analytics', label: 'Analytics', description: 'Compare periods, customers who come back, carts that become orders.', permissions: ['analytics.view'], feature: 'advanced_analytics.enabled' },
       { href: '/store-health', label: 'Store health', description: 'Health checks for your store.', permissions: ['store_health.view'] },
     ],
   },
@@ -302,7 +303,7 @@ export const NAV_ICONS: Record<string, IconName> = {
   '/products': 'box', '/collections': 'layers', '/badges': 'award', '/reviews': 'star', '/categories': 'folder', '/brands': 'tag', '/attributes': 'sliders', '/inventory': 'database', '/warehouses': 'warehouse',
   '/promotions': 'percent', '/campaigns': 'megaphone', '/affiliates': 'handshake', '/loyalty': 'star', '/segments': 'users', '/notifications': 'chat',
   '/storefront/theme': 'palette', '/content/pages': 'file', '/content/seo': 'search', '/content/redirects': 'link', '/domains': 'globe', '/storefront/app': 'phone', '/shipping': 'truck',
-  '/reports': 'chart', '/store-health': 'activity',
+  '/reports': 'chart', '/analytics': 'activity', '/store-health': 'activity',
   '/team': 'users', '/team/roles': 'key', '/billing': 'receipt', '/settings': 'settings', '/settings/general': 'store', '/settings/payments': 'wallet', '/settings/tax': 'percent', '/settings/audit-log': 'clock',
   '/apps': 'puzzle', '/settings/developer': 'code', '/backups': 'database', '/settings/close-store': 'lock', '/support': 'lifebuoy',
   '/partner': 'handshake', '/security': 'shieldCheck',
