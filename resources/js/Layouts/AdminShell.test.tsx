@@ -58,9 +58,12 @@ describe('admin navigation', () => {
     render(<AuthenticatedLayout>content</AuthenticatedLayout>);
     const nav = screen.getByRole('navigation', { name: 'Admin' });
 
-    expect(within(nav).getByRole('link', { name: 'Platform administration' })).toBeTruthy();
-    expect(within(nav).getByText('Umar Techy staff only')).toBeTruthy();
+    // UI-28: six platform sections, introduced once; only the open one shows its pages.
+    expect(within(nav).getAllByText('Umar Techy staff only')).toHaveLength(1);
+    expect(within(nav).getByRole('link', { name: 'Stores & users' })).toBeTruthy();
+    expect(within(nav).getByRole('link', { name: 'Security & data' })).toBeTruthy();
     expect(within(nav).getByRole('link', { name: 'Stores' }).getAttribute('aria-current')).toBe('page');
+    expect(within(nav).queryByRole('link', { name: 'Platform backups' })).toBeNull(); // its section is closed
   });
 
   it('closes the admin for an owner who has not turned on two-step sign-in, and says why', () => {

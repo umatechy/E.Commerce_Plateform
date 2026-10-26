@@ -602,4 +602,10 @@ export const adminUr: Record<string, string> = {
   'To pack': 'پیک کرنے ہیں',
   'Packing': 'پیکنگ جاری',
   'Ship': 'بھیجیں',
+  'Overview': 'جائزہ',
+  'Stores & users': 'اسٹورز اور صارفین',
+  'Plans & payments': 'پیکجز اور ادائیگیاں',
+  'Messages & support': 'پیغامات اور سپورٹ',
+  'Themes & apps': 'تھیمز اور ایپس',
+  'Security & data': 'سیکیورٹی اور ڈیٹا',
 };

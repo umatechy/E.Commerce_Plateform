@@ -171,14 +171,16 @@ function SidebarNav({ groups, current, path, locked, onNavigate }: { groups: Res
       </div>
 
       <ul className="space-y-1">
-        {sections.map((group) => {
+        {sections.map((group, index) => {
           const active = here?.label === group.label;
+          // The platform sections are introduced once, above the first of them.
+          const firstPlatform = group.platform && !sections[index - 1]?.platform;
           const foldable = !group.hub && group.items.length > 1;
           const open = foldable && (toggled[group.label] ?? active);
 
           return (
-            <li key={group.label} className={`${toneClass(group.tone)} ${group.platform ? 'mt-4 border-t border-slate-200 pt-4' : ''}`}>
-              {group.platform && <p className="mb-1.5 px-2 text-[11px] font-semibold uppercase tracking-wider text-violet-700">{t('Umar Techy staff only')}</p>}
+            <li key={group.label} className={`${toneClass(group.tone)} ${firstPlatform && index > 0 ? 'mt-4 border-t border-slate-200 pt-4' : ''}`}>
+              {firstPlatform && <p className="mb-1.5 px-2 text-[11px] font-semibold uppercase tracking-wider text-violet-700">{t('Umar Techy staff only')}</p>}
               <SectionRow
                 group={group}
                 active={active}

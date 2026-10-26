@@ -143,32 +143,74 @@ export const accountNav: NavItem = { href: '/security', label: 'Security', descr
 /** Phase B58: a reseller's own portal — its clients' stores, commissions and payouts. */
 export const partnerNav: NavItem = { href: '/partner', label: 'Partner portal', description: 'Your clients’ stores, your commissions and payouts.' };
 
-/** Umar Techy Super Admin: pages for platform staff only. The server refuses everyone else, whatever the menu shows. */
-export const platformNav: NavGroup = {
-  label: 'Platform administration',
-  icon: 'shield',
-  tone: 'violet',
-  items: [
-    { href: '/super-admin', label: 'Platform overview', description: 'Stores, orders and payments across the platform.' },
-    { href: '/super-admin/stores', label: 'Stores', description: 'Every store, its package and its health.' },
-    { href: '/super-admin/users', label: 'Users', description: 'Every account on the platform.' },
-    { href: '/super-admin/packages', label: 'Packages', description: 'Packages and what they include.' },
-    { href: '/super-admin/billing', label: 'Platform billing', description: 'Prices, invoices and payments received.' },
-    { href: '/super-admin/payments', label: 'Payment providers', description: 'JazzCash, Easypaisa: live access, health, lookups and findings.' },
-    { href: '/super-admin/messaging', label: 'WhatsApp & SMS', description: 'Alert account and template, SMS providers’ live access, delivery.' },
-    { href: '/super-admin/security', label: 'Security', description: 'Sign-in alerts, staff roles and sessions, incidents, emergency controls.' },
-    { href: '/super-admin/monitoring', label: 'Monitoring', description: 'Infrastructure, store health and queues.' },
-    { href: '/super-admin/audit-log', label: 'Platform audit log', description: 'The audit trail of every store and the platform.' },
-    { href: '/super-admin/catalog', label: 'Themes & domains', description: 'Themes, domains and developer applications.' },
-    { href: '/super-admin/starter-templates', label: 'Starter templates', description: 'Ready-made store structures new stores start from.' },
-    { href: '/super-admin/settings', label: 'Platform settings', description: 'Platform-wide configuration.' },
-    { href: '/super-admin/backups', label: 'Platform backups', description: 'Backups, restore rehearsals and restore requests.' },
-    { href: '/super-admin/support', label: 'Platform support', description: 'Requests from every store to the platform.' },
-    { href: '/super-admin/marketplace', label: 'Marketplace', description: 'Apps stores can install: review, publish and the kill switch.' },
-    { href: '/super-admin/resellers', label: 'Resellers', description: 'Partners who sell Umar Techy: tiers, their stores, commissions and payouts.' },
-    { href: '/super-admin/help', label: 'Help center', description: 'Help articles, their review, feedback, searches and release notes.' },
-  ],
-};
+/**
+ * Umar Techy Super Admin: pages for platform staff only. The server refuses
+ * everyone else, whatever the menu shows. UI-28: grouped like the store menu
+ * — six sections, each with its colour, only the open one unfolded.
+ */
+
+export const platformNav: NavGroup[] = [
+  {
+    label: 'Overview',
+    icon: 'activity',
+    tone: 'violet',
+    items: [
+      { href: '/super-admin', label: 'Platform overview', description: 'Stores, orders and payments across the platform.' },
+      { href: '/super-admin/monitoring', label: 'Monitoring', description: 'Infrastructure, store health and queues.' },
+    ],
+  },
+  {
+    label: 'Stores & users',
+    icon: 'store',
+    tone: 'blue',
+    items: [
+      { href: '/super-admin/stores', label: 'Stores', description: 'Every store, its package and its health.' },
+      { href: '/super-admin/users', label: 'Users', description: 'Every account on the platform.' },
+      { href: '/super-admin/resellers', label: 'Resellers', description: 'Partners who sell Umar Techy: tiers, their stores, commissions and payouts.' },
+    ],
+  },
+  {
+    label: 'Plans & payments',
+    icon: 'receipt',
+    tone: 'emerald',
+    items: [
+      { href: '/super-admin/packages', label: 'Packages', description: 'Packages and what they include.' },
+      { href: '/super-admin/billing', label: 'Platform billing', description: 'Prices, invoices and payments received.' },
+      { href: '/super-admin/payments', label: 'Payment providers', description: 'JazzCash, Easypaisa: live access, health, lookups and findings.' },
+    ],
+  },
+  {
+    label: 'Messages & support',
+    icon: 'chat',
+    tone: 'pink',
+    items: [
+      { href: '/super-admin/messaging', label: 'WhatsApp & SMS', description: 'Alert account and template, SMS providers’ live access, delivery.' },
+      { href: '/super-admin/support', label: 'Platform support', description: 'Requests from every store to the platform.' },
+      { href: '/super-admin/help', label: 'Help center', description: 'Help articles, their review, feedback, searches and release notes.' },
+    ],
+  },
+  {
+    label: 'Themes & apps',
+    icon: 'palette',
+    tone: 'amber',
+    items: [
+      { href: '/super-admin/catalog', label: 'Themes & domains', description: 'Themes, domains and developer applications.' },
+      { href: '/super-admin/starter-templates', label: 'Starter templates', description: 'Ready-made store structures new stores start from.' },
+      { href: '/super-admin/marketplace', label: 'Marketplace', description: 'Apps stores can install: review, publish and the kill switch.' },
+    ],
+  },
+  {
+    label: 'Security & data',
+    icon: 'shield',
+    tone: 'teal',
+    items: [
+      { href: '/super-admin/security', label: 'Security', description: 'Sign-in alerts, staff roles and sessions, incidents, emergency controls.' },
+      { href: '/super-admin/audit-log', label: 'Platform audit log', description: 'The audit trail of every store and the platform.' },
+      { href: '/super-admin/backups', label: 'Platform backups', description: 'Backups, restore rehearsals and restore requests.' },
+      { href: '/super-admin/settings', label: 'Platform settings', description: 'Platform-wide configuration.' },
+    ],
+  },
+];
 
 export type NavEntryState = 'open' | 'locked' | 'not_in_package';
 export type NavEntry = NavItem & { state: NavEntryState; reason?: string };
@@ -189,7 +231,7 @@ function resolve(item: NavItem, access: Access, alwaysOpen = false): NavEntry {
 
 /**
  * The menu for this user: Store Admin sections for a user with a store,
- * the platform section for platform staff, and the user's own account.
+ * the platform sections for platform staff, and the user's own account.
  * A page the user holds no permission for is left out.
  */
 export function navigationFor(access: Access, store: NavGroup[] = storeNav): ResolvedGroup[] {
@@ -204,7 +246,9 @@ export function navigationFor(access: Access, store: NavGroup[] = storeNav): Res
     }
   }
   if (access.isPlatformStaff) {
-    groups.push({ label: platformNav.label, platform: true, icon: platformNav.icon, tone: platformNav.tone, items: platformNav.items.map((item) => resolve(item, access)) });
+    for (const group of platformNav) {
+      groups.push({ label: group.label, platform: true, icon: group.icon, tone: group.tone, items: group.items.map((item) => resolve(item, access)) });
+    }
   }
   groups.push({ label: 'Account', platform: false, icon: 'user', tone: 'slate', items: [...(access.isReseller ? [resolve(partnerNav, access, true)] : []), resolve(accountNav, access, true)] });
 

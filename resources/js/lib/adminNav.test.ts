@@ -54,9 +54,16 @@ describe('navigation', () => {
   it('keeps the platform section apart and only for platform staff', () => {
     const groups = navigationFor(accessFrom(auth({ user: { ...user, is_platform_staff: true }, activeStore: null, stores: [] })));
 
-    expect(groups.map((group) => group.label)).toEqual(['Platform administration', 'Account']);
-    expect(groups[0].platform).toBe(true);
-    expect(groups[0].items.every((item) => item.href.startsWith('/super-admin'))).toBe(true);
+    // UI-28: grouped like the store menu.
+    expect(groups.map((group) => group.label)).toEqual(['Overview', 'Stores & users', 'Plans & payments', 'Messages & support', 'Themes & apps', 'Security & data', 'Account']);
+    const platform = groups.filter((group) => group.platform);
+    expect(platform).toHaveLength(6);
+    expect(platform.every((group) => group.items.every((item) => item.href.startsWith('/super-admin')))).toBe(true);
+    // Every platform page is still in the menu, once.
+    const hrefs = platform.flatMap((group) => group.items.map((item) => item.href));
+    expect(hrefs).toHaveLength(18);
+    expect(new Set(hrefs).size).toBe(18);
+    expect(breadcrumbsFor(groups, '/super-admin/billing')).toEqual([{ label: 'Dashboard', href: '/' }, { label: 'Plans & payments', href: '/super-admin/packages' }, { label: 'Platform billing', href: undefined }]);
   });
 
   it('closes every entry except Security while two-step sign-in is owed', () => {

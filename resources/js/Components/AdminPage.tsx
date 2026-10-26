@@ -60,7 +60,7 @@ export default function AdminPage({ title, description, actions, trail = [], chi
   const current = activeHref(groups, path);
   // Tabs on the section's own pages (a list, a setup page), not on a record or form below one.
   const onSectionPage = current !== null && current === path;
-  const tabs = section && !section.hub && !section.platform && onSectionPage
+  const tabs = section && !section.hub && onSectionPage
     ? section.items.map((item) => ({ href: item.href, label: item.label, icon: NAV_ICONS[item.href], disabled: item.state !== 'open', reason: item.reason }))
     : [];
   const icon = (current && NAV_ICONS[current]) || (section?.hub === path ? NAV_ICONS[path] : undefined) || section?.icon;
