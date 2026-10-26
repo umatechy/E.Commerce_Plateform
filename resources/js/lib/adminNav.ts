@@ -69,6 +69,7 @@ export const storeNav: NavGroup[] = [
       { href: '/reviews', label: 'Reviews', description: 'Ratings and reviews from customers who bought.', permissions: ['reviews.manage'], feature: 'reviews.product' },
       { href: '/badges', label: 'Badges', description: 'Labels on product cards: automatic and your own.', permissions: ['collections.manage', 'products.view'] },
       { href: '/attributes', label: 'Product options', description: 'Options such as size and colour.', permissions: ['attributes.manage', 'products.view'] },
+      { href: '/stock-planning', label: 'Stock planning', description: 'What to order again, stock received from suppliers, transfers between locations.', permissions: ['inventory.view'], feature: 'inventory.advanced' },
       { href: '/warehouses', label: 'Stock locations', description: 'Where your stock is kept.', permissions: ['warehouses.manage', 'inventory.view'] },
     ],
   },
@@ -300,7 +301,7 @@ export function breadcrumbsFor(groups: ResolvedGroup[], path: string): { label: 
 export const NAV_ICONS: Record<string, IconName> = {
   '/': 'grid',
   '/orders': 'cart', '/payments': 'creditCard', '/returns': 'undo', '/shipments': 'truck', '/customers': 'users',
-  '/products': 'box', '/collections': 'layers', '/badges': 'award', '/reviews': 'star', '/categories': 'folder', '/brands': 'tag', '/attributes': 'sliders', '/inventory': 'database', '/warehouses': 'warehouse',
+  '/products': 'box', '/collections': 'layers', '/badges': 'award', '/reviews': 'star', '/categories': 'folder', '/brands': 'tag', '/attributes': 'sliders', '/inventory': 'database', '/warehouses': 'warehouse', '/stock-planning': 'truck',
   '/promotions': 'percent', '/campaigns': 'megaphone', '/affiliates': 'handshake', '/loyalty': 'star', '/segments': 'users', '/notifications': 'chat',
   '/storefront/theme': 'palette', '/content/pages': 'file', '/content/seo': 'search', '/content/redirects': 'link', '/domains': 'globe', '/storefront/app': 'phone', '/shipping': 'truck',
   '/reports': 'chart', '/analytics': 'activity', '/store-health': 'activity',

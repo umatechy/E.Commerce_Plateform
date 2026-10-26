@@ -65,7 +65,8 @@ final class PackageServicesTest extends TestCase
         $this->assertTrue($entitlements['ai.chatbot']['coming_soon']);
         $this->assertFalse($entitlements['loyalty.points']['coming_soon'], 'built in P2');
         $this->assertFalse($entitlements['advanced_analytics.enabled']['coming_soon'], 'built in P3');
-        $this->assertTrue($entitlements['inventory.advanced']['coming_soon']);
+        $this->assertFalse($entitlements['inventory.advanced']['coming_soon'], 'built in P4');
+        $this->assertTrue($entitlements['ai.recommendations']['coming_soon']);
         $this->assertFalse($entitlements['products.variants']['coming_soon']);
         $this->assertSame(PackageServices::DEFAULTS['premium'], $premium['services']);
 

@@ -134,6 +134,7 @@ Route::middleware(['auth', 'required.mfa'])->group(function () {
     foreach ([
         '/products' => 'Catalog/Products', '/collections' => 'Catalog/Collections', '/badges' => 'Catalog/Badges', '/reviews' => 'Catalog/Reviews', '/categories' => 'Catalog/Categories', '/brands' => 'Catalog/Brands', '/attributes' => 'Catalog/Attributes',
         '/warehouses' => 'Inventory/Warehouses',
+        '/stock-planning' => 'Inventory/Planning', // Phase P4a
         '/payments' => 'Payments/Index', '/shipments' => 'Shipping/Shipments', '/shipping' => 'Shipping/Settings',
         '/customers' => 'Customers/Index',
         '/promotions' => 'Marketing/Promotions', '/campaigns' => 'Marketing/Campaigns', '/segments' => 'Marketing/Segments',

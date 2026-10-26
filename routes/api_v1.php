@@ -324,6 +324,15 @@ Route::middleware(['auth:sanctum', 'session.track', 'staff.principal', 'required
     Route::post('/inventory/{inventory}/damaged/write-off', [InventoryController::class, 'writeOffDamaged']);
     Route::get('/inventory/{inventory}/movements', [InventoryController::class, 'movements']);
     Route::post('/inventory/{inventory}/reservations', [ReservationController::class, 'store']);
+    // Phase P4a (Module 08 §71, inventory.advanced): reorder plan, supplier receipts, transfers.
+    $stock = \App\Domain\Inventory\Http\Controllers\StockPlanningController::class;
+    Route::get('/stock/reorder', [$stock, 'reorder']);
+    Route::get('/stock/receipts', [$stock, 'receipts']);
+    Route::post('/stock/receipts', [$stock, 'receive'])->middleware('throttle:60,1,stock-receive');
+    Route::get('/stock/transfers', [$stock, 'transfers']);
+    Route::post('/stock/transfers', [$stock, 'send'])->middleware('throttle:60,1,stock-transfer');
+    Route::post('/stock/transfers/{transfer}/receive', [$stock, 'arrive']);
+    Route::post('/stock/transfers/{transfer}/cancel', [$stock, 'cancel']);
     Route::post('/reservations/{reservation}/release', [ReservationController::class, 'release']);
 
     // --- Orders (Module 09, Phase B5) ---

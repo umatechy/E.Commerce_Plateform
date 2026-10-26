@@ -625,4 +625,6 @@ export const adminUr: Record<string, string> = {
   'Net sales': 'خالص فروخت',
   'Customers who ordered': 'آرڈر کرنے والے گاہک',
   'Returning customers': 'واپس آنے والے گاہک',
+  'Stock planning': 'اسٹاک کی منصوبہ بندی',
+  'What to order again, stock received from suppliers, transfers between locations.': 'دوبارہ کیا منگوانا ہے، سپلائرز سے آیا اسٹاک، مقامات کے درمیان منتقلی۔',
 };

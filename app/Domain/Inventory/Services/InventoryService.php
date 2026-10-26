@@ -594,6 +594,72 @@ final class InventoryService
         return $stale->count();
     }
 
+    /**
+     * Phase P4a: stock into a location by a document (a supplier receipt, a
+     * transfer arriving). With $fromIncoming the units were already shown as
+     * incoming there (a transfer on its way) and leave that figure.
+     */
+    public function stockIn(Inventory $inventory, int $quantity, StockMovementType $type, string $referenceType, int $referenceId, string $reason, int $actorId, string $idempotencyKey, bool $fromIncoming = false): StockMovement
+    {
+        if ($quantity <= 0) {
+            throw new \InvalidArgumentException('A quantity must be above zero.');
+        }
+        if ($existing = $this->findByIdempotencyKey($idempotencyKey)) {
+            return $existing;
+        }
+
+        return DB::transaction(function () use ($inventory, $quantity, $type, $referenceType, $referenceId, $reason, $actorId, $idempotencyKey, $fromIncoming) {
+            $previous = (int) DB::table('inventories')->where('id', $inventory->id)->lockForUpdate()->value('on_hand');
+            DB::table('inventories')->where('id', $inventory->id)->update([
+                'on_hand' => DB::raw("on_hand + {$quantity}"),
+                ...($fromIncoming ? ['incoming' => DB::raw("GREATEST(incoming, {$quantity}) - {$quantity}")] : []),
+                'updated_at' => now(),
+            ]);
+
+            return $this->recordMovement($inventory, $type, $quantity, previousOnHand: $previous, newOnHand: $previous + $quantity,
+                reason: $reason, actorId: $actorId, idempotencyKey: $idempotencyKey, referenceType: $referenceType, referenceId: $referenceId);
+        });
+    }
+
+    /**
+     * Phase P4a: stock out of a location by a document (a transfer sent).
+     * Only what is available (on hand less reserved for orders) can leave.
+     *
+     * @throws InsufficientStockException
+     */
+    public function stockOut(Inventory $inventory, int $quantity, StockMovementType $type, string $referenceType, int $referenceId, string $reason, int $actorId, string $idempotencyKey): StockMovement
+    {
+        if ($quantity <= 0) {
+            throw new \InvalidArgumentException('A quantity must be above zero.');
+        }
+        if ($existing = $this->findByIdempotencyKey($idempotencyKey)) {
+            return $existing;
+        }
+
+        return DB::transaction(function () use ($inventory, $quantity, $type, $referenceType, $referenceId, $reason, $actorId, $idempotencyKey) {
+            $previous = (int) DB::table('inventories')->where('id', $inventory->id)->lockForUpdate()->value('on_hand');
+            $affected = DB::table('inventories')->where('id', $inventory->id)->whereRaw('on_hand - reserved >= ?', [$quantity])
+                ->update(['on_hand' => DB::raw("on_hand - {$quantity}"), 'updated_at' => now()]);
+            if ($affected === 0) {
+                throw new InsufficientStockException($inventory->id, $quantity);
+            }
+            $movement = $this->recordMovement($inventory, $type, -$quantity, previousOnHand: $previous, newOnHand: $previous - $quantity,
+                reason: $reason, actorId: $actorId, idempotencyKey: $idempotencyKey, referenceType: $referenceType, referenceId: $referenceId);
+            $this->maybeRecordLowStockEvent($inventory->fresh());
+
+            return $movement;
+        });
+    }
+
+    /** Phase P4a: units on their way to a location (a transfer sent), or no longer (cancelled). Not stock yet: no movement. */
+    public function changeIncoming(Inventory $inventory, int $delta): void
+    {
+        DB::table('inventories')->where('id', $inventory->id)->update([
+            'incoming' => $delta >= 0 ? DB::raw("incoming + {$delta}") : DB::raw('GREATEST(incoming, '.(-$delta).') - '.(-$delta)),
+            'updated_at' => now(),
+        ]);
+    }
+
     private function recordMovement(
         Inventory $inventory,
         StockMovementType $type,
