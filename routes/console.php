@@ -75,3 +75,5 @@ Schedule::command('affiliates:follow-up')->hourly()->withoutOverlapping();
 Schedule::command('resellers:follow-up')->hourly()->withoutOverlapping();
 // Phase P2: loyalty points follow orders (pending, earned, refunds); birthdays; expiry. Idempotent.
 Schedule::command('loyalty:follow-up')->everyFifteenMinutes()->withoutOverlapping();
+// Phase P4b: automatic marketing messages that are due (welcome, post-purchase, win-back, birthday). Idempotent.
+Schedule::command('marketing:automations')->hourly()->withoutOverlapping();

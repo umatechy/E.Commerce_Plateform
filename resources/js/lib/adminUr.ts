@@ -627,4 +627,6 @@ export const adminUr: Record<string, string> = {
   'Returning customers': 'واپس آنے والے گاہک',
   'Stock planning': 'اسٹاک کی منصوبہ بندی',
   'What to order again, stock received from suppliers, transfers between locations.': 'دوبارہ کیا منگوانا ہے، سپلائرز سے آیا اسٹاک، مقامات کے درمیان منتقلی۔',
+  'Automations': 'خودکار پیغامات',
+  'Welcome, thank-you, win-back and birthday emails that send themselves.': 'خوش آمدید، شکریہ، واپسی اور سالگرہ کی ای میلز جو خود بخود جاتی ہیں۔',
 };

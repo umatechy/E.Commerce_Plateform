@@ -45,6 +45,7 @@ return Application::configure(basePath: dirname(__DIR__))
         app_path('Domain/Affiliates/Console'), // Phase B57: affiliates:follow-up
         app_path('Domain/Resellers/Console'), // Phase B58: resellers:follow-up
         app_path('Domain/Loyalty/Console'), // Phase P2: loyalty:follow-up
+        app_path('Domain/Marketing/Console'), // Phase P4b: marketing:automations
     ])
     ->withRouting(
         web: __DIR__.'/../routes/web.php',

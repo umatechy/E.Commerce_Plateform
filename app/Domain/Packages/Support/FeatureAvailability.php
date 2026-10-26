@@ -19,7 +19,6 @@ namespace App\Domain\Packages\Support;
 final class FeatureAvailability
 {
     public const COMING_SOON = [
-        'marketing.advanced',
         'integrations.advanced',
         'ai.recommendations',
         'ai.chatbot',

@@ -89,6 +89,7 @@ export const storeNav: NavGroup[] = [
     tone: 'pink',
     items: [
       { href: '/promotions', label: 'Discounts', description: 'Discounts and coupon codes.', permissions: ['promotions.view'] },
+      { href: '/automations', label: 'Automations', description: 'Welcome, thank-you, win-back and birthday emails that send themselves.', permissions: ['marketing.view'], feature: 'marketing.advanced' },
       { href: '/campaigns', label: 'Campaigns', description: 'Email campaigns to your customers.', permissions: ['marketing.view'] },
       { href: '/notifications', label: 'Customer messages', description: 'Messages sent to customers: email, WhatsApp & SMS, and their templates.', permissions: ['notifications.view'] },
       { href: '/affiliates', label: 'Affiliates', description: 'People who promote your store and earn commission.', permissions: ['affiliates.view'], feature: 'affiliate.programs' },
@@ -302,7 +303,7 @@ export const NAV_ICONS: Record<string, IconName> = {
   '/': 'grid',
   '/orders': 'cart', '/payments': 'creditCard', '/returns': 'undo', '/shipments': 'truck', '/customers': 'users',
   '/products': 'box', '/collections': 'layers', '/badges': 'award', '/reviews': 'star', '/categories': 'folder', '/brands': 'tag', '/attributes': 'sliders', '/inventory': 'database', '/warehouses': 'warehouse', '/stock-planning': 'truck',
-  '/promotions': 'percent', '/campaigns': 'megaphone', '/affiliates': 'handshake', '/loyalty': 'star', '/segments': 'users', '/notifications': 'chat',
+  '/promotions': 'percent', '/campaigns': 'megaphone', '/automations': 'zap', '/affiliates': 'handshake', '/loyalty': 'star', '/segments': 'users', '/notifications': 'chat',
   '/storefront/theme': 'palette', '/content/pages': 'file', '/content/seo': 'search', '/content/redirects': 'link', '/domains': 'globe', '/storefront/app': 'phone', '/shipping': 'truck',
   '/reports': 'chart', '/analytics': 'activity', '/store-health': 'activity',
   '/team': 'users', '/team/roles': 'key', '/billing': 'receipt', '/settings': 'settings', '/settings/general': 'store', '/settings/payments': 'wallet', '/settings/tax': 'percent', '/settings/audit-log': 'clock',

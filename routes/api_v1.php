@@ -438,6 +438,9 @@ Route::middleware(['auth:sanctum', 'session.track', 'staff.principal', 'required
     Route::get('/marketing/segments', [SegmentController::class, 'index']);
     Route::post('/marketing/segments', [SegmentController::class, 'store']);
     Route::get('/marketing/segments/{segment}/preview', [SegmentController::class, 'preview']);
+    // Phase P4b (marketing.advanced): automatic welcome, post-purchase, win-back and birthday messages.
+    Route::get('/marketing/automations', [\App\Domain\Marketing\Http\Controllers\AutomationController::class, 'index']);
+    Route::put('/marketing/automations/{kind}', [\App\Domain\Marketing\Http\Controllers\AutomationController::class, 'update'])->middleware('throttle:30,1,marketing-automations');
     Route::get('/campaigns', [CampaignController::class, 'index']);
     Route::get('/campaigns/{campaign}', [CampaignController::class, 'show']);
     Route::post('/campaigns', [CampaignController::class, 'store']);

@@ -137,6 +137,7 @@ Route::middleware(['auth', 'required.mfa'])->group(function () {
         '/stock-planning' => 'Inventory/Planning', // Phase P4a
         '/payments' => 'Payments/Index', '/shipments' => 'Shipping/Shipments', '/shipping' => 'Shipping/Settings',
         '/customers' => 'Customers/Index',
+        '/automations' => 'Marketing/Automations', // Phase P4b
         '/promotions' => 'Marketing/Promotions', '/campaigns' => 'Marketing/Campaigns', '/segments' => 'Marketing/Segments',
         '/content/pages' => 'Content/Pages', '/content/redirects' => 'Content/Redirects', '/content/seo' => 'Content/Seo',
         '/storefront/theme' => 'Storefront/Theme', '/domains' => 'Storefront/Domains',
