@@ -100,7 +100,7 @@ final class MarketingAutomationTest extends TestCase
         $this->assertSame([], $this->sentTo($noConsent));
         $this->assertSame([], $this->sentTo($guest));
         $message = NotificationMessage::query()->where('recipient_id', $ayesha->id)->sole();
-        $this->assertStringContainsString($this->store->name, $message->body);
+        $this->assertStringContainsString(e($this->store->name), $message->body); // email bodies are HTML-escaped
         $this->assertStringContainsString('Unsubscribe:', $message->body);
     }
 
