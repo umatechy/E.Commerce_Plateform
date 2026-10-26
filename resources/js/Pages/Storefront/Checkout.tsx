@@ -15,6 +15,7 @@ import BankDetails from '@/Components/Storefront/BankDetails';
 import { normalizeMobile, validCnicLast6 } from '@/lib/payments';
 import { useApp } from '@/Storefront/pwa';
 import { referralToken } from '@/Storefront/referral';
+import LoyaltyCheckout from '@/Components/Storefront/LoyaltyCheckout';
 
 type ShippingOption = { id: number; name: string; type: string; cost_minor: number };
 /** Phase B46: the server's price of the order before it is placed (POST /checkout/summary). */
@@ -94,10 +95,15 @@ export default function Checkout({ storefront, seo, payment_methods, payment_opt
         if (preferred) setForm((current) => ({ ...current, ...addressFields(preferred, current.phone) }));
       })
       .catch(() => setAddresses([]));
+    loadCredit();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [customer, storefront]);
+
+  function loadCredit() {
     storefrontFetch<{ data: { balance_minor: number; currency: string } }>(storefront, '/customer/store-credit')
       .then((res) => setCredit(res.data))
       .catch(() => setCredit(null));
-  }, [customer, storefront]);
+  }
   const base = storefront.base_path;
   const currency = cart?.currency ?? storefront.store.currency;
 
@@ -391,6 +397,15 @@ export default function Checkout({ storefront, seo, payment_methods, payment_opt
                   <span className="block text-xs text-sf-muted">{t('It pays as much of the total as it covers; you pay the rest by the method above.')}</span>
                 </span>
               </label>
+            )}
+            {summary !== null && (
+              <LoyaltyCheckout
+                storefront={storefront}
+                signedIn={customer !== null}
+                // Points are for products after discounts, not for what store credit pays (as the server counts them).
+                baseMinor={summary.subtotal_minor - summary.discount_minor - (hasCredit && useCredit && credit ? Math.min(credit.balance_minor, summary.grand_total_minor) : 0)}
+                onCredited={() => { loadCredit(); setUseCredit(true); }}
+              />
             )}
             <p className="text-xs text-sf-muted">{t('The final total, including any discount and tax, is confirmed when you place the order.')}</p>
             {!connected && (

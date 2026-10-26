@@ -14,6 +14,8 @@ export type Customer = {
   /** Phase B50: order updates on WhatsApp. */
   whatsapp_opt_in?: boolean;
   member_since?: string | null;
+  /** Phase P2: for birthday rewards — day and month only. */
+  birthday?: { month: number; day: number } | null;
 };
 
 export type Address = {

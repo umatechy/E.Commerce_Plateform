@@ -46,11 +46,15 @@ function DetailsForm({ storefront, customer, onSaved }: Shared & { customer: Cus
   const t = useT();
   const [form, setForm] = useState({ name: customer.name, phone: customer.phone ?? '', marketing_email_opt_in: Boolean(customer.marketing_email_opt_in), whatsapp_opt_in: Boolean(customer.whatsapp_opt_in) });
   const [notice, setNotice] = useState<Notice>(null);
+  // Phase P2: the birthday is asked only where the store gives birthday points (or to remove one given before).
+  const askBirthday = (storefront.loyalty?.birthday_points ?? 0) > 0 || Boolean(customer.birthday);
+  const [birthday, setBirthday] = useState({ month: customer.birthday ? String(customer.birthday.month) : '', day: customer.birthday ? String(customer.birthday.day) : '' });
 
   async function submit(event: React.FormEvent) {
     event.preventDefault();
     try {
-      const res = await storefrontFetch<{ data: Customer }>(storefront, '/customer/profile', { method: 'PATCH', body: { ...form, phone: form.phone || null } });
+      const body = { ...form, phone: form.phone || null, ...(askBirthday ? { birthday: birthday.month && birthday.day ? { month: Number(birthday.month), day: Number(birthday.day) } : null } : {}) };
+      const res = await storefrontFetch<{ data: Customer }>(storefront, '/customer/profile', { method: 'PATCH', body });
       onSaved(res.data);
       setNotice({ tone: 'ok', text: t('Saved.') });
     } catch (e) {
@@ -69,6 +73,22 @@ function DetailsForm({ storefront, customer, onSaved }: Shared & { customer: Cus
         <span className="mb-1 block text-sf-muted">{t('Phone')}</span>
         <input value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} className={input} autoComplete="tel" />
       </label>
+      {askBirthday && (
+        <fieldset className="text-sm">
+          <legend className="mb-1 text-sf-muted">{t('Birthday (for a birthday gift of points)')}</legend>
+          <div className="flex gap-2">
+            <select value={birthday.day} onChange={(e) => setBirthday({ ...birthday, day: e.target.value })} className={input} aria-label={t('Day')}>
+              <option value="">{t('Day')}</option>
+              {Array.from({ length: 31 }, (_, i) => <option key={i + 1} value={i + 1}>{i + 1}</option>)}
+            </select>
+            <select value={birthday.month} onChange={(e) => setBirthday({ ...birthday, month: e.target.value })} className={input} aria-label={t('Month')}>
+              <option value="">{t('Month')}</option>
+              {Array.from({ length: 12 }, (_, i) => <option key={i + 1} value={i + 1}>{new Date(2000, i, 1).toLocaleString(undefined, { month: 'long' })}</option>)}
+            </select>
+          </div>
+          <p className="mt-1 text-xs text-sf-muted">{t('Only the day and month. Leave empty if you prefer not to say.')}</p>
+        </fieldset>
+      )}
       <label className="flex items-center gap-2 text-sm">
         <input type="checkbox" checked={form.marketing_email_opt_in} onChange={(e) => setForm({ ...form, marketing_email_opt_in: e.target.checked })} />
         {t('Email me news and offers')}

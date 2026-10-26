@@ -354,12 +354,28 @@ final class StorefrontWebController
                 // Phase B57 (Module 28 §8, §12): arrived through an affiliate link — a token the server signed.
                 'referral' => app(\App\Domain\Affiliates\Services\AffiliateAttribution::class)->fromLanding($request, $store),
                 'affiliate_join' => app(\App\Domain\Affiliates\Services\AffiliateAttribution::class)->joinOpen(),
+                // Phase P2: how the store's loyalty points are earned and used (null: no program).
+                'loyalty' => $this->loyalty(),
                 // Phase B55 (Module 25): the store's installable app (worked out per request, not cached).
                 'pwa' => app(\App\Domain\Pwa\Services\PwaConfig::class)->forPage($store, (string) $request->attributes->get('storefront.base_path')),
             ],
             // A preview is never indexed.
             'seo' => $this->localizedSeo($themePreview !== null ? [...$seo, 'robots' => 'noindex, nofollow'] : $seo),
         ]);
+    }
+
+    /**
+     * Phase P2: the loyalty program as shoppers see it — shown only while it
+     * earns points (customers who still hold points find them in their account).
+     *
+     * @return array<string, mixed>|null
+     */
+    private function loyalty(): ?array
+    {
+        $programs = app(\App\Domain\Loyalty\Services\LoyaltyProgramService::class);
+        $program = $programs->current();
+
+        return $programs->running($program) ? \App\Domain\Loyalty\Http\Controllers\CustomerLoyaltyController::publicProgram($program, true) : null;
     }
 
     /**

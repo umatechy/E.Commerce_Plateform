@@ -128,6 +128,8 @@ final class StepUpTest extends TestCase
             'POST api/v1/backups/{backup}/restore-request',
             // Phase B32: erasing a customer's personal data cannot be undone.
             'POST api/v1/customers/{customer}/erase',
+            // Phase P2: giving or taking loyalty points by hand (they turn into store credit).
+            'POST api/v1/customers/{customer}/loyalty/adjust',
             'POST api/v1/customers/{customer}/merge',
             // Phase B34: giving or taking store credit by hand.
             'POST api/v1/customers/{customer}/store-credit/adjust',

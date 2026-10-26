@@ -34,12 +34,68 @@ The public home page already listed built features only (`PublicPlans::SHOWN_FEA
 - Super Admin → Packages lists only included features; a higher tier says
   "Everything in <tier below>, plus:" when it really includes all of it.
 
-## P2 — Loyalty points (Premium)
+## P2 — Loyalty points (Premium) — done
 
 Blueprints: Module 10 §45, Module 15 §45 (points, tiers, rewards, birthday and
 repeat-purchase rewards; an auditable, tenant-scoped ledger), Module 14 §76
 (loyalty separate from promotion rules; redeemed through a controlled
-adjustment — here the existing store-credit ledger).
+adjustment — here the existing store-credit ledger). `loyalty.points` left
+`FeatureAvailability::COMING_SOON` and is on the public pricing.
+
+**Data** (migration `2030_04_07_000001_loyalty_points`, all store-scoped, all
+purged with the store — `StoreDataMap`):
+`loyalty_programs` (one per store, the store's own rates), `loyalty_accounts`
+(unsigned balance; `lifetime_points` decides the tier), `loyalty_entries`
+(immutable ledger, idempotency key per change), `loyalty_order_awards` (what
+an order earns), `customers.birth_month`/`birth_day` (day and month only).
+
+**Rules** (`App\Domain\Loyalty`):
+- Nothing is proposed: the store enters every rate, and nothing earns points
+  until it turns the program on. Only a rate giving back more than the
+  customer spends (also at the top tier) is refused. Turning on needs
+  `loyalty.points` in the package.
+- Points are for customers with an account, on what they pay for products:
+  after discounts, without delivery, tax added on top, or what store credit
+  paid (`LoyaltyEngine::baseOf`). The tier's bonus is fixed when the order is
+  placed.
+- `loyalty:follow-up` (every 15 minutes, idempotent, per store under its
+  tenant context): new orders get a pending award; an award is earned when
+  the order is paid and delivered — all shipments delivered, or the order
+  moved to delivered by staff — and the hold is over. A cancelled pending
+  order earns nothing. Refunds (payment refunds and returns refunded as
+  credit) take back the same share, also after earning; if the points were
+  used, what is left is taken and the rest written off — the balance never
+  goes negative, and the tier counts all that was taken back. Earned awards
+  are followed for 365 days.
+- Every Nth earned order brings the store's bonus; once a year, on the
+  customer's birthday (store time zone; 29 February on the 28th in other
+  years), customers who have earned points before get the birthday points.
+  Expiry, if set: the balance lapses after that many days without earning or
+  using points.
+- Redemption (`LoyaltyRedemption`): whole steps of the store's rate, from its
+  minimum, into store credit, in one transaction with both ledger entries
+  pointing at each other. It stays possible when the store turns earning off
+  or its package changes: customers keep what they earned.
+- Staff corrections: `loyalty.adjust` (Administrator, Owner), a reason, step-up,
+  audited; they do not raise the tier. `loyalty.view` / `loyalty.manage` for
+  marketing roles. Erasure ends the balance and clears the birthday; the data
+  export lists every entry; merging customers joins balances, entries and
+  awards.
+
+**Screens**: Marketing → Loyalty points (status, plain-language rules, figures
+incl. what the points held are worth, members, settings with a live example
+and the share of spending that comes back); the customer page's Loyalty card;
+the shop's Rewards page (balance and worth, tier progress, one-step
+redemption, how it works, history), the account overview card, the birthday
+in the profile (only where the store gives birthday points), "Earn N loyalty
+points" on product pages, and at checkout the expected points and a one-step
+"Use N points for Rs. X". Shop texts in Urdu too.
+
+**Found while building (not changed in P2):** affiliate commissions (B57)
+qualify on the order's own status `delivered`, which only staff set; an order
+whose shipments are all delivered stays `confirmed`, so a commission that
+requires delivery waits until staff move the order. Loyalty accepts both;
+the affiliate rule should do the same — proposed as a small follow-up.
 
 ## P3 — Advanced analytics (Premium) and advanced reports (Business)
 

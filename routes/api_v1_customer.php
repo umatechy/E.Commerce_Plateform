@@ -48,6 +48,9 @@ Route::middleware(['auth:customer', 'customer.principal'])->group(function () {
     Route::get('/customer/orders/{orderPublicId}', [\App\Domain\CustomerAccount\Http\Controllers\CustomerOrderController::class, 'show']);
     // Module 09 §52 (Phase B34): the customer's own store credit.
     Route::get('/customer/store-credit', [\App\Domain\StoreCredit\Http\Controllers\StoreCreditController::class, 'own']);
+    // Phase P2: the customer's own loyalty points, and turning them into store credit.
+    Route::get('/customer/loyalty', [\App\Domain\Loyalty\Http\Controllers\CustomerLoyaltyController::class, 'show']);
+    Route::post('/customer/loyalty/redeem', [\App\Domain\Loyalty\Http\Controllers\CustomerLoyaltyController::class, 'redeem'])->middleware('throttle:10,1,customer-loyalty-redeem');
     // Module 09 §45 (Phase B33): the customer's own returns.
     Route::get('/customer/orders/{orderPublicId}/returnable', [\App\Domain\Returns\Http\Controllers\CustomerReturnController::class, 'returnable']);
     Route::post('/customer/orders/{orderPublicId}/returns', [\App\Domain\Returns\Http\Controllers\CustomerReturnController::class, 'store'])->middleware('throttle:10,10,customer-returns-create');

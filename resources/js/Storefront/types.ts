@@ -57,6 +57,23 @@ export type ProductDetail = ProductCard & {
   breadcrumbs: { name: string; slug: string }[];
 };
 
+/** Phase P2: the store's loyalty program as shoppers see it. */
+export type LoyaltyProgram = {
+  earning: boolean;
+  currency: string;
+  earn_points: number;
+  earn_spend_minor: number;
+  redeem_points: number;
+  redeem_value_minor: number;
+  min_redeem_points: number;
+  hold_days: number;
+  expiry_days: number | null;
+  birthday_points: number;
+  repeat_every: number | null;
+  repeat_points: number;
+  tiers: { name: string; min_points: number; bonus_percent: number }[];
+};
+
 export type CategoryNode = {
   id: string;
   slug: string;
@@ -100,6 +117,8 @@ export type Shell = {
   referral?: { token: string; code: string; days: number } | null;
   /** Phase B57: the store's affiliate program takes applications (the footer links to its page). */
   affiliate_join?: boolean;
+  /** Phase P2: how the store's loyalty points are earned and used, while it gives them (absent or null: no program). */
+  loyalty?: LoyaltyProgram | null;
   /** Phase B55 (Module 25): the store's installable app; absent in older test fixtures. */
   pwa?: {
     enabled: boolean;

@@ -37,6 +37,7 @@ $storefrontPages = function (): void {
         '/account/forgot-password' => 'ForgotPassword', '/account/reset-password' => 'ResetPassword',
         '/account/orders' => 'Orders', '/account/orders/{orderId}' => 'Order', '/account/addresses' => 'Addresses',
         '/account/profile' => 'Profile', '/account/wishlist' => 'Wishlist',
+        '/account/rewards' => 'Rewards', // Phase P2: loyalty points
         // Phase B32: the link in the "confirm your email" message.
         '/account/verify-email' => 'VerifyEmail',
         // Phase B26: support requests ('new' is registered before the id).
@@ -141,6 +142,7 @@ Route::middleware(['auth', 'required.mfa'])->group(function () {
         '/storefront/app' => 'Storefront/App', // Phase B55: the store's installable app
         '/apps' => 'Apps/Index', // Phase B56: the app marketplace
         '/affiliates' => 'Marketing/Affiliates', // Phase B57: the store's affiliate program
+        '/loyalty' => 'Marketing/Loyalty', // Phase P2: loyalty points
         '/partner' => 'Partner/Portal', // Phase B58: a reseller's partner portal (its API checks the reseller and two-step sign-in)
         '/reports' => 'Analytics/Reports',
         '/notifications' => 'Communication/Index',

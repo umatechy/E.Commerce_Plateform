@@ -73,3 +73,5 @@ Schedule::command('help:maintain')->dailyAt('02:45')->timezone('UTC')->withoutOv
 Schedule::command('affiliates:follow-up')->hourly()->withoutOverlapping();
 // Phase B58 (Module 28 §25): reseller commissions from paid Umar Techy invoices; credit notes taken back; holds ended.
 Schedule::command('resellers:follow-up')->hourly()->withoutOverlapping();
+// Phase P2: loyalty points follow orders (pending, earned, refunds); birthdays; expiry. Idempotent.
+Schedule::command('loyalty:follow-up')->everyFifteenMinutes()->withoutOverlapping();

@@ -35,6 +35,8 @@ use Laravel\Sanctum\HasApiTokens;
  *
  * @property bool $tax_exempt Phase B46
  * @property ?string $tax_exemption_reference Phase B46
+ * @property ?int $birth_month Phase P2: for birthday rewards, set by the customer only
+ * @property ?int $birth_day
  */
 final class Customer extends Model implements AuthenticatableContract
 {
@@ -53,6 +55,8 @@ final class Customer extends Model implements AuthenticatableContract
             'marketing_email_opt_in' => 'boolean',
             'whatsapp_opt_in' => 'boolean',
             'whatsapp_opt_in_at' => 'datetime',
+            'birth_month' => 'integer', // Phase P2
+            'birth_day' => 'integer',
             'tax_exempt' => 'boolean', // Phase B46: set by staff only (not fillable — a customer cannot exempt themselves)
             'email_verified_at' => 'datetime',
             'password' => 'hashed',

@@ -13,6 +13,7 @@ import { loginHref } from '@/Storefront/account';
 import { findVariant, initialSelection, isSelectable, type Selection } from '@/Storefront/variants';
 import type { Availability, ProductCard, ProductDetail, StorefrontPageProps } from '@/Storefront/types';
 import { useT } from '@/Storefront/i18n';
+import { pointsFor } from '@/Storefront/loyalty';
 
 const AVAILABILITY: Record<Availability, string> = { in_stock: 'text-sf-success', low_stock: 'text-sf-warning', backorder: 'text-sf-warning', out_of_stock: 'text-sf-error' };
 
@@ -154,6 +155,10 @@ export default function Product({
             </p>
           )}
           <Price price={price} className="mt-3 text-xl" />
+          {/* Phase P2: what one of these earns, while the store gives loyalty points. */}
+          {storefront.loyalty && pointsFor(storefront.loyalty, price.amount_minor ?? 0) > 0 && (
+            <p className="mt-1 text-sm text-sf-muted"><span aria-hidden="true" className="text-sf-accent">★ </span>{t('Earn {points} loyalty points', { points: pointsFor(storefront.loyalty, price.amount_minor ?? 0).toLocaleString() })}</p>
+          )}
           {product.summary && <p className="mt-4 text-sf-muted">{product.summary}</p>}
 
           {product.options.map((option) => (

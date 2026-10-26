@@ -37,7 +37,8 @@ export default function AccountLayout({
             <p className="mb-6 font-semibold">{customer.name}</p>
             <nav aria-label={t('Account')}>
               <ul className="space-y-1 text-sm">
-                {LINKS.map((link) => (
+                {/* Phase P2: Rewards, while the store gives loyalty points (the overview links to it for customers who still hold some). */}
+                {(shell.loyalty ? [...LINKS.slice(0, 4), { path: '/account/rewards', label: 'Rewards' }, ...LINKS.slice(4)] : LINKS).map((link) => (
                   <li key={link.path}>
                     <Link
                       href={`${shell.base_path}${link.path}`}

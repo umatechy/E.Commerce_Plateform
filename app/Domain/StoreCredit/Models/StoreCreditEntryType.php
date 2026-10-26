@@ -13,4 +13,5 @@ enum StoreCreditEntryType: string
     case OrderCancelled = 'order_cancelled'; // the order it was used on was cancelled
     case Erased = 'erased'; // the customer's personal data was erased; the balance ends
     case Expired = 'expired'; // Phase B35: credit that reached its expiry date (only when the store turned expiry on)
+    case LoyaltyPoints = 'loyalty_points'; // Phase P2: the customer turned loyalty points into credit
 }

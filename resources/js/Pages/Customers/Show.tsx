@@ -2,6 +2,7 @@ import { FormEvent, useState } from 'react';
 import { Link, router } from '@inertiajs/react';
 import AdminPage from '@/Components/AdminPage';
 import StoreCreditCard from '@/Components/Customers/StoreCreditCard';
+import LoyaltyCard from '@/Components/Customers/LoyaltyCard';
 import Button, { ButtonLink, FOCUS_RING } from '@/Components/ui/Button';
 import DataTable, { Pagination, type Column } from '@/Components/ui/DataTable';
 import Dialog, { ConfirmDialog } from '@/Components/ui/Dialog';
@@ -623,6 +624,7 @@ export default function Show({ customerId }: { customerId: string }) {
               )}
             </Card>
             {!merged && <StoreCreditCard customerId={customer.id} version={version} />}
+            {!merged && <LoyaltyCard customerId={customer.id} version={version} />}
             {(access.can('tax.manage') || customer.tax_exempt) && (
               <TaxExemption key={`${customer.tax_exempt}-${customer.tax_exemption_reference}`} customer={customer} canChange={access.can('tax.manage') && access.can('customers.manage') && !merged} onChanged={changed} />
             )}

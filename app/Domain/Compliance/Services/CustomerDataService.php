@@ -49,6 +49,8 @@ final class CustomerDataService
                 'phone' => $customer->phone,
                 'has_account' => $customer->password !== null,
                 'marketing_email_opt_in' => (bool) $customer->marketing_email_opt_in,
+                // Phase P2: the birthday the customer gave for birthday rewards (day and month only).
+                'birthday' => $customer->birth_month === null ? null : sprintf('%02d-%02d', $customer->birth_month, $customer->birth_day),
                 'created_at' => $customer->created_at?->toIso8601String(),
                 'erased_at' => $customer->erased_at?->toIso8601String(),
             ],
@@ -85,6 +87,11 @@ final class CustomerDataService
                 ->map(fn (\App\Domain\StoreCredit\Models\StoreCreditEntry $entry) => [
                     'type' => $entry->type->value, 'amount_minor' => $entry->amount_minor, 'balance_after_minor' => $entry->balance_after_minor,
                     'currency' => $entry->currency, 'at' => $entry->created_at->toIso8601String(),
+                ])->all(),
+            // Phase P2: loyalty points, every entry.
+            'loyalty_points' => \App\Domain\Loyalty\Models\LoyaltyEntry::query()->where('customer_id', $customer->id)->orderBy('id')->get()
+                ->map(fn (\App\Domain\Loyalty\Models\LoyaltyEntry $entry) => [
+                    'type' => $entry->type->value, 'points' => $entry->points, 'balance_after' => $entry->balance_after, 'at' => $entry->created_at->toIso8601String(),
                 ])->all(),
             // Owner decision 15: the product reviews they wrote.
             'reviews' => \App\Domain\Catalog\Models\ProductReview::query()->where('customer_id', $customer->id)->with('product:id,name')->get()
@@ -172,6 +179,7 @@ final class CustomerDataService
             $customer->tags()->detach();
             // Phase B34: nobody can use the balance any more; it ends on the record (the ledger stays, as financial history).
             app(\App\Domain\StoreCredit\Services\StoreCreditService::class)->endForErasedCustomer($customer);
+            app(\App\Domain\Loyalty\Services\LoyaltyLedger::class)->endForErasedCustomer($customer); // Phase P2
             // Phase B33: what the person wrote on a return, and their parcel's tracking number. The
             // return itself stays: it belongs to the order's financial record.
             $returns = \App\Domain\Returns\Models\ReturnRequest::query()->where('customer_id', $customer->id)
@@ -197,6 +205,8 @@ final class CustomerDataService
                 'password' => null,
                 'email_verified_at' => null,
                 'marketing_email_opt_in' => false,
+                'birth_month' => null, // Phase P2
+                'birth_day' => null,
                 'erased_at' => now(),
                 'customer_group_id' => null,
                 'status_reason' => null,

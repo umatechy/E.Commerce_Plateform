@@ -63,7 +63,8 @@ final class PackageServicesTest extends TestCase
         $premium = collect($this->actingAs($admin)->getJson('/api/v1/super-admin/packages')->assertOk()->json('data'))->firstWhere('code', 'premium');
         $entitlements = collect($premium['entitlements'])->keyBy('key');
         $this->assertTrue($entitlements['ai.chatbot']['coming_soon']);
-        $this->assertTrue($entitlements['loyalty.points']['coming_soon']);
+        $this->assertFalse($entitlements['loyalty.points']['coming_soon'], 'built in P2');
+        $this->assertTrue($entitlements['advanced_analytics.enabled']['coming_soon']);
         $this->assertFalse($entitlements['products.variants']['coming_soon']);
         $this->assertSame(PackageServices::DEFAULTS['premium'], $premium['services']);
 

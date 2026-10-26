@@ -44,6 +44,7 @@ return Application::configure(basePath: dirname(__DIR__))
         app_path('Domain/Pwa/Console'), // Phase B55: pwa:vapid-keys
         app_path('Domain/Affiliates/Console'), // Phase B57: affiliates:follow-up
         app_path('Domain/Resellers/Console'), // Phase B58: resellers:follow-up
+        app_path('Domain/Loyalty/Console'), // Phase P2: loyalty:follow-up
     ])
     ->withRouting(
         web: __DIR__.'/../routes/web.php',

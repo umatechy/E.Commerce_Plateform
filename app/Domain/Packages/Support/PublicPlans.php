@@ -26,7 +26,7 @@ final class PublicPlans
         'pwa.enabled', 'domains.custom_domain', 'seo.basic', 'marketing.basic',
         // Growing
         'reviews.product', 'products.units_sold', 'customers.advanced', 'affiliate.programs', 'reports.advanced',
-        'inventory.multi_warehouse', 'custom_roles.enabled', 'integrations.api',
+        'inventory.multi_warehouse', 'custom_roles.enabled', 'integrations.api', 'loyalty.points',
         // Design
         'themes.business', 'homepage.advanced_sections', 'animation.advanced', 'theme.custom_css',
         'themes.premium', 'layout.advanced', 'homepage.reorder', 'animation.premium',

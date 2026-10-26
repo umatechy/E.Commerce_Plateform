@@ -47,6 +47,7 @@ final class SystemRoles
         'returns.view', 'returns.manage', 'returns.approve', // Module 09 §65 (Phase B33); refunds stay with payments.refund
         'reviews.manage', // product reviews (owner decision 15)
         'affiliates.view', 'affiliates.manage', // Module 28 (Phase B57); payouts stay with affiliates.payouts
+        'loyalty.view', 'loyalty.manage', // Phase P2; giving points by hand stays with loyalty.adjust
     ];
 
     /** @return array<string, array{name: string, permissions: list<string>}> slug => definition, Owner first */
@@ -59,6 +60,7 @@ final class SystemRoles
                 ...self::MANAGER,
                 'users.manage', 'products.delete', 'products.view_cost', 'payments.refund',
                 'affiliates.payouts', // Phase B57: paying affiliates is a financial act
+                'loyalty.adjust', // Phase P2: points turn into store credit, so giving them by hand is a financial act
                 'analytics.financial', 'domains.manage', 'storefront.manage', 'audit.view', 'billing.view',
                 'customers.export', 'customers.import', 'store_credit.manage', // creating store credit by hand is a financial act (Phase B34)
                 'tax.manage', // Phase B46: tax set-up is a financial and legal setting
@@ -85,6 +87,7 @@ final class SystemRoles
                 'categories.manage', 'brands.manage', 'attributes.manage', 'collections.manage',
                 'promotions.view', 'promotions.manage', 'marketing.view', 'marketing.manage',
                 'affiliates.view', 'affiliates.manage', // Phase B57
+                'loyalty.view', 'loyalty.manage', // Phase P2
                 'seo.view', 'seo.manage', 'theme.view', 'theme.manage', 'analytics.view',
                 'customers.view', 'reviews.manage',
             ]],

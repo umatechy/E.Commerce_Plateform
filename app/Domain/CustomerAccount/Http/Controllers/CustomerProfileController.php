@@ -29,6 +29,8 @@ final class CustomerProfileController
             ...(new CustomerResource($customer))->resolve($request),
             'marketing_email_opt_in' => (bool) $customer->marketing_email_opt_in,
             'whatsapp_opt_in' => (bool) $customer->whatsapp_opt_in, // Phase B50
+            // Phase P2: for birthday rewards — day and month only, never the year.
+            'birthday' => $customer->birth_month === null ? null : ['month' => $customer->birth_month, 'day' => $customer->birth_day],
             'member_since' => $customer->created_at?->toIso8601String(),
         ]]);
     }
@@ -40,11 +42,21 @@ final class CustomerProfileController
             'phone' => ['nullable', 'string', 'max:32', 'regex:/^[0-9+()\-\s]{4,32}$/'],
             'marketing_email_opt_in' => ['sometimes', 'boolean'],
             'whatsapp_opt_in' => ['sometimes', 'boolean'], // Phase B50: order updates on WhatsApp
+            'birthday' => ['sometimes', 'nullable', 'array:month,day'], // Phase P2
+            'birthday.month' => ['required_with:birthday', 'integer', 'between:1,12'],
+            'birthday.day' => ['required_with:birthday', 'integer', 'between:1,31'],
         ]);
+        if (! empty($validated['birthday']) && ! checkdate((int) $validated['birthday']['month'], (int) $validated['birthday']['day'], 2000)) {
+            throw ValidationException::withMessages(['birthday.day' => 'That day is not in that month.']);
+        }
 
         /** @var Customer $customer */
         $customer = $request->user();
-        $customer->fill(\Illuminate\Support\Arr::except($validated, ['whatsapp_opt_in']))->save();
+        $customer->fill(\Illuminate\Support\Arr::except($validated, ['whatsapp_opt_in', 'birthday']))->save();
+        if (array_key_exists('birthday', $validated)) {
+            // Not fillable: only the customer sets it, here.
+            $customer->forceFill(['birth_month' => $validated['birthday']['month'] ?? null, 'birth_day' => $validated['birthday']['day'] ?? null])->save();
+        }
         if (array_key_exists('whatsapp_opt_in', $validated) && (bool) $validated['whatsapp_opt_in'] !== (bool) $customer->whatsapp_opt_in) {
             $customer->forceFill(['whatsapp_opt_in' => (bool) $validated['whatsapp_opt_in'], 'whatsapp_opt_in_at' => $validated['whatsapp_opt_in'] ? now() : null])->save();
             app(AuditLogger::class)->record('customer.whatsapp_consent_changed', ['opt_in' => (bool) $validated['whatsapp_opt_in']], $customer);

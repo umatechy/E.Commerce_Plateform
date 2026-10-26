@@ -124,6 +124,26 @@ final class CustomerMerger
                 $moved['store_credit_minor'] = ($moved['store_credit_minor'] ?? 0) + (int) $account->balance_minor;
             }
 
+            // Loyalty points (Phase P2): the balance and the points earned so far join the target's; entries and order awards follow.
+            $points = DB::table('loyalty_accounts')->where('store_id', $store)->where('customer_id', $from->id)->lockForUpdate()->first();
+            if ($points !== null) {
+                $targetPoints = DB::table('loyalty_accounts')->where('store_id', $store)->where('customer_id', $into->id)->lockForUpdate()->first();
+                if ($targetPoints === null) {
+                    DB::table('loyalty_accounts')->where('id', $points->id)->update(['customer_id' => $into->id]);
+                    DB::table('loyalty_entries')->where('account_id', $points->id)->update(['customer_id' => $into->id]);
+                } else {
+                    DB::table('loyalty_accounts')->where('id', $targetPoints->id)->update([
+                        'balance' => (int) $targetPoints->balance + (int) $points->balance,
+                        'lifetime_points' => (int) $targetPoints->lifetime_points + (int) $points->lifetime_points,
+                        'last_activity_at' => max($targetPoints->last_activity_at, $points->last_activity_at),
+                    ]);
+                    DB::table('loyalty_entries')->where('account_id', $points->id)->update(['customer_id' => $into->id, 'account_id' => $targetPoints->id]);
+                    DB::table('loyalty_accounts')->where('id', $points->id)->delete();
+                }
+                $moved['loyalty_points'] = (int) $points->balance;
+            }
+            DB::table('loyalty_order_awards')->where('store_id', $store)->where('customer_id', $from->id)->update(['customer_id' => $into->id]);
+
             // The source keeps nothing it could be used with.
             DB::table('customer_email_verifications')->where('customer_id', $from->id)->delete();
             DB::table('customer_password_resets')->where('customer_id', $from->id)->delete();

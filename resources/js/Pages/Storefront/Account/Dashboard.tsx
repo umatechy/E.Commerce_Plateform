@@ -8,6 +8,7 @@ import { errorMessage, storefrontFetch } from '@/Storefront/api';
 import { useCustomer } from '@/Storefront/account';
 import { statusLabel, type OrderSummary } from '@/Storefront/orders';
 import type { StorefrontPageProps } from '@/Storefront/types';
+import type { CustomerLoyalty } from '@/Storefront/loyalty';
 
 const CREDIT_LABELS: Record<string, string> = {
   return_refund: 'Refund of a return',
@@ -15,6 +16,7 @@ const CREDIT_LABELS: Record<string, string> = {
   spent: 'Used on an order',
   order_cancelled: 'Order cancelled',
   expired: 'Expired',
+  loyalty_points: 'From your loyalty points',
 };
 
 /**
@@ -67,6 +69,8 @@ export default function Dashboard({ storefront, seo }: StorefrontPageProps) {
   const [orders, setOrders] = useState<OrderSummary[] | null>(null);
   // Module 09 §52 (Phase B34): store credit, shown only when there is some or has been.
   const [credit, setCredit] = useState<{ balance_minor: number; currency: string; next_expiry?: { amount_minor: number; expires_at: string } | null; entries: { id: string; type: string; amount_minor: number; currency: string; created_at: string }[] } | null>(null);
+  // Phase P2: loyalty points, while the store gives them or the customer still holds some.
+  const [loyalty, setLoyalty] = useState<CustomerLoyalty | null>(null);
   const base = storefront.base_path;
 
   useEffect(() => {
@@ -77,6 +81,9 @@ export default function Dashboard({ storefront, seo }: StorefrontPageProps) {
     storefrontFetch<{ data: NonNullable<typeof credit> }>(storefront, '/customer/store-credit')
       .then((res) => setCredit(res.data))
       .catch(() => setCredit(null));
+    storefrontFetch<{ data: CustomerLoyalty }>(storefront, '/customer/loyalty')
+      .then((res) => setLoyalty(res.data))
+      .catch(() => setLoyalty(null));
   }, [customer, storefront]);
 
   return (
@@ -94,6 +101,19 @@ export default function Dashboard({ storefront, seo }: StorefrontPageProps) {
           </Link>
         ))}
       </div>
+
+      {loyalty?.program && (loyalty.program.earning || loyalty.balance > 0) && (
+        <Link href={`${base}/account/rewards`} className="group mt-8 flex flex-wrap items-center justify-between gap-4 rounded-sf border border-sf-border bg-sf-surface p-4 transition hover:border-sf-accent">
+          <span>
+            <span className="block text-sm text-sf-muted">{t('Your points')}{loyalty.tier ? ` · ${t('{tier} member', { tier: loyalty.tier.name })}` : ''}</span>
+            <span className="block text-2xl font-bold tabular-nums">{loyalty.balance.toLocaleString()}</span>
+            <span className="block text-sm">{loyalty.value_minor > 0 && t('Worth {amount} of store credit', { amount: formatMoney(loyalty.value_minor, loyalty.currency ?? storefront.store.currency) })}</span>
+          </span>
+          <span className="font-semibold text-sf-accent">
+            {t('See rewards')} <span aria-hidden="true" className="inline-block transition-transform group-hover:translate-x-1 rtl:group-hover:-translate-x-1">→</span>
+          </span>
+        </Link>
+      )}
 
       {credit && (credit.balance_minor > 0 || credit.entries.length > 0) && (
         <section className="mt-8 rounded-sf border border-sf-border p-4" aria-label={t('Store credit')}>

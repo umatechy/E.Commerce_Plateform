@@ -278,6 +278,7 @@ Architecture v1.0 arrived after this review was written and are now in
 | SHIP-007 | 🟡 | B49: full courier contract and engine, Test courier, another courier with typed tracking; real couriers await a verified API/sandbox | P1 |
 | PROMO-001–007 | ✅ | B9; admin pages since B31 | P0 |
 | MKT-001–005 | ✅ | Email only (see Module 15 gaps) | P1 |
+| Loyalty (M10 §45, M15 §45, M14 §76) | ✅ | Phase P2 (Premium, `loyalty.points`): points ledger, order awards (pending → earned, refunds take back), tiers, birthday and repeat-purchase rewards, expiry, redemption into store credit; see `docs/architecture/packages-value-plan.md` | P2 |
 
 ### 3.12 SEO (SEO), theme (THEME), animation (ANIM), domains (DOM), hosting (HOST)
 

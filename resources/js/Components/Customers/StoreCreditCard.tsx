@@ -33,6 +33,7 @@ export const STORE_CREDIT_TYPES: Record<string, string> = {
   order_cancelled: 'Order cancelled',
   erased: 'Ended with the erasure of personal data',
   expired: 'Expired',
+  loyalty_points: 'From loyalty points', // Phase P2
 };
 
 function AdjustDialog({ customerId, credit, onClose, onDone }: { customerId: string; credit: StoreCredit; onClose: () => void; onDone: (credit: StoreCredit) => void }) {

@@ -163,6 +163,14 @@ Route::middleware(['auth:sanctum', 'session.track', 'staff.principal', 'required
     Route::get('/affiliates/{affiliate}/adjustments', [$aff, 'adjustments']);
     Route::post('/affiliates/{affiliate}/adjustments', [$aff, 'adjust'])->middleware(['step_up', 'idempotent']);
 
+    // --- Loyalty points (Phase P2): loyalty.view / .manage / .adjust (LoyaltyPolicy) ---
+    $loyalty = \App\Domain\Loyalty\Http\Controllers\LoyaltyAdminController::class;
+    Route::get('/loyalty/overview', [$loyalty, 'overview']);
+    Route::put('/loyalty/program', [$loyalty, 'saveProgram'])->middleware('throttle:30,1,loyalty-program');
+    Route::post('/loyalty/program/enable', [$loyalty, 'enable']);
+    Route::post('/loyalty/program/disable', [$loyalty, 'disable']);
+    Route::get('/loyalty/members', [$loyalty, 'members']);
+
     // --- The partner portal (Module 28, Phase B58): the reseller of the signed-in account, with two-step sign-in ---
     Route::post('/partner/invitations/accept', [\App\Domain\Resellers\Http\Controllers\PartnerJoinController::class, 'accept'])->middleware('throttle:10,1,partner-accept');
     Route::middleware('reseller')->prefix('partner')->group(function () {
@@ -505,6 +513,9 @@ Route::middleware(['auth:sanctum', 'session.track', 'staff.principal', 'required
     // Module 09 §52 (Phase B34): store credit. Giving or taking it by hand asks for the password again.
     Route::get('/customers/{customer}/store-credit', [\App\Domain\StoreCredit\Http\Controllers\StoreCreditController::class, 'show']);
     Route::post('/customers/{customer}/store-credit/adjust', [\App\Domain\StoreCredit\Http\Controllers\StoreCreditController::class, 'adjust'])->middleware(['idempotent', 'step_up', 'throttle:20,10,store-credit-adjust']);
+    // Phase P2: the customer's loyalty points. Giving or taking them by hand asks for the password again.
+    Route::get('/customers/{customer}/loyalty', [\App\Domain\Loyalty\Http\Controllers\LoyaltyAdminController::class, 'customer']);
+    Route::post('/customers/{customer}/loyalty/adjust', [\App\Domain\Loyalty\Http\Controllers\LoyaltyAdminController::class, 'adjust'])->middleware(['idempotent', 'step_up', 'throttle:20,10,loyalty-adjust']);
     Route::post('/customers/{customer}/merge', [\App\Domain\Customers\Http\Controllers\CustomerController::class, 'merge'])->middleware(['step_up', 'throttle:10,10,customers-merge']);
     Route::get('/customers/{customer}/activity', [\App\Domain\Customers\Http\Controllers\CustomerController::class, 'activity']);
     Route::get('/customers/{customer}/notes', [\App\Domain\Customers\Http\Controllers\CustomerRecordsController::class, 'notes']);

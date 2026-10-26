@@ -48,7 +48,7 @@ final class StoreDataMap
         'collections', 'content_pages', 'content_translations', 'coupons', 'courier_accounts',
         'customer_addresses', 'customer_email_verifications', 'customer_groups', 'customer_merges',
         'customer_notes', 'customer_password_resets', 'customer_tag_assignments', 'customer_tags', 'customers',
-        'developer_applications', 'domains', 'help_feedback', 'idempotency_keys', 'inventories', 'marketing_segments', 'messaging_accounts',
+        'developer_applications', 'domains', 'help_feedback', 'idempotency_keys', 'inventories', 'loyalty_accounts', 'loyalty_entries', 'loyalty_order_awards', 'loyalty_programs', 'marketing_segments', 'messaging_accounts',
         'messaging_templates', 'notification_delivery_attempts', 'notification_messages',
         'notification_suppressions', 'notification_templates', 'order_items', 'order_number_sequences',
         'order_promotions', 'order_timeline_events', 'orders', 'outbox_events', 'payment_attempts',
