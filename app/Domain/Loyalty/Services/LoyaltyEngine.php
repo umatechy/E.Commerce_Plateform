@@ -10,6 +10,7 @@ use App\Domain\Loyalty\Models\LoyaltyOrderAward;
 use App\Domain\Loyalty\Models\LoyaltyProgram;
 use App\Domain\Orders\Models\Customer;
 use App\Domain\Orders\Models\Order;
+use App\Domain\Orders\Support\OrderDelivery;
 use App\Domain\Settings\Services\ConfigService;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -36,8 +37,6 @@ use Illuminate\Support\Facades\DB;
  */
 final class LoyaltyEngine
 {
-    /** Order statuses after delivery (Module 09 lifecycle). */
-    private const DELIVERED = ['delivered', 'completed', 'return_requested', 'partially_returned', 'partially_refunded', 'returned', 'refund_pending', 'refunded'];
 
     /** Earned awards are followed for refunds for this long. */
     private const REFUND_WATCH_DAYS = 365;
@@ -241,28 +240,13 @@ final class LoyaltyEngine
         return $payments + $credit;
     }
 
-    /**
-     * When the paid order was delivered, or null while it is not both. An
-     * order is delivered when all of it went out and every shipment arrived
-     * (Module 13: the shipments carry delivery), or when staff moved the
-     * order itself to delivered.
-     */
+    /** When the paid order was delivered (OrderDelivery), or null while it is not both. */
     private function deliveredAt(Order $order): ?Carbon
     {
         if (! in_array($order->payment_status->value, ['paid', 'partially_refunded'], true)) {
             return null;
         }
-        if ($order->fulfillment_status->value === 'fulfilled') {
-            $shipments = DB::table('shipments')->where('order_id', $order->id)->where('status', '!=', 'cancelled');
-            if (! (clone $shipments)->where('status', '!=', 'delivered')->exists() && ($last = (clone $shipments)->max('delivered_at')) !== null) {
-                return Carbon::parse($last, 'UTC');
-            }
-        }
-        if (! in_array($order->status->value, self::DELIVERED, true)) {
-            return null;
-        }
-        $delivered = DB::table('order_timeline_events')->where('order_id', $order->id)->where('to_status', 'delivered')->min('created_at');
 
-        return Carbon::parse($delivered ?? $order->completed_at ?? $order->updated_at);
+        return OrderDelivery::deliveredAt($order);
     }
 }

@@ -148,18 +148,16 @@ final class AffiliateLedger
      */
     private function qualifiedSince(Order $order, array $snapshot): ?Carbon
     {
-        if (($snapshot['require_payment'] ?? true) && $order->payment_status->value !== 'paid') {
+        // A partial refund leaves the order paid for the rest (its share is taken back above).
+        if (($snapshot['require_payment'] ?? true) && ! in_array($order->payment_status->value, ['paid', 'partially_refunded'], true)) {
             return null;
         }
         if (! ($snapshot['require_delivery'] ?? true)) {
             return Carbon::parse($order->created_at);
         }
-        if (! in_array($order->status->value, ['delivered', 'completed', 'return_requested', 'partially_returned', 'partially_refunded'], true)) {
-            return null;
-        }
-        $delivered = DB::table('order_timeline_events')->where('order_id', $order->id)->where('to_status', 'delivered')->min('created_at');
 
-        return Carbon::parse($delivered ?? $order->completed_at ?? $order->updated_at);
+        // Delivered by its shipments, or moved to delivered by staff (before: only the second counted).
+        return \App\Domain\Orders\Support\OrderDelivery::deliveredAt($order);
     }
 
     /** §42: the store decides on a commission held for review. */

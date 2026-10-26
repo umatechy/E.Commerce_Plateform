@@ -91,11 +91,13 @@ in the profile (only where the store gives birthday points), "Earn N loyalty
 points" on product pages, and at checkout the expected points and a one-step
 "Use N points for Rs. X". Shop texts in Urdu too.
 
-**Found while building (not changed in P2):** affiliate commissions (B57)
-qualify on the order's own status `delivered`, which only staff set; an order
-whose shipments are all delivered stays `confirmed`, so a commission that
-requires delivery waits until staff move the order. Loyalty accepts both;
-the affiliate rule should do the same — proposed as a small follow-up.
+**Found while building, fixed after P4 (owner's yes):** affiliate commissions
+(B57) qualified only on the order's own status `delivered`, which only staff
+set; an order whose shipments are all delivered stays `confirmed`, so a
+commission that requires delivery waited until staff moved the order. Both
+now use `App\Domain\Orders\Support\OrderDelivery` (all shipments delivered,
+or the order moved to delivered); a partly refunded order also counts as
+paid for its rest.
 
 ## P3 — Advanced analytics (Premium) and advanced reports (Business) — done
 

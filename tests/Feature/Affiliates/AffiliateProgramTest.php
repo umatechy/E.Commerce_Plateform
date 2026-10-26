@@ -193,6 +193,24 @@ final class AffiliateProgramTest extends TestCase
 
     // --- Lifecycle (§21–24) ---
 
+    /** An order whose shipments all arrived stays "confirmed": its delivery still counts (before, only staff moving the order did). */
+    public function test_an_order_delivered_by_its_shipments_qualifies_without_staff_moving_the_order(): void
+    {
+        [$store, $owner, $product, $pickup] = $this->store();
+        $code = $this->runningProgramWithAffiliate($owner);
+        $order = $this->checkout($store, $product, $pickup, $this->token($store, $code));
+        $commission = fn () => AffiliateCommission::query()->withoutTenantScope()->where('order_id', $order->id)->sole();
+        $warehouse = \App\Domain\Inventory\Models\Warehouse::query()->withoutTenantScope()->where('store_id', $store->id)->where('is_default', true)->value('id');
+
+        DB::table('orders')->where('id', $order->id)->update(['fulfillment_status' => 'fulfilled', 'payment_status' => 'paid']);
+        DB::table('shipments')->insert(['public_id' => (string) \Illuminate\Support\Str::ulid(), 'store_id' => $store->id, 'order_id' => $order->id, 'warehouse_id' => $warehouse,
+            'carrier' => 'store_pickup', 'status' => 'delivered', 'currency' => 'USD', 'delivered_at' => now()->subDays(15), 'idempotency_key' => 'ship-1', 'created_at' => now(), 'updated_at' => now()]);
+        $this->assertSame('confirmed', $order->fresh()->status->value);
+
+        app(AffiliateLedger::class)->followUp();
+        $this->assertSame('approved', $commission()->status, 'delivered 15 days ago, paid, the 14-day hold is over');
+    }
+
     public function test_commissions_follow_their_orders_through_delivery_hold_refund_and_cancellation(): void
     {
         [$store, $owner, $product, $pickup] = $this->store();
