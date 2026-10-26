@@ -5,8 +5,6 @@ import { Card, QueryState, StatCard } from '@/Components/ui/Page';
 import { useApi } from '@/lib/useApi';
 import { fromMinor } from '@/lib/money';
 import Icon from '@/Components/ui/Icon';
-import { Link } from '@inertiajs/react';
-import { FOCUS_RING } from '@/Components/ui/Button';
 import { recoveryPointText, type BackupSummary } from '@/lib/backups';
 
 /**
@@ -64,7 +62,7 @@ export default function Dashboard() {
                 {attention.map((item) => (
                   <li key={item.text} className="flex flex-wrap items-center justify-between gap-2">
                     <span>{item.text}</span>
-                    <Link href={item.href} className={`rounded font-semibold underline ${FOCUS_RING}`}>Open</Link>
+                    <ButtonLink href={item.href} size="sm" variant="soft">Open<Icon name="arrowRight" size={14} className="rtl:-scale-x-100" /></ButtonLink>
                   </li>
                 ))}
               </ul>

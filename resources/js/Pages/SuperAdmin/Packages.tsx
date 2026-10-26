@@ -4,6 +4,7 @@ import Button, { ButtonLink } from '@/Components/ui/Button';
 import Dialog from '@/Components/ui/Dialog';
 import { CheckboxField, FormError, TextField } from '@/Components/ui/Form';
 import Badge from '@/Components/ui/Badge';
+import Icon from '@/Components/ui/Icon';
 import { Card, EmptyPanel, QueryState } from '@/Components/ui/Page';
 import { useApi } from '@/lib/useApi';
 import { useForm } from '@/lib/useForm';
@@ -146,6 +147,21 @@ function EntitlementsDialog({ target, all, onClose, onDone }: { target: Package;
   );
 }
 
+/** The feature keys a package includes. */
+function enabledFeatures(item: Package): Set<string> {
+  return new Set((item.entitlements ?? []).filter((e) => e.type === 'feature' && e.enabled === true).map((e) => e.key));
+}
+
+/**
+ * UI-29: packages from the smallest to the largest (by features included,
+ * then as the server listed them), each with the one below it.
+ */
+function ladder<T extends Package>(packages: T[]): { item: T; previous: T | null }[] {
+  const ordered = packages.map((item, index) => ({ item, index, size: enabledFeatures(item).size })).sort((a, b) => a.size - b.size || a.index - b.index);
+
+  return ordered.map(({ item }, i) => ({ item, previous: i > 0 ? ordered[i - 1].item : null }));
+}
+
 export default function Packages() {
   const state = useApi<{ data: (Package & { id?: number })[] }>('/super-admin/packages');
   const [editing, setEditing] = useState<Package | 'new' | null>(null);
@@ -168,8 +184,12 @@ export default function Packages() {
             <EmptyPanel title="No packages" />
           ) : (
             <div className="grid gap-4 lg:grid-cols-3">
-              {data.map((item) => {
-                const features = (item.entitlements ?? []).filter((entitlement) => entitlement.type === 'feature');
+              {ladder(data).map(({ item, previous }) => {
+                const included = enabledFeatures(item);
+                // UI-29: only what the package includes; a higher tier names the one below and adds what is new.
+                // Said only when it is true — a package missing anything of the one below lists all it has.
+                const builds = previous !== null && [...enabledFeatures(previous)].every((key) => included.has(key));
+                const shown = builds && previous ? [...included].filter((key) => !enabledFeatures(previous).has(key)) : [...included];
                 const limits = (item.entitlements ?? []).filter((entitlement) => entitlement.type !== 'feature');
 
                 return (
@@ -193,15 +213,27 @@ export default function Packages() {
                         ))}
                       </ul>
                     )}
-                    <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-500">Features</h3>
-                    <ul className="text-sm">
-                      {features.map((feature) => (
-                        <li key={feature.key} className="flex justify-between gap-2 border-b border-slate-100 py-1">
-                          <span>{labelFor(FEATURE_LABELS, feature.key)}</span>
-                          <span className={feature.enabled ? 'font-medium text-green-800' : 'text-slate-500'}>{feature.enabled ? 'Yes' : 'No'}</span>
-                        </li>
-                      ))}
-                    </ul>
+                    <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                      Features <span className="font-normal normal-case tracking-normal text-slate-400">· {included.size} included</span>
+                    </h3>
+                    {builds && previous && (
+                      <p className="mt-2 flex items-center gap-2 rounded-xl border border-brand-100 bg-brand-50 px-3 py-2 text-sm font-semibold text-brand-800">
+                        <Icon name="layers" size={16} className="flex-none text-brand-600" />
+                        Everything in {previous.name}, plus:
+                      </p>
+                    )}
+                    {shown.length === 0 ? (
+                      <p className="mt-2 text-sm text-slate-600">{builds ? 'Nothing more — the same features, with the limits above.' : 'No features included.'}</p>
+                    ) : (
+                      <ul className="mt-2 space-y-1.5 text-sm">
+                        {shown.map((key) => (
+                          <li key={key} className="flex items-start gap-2">
+                            <span aria-hidden="true" className="mt-0.5 flex h-5 w-5 flex-none items-center justify-center rounded-full bg-emerald-50 text-emerald-600"><Icon name="check" size={13} /></span>
+                            <span className="text-slate-800">{labelFor(FEATURE_LABELS, key)}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
                   </Card>
                 );
               })}

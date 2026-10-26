@@ -514,7 +514,8 @@
 }
 /* Whatever sits in the bar stays readable on the dark colour. */
 .card-head :is(h2, h3) { color: #fff; }
-.card-head :is(.text-slate-500, .text-slate-600, .text-slate-700) { color: rgb(255 255 255 / 0.78); }
+/* Only plain text: a badge or button with its own background keeps its own colours. */
+.card-head :is(.text-slate-500, .text-slate-600, .text-slate-700):not([class*='bg-']) { color: rgb(255 255 255 / 0.78); }
 .card-head .card-head-chip { background-color: rgb(255 255 255 / 0.16); color: #fff; box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.18); }
 .card-head a:not([class*='bg-']) { color: #fff; text-decoration: underline; text-underline-offset: 2px; }
 .card-head .bg-transparent { color: #fff; }
