@@ -39,7 +39,7 @@ test('the store owner signs in with two-step sign-in and finds the guest order',
   await page.locator('#password').fill(data.owner.password);
   await page.getByRole('button', { name: 'Sign in', exact: true }).click();
   await page.locator('#code').fill(totp(data.owner.mfa_secret));
-  await page.getByRole('button', { name: 'Continue' }).click();
+  // The sixth digit signs in by itself (no button press).
   await page.waitForURL((url) => !/login/.test(url.pathname));
 
   await page.goto('/orders');

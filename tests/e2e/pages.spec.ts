@@ -34,7 +34,7 @@ async function signIn(page: Page): Promise<void> {
   await page.locator('#password').fill(data.owner.password);
   await page.getByRole('button', { name: 'Sign in', exact: true }).click();
   await page.locator('#code').fill(totp(data.owner.mfa_secret));
-  await page.getByRole('button', { name: 'Continue' }).click();
+  // The sixth digit signs in by itself (no button press).
   await page.waitForURL((url) => !/login/.test(url.pathname));
 }
 
