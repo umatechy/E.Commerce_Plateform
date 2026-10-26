@@ -22,6 +22,7 @@ final class Package extends Model
     protected $fillable = [
         'code',
         'name',
+        'services',
         'is_active',
     ];
 
@@ -29,6 +30,8 @@ final class Package extends Model
     {
         return [
             'is_active' => 'boolean',
+            // P1: what Umar Techy does for a store on this package, one line each.
+            'services' => 'array',
         ];
     }
 

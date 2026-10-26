@@ -2,7 +2,7 @@ import { FormEvent, useState } from 'react';
 import AdminPage from '@/Components/AdminPage';
 import Button, { ButtonLink } from '@/Components/ui/Button';
 import Dialog from '@/Components/ui/Dialog';
-import { CheckboxField, FormError, TextField } from '@/Components/ui/Form';
+import { CheckboxField, FormError, TextAreaField, TextField } from '@/Components/ui/Form';
 import Badge from '@/Components/ui/Badge';
 import Icon from '@/Components/ui/Icon';
 import { Card, EmptyPanel, QueryState } from '@/Components/ui/Page';
@@ -23,15 +23,23 @@ import { FEATURE_LABELS, USAGE_LABELS, labelFor } from '@/lib/labels';
  * log with its before and after (the entitlement history), applies to
  * every store on the package at once, and asks for the password again.
  */
-type Entitlement = { key: string; type: string; enabled: boolean | null; limit: number | null; unlimited: boolean; period: string | null };
-type Package = { code: string; name: string; is_active: boolean; entitlements?: Entitlement[] };
+type Entitlement = { key: string; type: string; enabled: boolean | null; limit: number | null; unlimited: boolean; period: string | null; coming_soon?: boolean };
+type Package = { code: string; name: string; is_active: boolean; services?: string[]; entitlements?: Entitlement[] };
+
+/** P1: services are typed one per line; blank lines are dropped. */
+function serviceLines(text: string): string[] {
+  return text.split('\n').map((line) => line.trim()).filter((line) => line !== '');
+}
 
 function PackageDialog({ target, onClose, onDone }: { target: Package | null; onClose: () => void; onDone: () => void }) {
-  const form = useForm({ code: target?.code ?? '', name: target?.name ?? '', is_active: target?.is_active ?? true });
+  const form = useForm({ code: target?.code ?? '', name: target?.name ?? '', is_active: target?.is_active ?? true, services: (target?.services ?? []).join('\n') });
 
   async function save(event: FormEvent) {
     event.preventDefault();
-    const body = target === null ? form.values : { name: form.values.name, is_active: form.values.is_active };
+    const services = serviceLines(form.values.services);
+    const body = target === null
+      ? { code: form.values.code, name: form.values.name, is_active: form.values.is_active, services }
+      : { name: form.values.name, is_active: form.values.is_active, services };
     // The update route takes the package's numeric key or code; the list gives the code.
     if ((await form.submit(() => adminFetch(target === null ? '/super-admin/packages' : `/super-admin/packages/${target.code}`, { method: target === null ? 'POST' : 'PUT', body }), 'Package saved.')) !== undefined) onDone();
   }
@@ -43,6 +51,15 @@ function PackageDialog({ target, onClose, onDone }: { target: Package | null; on
         {target === null && <TextField label="Code" value={form.values.code} onChange={(v) => form.set('code', v)} error={form.errors.code} required maxLength={32} hint="Letters, numbers, dashes. Cannot be changed later." data-autofocus />}
         <TextField label="Name" value={form.values.name} onChange={(v) => form.set('name', v)} error={form.errors.name} required maxLength={255} />
         <CheckboxField label="Offered to stores" checked={form.values.is_active} onChange={(v) => form.set('is_active', v)} hint="An inactive package stays with the stores that have it, but is not offered." />
+        <TextAreaField
+          label="Services included"
+          optional
+          rows={5}
+          value={form.values.services}
+          onChange={(v) => form.set('services', v)}
+          error={form.errors.services ?? Object.entries(form.errors).find(([key]) => key.startsWith('services.'))?.[1]}
+          hint="What Umar Techy does for a store on this package — one per line, up to 12 (for example: Store setup with you, including your first 50 products). Shown on the home page, in the store's billing and here."
+        />
         <div className="flex justify-end gap-2">
           <Button onClick={onClose} disabled={form.busy}>Cancel</Button>
           <Button type="submit" variant="primary" busy={form.busy} busyLabel="Saving…">Save package</Button>
@@ -132,7 +149,7 @@ function EntitlementsDialog({ target, all, onClose, onDone }: { target: Package;
           <legend className="text-xs font-semibold uppercase tracking-wide text-slate-500">Features</legend>
           <div className="mt-2 grid gap-2 sm:grid-cols-2">
             {features.map((k) => (
-              <CheckboxField key={k.key} label={labelFor(FEATURE_LABELS, k.key)} hint={own.has(k.key) ? undefined : 'Not set on this package yet.'} checked={draft[k.key].enabled} onChange={(enabled) => set(k.key, { enabled })} />
+              <CheckboxField key={k.key} label={labelFor(FEATURE_LABELS, k.key)} hint={k.coming_soon ? 'Coming soon: not in the platform yet, so stores do not get it even when ticked.' : own.has(k.key) ? undefined : 'Not set on this package yet.'} checked={draft[k.key].enabled} onChange={(enabled) => set(k.key, { enabled })} />
             ))}
           </div>
         </fieldset>
@@ -147,9 +164,14 @@ function EntitlementsDialog({ target, all, onClose, onDone }: { target: Package;
   );
 }
 
-/** The feature keys a package includes. */
+/** The feature keys a package really gives (P1: not those still to be built). */
 function enabledFeatures(item: Package): Set<string> {
-  return new Set((item.entitlements ?? []).filter((e) => e.type === 'feature' && e.enabled === true).map((e) => e.key));
+  return new Set((item.entitlements ?? []).filter((e) => e.type === 'feature' && e.enabled === true && e.coming_soon !== true).map((e) => e.key));
+}
+
+/** Features planned for a package that the platform does not have yet. */
+function comingSoon(item: Package): string[] {
+  return (item.entitlements ?? []).filter((e) => e.type === 'feature' && e.enabled === true && e.coming_soon === true).map((e) => e.key);
 }
 
 /**
@@ -233,6 +255,28 @@ export default function Packages() {
                           </li>
                         ))}
                       </ul>
+                    )}
+                    {(item.services ?? []).length > 0 && (
+                      <div className="mt-5 rounded-xl border border-violet-100 bg-violet-50/60 p-3">
+                        <h3 className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-violet-700"><Icon name="sparkles" size={14} />Services included</h3>
+                        <ul className="mt-2 space-y-1.5 text-sm">
+                          {(item.services ?? []).map((service) => (
+                            <li key={service} className="flex items-start gap-2 text-slate-800">
+                              <span aria-hidden="true" className="mt-1.5 h-1.5 w-1.5 flex-none rounded-full bg-violet-500" />{service}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                    {comingSoon(item).length > 0 && (
+                      <div className="mt-4 rounded-xl border border-dashed border-slate-300 p-3">
+                        <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-500">Coming soon <span className="font-normal normal-case tracking-normal text-slate-400">· not yet in the platform, not sold as included</span></h3>
+                        <ul className="mt-2 space-y-1 text-sm text-slate-500">
+                          {comingSoon(item).map((key) => (
+                            <li key={key} className="flex items-center gap-2"><Icon name="clock" size={13} className="flex-none" />{labelFor(FEATURE_LABELS, key)}</li>
+                          ))}
+                        </ul>
+                      </div>
                     )}
                   </Card>
                 );

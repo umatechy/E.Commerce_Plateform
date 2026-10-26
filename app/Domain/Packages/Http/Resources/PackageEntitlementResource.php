@@ -20,6 +20,8 @@ final class PackageEntitlementResource extends JsonResource
             'enabled' => $this->boolean_value,
             'limit' => $this->is_unlimited ? null : $this->limit_value,
             'unlimited' => $this->is_unlimited,
+            // P1: a feature the platform does not have yet is shown apart, never as included.
+            'coming_soon' => \App\Domain\Packages\Support\FeatureAvailability::isComingSoon((string) $this->key),
         ];
     }
 }

@@ -26,6 +26,7 @@ final class PackageResource extends JsonResource
             'code' => $this->code,
             'name' => $this->name,
             'is_active' => $this->is_active,
+            'services' => array_values($this->services ?? []),
             'entitlements' => PackageEntitlementResource::collection($this->whenLoaded('entitlements')),
         ];
     }

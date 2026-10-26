@@ -27,6 +27,9 @@ final class PackageRequest extends FormRequest
             'code' => [$presence, 'string', 'max:32', 'alpha_dash', Rule::unique('packages', 'code')->ignore($package)],
             'name' => [$presence, 'string', 'max:255'],
             'is_active' => ['boolean'],
+            // P1: the services, one short line each (an empty list is allowed).
+            'services' => ['sometimes', 'array', 'max:12'],
+            'services.*' => ['required', 'string', 'max:160', 'distinct'],
         ];
     }
 }

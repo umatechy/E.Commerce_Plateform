@@ -35,7 +35,7 @@ final class PublicPlans
     /** The usage limits the home page names. A package that leaves one unset is not limited by the platform (EntitlementService::limitFor). */
     private const LIMITS = ['max_products', 'max_staff_accounts', 'max_monthly_orders', 'max_storage_gb'];
 
-    /** @return list<array{code: string, name: string, price: ?array{amount_minor: int, first_period_amount_minor: ?int, currency: string, interval: string}, limits: array<string, ?int>, features: list<string>}> */
+    /** @return list<array{code: string, name: string, price: ?array{amount_minor: int, first_period_amount_minor: ?int, currency: string, interval: string}, limits: array<string, ?int>, features: list<string>, services: list<string>}> */
     public static function all(): array
     {
         $prices = PackagePrice::query()->where('is_active', true)->get()->groupBy('package_id');
@@ -65,6 +65,7 @@ final class PublicPlans
                     'price' => $price === null ? null : ['amount_minor' => $price->amount_minor, 'first_period_amount_minor' => $price->first_period_amount_minor, 'currency' => $price->currency, 'interval' => $price->billing_interval->value],
                     'limits' => $limits,
                     'features' => $features,
+                    'services' => array_values($package->services ?? []),
                 ];
             })->values()->all();
     }

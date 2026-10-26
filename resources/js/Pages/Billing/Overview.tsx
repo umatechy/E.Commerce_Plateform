@@ -4,6 +4,7 @@ import Button from '@/Components/ui/Button';
 import Dialog, { ConfirmDialog } from '@/Components/ui/Dialog';
 import { FormError, TextAreaField } from '@/Components/ui/Form';
 import Badge, { StatusBadge, humanize } from '@/Components/ui/Badge';
+import Icon from '@/Components/ui/Icon';
 import { Card, Details, ErrorPanel, QueryState, Skeleton, UsageMeter } from '@/Components/ui/Page';
 import InvoiceTable, { type Invoice } from '@/Components/InvoiceTable';
 import { useAccess } from '@/lib/access';
@@ -47,8 +48,8 @@ type Billing = {
   balance: { open_invoices: number; overdue_invoices: number; amount_due_minor: number; account_credit_minor?: number };
 };
 
-type Entitlement = { key: string; type: string; enabled: boolean | null; limit: number | null; unlimited: boolean };
-type Subscription = { package?: { name: string; entitlements?: Entitlement[] } };
+type Entitlement = { key: string; type: string; enabled: boolean | null; limit: number | null; unlimited: boolean; coming_soon?: boolean };
+type Subscription = { package?: { name: string; services?: string[]; entitlements?: Entitlement[] } };
 type UsageEntry = { limit: number | null; current: number; unlimited: boolean; remaining: number | null };
 type InvoiceDetail = Invoice & {
   subtotal_minor: number;
@@ -156,7 +157,11 @@ export default function Overview() {
   const { busy, run } = useAction();
 
   const invoiceRows = invoices.data === null ? null : readPage<Invoice>(invoices.data).rows;
-  const features = (plan.data?.data.package?.entitlements ?? []).filter((entitlement) => entitlement.type === 'feature');
+  // P1: what the package really gives, its services, and what it will get once built — never a feature that is not there as "included".
+  const packageFeatures = (plan.data?.data.package?.entitlements ?? []).filter((entitlement) => entitlement.type === 'feature' && entitlement.enabled === true);
+  const features = packageFeatures.filter((feature) => feature.coming_soon !== true);
+  const upcoming = packageFeatures.filter((feature) => feature.coming_soon === true);
+  const services = plan.data?.data.package?.services ?? [];
 
   async function cancel(event: FormEvent) {
     event.preventDefault();
@@ -257,16 +262,33 @@ export default function Overview() {
           )}
         </Card>
 
-        {features.length > 0 && (
-          <Card title="What your package includes">
-            <ul className="grid gap-x-6 gap-y-1 text-sm sm:grid-cols-2">
+        {(features.length > 0 || services.length > 0) && (
+          <Card title="What your package includes" icon="checkCircle" description={`${features.length} features${services.length > 0 ? ` and ${services.length} services from Umar Techy` : ''}.`}>
+            <ul className="grid gap-x-6 gap-y-2 text-sm sm:grid-cols-2 lg:grid-cols-3">
               {features.map((feature) => (
-                <li key={feature.key} className="flex items-center justify-between gap-3 border-b border-slate-100 py-1">
-                  <span>{labelFor(FEATURE_LABELS, feature.key)}</span>
-                  <Badge tone={feature.enabled ? 'green' : 'neutral'}>{feature.enabled ? 'Included' : 'Not included'}</Badge>
+                <li key={feature.key} className="flex items-start gap-2">
+                  <span aria-hidden="true" className="mt-0.5 flex h-5 w-5 flex-none items-center justify-center rounded-full bg-emerald-50 text-emerald-600"><Icon name="check" size={13} /></span>
+                  <span className="text-slate-800">{labelFor(FEATURE_LABELS, feature.key)}</span>
                 </li>
               ))}
             </ul>
+            {services.length > 0 && (
+              <div className="mt-5 rounded-xl border border-violet-100 bg-violet-50/60 p-4">
+                <h3 className="flex items-center gap-1.5 text-sm font-semibold text-violet-800"><Icon name="sparkles" size={16} />Services from Umar Techy</h3>
+                <ul className="mt-2 grid gap-x-6 gap-y-1.5 text-sm sm:grid-cols-2">
+                  {services.map((service) => (
+                    <li key={service} className="flex items-start gap-2 text-slate-800"><span aria-hidden="true" className="mt-1.5 h-1.5 w-1.5 flex-none rounded-full bg-violet-500" />{service}</li>
+                  ))}
+                </ul>
+                <p className="mt-3 text-xs text-slate-600">To use a service, write to us from Help → Ask Umar Techy.</p>
+              </div>
+            )}
+            {upcoming.length > 0 && (
+              <p className="mt-4 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-slate-500">
+                <Icon name="clock" size={14} />Coming soon to your package:
+                {upcoming.map((feature, i) => <span key={feature.key}>{labelFor(FEATURE_LABELS, feature.key)}{i < upcoming.length - 1 ? ',' : ''}</span>)}
+              </p>
+            )}
             <p className="mt-3 text-sm text-slate-600">To move to another package, use “Change plan” above: you see what it costs and what changes first.</p>
           </Card>
         )}

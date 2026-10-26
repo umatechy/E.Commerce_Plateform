@@ -12,7 +12,7 @@ import { money } from '@/lib/money';
  * the server; nothing here invents a price, a figure or a feature),
  * partners and answers to first questions.
  */
-type Plan = { code: string; name: string; price: { amount_minor: number; first_period_amount_minor?: number | null; currency: string; interval: string } | null; limits: Record<string, number | null>; features: string[] };
+type Plan = { code: string; name: string; price: { amount_minor: number; first_period_amount_minor?: number | null; currency: string; interval: string } | null; limits: Record<string, number | null>; features: string[]; services?: string[] };
 type Props = { plans?: Plan[]; trialDays?: number; signupOpen?: boolean };
 
 type Feature = { icon: IconName; title: string; text: string; wide?: boolean; chips?: string[] };
@@ -182,6 +182,20 @@ function PlanCard({ plan, previous, highlighted, signupOpen }: { plan: Plan; pre
               {all ? 'Show fewer' : `Show all ${added.length} features`}
               <Icon name="chevronDown" size={16} className={all ? 'rotate-180' : ''} />
             </button>
+          )}
+          {/* P1: what Umar Techy does for the store, next to what the software does. */}
+          {(plan.services ?? []).length > 0 && (
+            <div className={`mt-6 rounded-2xl p-4 ${dark ? 'bg-white/5 ring-1 ring-white/10' : 'bg-violet-50/70 ring-1 ring-violet-100'}`}>
+              <p className={`flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider ${dark ? 'text-violet-200' : 'text-violet-700'}`}><Icon name="sparkles" size={14} />Services included</p>
+              <ul className="mt-3 space-y-2 text-sm">
+                {(plan.services ?? []).map((service) => (
+                  <li key={service} className="flex gap-2.5">
+                    <span aria-hidden="true" className={`mt-1.5 h-1.5 w-1.5 flex-none rounded-full ${dark ? 'bg-violet-300' : 'bg-violet-500'}`} />
+                    <span className={dark ? 'text-slate-200' : 'text-slate-700'}>{service}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
           )}
         </div>
       </div>

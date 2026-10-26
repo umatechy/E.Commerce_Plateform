@@ -199,6 +199,10 @@ final class PackageSeeder extends Seeder
                 ['code' => $code],
                 ['name' => ucfirst($code), 'is_active' => true]
             );
+            // Services: the first wording only — never over what platform staff have written since.
+            if ($package->services === null) {
+                $package->update(['services' => \App\Domain\Packages\Support\PackageServices::DEFAULTS[$code]]);
+            }
 
             foreach ($features as $key => $enabled) {
                 $package->entitlements()->updateOrCreate(
