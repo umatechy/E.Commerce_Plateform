@@ -213,6 +213,19 @@ jobs:
           done
           echo "shared network ok"
 
+      - name: Audit entries written at the same moment do not deadlock, and the chain stays intact
+        run: |
+          dc="docker compose -p umartechy-ecom -f docker-compose.prod.yml"
+          # Super Admin pages fire several audited requests at once; production once saw a deadlock here.
+          for i in $(seq 1 12); do
+            $dc exec -T app php artisan tinker --execute 'app(\App\Domain\Compliance\Services\AuditLogger::class)->record("ci.concurrent_write", ["n" => 1], null, null, null, true); echo "written";' > "audit-$i.txt" 2>&1 &
+          done
+          wait
+          failed=0
+          for i in $(seq 1 12); do grep -q written "audit-$i.txt" || { echo "write $i failed:"; cat "audit-$i.txt"; failed=1; }; done
+          test "$failed" = 0
+          $dc exec -T app php artisan audit:verify --chain=platform
+
       - name: A real backup by the worker, verified and rehearsed
         run: |
           dc="docker compose -p umartechy-ecom -f docker-compose.prod.yml"

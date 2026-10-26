@@ -81,8 +81,18 @@ final class AuditLogger
             // Row lock on the chain head serializes appends to this chain,
             // so sequence numbers and hash links are gap-free under
             // concurrency. The head is created on first use.
-            DB::table('audit_chain_heads')->insertOrIgnore(['chain_key' => $chainKey, 'last_sequence' => 0, 'anchor_sequence' => 0]);
+            //
+            // The exclusive lock is taken FIRST. An INSERT IGNORE on a head
+            // that already exists takes a shared lock on it in InnoDB; two
+            // requests holding that shared lock and then both asking for the
+            // exclusive one deadlock (seen in production: Super Admin pages
+            // fire several audited requests at once). Now the insert only
+            // runs when the head does not exist yet.
             $head = DB::table('audit_chain_heads')->where('chain_key', $chainKey)->lockForUpdate()->first();
+            if ($head === null) {
+                DB::table('audit_chain_heads')->insertOrIgnore(['chain_key' => $chainKey, 'last_sequence' => 0, 'anchor_sequence' => 0]);
+                $head = DB::table('audit_chain_heads')->where('chain_key', $chainKey)->lockForUpdate()->first();
+            }
 
             $row['sequence'] = (int) $head->last_sequence + 1;
             $row['previous_hash'] = $head->last_hash;
@@ -97,7 +107,7 @@ final class AuditLogger
             ]);
 
             return AuditLog::query()->findOrFail($id);
-        });
+        }, 3); // a deadlock that still happens (two first writes to a new chain) is retried, when this is the outermost transaction
 
         if (config('compliance.audit.mirror_to_log')) {
             // Same message and caller context as the pre-B22 file audit log,
