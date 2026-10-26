@@ -113,7 +113,7 @@ export function Card({ title, description, actions, children, className = '', ic
         <div className={`flex flex-wrap items-center justify-between gap-2 rounded-t-2xl border-b border-slate-100 px-5 py-4 ${title ? 'card-head' : ''}`}>
           <div className="flex min-w-0 items-center gap-3">
             {icon && (
-              <span aria-hidden="true" className="tone-chip flex h-9 w-9 flex-none items-center justify-center rounded-xl">
+              <span aria-hidden="true" className="card-head-chip flex h-9 w-9 flex-none items-center justify-center rounded-xl">
                 <Icon name={icon} size={18} />
               </span>
             )}
@@ -140,12 +140,12 @@ export function StatCard({ label, value, hint, href, icon, trend }: { label: str
   const body = (
     <>
       {icon && (
-        <span className="absolute end-4 top-4 flex h-9 w-9 items-center justify-center rounded-xl bg-brand-50 text-brand-600 ring-1 ring-brand-100 transition-transform duration-200 group-hover:scale-110 motion-reduce:transform-none">
+        <span className="tone-chip absolute end-4 top-4 flex h-10 w-10 items-center justify-center rounded-xl transition-all duration-300 group-hover:-rotate-6 group-hover:scale-110 group-hover:shadow-md motion-reduce:transform-none">
           <Icon name={icon} size={18} />
         </span>
       )}
       <p className={`text-xs font-medium uppercase tracking-wide text-slate-500 ${icon ? 'pe-10' : ''}`}>{t(label)}</p>
-      <p className="mt-1 text-2xl font-semibold tracking-tight text-slate-900">{value ?? <span className="text-base font-normal text-slate-500">{t('Not available')}</span>}</p>
+      <p className="mt-1.5 text-[1.65rem] font-bold leading-tight tracking-tight text-slate-900">{value ?? <span className="text-base font-normal text-slate-500">{t('Not available')}</span>}</p>
       {(hint || hasTrend) && (
         <p className="mt-1 flex flex-wrap items-center gap-1.5 text-xs text-slate-600">
           {hasTrend && (
@@ -161,14 +161,17 @@ export function StatCard({ label, value, hint, href, icon, trend }: { label: str
       )}
     </>
   );
-  const box = 'group relative block rounded-2xl border border-slate-200/80 bg-white p-5 shadow-[0_1px_2px_rgba(15,23,42,0.04)]';
+  // UI-27: every figure lifts on hover, its icon turns, and a bar in the section colour slides in on top.
+  const box = 'group relative block overflow-hidden rounded-2xl border border-slate-200/80 bg-white p-5 shadow-[0_1px_2px_rgba(15,23,42,0.04),0_4px_12px_-6px_rgba(15,23,42,0.08)] transition duration-300 ease-out hover:-translate-y-1 hover:border-slate-300 hover:shadow-xl hover:shadow-slate-900/10 motion-reduce:transform-none motion-reduce:transition-none';
+  const accent = <span aria-hidden="true" className="tone-bar absolute inset-x-0 top-0 h-1 origin-left scale-x-0 transition-transform duration-300 ease-out group-hover:scale-x-100 rtl:origin-right motion-reduce:transition-none" />;
 
   return href ? (
-    <Link href={href} className={`${box} transition duration-200 hover:-translate-y-0.5 hover:border-brand-200 hover:shadow-lg hover:shadow-slate-900/5 motion-reduce:transform-none motion-reduce:transition-none ${FOCUS_RING}`}>
+    <Link href={href} className={`${box} ${FOCUS_RING}`}>
+      {accent}
       {body}
     </Link>
   ) : (
-    <div className={box}>{body}</div>
+    <div className={box}>{accent}{body}</div>
   );
 }
 

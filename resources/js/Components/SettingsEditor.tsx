@@ -273,12 +273,12 @@ export default function SettingsEditor({ listPath, updatePath, info, canManage, 
         <div className="space-y-6">
           {grouped.map((group) => (
             <section key={group.key} id={groupId(group.key)} aria-labelledby={`${groupId(group.key)}-title`} className="scroll-mt-24 overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-[0_1px_2px_rgba(15,23,42,0.04)]">
-              <div className="flex items-start gap-3 border-b border-slate-100 bg-slate-50/60 px-5 py-4">
-                <span aria-hidden="true" className="flex h-9 w-9 flex-none items-center justify-center rounded-xl bg-brand-50 text-brand-600 ring-1 ring-brand-100">
+              <div className="card-head flex items-start gap-3 border-b px-5 py-4">
+                <span aria-hidden="true" className="card-head-chip flex h-9 w-9 flex-none items-center justify-center rounded-xl">
                   <Icon name={group.meta.icon ?? 'sliders'} size={18} />
                 </span>
                 <div className="min-w-0">
-                  <h2 id={`${groupId(group.key)}-title`} className="text-[15px] font-semibold text-slate-900">{group.meta.title}</h2>
+                  <h2 id={`${groupId(group.key)}-title`} className="text-base font-semibold">{group.meta.title}</h2>
                   {group.meta.description && <p className="mt-0.5 text-xs text-slate-500">{group.meta.description}</p>}
                 </div>
               </div>

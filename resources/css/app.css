@@ -470,8 +470,87 @@
 .tone-bar { background-color: rgb(var(--tone)); }
 .tone-soft { background-color: rgb(var(--tone) / 0.08); }
 .tone-ring { --tw-ring-color: rgb(var(--tone) / 0.25); }
-/* A card's heading: a coloured strip at the start and a light wash of the section colour. */
-.card-head { position: relative; background-image: linear-gradient(90deg, rgb(var(--tone) / 0.08), rgb(var(--tone) / 0) 65%); }
-[dir='rtl'] .card-head { background-image: linear-gradient(270deg, rgb(var(--tone) / 0.08), rgb(var(--tone) / 0) 65%); }
-.card-head::before { content: ''; position: absolute; inset-block: 0.85rem; inset-inline-start: 0; width: 4px; border-start-end-radius: 4px; border-end-end-radius: 4px; background-color: rgb(var(--tone)); }
-[dir='rtl'] .card-head::before { border-radius: 4px 0 0 4px; }
+
+
+/*
+ * UI-27 — premium headings and motion.
+ *
+ * Card headings: a deep gradient in the section's colour with white text
+ * (instead of a grey-white wash), so every task block reads as a clear,
+ * confident title bar. --tone-deep is the dark end of each section colour.
+ */
+.admin-root, .tone-brand { --tone-deep: var(--brand-900); }
+.tone-blue { --tone-deep: 23 37 84; }
+.tone-emerald { --tone-deep: 6 61 48; }
+.tone-violet { --tone-deep: 59 22 120; }
+.tone-pink { --tone-deep: 112 18 64; }
+.tone-amber { --tone-deep: 110 46 10; }
+.tone-cyan { --tone-deep: 14 63 84; }
+.tone-teal { --tone-deep: 15 64 62; }
+.tone-slate { --tone-deep: 15 23 42; }
+
+.card-head {
+  position: relative;
+  overflow: hidden;
+  color: #fff;
+  background-image:
+    radial-gradient(120% 140% at 100% 0%, rgb(255 255 255 / 0.14), transparent 55%),
+    linear-gradient(120deg, rgb(var(--tone-deep)) 0%, rgb(var(--tone)) 115%);
+  border-bottom-color: transparent !important;
+}
+[dir='rtl'] .card-head {
+  background-image:
+    radial-gradient(120% 140% at 0% 0%, rgb(255 255 255 / 0.14), transparent 55%),
+    linear-gradient(240deg, rgb(var(--tone-deep)) 0%, rgb(var(--tone)) 115%);
+}
+/* A fine light line under the bar, like a premium title strip. */
+.card-head::after {
+  content: '';
+  position: absolute;
+  inset-inline: 0;
+  bottom: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgb(255 255 255 / 0.35), transparent);
+}
+/* Whatever sits in the bar stays readable on the dark colour. */
+.card-head :is(h2, h3) { color: #fff; }
+.card-head :is(.text-slate-500, .text-slate-600, .text-slate-700) { color: rgb(255 255 255 / 0.78); }
+.card-head .card-head-chip { background-color: rgb(255 255 255 / 0.16); color: #fff; box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.18); }
+.card-head a:not([class*='bg-']) { color: #fff; text-decoration: underline; text-underline-offset: 2px; }
+.card-head .bg-transparent { color: #fff; }
+.card-head .bg-transparent:hover { background-color: rgb(255 255 255 / 0.16); color: #fff; }
+
+/* Primary and danger buttons: a soft light sweeps across on hover. */
+.btn-shine { position: relative; overflow: hidden; isolation: isolate; }
+.btn-shine::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: linear-gradient(110deg, transparent 30%, rgb(255 255 255 / 0.28) 50%, transparent 70%);
+  transform: translateX(-120%);
+  transition: transform 0.6s ease;
+}
+.btn-shine:hover::after { transform: translateX(120%); }
+
+/* A calm, layered page background instead of flat grey. */
+.admin-root[data-mode='light'] {
+  background-image:
+    radial-gradient(60rem 30rem at 100% -10%, rgb(var(--brand-500) / 0.07), transparent 60%),
+    radial-gradient(50rem 28rem at -10% 110%, rgb(var(--brand-400) / 0.06), transparent 60%);
+  background-attachment: fixed;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .btn-shine::after { display: none; }
+}
+
+/* Dark mode: deep text colours that had no light counterpart (e.g. the
+   payment method chips were near-invisible), and their light borders. */
+.admin-root[data-mode='dark'] :is(.text-emerald-900, .text-green-900) { color: rgb(167 243 208); }
+.admin-root[data-mode='dark'] :is(.text-blue-900, .text-indigo-800, .text-indigo-900) { color: rgb(191 219 254); }
+.admin-root[data-mode='dark'] :is(.text-yellow-800, .text-orange-800) { color: rgb(253 230 138); }
+.admin-root[data-mode='dark'] :is(.border-emerald-200, .border-green-200) { border-color: rgb(16 185 129 / 0.35); }
+.admin-root[data-mode='dark'] :is(.border-amber-200, .border-yellow-200) { border-color: rgb(245 158 11 / 0.35); }
+.admin-root[data-mode='dark'] .border-red-200 { border-color: rgb(239 68 68 / 0.35); }
+.admin-root[data-mode='dark'] .border-blue-200 { border-color: rgb(59 130 246 / 0.35); }

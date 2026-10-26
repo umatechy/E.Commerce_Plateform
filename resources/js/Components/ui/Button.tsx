@@ -18,12 +18,12 @@ export type ButtonSize = 'sm' | 'md' | 'lg';
 export const FOCUS_RING = 'focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-600 focus-visible:ring-offset-2';
 
 const VARIANT: Record<ButtonVariant, string> = {
-  primary: 'border border-brand-700/20 bg-gradient-to-b from-brand-500 to-brand-600 text-white shadow-md shadow-brand-600/25 hover:from-brand-600 hover:to-brand-700 hover:shadow-lg hover:shadow-brand-600/30',
-  secondary: 'border border-slate-200 bg-white text-slate-800 shadow-sm shadow-slate-900/5 hover:border-slate-300 hover:bg-slate-50',
-  danger: 'border border-red-700/20 bg-gradient-to-b from-red-500 to-red-600 text-white shadow-md shadow-red-600/20 hover:from-red-600 hover:to-red-700 hover:shadow-lg',
+  primary: 'btn-shine border border-brand-700/20 bg-gradient-to-b from-brand-500 to-brand-600 text-white shadow-md shadow-brand-600/25 hover:from-brand-600 hover:to-brand-700 hover:shadow-lg hover:shadow-brand-600/30',
+  secondary: 'border border-slate-200 bg-white text-slate-800 shadow-sm shadow-slate-900/5 hover:border-brand-300 hover:bg-white hover:text-brand-700 hover:shadow-md',
+  danger: 'btn-shine border border-red-700/20 bg-gradient-to-b from-red-500 to-red-600 text-white shadow-md shadow-red-600/20 hover:from-red-600 hover:to-red-700 hover:shadow-lg',
   ghost: 'border border-transparent bg-transparent text-slate-700 hover:bg-slate-100 hover:text-slate-900',
   soft: 'border border-transparent bg-brand-50 text-brand-700 hover:bg-brand-100',
-  outline: 'border border-brand-200 bg-white text-brand-700 hover:border-brand-300 hover:bg-brand-50',
+  outline: 'border border-brand-200 bg-white text-brand-700 hover:border-brand-400 hover:bg-brand-50 hover:shadow-md',
 };
 
 const SIZE: Record<ButtonSize, string> = {

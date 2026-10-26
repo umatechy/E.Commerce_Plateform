@@ -22,6 +22,7 @@ export default function StepUpDialog({ mfaEnabled }: { mfaEnabled: boolean }) {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [formError, setFormError] = useState<string | null>(null);
   const settle = useRef<((passed: boolean) => void) | null>(null);
+  const form = useRef<HTMLFormElement>(null);
 
   useEffect(() => {
     registerStepUpHandler(
@@ -56,8 +57,13 @@ export default function StepUpDialog({ mfaEnabled }: { mfaEnabled: boolean }) {
     settle.current = null;
   }
 
+  const sending = useRef(false);
+
   async function submit(event: FormEvent) {
     event.preventDefault();
+    // The sixth digit may send the form while the button is pressed too: send once.
+    if (sending.current) return;
+    sending.current = true;
     setBusy(true);
     setErrors({});
     setFormError(null);
@@ -71,6 +77,7 @@ export default function StepUpDialog({ mfaEnabled }: { mfaEnabled: boolean }) {
         setFormError(e instanceof AdminApiError && e.status === 0 ? e.message : adminErrorMessage(e, 'Could not confirm your password. Try again.'));
       }
     } finally {
+      sending.current = false;
       setBusy(false);
     }
   }
@@ -83,14 +90,20 @@ export default function StepUpDialog({ mfaEnabled }: { mfaEnabled: boolean }) {
       onClose={() => finish(false)}
       busy={busy}
     >
-      <form onSubmit={submit} className="space-y-4" noValidate>
+      <form ref={form} onSubmit={submit} className="space-y-4" noValidate>
         <FormError message={formError} />
         <TextField label="Password" type="password" value={password} onChange={setPassword} error={errors.password} autoComplete="current-password" required data-autofocus />
         {mfaEnabled && (
           <TextField
             label="Two-step code"
             value={code}
-            onChange={setCode}
+            onChange={(next) => {
+              setCode(next);
+              // A six-digit code lives 30 seconds: its last digit sends the form (after the new value renders).
+              if (/^\d{6}$/.test(next.trim()) && code.trim().length < 6 && password !== '' && !busy) {
+                window.setTimeout(() => form.current?.requestSubmit(), 0);
+              }
+            }}
             error={errors.code}
             hint="The 6-digit code from your authenticator app, or a recovery code."
             inputMode="numeric"

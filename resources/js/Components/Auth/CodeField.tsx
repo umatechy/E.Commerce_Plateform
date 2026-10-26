@@ -44,9 +44,12 @@ export default function CodeField({ id, value, onChange, onComplete, invalid, de
         onChange={(e) => {
           const next = e.target.value.replace(/\D/g, '').slice(0, 6);
           onChange(next);
+          // The code lives only 30 seconds in the authenticator app: the
+          // sixth digit sends it, no button needed (the button still works).
+          if (next.length === 6 && value.length < 6) onComplete?.(next);
         }}
         onPaste={(e) => {
-          // A pasted code is sent at once; typed digits wait for the button.
+          // A pasted code is sent at once, too.
           const pasted = e.clipboardData.getData("text").replace(/\D/g, "").slice(0, 6);
           if (pasted.length === 6) {
             e.preventDefault();
