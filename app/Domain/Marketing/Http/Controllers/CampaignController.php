@@ -44,6 +44,10 @@ final class CampaignController
     public function store(SaveCampaignRequest $request): JsonResponse
     {
         $this->authorizeManage($request);
+        // Owner decision 2026-10-26: sending to a customer group needs the Business or Premium package.
+        if ($request->input('audience_type') === 'segment') {
+            SegmentController::assertIncluded();
+        }
 
         $campaign = Campaign::query()->create($request->validated());
 

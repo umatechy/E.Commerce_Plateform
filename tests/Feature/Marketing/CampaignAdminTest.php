@@ -138,10 +138,29 @@ final class CampaignAdminTest extends TestCase
         $response->assertStatus(403);
     }
 
+    /** Owner decision 2026-10-26: customer groups are Business and Premium; a campaign to all customers stays with every package. */
+    public function test_customer_groups_need_the_business_or_premium_package(): void
+    {
+        $store = Store::factory()->create();
+        $owner = $this->ownerOf($store);
+        $campaign = ['name' => 'Eid', 'objective' => 'awareness', 'subject' => 'Hi', 'body' => 'Hello'];
+
+        $this->actingAs($owner)->getJson('/api/v1/marketing/segments')->assertForbidden()->assertJsonPath('code', 'feature_not_entitled');
+        $this->actingAs($owner)->postJson('/api/v1/marketing/segments', ['name' => 'Loyal', 'rules' => [['field' => 'order_count', 'operator' => '>=', 'value' => 3]]])
+            ->assertForbidden()->assertJsonPath('code', 'feature_not_entitled');
+        $this->actingAs($owner)->postJson('/api/v1/campaigns', [...$campaign, 'audience_type' => 'segment', 'marketing_segment_id' => 1])
+            ->assertForbidden()->assertJsonPath('code', 'feature_not_entitled');
+        $this->actingAs($owner)->postJson('/api/v1/campaigns', [...$campaign, 'audience_type' => 'all_customers'])->assertCreated();
+
+        $this->entitle($store, ['marketing.advanced']);
+        $this->actingAs($owner)->getJson('/api/v1/marketing/segments')->assertOk();
+    }
+
     public function test_segment_creation_rejects_a_malicious_field_via_the_api(): void
     {
         $store = Store::factory()->create();
         $owner = $this->ownerOf($store);
+        $this->entitle($store, ['marketing.advanced']); // customer groups are Business and Premium
 
         $response = $this->actingAs($owner)->postJson('/api/v1/marketing/segments', [
             'name' => 'Malicious', 'rules' => [['field' => '1=1; DROP TABLE customers;', 'operator' => '>=', 'value' => 1]],

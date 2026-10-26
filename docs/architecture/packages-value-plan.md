@@ -187,7 +187,9 @@ Installing an app from the marketplace needs it (with `integrations.api` when
 the app reads store data, as before); core payment and delivery stay with
 every package. Apps already installed keep working after a package change.
 
-**For the owner to decide (not changed):** Module 15 §92 lists segments,
-scheduled campaigns and WhatsApp/SMS as Business; today every package has
-them (B10, B50). Gating them would take features away from Basic stores, so it
-is left for the owner.
+**Owner decision 2026-10-26:** customer groups (marketing segments) are
+Business and Premium (`marketing.advanced`, Module 15 §92 "Advanced
+segmentation"): the segments API refuses other packages with
+`feature_not_entitled`, and a campaign can be sent to a group only there;
+a campaign to all customers stays with every package. Scheduled campaigns
+and WhatsApp/SMS stay with every package (not asked to change).

@@ -5,7 +5,7 @@ import Button, { FOCUS_RING } from '@/Components/ui/Button';
 import DataTable, { type Column } from '@/Components/ui/DataTable';
 import Dialog from '@/Components/ui/Dialog';
 import { FormError, SelectField, TextField } from '@/Components/ui/Form';
-import { EmptyPanel } from '@/Components/ui/Page';
+import { EmptyPanel, PackageNotice } from '@/Components/ui/Page';
 import { useAccess } from '@/lib/access';
 import { useApi } from '@/lib/useApi';
 import { useForm } from '@/lib/useForm';
@@ -152,8 +152,10 @@ function PreviewDrawer({ segment, onClose }: { segment: Segment; onClose: () => 
 
 export default function Segments() {
   const access = useAccess();
-  const canManage = access.can('marketing.manage');
-  const list = useApi<{ data: Segment[] }>('/marketing/segments');
+  // Owner decision 2026-10-26: customer groups are Business and Premium (marketing.advanced).
+  const included = access.feature('marketing.advanced') === true;
+  const canManage = access.can('marketing.manage') && included;
+  const list = useApi<{ data: Segment[] }>(included ? '/marketing/segments' : null);
   const [creating, setCreating] = useState(false);
   const [preview, setPreview] = useState<Segment | null>(null);
 
@@ -175,6 +177,11 @@ export default function Segments() {
 
   return (
     <AdminPage title="Customer groups" description="Groups of customers you can send a campaign to." actions={canManage && <Button variant="primary" onClick={() => setCreating(true)}>Add segment</Button>}>
+      {!included ? (
+        <PackageNotice title="Customer groups are part of the Business and Premium packages" packageName={access.packageName} canSeeBilling={access.can('billing.view')}>
+          Group customers by what they bought and how often, and send a campaign to just that group. With every package you can send a campaign to all customers.
+        </PackageNotice>
+      ) : (
       <DataTable
         caption="Segments"
         columns={columns}
@@ -185,6 +192,7 @@ export default function Segments() {
         onRetry={list.reload}
         empty={<EmptyPanel title="No segments yet" description="For example: customers with at least 3 orders." action={canManage ? <Button variant="primary" onClick={() => setCreating(true)}>Add segment</Button> : undefined} />}
       />
+      )}
       {creating && <CreateDialog currency={access.currency} onClose={() => setCreating(false)} onDone={() => { setCreating(false); list.reload(); }} />}
       {preview && <PreviewDrawer segment={preview} onClose={() => setPreview(null)} />}
     </AdminPage>

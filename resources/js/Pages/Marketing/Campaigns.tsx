@@ -50,7 +50,9 @@ const ACTIONS: Record<string, ('activate' | 'pause' | 'resume' | 'cancel')[]> = 
 };
 
 function CreateDialog({ onClose, onDone }: { onClose: () => void; onDone: () => void }) {
-  const segments = useApi<{ data: Segment[] }>('/marketing/segments');
+  // Sending to a customer group is Business and Premium (owner decision 2026-10-26).
+  const groups = useAccess().feature('marketing.advanced') === true;
+  const segments = useApi<{ data: Segment[] }>(groups ? '/marketing/segments' : null);
   const promotions = usePagedApi<PromotionOption>('/promotions');
   const form = useForm({ name: '', objective: 'awareness', audience_type: 'all_customers', marketing_segment_id: '', promotion_id: '', subject: '', body: '' });
   const { values, set } = form;
@@ -76,7 +78,7 @@ function CreateDialog({ onClose, onDone }: { onClose: () => void; onDone: () => 
         <div className="grid gap-4 sm:grid-cols-2">
           <TextField label="Name" value={values.name} onChange={(v) => set('name', v)} error={form.errors.name} required maxLength={255} hint="For your own reference." data-autofocus />
           <SelectField label="Goal" value={values.objective} onChange={(v) => set('objective', v)} error={form.errors.objective} options={options(OBJECTIVES)} />
-          <SelectField label="Send to" value={values.audience_type} onChange={(v) => set('audience_type', v)} error={form.errors.audience_type} options={[{ value: 'all_customers', label: 'All customers' }, { value: 'segment', label: 'A segment' }]} />
+          <SelectField label="Send to" value={values.audience_type} onChange={(v) => set('audience_type', v)} error={form.errors.audience_type} options={[{ value: 'all_customers', label: 'All customers' }, ...(groups ? [{ value: 'segment', label: 'A customer group' }] : [])]} hint={groups ? undefined : 'Sending to a customer group comes with the Business and Premium packages.'} />
           {values.audience_type === 'segment' && (
             <SelectField
               label="Segment"

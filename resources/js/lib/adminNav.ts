@@ -79,7 +79,7 @@ export const storeNav: NavGroup[] = [
     tone: 'violet',
     items: [
       { href: '/customers', label: 'Customers', description: 'Your customers, their orders, groups, tags and notes.', permissions: ['customers.view'] },
-      { href: '/segments', label: 'Customer groups', description: 'Groups of customers, for campaigns and offers.', permissions: ['marketing.view'] },
+      { href: '/segments', label: 'Customer groups', description: 'Groups of customers, for campaigns and offers.', permissions: ['marketing.view'], feature: 'marketing.advanced' },
       { href: '/support', label: 'Support', description: 'Customer tickets and your requests to Umar Techy.', permissions: ['support.view', 'support.reply', 'support.manage', 'support.platform'] },
     ],
   },
