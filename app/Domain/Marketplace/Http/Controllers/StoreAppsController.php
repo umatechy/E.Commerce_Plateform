@@ -46,7 +46,9 @@ final class StoreAppsController
 
         return response()->json([
             'data' => $apps->map(fn (MarketplaceApp $app) => [...$this->card($app), 'installed' => $installed->has($app->id) ? $installed[$app->id]->status : null])->all(),
-            'meta' => ['categories' => MarketplaceCatalog::CATEGORIES, 'can_manage' => $this->canManage($request)],
+            'meta' => ['categories' => MarketplaceCatalog::CATEGORIES, 'can_manage' => $this->canManage($request),
+                // Phase P4c: installing needs integrations.advanced (Business and Premium).
+                'included' => app(\App\Domain\Packages\Services\EntitlementService::class)->hasFeature('integrations.advanced')],
         ]);
     }
 

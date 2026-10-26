@@ -58,7 +58,7 @@ final class MarketplaceTest extends TestCase
     }
 
     /** @return array{0: Store, 1: User} */
-    private function store(array $features = ['orders.basic', 'integrations.api']): array
+    private function store(array $features = ['orders.basic', 'integrations.api', 'integrations.advanced']): array
     {
         $store = Store::factory()->create(['status' => 'active']);
         $this->entitle($store, $features);
@@ -163,6 +163,8 @@ final class MarketplaceTest extends TestCase
     {
         [$app] = $this->publishedApp();
         [$basic, $basicOwner] = $this->store(['orders.basic']);
+        // Phase P4c: API access alone is not enough — apps are the advanced integrations (Business and Premium).
+        [, $apiOnlyOwner] = $this->store(['orders.basic', 'integrations.api']);
         [$store, $owner] = $this->store();
         $staff = User::factory()->create();
         $store->users()->attach($staff, ['role_id' => $this->systemRole($store, 'manager')->id, 'status' => 'active']);
@@ -175,6 +177,8 @@ final class MarketplaceTest extends TestCase
 
         $this->as($basicOwner)->getJson('/api/v1/apps/ledger-sync')->assertOk()->assertJsonPath('data.problems.0.code', 'package');
         $this->as($basicOwner)->postJson('/api/v1/apps/ledger-sync/install', ['accept_permissions' => true])->assertUnprocessable()->assertJsonPath('code', 'package');
+        $this->as($apiOnlyOwner)->postJson('/api/v1/apps/ledger-sync/install', ['accept_permissions' => true])->assertUnprocessable()->assertJsonPath('code', 'package');
+        $this->as($apiOnlyOwner)->getJson('/api/v1/apps')->assertOk()->assertJsonPath('meta.included', false);
         $this->as($staff)->postJson('/api/v1/apps/ledger-sync/install', ['accept_permissions' => true])->assertForbidden();
         $this->as($owner)->postJson('/api/v1/apps/ledger-sync/install', [])->assertUnprocessable()->assertJsonValidationErrors('accept_permissions');
 

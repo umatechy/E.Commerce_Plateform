@@ -70,7 +70,9 @@ final class AppInstaller
             $problems[] = ['code' => 'platform_version', 'message' => "This app needs Umar Techy {$version->min_platform_version} or later."];
         }
         $entitlements = app(EntitlementService::class);
-        $features = (array) $app->required_features;
+        // Phase P4c (Module 04 §54–55): apps from the marketplace are the advanced integrations of the
+        // Business and Premium packages; core payment and delivery stay with every package.
+        $features = [...(array) $app->required_features, 'integrations.advanced'];
         if ((array) $version->scopes !== []) {
             $features[] = 'integrations.api'; // reading store data is API access (Module 04 §8)
         }

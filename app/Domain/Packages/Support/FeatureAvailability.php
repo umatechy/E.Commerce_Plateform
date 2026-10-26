@@ -13,13 +13,12 @@ namespace App\Domain\Packages\Support;
  *
  * When a feature is built, it leaves this list in the same change.
  *   - (loyalty.points was built in P2, advanced_analytics.enabled in P3)
- *   - inventory.advanced, marketing.advanced, integrations.advanced: phase P4
+ *   - (inventory.advanced, marketing.advanced, integrations.advanced were built in P4)
  *   - ai.recommendations, ai.chatbot: later (owner decision: AI afterwards)
  */
 final class FeatureAvailability
 {
     public const COMING_SOON = [
-        'integrations.advanced',
         'ai.recommendations',
         'ai.chatbot',
     ];

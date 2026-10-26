@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import AdminPage from '@/Components/AdminPage';
-import { Card, EmptyPanel, ErrorPanel, Skeleton, Tabs } from '@/Components/ui/Page';
+import { Card, EmptyPanel, ErrorPanel, PackageNotice, Skeleton, Tabs } from '@/Components/ui/Page';
+import { useAccess } from '@/lib/access';
 import { FilterBar, SearchField } from '@/Components/ui/Filters';
 import Dialog, { ConfirmDialog } from '@/Components/ui/Dialog';
 import Badge, { StatusBadge, type Tone } from '@/Components/ui/Badge';
@@ -69,13 +70,21 @@ export default function Apps() {
   const [tab, setTab] = useState('browse');
   const [q, setQ] = useState('');
   const [category, setCategory] = useState('');
-  const list = useApi<{ data: Card_[]; meta: { categories: Record<string, string>; can_manage: boolean } }>('/apps', { q: q || undefined, category: category || undefined });
+  const access = useAccess();
+  const list = useApi<{ data: Card_[]; meta: { categories: Record<string, string>; can_manage: boolean; included?: boolean } }>('/apps', { q: q || undefined, category: category || undefined });
   const [open, setOpen] = useState<string | null>(() => (typeof window === 'undefined' ? null : new URLSearchParams(window.location.search).get('app')));
   const rows = list.data?.data ?? [];
   const shown = tab === 'installed' ? rows.filter((a) => a.installed) : rows;
 
   return (
     <AdminPage title="Apps" description="Connect your store to other services. You see exactly what each app may read before you install it, and you can remove it at any time.">
+      {list.data?.meta.included === false && (
+        <div className="mb-4">
+          <PackageNotice title="Installing apps is part of the Business and Premium packages" packageName={access.packageName} canSeeBilling={access.can('billing.view')}>
+            You can look around. Payments and delivery work with every package; connecting other services through apps comes with Business and Premium.
+          </PackageNotice>
+        </div>
+      )}
       <Tabs
         label="Apps sections"
         active={tab}

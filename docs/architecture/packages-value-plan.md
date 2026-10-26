@@ -150,8 +150,42 @@ recorded, so no view-to-order or checkout conversion is shown (the cart status
 `checkout_started` exists but nothing sets it). Saved, scheduled and custom
 reports (§39–42) are not built.
 
-## P4 — Business: advanced inventory, marketing and integrations
+## P4 — Business: advanced inventory, marketing and integrations — done
 
-Stock forecast and reorder suggestions; automated marketing flows (abandoned
-cart, win-back, birthday); webhooks and apps — each defined against its module
-blueprint before it is built.
+All three left `COMING_SOON` and are on the public pricing. Only
+`ai.recommendations` and `ai.chatbot` remain "coming soon" (owner: AI later).
+
+**P4a — advanced inventory** (`inventory.advanced`; Module 08 §71 Business:
+transfers, purchase receiving, advanced stock reports). Products → Stock
+planning, with the existing `inventory.view` / `inventory.adjust`:
+- *What to order*: per product over all locations — a day's sales from real
+  orders over a chosen period, days left, and a suggested quantity for the days
+  to cover, less what is available and on its way (at least the reorder
+  quantity at the reorder point). The arithmetic is on the page; it is not a
+  forecast model.
+- *Received stock* (`stock_receipts`): supplier, delivery note, location,
+  products; `purchase_in` movements. Quantities only — no costing (owner
+  decision).
+- *Transfers* (`stock_transfers`): sent (`transfer_out`, shown as incoming at
+  the destination), received (`transfer_in`) or cancelled (back to the
+  source). Stock reserved for orders cannot leave.
+- Multiple locations stay `inventory.multi_warehouse` (B4).
+
+**P4b — advanced marketing** (`marketing.advanced`; Module 15 §29–44, §92
+Business "Automation"). Marketing → Automations: welcome after sign-up,
+thank-you after delivery, win-back when the last order is old enough,
+birthday. Each off until turned on, with its own delay, wording and optional
+coupon. `marketing:automations` hourly; marketing email through the
+notification pipeline — consent, customer standing, suppression, unsubscribe
+link; once per occasion; not within a day of another marketing email; counts
+from when it was turned on.
+
+**P4c — advanced integrations** (`integrations.advanced`; Module 04 §54–55).
+Installing an app from the marketplace needs it (with `integrations.api` when
+the app reads store data, as before); core payment and delivery stay with
+every package. Apps already installed keep working after a package change.
+
+**For the owner to decide (not changed):** Module 15 §92 lists segments,
+scheduled campaigns and WhatsApp/SMS as Business; today every package has
+them (B10, B50). Gating them would take features away from Basic stores, so it
+is left for the owner.
