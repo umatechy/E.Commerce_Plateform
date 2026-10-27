@@ -5,8 +5,11 @@ Status: **live at https://store.umartechy.com since 2026-10-24** (release
 A2 clone, A3 settings, A4 DNS, A5 first install, A6 site file
 (`/opt/utschoolerp/deploy/nginx/conf.d/20-umartechy-shop.conf`; the HTTP-only
 version is kept in `/root/20-umartechy-shop.conf.phase1`), A7 certificate
-(Let's Encrypt, renewed by School ERP's daily job). Open: A8 super admins, A9
-off-server backups and SMTP. Every further server step still needs the owner's
+(Let's Encrypt, renewed by School ERP's daily job), A8 super admins, A9 (done
+2026-10-27 with v1.1.0-rc.4: mail from info@umartechy.com through
+smtp.hostinger.com:587 — Hetzner blocks outgoing 25 and 465 — and backups on
+the S3 bucket umartechy-store-backups, `BACKUP_DISK=backups_s3`; first S3 backup
+verified deep and rehearsed). Every further server step still needs the owner's
 explicit approval. The images and the Compose project are smoke-tested in CI
 (`docker` job in `.github/workflows/ci.yml`) on every push.
 
