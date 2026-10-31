@@ -50,6 +50,7 @@ export default function Register({ signupOpen = true, businessCategories = [], p
         <p className="text-sm text-slate-700">
           New stores are set up by the Umar Techy team. Contact us with what you sell and your budget, and we will create your store and send you an email to take it over.
         </p>
+        <a href="/#contact" className="mt-4 inline-flex rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-slate-800">Ask for your store</a>
       </AuthShell>
     );
   }

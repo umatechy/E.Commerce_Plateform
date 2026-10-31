@@ -109,6 +109,9 @@ Route::get('/', function (Request $request) {
         'plans' => \App\Domain\Packages\Support\PublicPlans::all(),
         'trialDays' => (int) app(\App\Domain\Settings\Services\ConfigService::class)->get('platform.trial_days'),
         'signupOpen' => app(\App\Domain\Settings\Services\ConfigService::class)->get('platform.self_signup_enabled') !== false,
+        // Phase S1: with sign-up closed the page asks businesses to contact Umar Techy (form, and WhatsApp once a number is set).
+        'contactWhatsapp' => app(\App\Domain\Settings\Services\ConfigService::class)->get('platform.contact_whatsapp'),
+        'businessCategories' => collect(\App\Domain\Tenancy\Support\BusinessCategories::ALL)->map(fn ($label, $key) => ['value' => $key, 'label' => $label])->values(),
     ]);
 })->middleware('required.mfa');
 
@@ -189,6 +192,7 @@ Route::middleware(['auth', 'required.mfa'])->group(function () {
             '/help' => 'SuperAdmin/Help', // Phase B54
             '/marketplace' => 'SuperAdmin/Marketplace', // Phase B56
             '/resellers' => 'SuperAdmin/Resellers', // Phase B58
+            '/store-requests' => 'SuperAdmin/StoreRequests', // Phase S1
         ] as $uri => $page) {
             Route::get($uri, fn () => Inertia::render($page));
         }

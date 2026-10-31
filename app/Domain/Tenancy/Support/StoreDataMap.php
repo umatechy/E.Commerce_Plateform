@@ -59,7 +59,7 @@ final class StoreDataMap
         'return_request_items', 'return_request_photos', 'return_requests', 'roles', 'seo_settings',
         'setting_revisions', 'shipment_items', 'shipment_tracking_events', 'shipment_webhook_events',
         'shipments', 'shipping_methods', 'shipping_rates', 'shipping_zones', 'starter_template_applications',
-        'stock_movements', 'stock_receipt_lines', 'stock_receipts', 'stock_reservations', 'stock_transfer_lines', 'stock_transfers', 'store_credit_accounts', 'store_credit_entries',
+        'stock_movements', 'stock_receipt_lines', 'stock_receipts', 'stock_reservations', 'stock_transfer_lines', 'stock_transfers', 'store_credit_accounts', 'store_credit_entries', 'store_requests',
         'store_credit_lots', 'store_health_snapshots', 'store_invitations', 'store_media', 'store_settings',
         'store_theme_publications', 'store_themes', 'store_user', 'support_messages', 'support_tickets',
         'tags', 'tax_classes', 'tax_rates', 'usage_counters', 'warehouses', 'webhook_delivery_attempts',

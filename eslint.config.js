@@ -31,6 +31,7 @@ export default tseslint.config(
       'resources/js/Components/Storefront/**',
       'resources/js/Pages/Storefront/**',
       'resources/js/Pages/Welcome.tsx',
+      'resources/js/Components/Welcome/**', // Phase S1: the home page's request form, in the home page's colours
       'resources/js/Components/Brand.tsx',
     ],
     rules: {

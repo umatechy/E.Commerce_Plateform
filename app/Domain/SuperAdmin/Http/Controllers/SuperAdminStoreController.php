@@ -95,11 +95,19 @@ final class SuperAdminStoreController
             'owner_email' => ['required', 'email', 'max:191'],
             'starter_template' => ['sometimes', 'boolean'], // Phase B45
             'starter_template_key' => ['nullable', 'string', 'max:40'], // any active template, e.g. one saved from another store
+            'store_request_id' => ['nullable', 'string', 'size:26'], // Phase S1: the request it answers
         ]);
+        $storeRequest = isset($data['store_request_id']) ? \App\Domain\Tenancy\Models\StoreRequest::query()->where('public_id', $data['store_request_id'])->first() : null;
+        if (isset($data['store_request_id']) && ($storeRequest === null || $storeRequest->status === 'store_created')) {
+            return response()->json(['message' => 'This request is not open any more.', 'errors' => ['store_request_id' => ['This request is not open any more.']]], 422);
+        }
         $data['idempotency_key'] = (string) $request->header('Idempotency-Key', '');
 
         try {
             $store = $provisioning->forCustomer($request->user(), $data);
+            if ($storeRequest !== null) {
+                app(\App\Domain\Tenancy\Services\StoreRequestService::class)->storeCreated($request->user(), $storeRequest, $store);
+            }
         } catch (\App\Domain\Identity\Services\TeamActionRefusedException $e) {
             return response()->json(['message' => $e->getMessage(), 'code' => $e->errorCode, 'errors' => [$e->field => [$e->getMessage()]]], 422);
         }

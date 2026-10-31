@@ -169,6 +169,7 @@ export const platformNav: NavGroup[] = [
     tone: 'blue',
     items: [
       { href: '/super-admin/stores', label: 'Stores', description: 'Every store, its package and its health.' },
+      { href: '/super-admin/store-requests', label: 'Store requests', description: 'Businesses who asked Umar Techy for a store.' },
       { href: '/super-admin/users', label: 'Users', description: 'Every account on the platform.' },
       { href: '/super-admin/resellers', label: 'Resellers', description: 'Partners who sell Umar Techy: tiers, their stores, commissions and payouts.' },
     ],
@@ -309,7 +310,7 @@ export const NAV_ICONS: Record<string, IconName> = {
   '/team': 'users', '/team/roles': 'key', '/billing': 'receipt', '/settings': 'settings', '/settings/general': 'store', '/settings/payments': 'wallet', '/settings/tax': 'percent', '/settings/audit-log': 'clock',
   '/apps': 'puzzle', '/settings/developer': 'code', '/backups': 'database', '/settings/close-store': 'lock', '/support': 'lifebuoy',
   '/partner': 'handshake', '/security': 'shieldCheck',
-  '/super-admin': 'grid', '/super-admin/stores': 'store', '/super-admin/users': 'users', '/super-admin/packages': 'box', '/super-admin/billing': 'receipt',
+  '/super-admin': 'grid', '/super-admin/stores': 'store', '/super-admin/store-requests': 'chat', '/super-admin/users': 'users', '/super-admin/packages': 'box', '/super-admin/billing': 'receipt',
   '/super-admin/payments': 'wallet', '/super-admin/messaging': 'bell', '/super-admin/security': 'shield', '/super-admin/monitoring': 'activity', '/super-admin/audit-log': 'clock',
   '/super-admin/catalog': 'palette', '/super-admin/starter-templates': 'layers', '/super-admin/settings': 'settings', '/super-admin/backups': 'database', '/super-admin/support': 'lifebuoy',
   '/super-admin/marketplace': 'puzzle', '/super-admin/resellers': 'handshake', '/super-admin/help': 'question',

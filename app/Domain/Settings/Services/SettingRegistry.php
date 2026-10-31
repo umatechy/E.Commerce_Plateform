@@ -34,6 +34,8 @@ final class SettingRegistry
             // No logo address: the built-in Umar Techy mark is shown.
             'platform.brand_name' => new SettingDefinition(key: 'platform.brand_name', scope: SettingScope::Platform, type: SettingType::String, default: 'Umar Techy'),
             'platform.logo_url' => new SettingDefinition(key: 'platform.logo_url', scope: SettingScope::Platform, type: SettingType::String, default: null),
+            // Phase S1: Umar Techy's WhatsApp number for the home page's "talk to us" button (digits with country code); none until set.
+            'platform.contact_whatsapp' => new SettingDefinition(key: 'platform.contact_whatsapp', scope: SettingScope::Platform, type: SettingType::String, default: null),
             'platform.default_locale' => new SettingDefinition(
                 key: 'platform.default_locale', scope: SettingScope::Platform, type: SettingType::String,
                 default: 'en',

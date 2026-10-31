@@ -59,10 +59,10 @@ describe('navigation', () => {
     const platform = groups.filter((group) => group.platform);
     expect(platform).toHaveLength(6);
     expect(platform.every((group) => group.items.every((item) => item.href.startsWith('/super-admin')))).toBe(true);
-    // Every platform page is still in the menu, once.
+    // Every platform page is still in the menu, once (Phase S1 added Store requests).
     const hrefs = platform.flatMap((group) => group.items.map((item) => item.href));
-    expect(hrefs).toHaveLength(18);
-    expect(new Set(hrefs).size).toBe(18);
+    expect(hrefs).toHaveLength(19);
+    expect(new Set(hrefs).size).toBe(19);
     expect(breadcrumbsFor(groups, '/super-admin/billing')).toEqual([{ label: 'Dashboard', href: '/' }, { label: 'Plans & payments', href: '/super-admin/packages' }, { label: 'Platform billing', href: undefined }]);
   });
 

@@ -3,6 +3,7 @@ import { Head } from '@inertiajs/react';
 import BrandLogo, { useBrand } from '@/Components/Brand';
 import Icon, { type IconName } from '@/Components/ui/Icon';
 import { FEATURE_LABELS } from '@/lib/labels';
+import StoreRequestForm from '@/Components/Welcome/StoreRequestForm';
 import { money } from '@/lib/money';
 
 /**
@@ -13,7 +14,7 @@ import { money } from '@/lib/money';
  * partners and answers to first questions.
  */
 type Plan = { code: string; name: string; price: { amount_minor: number; first_period_amount_minor?: number | null; currency: string; interval: string } | null; limits: Record<string, number | null>; features: string[]; services?: string[] };
-type Props = { plans?: Plan[]; trialDays?: number; signupOpen?: boolean };
+type Props = { plans?: Plan[]; trialDays?: number; signupOpen?: boolean; contactWhatsapp?: string | null; businessCategories?: { value: string; label: string }[] };
 
 type Feature = { icon: IconName; title: string; text: string; wide?: boolean; chips?: string[] };
 
@@ -34,7 +35,14 @@ const STEPS: { icon: IconName; title: string; text: string }[] = [
   { icon: 'cart', title: 'Start selling', text: 'Share your shop’s address, take orders on cash on delivery or online, and ship.' },
 ];
 
-const HIGHLIGHTS = ['Cash on delivery', 'JazzCash & Easypaisa', 'Urdu storefront', 'Installable app'];
+/** Phase S1: with sign-up closed, the Umar Techy team builds every store. */
+const STEPS_BY_TEAM: { icon: IconName; title: string; text: string }[] = [
+  { icon: 'chat', title: 'Tell us about your business', text: 'What you sell, your budget and your domain. We call you back.' },
+  { icon: 'store', title: 'We build your store', text: 'Products, design and payments set up by our team, ready for you to check.' },
+  { icon: 'globe', title: 'Your domain, your choice of hosting', text: 'Your store opens on your own domain — on Umar Techy hosting or on your own server.' },
+];
+
+const HIGHLIGHTS =['Cash on delivery', 'JazzCash & Easypaisa', 'Urdu storefront', 'Installable app'];
 
 /** Shown only when it is true of the prices on the page (see faqFor). */
 const PRICING_FAQ = { q: 'How does payment for a package work?', a: 'You pay the package’s one-time price once; it includes your first year. From the second year your store renews every year at the yearly price shown with the package. You can move to a higher package from your store’s billing page.' };
@@ -148,7 +156,7 @@ function Line({ children, strong = false, dark = false }: { children: string; st
   );
 }
 
-function PlanCard({ plan, previous, highlighted, signupOpen }: { plan: Plan; previous: Plan | null; highlighted: boolean; signupOpen: boolean }) {
+function PlanCard({ plan, previous, highlighted, signupOpen, onAsk }: { plan: Plan; previous: Plan | null; highlighted: boolean; signupOpen: boolean; onAsk: (code: string) => void }) {
   const [all, setAll] = useState(false);
   // A higher package lists what it adds to the one before it.
   const added = previous ? plan.features.filter((key) => !previous.features.includes(key)) : plan.features;
@@ -167,6 +175,11 @@ function PlanCard({ plan, previous, highlighted, signupOpen }: { plan: Plan; pre
         {signupOpen && (
           <a href="/register" className={`mt-7 inline-flex items-center justify-center gap-2 rounded-xl px-4 py-3 text-sm font-semibold transition focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 motion-reduce:transition-none ${dark ? 'bg-white text-slate-950 hover:bg-indigo-50 focus-visible:ring-offset-slate-950' : 'bg-slate-900 text-white hover:bg-slate-800'}`}>
             Start with {plan.name}<Icon name="arrowRight" size={16} />
+          </a>
+        )}
+        {!signupOpen && (
+          <a href="#contact" onClick={() => onAsk(plan.code)} className={`mt-7 inline-flex items-center justify-center gap-2 rounded-xl px-4 py-3 text-sm font-semibold transition focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 motion-reduce:transition-none ${dark ? 'bg-white text-slate-950 hover:bg-indigo-50 focus-visible:ring-offset-slate-950' : 'bg-slate-900 text-white hover:bg-slate-800'}`}>
+            Ask for {plan.name}<Icon name="arrowRight" size={16} />
           </a>
         )}
         <ul className={`mt-8 space-y-3 border-b pb-6 text-sm ${dark ? 'border-white/10' : 'border-slate-100'}`}>
@@ -219,12 +232,15 @@ const GRID = {
   backgroundSize: '48px 48px',
 };
 
-export default function Welcome({ plans = [], trialDays = 14, signupOpen = true }: Props) {
+export default function Welcome({ plans = [], trialDays = 14, signupOpen = true, contactWhatsapp = null, businessCategories = [] }: Props) {
   const brand = useBrand();
   const [menu, setMenu] = useState(false);
-  const cta = signupOpen ? { href: '/register', label: 'Create your store' } : { href: '/login', label: 'Sign in' };
+  // Phase S1: sign-up closed — every call to action leads to "Ask for your store".
+  const cta = signupOpen ? { href: '/register', label: 'Create your store' } : { href: '#contact', label: 'Ask for your store' };
+  const [asked, setAsked] = useState('');
   const middle = plans.length >= 3 ? Math.floor(plans.length / 2) : -1;
-  const nav = [['#features', 'Features'], ['#how', 'How it works'], ['#pricing', 'Pricing'], ['/partners', 'Partners']];
+  const nav = [['#features', 'Features'], ['#how', 'How it works'], ['#pricing', 'Pricing'], ...(signupOpen ? [] : [['#contact', 'Contact']]), ['/partners', 'Partners']];
+  const steps = signupOpen ? STEPS : STEPS_BY_TEAM;
   const oneTime = plans.some(hasOneTime);
   const faq = faqFor(brand.name, oneTime);
   const trial = signupOpen && trialDays > 0;
@@ -242,7 +258,7 @@ export default function Welcome({ plans = [], trialDays = 14, signupOpen = true 
           </nav>
           <div className="hidden items-center gap-2 md:flex">
             <a href="/login" className="rounded-lg px-3.5 py-2 text-sm font-semibold text-slate-200 hover:bg-white/10 hover:text-white">Sign in</a>
-            {signupOpen && <a href="/register" className="rounded-lg bg-white px-4 py-2 text-sm font-semibold text-slate-950 shadow-sm hover:bg-indigo-50">Create your store</a>}
+<a href={cta.href} className="rounded-lg bg-white px-4 py-2 text-sm font-semibold text-slate-950 shadow-sm hover:bg-indigo-50">{cta.label}</a>
           </div>
           <button type="button" onClick={() => setMenu((m) => !m)} aria-expanded={menu} aria-controls="mobile-menu" aria-label="Menu" className="rounded-lg p-2 text-slate-200 hover:bg-white/10 md:hidden">
             <Icon name={menu ? 'x' : 'menu'} size={22} />
@@ -253,7 +269,7 @@ export default function Welcome({ plans = [], trialDays = 14, signupOpen = true 
             {nav.map(([href, label]) => <a key={href} href={href} onClick={() => setMenu(false)} className="block rounded-lg px-3 py-2.5 font-medium text-slate-200 hover:bg-white/10">{label}</a>)}
             <div className="mt-2 grid grid-cols-2 gap-2">
               <a href="/login" className="rounded-lg border border-white/20 px-3 py-2.5 text-center font-semibold text-white">Sign in</a>
-              {signupOpen && <a href="/register" className="rounded-lg bg-white px-3 py-2.5 text-center font-semibold text-slate-950">Create store</a>}
+              <a href={cta.href} onClick={() => setMenu(false)} className="rounded-lg bg-white px-3 py-2.5 text-center font-semibold text-slate-950">{signupOpen ? 'Create store' : 'Ask for a store'}</a>
             </div>
           </nav>
         )}
@@ -320,10 +336,10 @@ export default function Welcome({ plans = [], trialDays = 14, signupOpen = true 
         {/* How it works */}
         <section id="how" className="scroll-mt-20 border-y border-slate-200 bg-slate-50 py-24">
           <div className="mx-auto max-w-6xl px-4">
-            <SectionHead eyebrow="How it works" title="Start selling in three steps">No code to write, no developer to hire.</SectionHead>
+            <SectionHead eyebrow="How it works" title={signupOpen ? 'Start selling in three steps' : 'Your store, built by our team'}>{signupOpen ? 'No code to write, no developer to hire.' : 'You talk to us; we set everything up and hand you a store ready to sell.'}</SectionHead>
             <ol className="relative mt-16 grid gap-10 md:grid-cols-3 md:gap-8">
               <div aria-hidden="true" className="absolute left-[16%] right-[16%] top-8 hidden border-t-2 border-dashed border-indigo-200 md:block" />
-              {STEPS.map((s, i) => (
+              {steps.map((s, i) => (
                 <li key={s.title} className="relative text-center">
                   <span className="relative mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-white text-indigo-600 shadow-md ring-1 ring-slate-200">
                     <Icon name={s.icon} size={26} />
@@ -356,11 +372,30 @@ export default function Welcome({ plans = [], trialDays = 14, signupOpen = true 
               <p className="mt-12 text-center text-slate-600">Packages are being prepared. Contact us for a price.</p>
             ) : (
               <div className={`mx-auto mt-16 grid items-start gap-6 ${plans.length >= 3 ? 'lg:grid-cols-3' : 'max-w-3xl md:grid-cols-2'}`}>
-                {plans.map((p, i) => <PlanCard key={p.code} plan={p} previous={i > 0 ? plans[i - 1] : null} highlighted={i === middle} signupOpen={signupOpen} />)}
+                {plans.map((p, i) => <PlanCard key={p.code} plan={p} previous={i > 0 ? plans[i - 1] : null} highlighted={i === middle} signupOpen={signupOpen} onAsk={setAsked} />)}
               </div>
             )}
           </div>
         </section>
+
+        {/* Phase S1: ask for a store (sign-up closed) */}
+        {!signupOpen && (
+          <section id="contact" className="scroll-mt-20 border-y border-slate-200 bg-slate-50 py-24">
+            <div className="mx-auto grid max-w-6xl gap-12 px-4 lg:grid-cols-[1fr_1.6fr]">
+              <div>
+                <p className="inline-flex rounded-full bg-indigo-50 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-indigo-700">Contact</p>
+                <h2 className="mt-4 text-3xl font-extrabold tracking-tight sm:text-4xl">Ask for your store</h2>
+                <p className="mt-4 text-lg text-slate-600">Tell us what you sell. Our team builds your store, connects your own domain and runs it on our hosting — or installs it on your server.</p>
+                <ul className="mt-8 space-y-3 text-sm text-slate-700">
+                  {['We call you back, usually within a day', 'Your store opens on your own domain', 'Umar Techy hosting, or your own server'].map((t) => (
+                    <li key={t} className="flex items-center gap-2"><Icon name="checkCircle" size={17} className="text-emerald-600" />{t}</li>
+                  ))}
+                </ul>
+              </div>
+              <StoreRequestForm plans={plans.map((p) => ({ code: p.code, name: p.name }))} categories={businessCategories} whatsapp={contactWhatsapp} packageCode={asked} />
+            </div>
+          </section>
+        )}
 
         {/* Partners */}
         <section className="px-4">
@@ -410,7 +445,7 @@ export default function Welcome({ plans = [], trialDays = 14, signupOpen = true 
             <div aria-hidden="true" className="pointer-events-none absolute left-1/2 top-0 h-72 w-[40rem] -translate-x-1/2 rounded-full bg-indigo-600/30 blur-[100px]" />
             <div className="relative">
               <h2 className="text-3xl font-extrabold tracking-tight sm:text-4xl">Ready to open your shop?</h2>
-              <p className="mx-auto mt-4 max-w-lg text-lg text-slate-300">It takes a few minutes, and you can change everything later.</p>
+              <p className="mx-auto mt-4 max-w-lg text-lg text-slate-300">{signupOpen ? 'It takes a few minutes, and you can change everything later.' : 'Tell us what you sell — our team builds your store and hands it to you ready to sell.'}</p>
               <a href={cta.href} className="mt-9 inline-flex items-center gap-2 rounded-xl bg-white px-7 py-3.5 font-semibold text-slate-950 shadow-lg hover:bg-indigo-50">
                 {cta.label}<Icon name="arrowRight" size={18} />
               </a>

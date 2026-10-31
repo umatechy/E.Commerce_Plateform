@@ -114,6 +114,8 @@ final class StepUpTest extends TestCase
             'DELETE api/v1/super-admin/payment-providers/{provider}/account',
             // Phase B45 follow-up: deleting a starter template saved from a store.
             'DELETE api/v1/super-admin/starter-templates/{key}',
+            // Phase S1: removing a store request (its contact details).
+            'DELETE api/v1/super-admin/store-requests/{storeRequest}',
             'GET api/v1/super-admin/stores/{store}/impersonate',
             'PATCH api/v1/super-admin/billing/prices/{price}',
             // Phase B57: paying affiliates — seeing where to send money, recording it, changing balances and accounts.

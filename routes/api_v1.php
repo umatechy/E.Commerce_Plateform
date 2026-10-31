@@ -66,6 +66,8 @@ Route::post('/auth/login', [AuthController::class, 'login'])->middleware('thrott
 // Phase B58 (Module 28 §92): becoming an Umar Techy partner — apply, look up an invitation, join with a new account.
 $partnerJoin = \App\Domain\Resellers\Http\Controllers\PartnerJoinController::class;
 Route::post('/partner/applications', [$partnerJoin, 'apply'])->middleware('throttle:3,10,partner-apply');
+// Phase S1 (owner decision 2026-10-30): the platform is closed to sign-up; businesses ask Umar Techy for a store.
+Route::post('/public/store-requests', [\App\Domain\Tenancy\Http\Controllers\StoreRequestController::class, 'submit'])->middleware('throttle:3,10,store-request');
 Route::post('/partner/invitations/lookup', [$partnerJoin, 'invitation'])->middleware('throttle:20,1,partner-invitation');
 Route::post('/partner/invitations/register', [$partnerJoin, 'register'])->middleware('throttle:5,1,partner-register');
 // The second step of a sign-in for accounts with MFA (Module 32 §8 — Phase B29).
@@ -604,6 +606,11 @@ Route::middleware(['auth:sanctum', 'session.track', 'staff.principal', 'required
             // Phase B44 (owner decision 13): Umar Techy creates a store for a customer.
             Route::post('/stores', [SuperAdminStoreController::class, 'store'])->middleware(['step_up', 'throttle:30,10,super-admin-store-create']);
             Route::get('/business-categories', [SuperAdminStoreController::class, 'businessCategories']);
+            // Phase S1: businesses who asked for a store; the store is created from one with POST /stores (store_request_id).
+            $storeRequests = \App\Domain\SuperAdmin\Http\Controllers\SuperAdminStoreRequestController::class;
+            Route::get('/store-requests', [$storeRequests, 'index']);
+            Route::put('/store-requests/{storeRequest}', [$storeRequests, 'update']);
+            Route::delete('/store-requests/{storeRequest}', [$storeRequests, 'destroy'])->middleware('step_up');
             // Phase B45 follow-up (Module 07 §101, Module 03 §52): platform-managed starter templates.
             $templates = \App\Domain\SuperAdmin\Http\Controllers\SuperAdminStarterTemplateController::class;
             Route::get('/starter-templates', [$templates, 'index']);

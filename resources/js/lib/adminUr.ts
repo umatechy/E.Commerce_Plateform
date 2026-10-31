@@ -629,4 +629,6 @@ export const adminUr: Record<string, string> = {
   'What to order again, stock received from suppliers, transfers between locations.': 'دوبارہ کیا منگوانا ہے، سپلائرز سے آیا اسٹاک، مقامات کے درمیان منتقلی۔',
   'Automations': 'خودکار پیغامات',
   'Welcome, thank-you, win-back and birthday emails that send themselves.': 'خوش آمدید، شکریہ، واپسی اور سالگرہ کی ای میلز جو خود بخود جاتی ہیں۔',
+  'Store requests': 'اسٹور کی درخواستیں',
+  'Businesses who asked Umar Techy for a store.': 'وہ کاروبار جنہوں نے امر ٹیکی سے اسٹور مانگا۔',
 };

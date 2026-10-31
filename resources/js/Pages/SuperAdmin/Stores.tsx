@@ -96,9 +96,10 @@ export default function Stores() {
 
 type Values = { store_name: string; business_category: string; package_code: string; trial_days: string; owner_email: string; starter_template: boolean; starter_template_key: string };
 
-function CreateStoreDialog({ categories, onClose }: { categories: Option[]; onClose: () => void }) {
+/** Phase S1: also opened from a store request, filled from it, and linked to it when the store is made. */
+export function CreateStoreDialog({ categories, onClose, initial, storeRequestId }: { categories: Option[]; onClose: () => void; initial?: Partial<Values>; storeRequestId?: string }) {
   const packages = useApi<{ data: { code: string; name: string; is_active?: boolean }[] }>('/super-admin/packages');
-  const form = useForm<Values>({ store_name: '', business_category: '', package_code: '', trial_days: '', owner_email: '', starter_template: true, starter_template_key: '' });
+  const form = useForm<Values>({ store_name: '', business_category: '', package_code: '', trial_days: '', owner_email: '', starter_template: true, starter_template_key: '', ...initial });
   // Phase B45 follow-up: any active template, including ones saved from a store.
   const templates = useApi<{ data: { key: string; name: string; source: string; is_active: boolean; offered_to_stores: boolean }[] }>('/super-admin/starter-templates');
   // One key per dialog: a double click or a retry never makes two stores.
@@ -107,7 +108,7 @@ function CreateStoreDialog({ categories, onClose }: { categories: Option[]; onCl
 
   async function save(event: FormEvent) {
     event.preventDefault();
-    const body = { store_name: v.store_name, business_category: v.business_category, package_code: v.package_code, owner_email: v.owner_email, trial_days: v.trial_days === '' ? null : Number(v.trial_days), starter_template: v.starter_template, ...(v.starter_template && v.starter_template_key !== '' ? { starter_template_key: v.starter_template_key } : {}) };
+    const body = { store_name: v.store_name, business_category: v.business_category, package_code: v.package_code, owner_email: v.owner_email, trial_days: v.trial_days === '' ? null : Number(v.trial_days), starter_template: v.starter_template, ...(v.starter_template && v.starter_template_key !== '' ? { starter_template_key: v.starter_template_key } : {}), ...(storeRequestId ? { store_request_id: storeRequestId } : {}) };
     const created = await form.submit(
       () => adminFetch<{ data: { id: number } }>('/super-admin/stores', { method: 'POST', body, headers: { 'Idempotency-Key': key } }),
       'Store created. The owner invitation is on its way.',

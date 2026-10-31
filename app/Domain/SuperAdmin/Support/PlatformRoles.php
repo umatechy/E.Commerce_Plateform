@@ -69,6 +69,7 @@ final class PlatformRoles
         ['stores/{store}/starter-template', 'catalog'],
         ['stores/{store}/subscription', 'billing'], // a store's package and subscription are billing (Module 30 §29)
         ['stores', 'stores'],
+        ['store-requests', 'stores'], // Phase S1: following up businesses who asked for a store
         ['packages', 'catalog'],
         ['themes', 'catalog'],
         ['starter-templates', 'catalog'],
