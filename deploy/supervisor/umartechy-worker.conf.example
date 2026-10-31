@@ -9,7 +9,7 @@
 
 [program:umartechy-worker]
 process_name=%(program_name)s_%(process_num)02d
-command=php /var/www/umartechy/artisan queue:work redis --sleep=3 --tries=3 --max-time=3600
+command=php /var/www/umartechy/artisan queue:work redis --queue=outbox,default --sleep=3 --tries=3 --max-time=3600
 directory=/var/www/umartechy
 autostart=true
 autorestart=true

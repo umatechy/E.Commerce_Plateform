@@ -61,7 +61,7 @@ services:
   worker:
     <<: *php
     pull_policy: never
-    command: ["php", "artisan", "queue:work", "redis", "--sleep=3", "--tries=3", "--max-time=3600", "--memory=256"]
+    command: ["php", "artisan", "queue:work", "redis", "--queue=outbox,default", "--sleep=3", "--tries=3", "--max-time=3600", "--memory=256"]
     stop_grace_period: 60s
     deploy:
       resources:

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Feature\DataProtection;
 
+use App\Domain\DataProtection\Exceptions\BackupIntegrityException;
 use App\Domain\DataProtection\Models\BackupRestoreJob;
 use App\Domain\DataProtection\Models\BackupStatus;
 use App\Domain\DataProtection\Services\BackupService;
@@ -90,6 +91,61 @@ final class MysqlRehearsalTest extends TestCase
         }
 
         $this->assertSame($before, $this->rehearsalDatabases());
+    }
+
+    public function test_a_prepared_database_is_used_emptied_and_kept_where_none_can_be_created(): void
+    {
+        config(['backup.encryption_key' => base64_encode(random_bytes(32))]);
+        $client = app(MysqlClient::class);
+        $prepared = 'b30_prepared_rehearsal';
+        $client->run('mysql', ['-e', "DROP DATABASE IF EXISTS `{$prepared}`; CREATE DATABASE `{$prepared}`"], 'prepare');
+        config(['backup.rehearsal_database' => $prepared]);
+
+        try {
+            app(BackupService::class)->requestScheduled(now());
+            $this->artisan('backups:rehearse')->expectsOutputToContain('Rehearsal passed')->assertSuccessful();
+
+            $checks = collect(BackupRestoreJob::query()->sole()->report['checks'])->keyBy('name');
+            $this->assertTrue($checks['rehearsal_target_removed']['passed']);
+            $this->assertStringContainsString('emptied', $checks['rehearsal_target_removed']['detail']);
+            $this->assertTrue($checks['core_tables_present']['passed']);
+            $this->assertCount(1, DB::select('SELECT 1 FROM information_schema.SCHEMATA WHERE SCHEMA_NAME = ?', [$prepared]));
+            $this->assertCount(0, DB::select('SELECT 1 FROM information_schema.TABLES WHERE TABLE_SCHEMA = ?', [$prepared]));
+        } finally {
+            $client->run('mysql', ['-e', "DROP DATABASE IF EXISTS `{$prepared}`"], 'clean up');
+        }
+    }
+
+    public function test_a_prepared_database_with_anything_in_it_is_refused_and_left_alone(): void
+    {
+        $client = app(MysqlClient::class);
+        $prepared = 'b30_occupied_rehearsal';
+        $client->run('mysql', ['-e', "DROP DATABASE IF EXISTS `{$prepared}`; CREATE DATABASE `{$prepared}`; CREATE TABLE `{$prepared}`.`wp_posts` (id INT)"], 'prepare');
+        config(['backup.rehearsal_database' => $prepared]);
+
+        try {
+            app(MysqlRehearsalTarget::class)->rehearse('unused.sql');
+            $this->fail('A database with tables in it was used.');
+        } catch (BackupIntegrityException $e) {
+            $this->assertStringContainsString('not empty', $e->getMessage());
+            $this->assertCount(1, DB::select('SELECT 1 FROM information_schema.TABLES WHERE TABLE_SCHEMA = ?', [$prepared]));
+        } finally {
+            $client->run('mysql', ['-e', "DROP DATABASE IF EXISTS `{$prepared}`"], 'clean up');
+        }
+    }
+
+    public function test_only_a_separate_database_named_for_rehearsals_can_be_prepared(): void
+    {
+        foreach (['u511_wordpress', (string) DB::getDatabaseName(), 'bad`name_rehearsal'] as $name) {
+            config(['backup.rehearsal_database' => $name]);
+
+            try {
+                app(MysqlRehearsalTarget::class)->rehearse('unused.sql');
+                $this->fail("{$name} was accepted.");
+            } catch (BackupIntegrityException $e) {
+                $this->assertStringContainsString('must be a separate database', $e->getMessage());
+            }
+        }
     }
 
     public function test_the_database_password_never_appears_in_a_failure_message(): void

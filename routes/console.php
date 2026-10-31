@@ -79,3 +79,5 @@ Schedule::command('loyalty:follow-up')->everyFifteenMinutes()->withoutOverlappin
 Schedule::command('marketing:automations')->hourly()->withoutOverlapping();
 // Phase S2: customers' domains — ownership, address, certificate; live when ready.
 Schedule::command('domains:check-connections')->everyFiveMinutes()->withoutOverlapping();
+// Shared hosting: no worker can run forever, so the scheduler empties the queue (config/hosting.php).
+Schedule::command('queue:work --queue=outbox,default --stop-when-empty --tries=3 --max-time=50 --memory=256')->everyMinute()->withoutOverlapping(5)->runInBackground()->when(fn () => config('hosting.queue_from_scheduler'));

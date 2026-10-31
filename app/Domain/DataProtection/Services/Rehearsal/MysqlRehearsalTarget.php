@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Domain\DataProtection\Services\Rehearsal;
 
+use App\Domain\DataProtection\Exceptions\BackupIntegrityException;
 use App\Domain\DataProtection\Services\DumpStrategies\MysqlClient;
 use Illuminate\Database\ConnectionInterface;
 use Illuminate\Support\Facades\DB;
@@ -21,6 +22,12 @@ use Illuminate\Support\Str;
  * The rehearsal database is created and dropped through the mysql
  * client, on its own connection: CREATE/DROP DATABASE on the
  * application's connection would commit a transaction it has open.
+ *
+ * Shared hosting lets no account create a database, so a rehearsal can
+ * use one prepared by hand (BACKUP_REHEARSAL_DATABASE). Rehearsals destroy
+ * what is in it, and the account may well reach other sites' databases, so
+ * it is refused unless its name ends in "_rehearsal", it is not the live
+ * database, and it is empty before the rehearsal starts.
  */
 final class MysqlRehearsalTarget implements RehearsalTarget
 {
@@ -35,20 +42,26 @@ final class MysqlRehearsalTarget implements RehearsalTarget
     {
         // Letters, digits and underscore only: the name is put into SQL
         // as an identifier, so it is built here and never taken from input.
-        $database = Str::limit((string) preg_replace('/[^A-Za-z0-9_]/', '_', $this->client->database()), 40, '').'_rehearsal_'.Str::lower(Str::random(10));
+        $prepared = $this->preparedDatabase();
+        $account = $this->account();
+        $database = $prepared ?? Str::limit((string) preg_replace('/[^A-Za-z0-9_]/', '_', $this->client->database()), 40, '').'_rehearsal_'.Str::lower(Str::random(10));
         $created = false;
         $removed = false;
 
         try {
-            $this->client->run('mysql', ['-e', "CREATE DATABASE `{$database}` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci"], 'the rehearsal database could not be created');
+            if ($prepared !== null) {
+                $this->assertEmpty($prepared, $account);
+            } else {
+                $this->client->run('mysql', ['-e', "CREATE DATABASE `{$database}` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci"], 'the rehearsal database could not be created');
+            }
             $created = true;
 
             $started = hrtime(true);
-            $this->client->run('mysql', [$database, '-e', 'source '.MysqlClient::sourcePath($plainSqlPath)], 'the dump could not be imported');
+            $this->client->run('mysql', [$database, '-e', 'source '.MysqlClient::sourcePath($plainSqlPath)], 'the dump could not be imported', $account);
             $importMs = (int) ((hrtime(true) - $started) / 1_000_000);
 
             $started = hrtime(true);
-            config(['database.connections.'.self::CONNECTION => [...$this->client->connection(), 'database' => $database]]);
+            $this->useConnection($database, $account);
             $rehearsal = DB::connection(self::CONNECTION);
 
             try {
@@ -61,7 +74,11 @@ final class MysqlRehearsalTarget implements RehearsalTarget
         } finally {
             if ($created) {
                 try {
-                    $this->client->run('mysql', ['-e', "DROP DATABASE IF EXISTS `{$database}`"], 'the rehearsal database could not be dropped');
+                    if ($prepared !== null) {
+                        $this->emptyPrepared($prepared, $account);
+                    } else {
+                        $this->client->run('mysql', ['-e', "DROP DATABASE IF EXISTS `{$database}`"], 'the rehearsal database could not be dropped');
+                    }
                     $removed = true;
                 } catch (\Throwable) {
                     $removed = false; // reported below; never hides the original failure
@@ -69,7 +86,7 @@ final class MysqlRehearsalTarget implements RehearsalTarget
             }
         }
 
-        $checks[] = ['name' => 'rehearsal_target_removed', 'passed' => $removed, 'detail' => $removed ? 'The rehearsal database was dropped.' : "The rehearsal database {$database} could not be dropped and must be removed by hand."];
+        $checks[] = ['name' => 'rehearsal_target_removed', 'passed' => $removed, 'detail' => $removed ? ($prepared !== null ? 'The rehearsal database was emptied.' : 'The rehearsal database was dropped.') : "The rehearsal database {$database} could not be cleared and must be cleared by hand."];
 
         return [
             'passed' => collect($checks)->every(fn (array $check) => $check['passed']),
@@ -79,6 +96,69 @@ final class MysqlRehearsalTarget implements RehearsalTarget
             'validate_ms' => $validateMs,
             'target_removed' => $removed,
         ];
+    }
+
+    /** The database prepared by hand, if there is one and it is safe to destroy what is in it. */
+    private function preparedDatabase(): ?string
+    {
+        $name = (string) config('backup.rehearsal_database', '');
+        if ($name === '') {
+            return null;
+        }
+        if (preg_match('/^[A-Za-z0-9_]+_rehearsal$/', $name) !== 1 || strcasecmp($name, $this->client->database()) === 0) {
+            throw new BackupIntegrityException('BACKUP_REHEARSAL_DATABASE must be a separate database whose name ends in _rehearsal.');
+        }
+
+        return $name;
+    }
+
+    /** @return array<string, string> the account for a prepared database, when it has its own */
+    private function account(): array
+    {
+        $username = (string) config('backup.rehearsal_username', '');
+
+        return $username === '' ? [] : ['username' => $username, 'password' => (string) config('backup.rehearsal_password', '')];
+    }
+
+    /** @param array<string, string> $account */
+    private function useConnection(string $database, array $account): void
+    {
+        config(['database.connections.'.self::CONNECTION => [...$this->client->connection(), ...$account, 'database' => $database]]);
+    }
+
+    /** @param array<string, string> $account */
+    private function assertEmpty(string $database, array $account): void
+    {
+        $this->useConnection($database, $account);
+
+        try {
+            $found = $this->tables(DB::connection(self::CONNECTION), $database);
+        } finally {
+            DB::purge(self::CONNECTION);
+        }
+
+        if ($found !== []) {
+            throw new BackupIntegrityException("The rehearsal database {$database} is not empty: it has ".count($found).' tables. Empty it by hand; nothing was changed.');
+        }
+    }
+
+    /** @param array<string, string> $account */
+    private function emptyPrepared(string $database, array $account): void
+    {
+        $this->useConnection($database, $account);
+
+        try {
+            $connection = DB::connection(self::CONNECTION);
+            $connection->statement('SET FOREIGN_KEY_CHECKS=0');
+            foreach ($this->tables($connection, $database) as $table) {
+                $connection->statement('DROP TABLE `'.str_replace('`', '``', $table).'`');
+            }
+            if ($this->tables($connection, $database) !== []) {
+                throw new BackupIntegrityException('Tables are left in the rehearsal database.');
+            }
+        } finally {
+            DB::purge(self::CONNECTION);
+        }
     }
 
     /**

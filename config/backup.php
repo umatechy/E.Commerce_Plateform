@@ -45,6 +45,11 @@ return [
     // This many scheduled backups failing in a row raises "repeated failure".
     'repeated_failure_threshold' => 2,
 
+    // Where no account may create a database: an empty one prepared by hand, named <something>_rehearsal.
+    'rehearsal_database' => env('BACKUP_REHEARSAL_DATABASE', ''),
+    'rehearsal_username' => env('BACKUP_REHEARSAL_USERNAME', ''),
+    'rehearsal_password' => env('BACKUP_REHEARSAL_PASSWORD', ''),
+
     // Seconds a backup or restore process may run before it is stopped.
     'process_timeout' => (int) env('BACKUP_PROCESS_TIMEOUT', 3600),
 ];

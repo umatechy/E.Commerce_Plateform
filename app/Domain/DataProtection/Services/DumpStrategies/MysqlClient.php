@@ -38,11 +38,12 @@ final class MysqlClient
     /**
      * @param 'mysqldump'|'mysql' $binary
      * @param list<string> $arguments
+     * @param array<string, string> $as another account on the server: username, password
      * @throws BackupIntegrityException when the binary cannot run or exits non-zero
      */
-    public function run(string $binary, array $arguments, string $failure): ProcessResult
+    public function run(string $binary, array $arguments, string $failure, array $as = []): ProcessResult
     {
-        $config = $this->connection();
+        $config = [...$this->connection(), ...$as];
         $credentialsFile = tempnam(sys_get_temp_dir(), 'mysql_cnf_') ?: throw new BackupIntegrityException('A working file could not be created.');
 
         file_put_contents($credentialsFile, sprintf(
@@ -61,14 +62,14 @@ final class MysqlClient
                 ...$arguments,
             ]);
         } catch (\Throwable $e) {
-            throw new BackupIntegrityException("{$failure}: ".$this->scrub($e->getMessage(), $credentialsFile));
+            throw new BackupIntegrityException("{$failure}: ".$this->scrub($e->getMessage(), $credentialsFile, $as));
         } finally {
             // The credentials file must never survive this call, success or failure.
             @unlink($credentialsFile);
         }
 
         if (! $result->successful()) {
-            throw new BackupIntegrityException("{$failure}: ".$this->scrub(trim($result->errorOutput()) ?: 'exit code '.$result->exitCode(), $credentialsFile));
+            throw new BackupIntegrityException("{$failure}: ".$this->scrub(trim($result->errorOutput()) ?: 'exit code '.$result->exitCode(), $credentialsFile, $as));
         }
 
         return $result;
@@ -98,11 +99,16 @@ final class MysqlClient
         return str_replace('\\', '/', $path);
     }
 
-    private function scrub(string $message, string $credentialsFile): string
+    /** @param array<string, string> $as */
+    private function scrub(string $message, string $credentialsFile, array $as = []): string
     {
-        $password = (string) ($this->connection()['password'] ?? '');
         $message = str_replace($credentialsFile, '[credentials file]', $message);
+        foreach ([$this->connection()['password'] ?? '', $as['password'] ?? ''] as $password) {
+            if ((string) $password !== '') {
+                $message = str_replace((string) $password, '[hidden]', $message);
+            }
+        }
 
-        return $password === '' ? $message : str_replace($password, '[hidden]', $message);
+        return $message;
     }
 }
