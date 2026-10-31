@@ -203,6 +203,14 @@ minutes; build outside ERP's busy hours.
   reload; `docker compose -p umartechy-ecom -f docker-compose.prod.yml stop`.
   Volumes (data) stay.
 
+## Known on rc.4: outbox events are not consumed
+
+The running worker reads only the `default` queue, while outbox events wait on
+`outbox`. Checked on the server on 2026-10-31 (read-only): 26 jobs waiting on
+`outbox`, and the worker's command has no `--queue`. Fixed in the repository
+(033a2f6), not deployed. **On the first deployment with the fix those 26 run**,
+so whatever they would send has to be looked at first.
+
 ## 9. Not part of the first launch
 
 - Stores' own domains (S2): the application is ready, the server side is not.

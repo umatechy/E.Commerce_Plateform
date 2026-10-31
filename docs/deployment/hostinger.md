@@ -65,9 +65,13 @@ WordPress plugin on the account can read `~/shop/shared/.env`: database
 password, `APP_KEY`, backup key, customers' provider credentials. hPanel showed
 **33 vulnerabilities** on `umartechy.com` on 2026-10-31.
 
-The real answer is a hosting account of its own for the shop. If the owner keeps
-one account, at the least every WordPress site is updated and unused plugins go
-before real customers' data arrives here. This is the owner's decision.
+**Owner decision 2026-10-31: the shop stays on this account**, against the advice
+to give it an account of its own. So this is a condition of going live, not an
+option: every WordPress site on the account is updated and unused plugins are
+removed before real customers' data arrives here, and they are kept up to date.
+
+The databases `u511003721_shop` and `u511003721_rehearsal` exist. hPanel lists
+them under `umartechy.com`.
 
 ## Pilot
 
