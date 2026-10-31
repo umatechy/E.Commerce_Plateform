@@ -26,6 +26,9 @@ on the shop's website it has to be removed from the list.
 
 Not yet known: the database engine and version.
 
+A release (`build-release.sh`) measured 18.3 MB and 16,713 files, so one copy takes
+about 17K inodes, and each kept release as many again.
+
 ## How it differs from the Docker deployment
 
 | Docker | Here |
@@ -75,9 +78,9 @@ not touched.
    CDN off. Make two databases, one named `..._rehearsal`, each with its user.
 2. Build here and upload:
    `sh deploy/hostinger/build-release.sh`, then `scp -P <port> shop-<sha>.tar.gz <user>@<ip>:~/`
-3. On the server: make `~/shop/shared/`, copy `env.hostinger.example` from the
-   release to `~/shop/shared/.env`, and fill it in there.
-4. `sh activate.sh ~/shop-<sha>.tar.gz` (from the unpacked release), then read
+3. On the server: `mkdir -p ~/shop/shared && tar -xzf ~/shop-<sha>.tar.gz -C ~/shop/shared ./deploy/hostinger`,
+   copy `deploy/hostinger/env.hostinger.example` to `~/shop/shared/.env`, and fill it in there.
+4. `sh ~/shop/shared/deploy/hostinger/activate.sh ~/shop-<sha>.tar.gz`, then read
    every line of `hosting:preflight`.
 5. Link `public_html` as in step 3 of "Each customer's domain".
 6. hPanel -> Cron Jobs, every minute: `/bin/sh ~/shop/current/deploy/hostinger/cron.sh`
