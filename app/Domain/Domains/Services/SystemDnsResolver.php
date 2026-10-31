@@ -24,4 +24,11 @@ final class SystemDnsResolver implements DnsResolverContract
 
         return array_column($records, 'txt');
     }
+
+    public function lookupARecords(string $hostname): array
+    {
+        $records = @dns_get_record($hostname, DNS_A);
+
+        return $records === false ? [] : array_values(array_unique(array_column($records, 'ip')));
+    }
 }

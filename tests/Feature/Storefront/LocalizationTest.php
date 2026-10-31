@@ -142,7 +142,7 @@ final class LocalizationTest extends TestCase
         $this->offerUrdu();
         $html = $this->page('?lang=ur')->assertOk()->getContent();
 
-        $this->assertMatchesRegularExpression('#<link rel="canonical" href="https://[^"?]+\?lang=ur"#', $html);
+        $this->assertMatchesRegularExpression('#<link rel="canonical" href="https?://[^"?]+\?lang=ur"#', $html);
         $this->assertStringContainsString('hreflang="en"', $html);
         $this->assertStringContainsString('hreflang="ur"', $html);
         $this->assertStringContainsString('hreflang="x-default"', $html);

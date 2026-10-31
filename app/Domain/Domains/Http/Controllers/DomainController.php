@@ -28,11 +28,27 @@ use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
  */
 final class DomainController
 {
-    public function index(Request $request): AnonymousResourceCollection
+    public function index(Request $request): JsonResponse
     {
         abort_unless(app(DomainPolicy::class)->viewAny($request->user()), 403);
+        $connections = app(\App\Domain\Domains\Services\DomainConnectionService::class);
+        // Phase S2: only the customer's own domains are shown; platform subdomains are records, not addresses.
+        $domains = Domain::query()->where('domain_type', \App\Domain\Domains\Models\DomainType::CustomDomain->value)
+            ->where('status', '!=', \App\Domain\Domains\Models\DomainStatus::Removed->value)->orderBy('id')->get();
 
-        return DomainResource::collection(Domain::query()->get());
+        return response()->json([
+            'data' => $domains->map(fn (Domain $d) => [...(new DomainResource($d))->resolve($request), 'records' => $connections->records($d)])->values(),
+            'meta' => ['shop_ipv4' => \App\Domain\Domains\Services\DomainConnectionService::shopAddress()],
+        ]);
+    }
+
+    /** Phase S2: "Check now" — ownership, address and certificate, as far as each is ready. */
+    public function check(Request $request, Domain $domain, \App\Domain\Domains\Services\DomainConnectionService $connections): JsonResponse
+    {
+        abort_unless(app(DomainPolicy::class)->manage($request->user(), $domain), 403);
+        $domain = $connections->check($domain);
+
+        return response()->json(['data' => [...(new DomainResource($domain))->resolve($request), 'records' => $connections->records($domain)]]);
     }
 
     public function store(AddDomainRequest $request, DomainService $domains, EntitlementService $entitlements): JsonResponse
@@ -43,6 +59,8 @@ final class DomainController
         try {
             $store = \App\Domain\Tenancy\Models\Store::query()->findOrFail(app(TenantContext::class)->storeId());
             $domain = $domains->addCustomDomain($store, $request->string('hostname')->toString());
+            // Phase S2: the TXT record to publish is there at once.
+            $domain = app(DomainVerificationService::class)->initiate($domain);
         } catch (InvalidHostnameException $e) {
             return response()->json(['message' => $e->getMessage(), 'code' => 'invalid_hostname'], 422);
         }

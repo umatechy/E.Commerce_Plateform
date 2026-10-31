@@ -22,6 +22,13 @@ final class DomainResolverServiceTest extends TestCase
 {
     use RefreshDatabase;
 
+    /** B14's platform subdomains, as when they are public (Phase S2 keeps them off by default). */
+    protected function setUp(): void
+    {
+        parent::setUp();
+        config(['domains.platform_subdomains_public' => true]);
+    }
+
     public function test_active_domain_resolves_to_the_correct_store(): void
     {
         $store = Store::factory()->create(['slug' => 'my-shop']);

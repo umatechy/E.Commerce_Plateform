@@ -205,9 +205,12 @@ minutes; build outside ERP's busy hours.
 
 ## 9. Not part of the first launch
 
-- Stores' own domains and `<slug>.PLATFORM_BASE_DOMAIN` subdomains: need
-  wildcard DNS and a wildcard (DNS-01) certificate or per-domain certificates.
-  Until then stores open at `https://<shop>/shop/<slug>`.
+- Stores' own domains (S2): the application is ready, the server side is not.
+  A store opens only on its own domain, which needs `SHOP_PUBLIC_IPV4` and a
+  proxy issuing certificates on demand, asking `/api/v1/public/tls-allowed`.
+  See `docs/architecture/store-requests-and-hosting-plan.md` ("S2b"). Once S2 is
+  deployed, a new store cannot launch until this is live. Platform subdomains
+  stay off (`PLATFORM_SUBDOMAINS_PUBLIC=false`), by owner decision.
 - Real payment, courier and WhatsApp/SMS providers: owner credentials,
   entered in the app, and each adapter checked in its sandbox first.
 - Web push for store apps: VAPID keys.

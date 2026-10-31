@@ -42,7 +42,8 @@ final class DomainAdminTest extends TestCase
         $response = $this->actingAs($owner)->postJson('/api/v1/domains', ['hostname' => 'shop.mystore.com']);
 
         $response->assertCreated();
-        $response->assertJsonPath('data.status', 'pending');
+        // Phase S2: the TXT record to publish is ready at once.
+        $response->assertJsonPath('data.status', 'verification_required');
     }
 
     public function test_invalid_hostname_is_rejected_with_a_clear_error(): void

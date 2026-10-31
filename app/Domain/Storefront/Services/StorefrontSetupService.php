@@ -43,7 +43,7 @@ final class StorefrontSetupService
      *
      * @return list<array{key: string, group: string, required: bool, done: bool, message: string}>
      */
-    public function checklist(Store $store): array
+    public function checklist(Store $store, bool $exceptOwnDomain = false): array
     {
         $sellable = Product::query()
             ->where('status', ProductStatus::Active->value)
@@ -61,6 +61,13 @@ final class StorefrontSetupService
             $this->check('products', true, $sellable, 'At least one active, public product with a price.', 'essentials'),
             $this->check('subscription', true, $this->gate->subscriptionGrantsAccess($store), 'A subscription that is active or on trial.', 'essentials'),
         ];
+        // Phase S2: the store's own domain, live with its certificate, before it goes public.
+        $ownDomainLive = Domain::query()->withoutTenantScope()->where('store_id', $store->id)->where('domain_type', DomainType::CustomDomain->value)
+            ->where('status', DomainStatus::Active->value)->where('ssl_status', \App\Domain\Domains\Models\SslStatus::Active->value)->exists();
+        $domainRequired = ! $exceptOwnDomain && $config->get('platform.custom_domain_required') !== false;
+        if ($domainRequired) {
+            $checks[] = $this->check('domain', true, $ownDomainLive, 'Your own domain, connected and secured (Settings → Domains). The store opens on it.', 'essentials');
+        }
         if ($this->launchRequiresPayment()) {
             $checks[] = $this->check('payment', true, $this->hasPaid($store), 'Your first payment to Umar Techy. Get your first invoice below, pay it, and the team confirms it.', 'essentials');
         }
@@ -77,7 +84,7 @@ final class StorefrontSetupService
             $this->check('test_order', false, \App\Domain\Orders\Models\Order::query()->exists(), 'A test order, to see the whole journey once.', 'operations'),
             // Growing it.
             $this->check('seo', false, ! empty(\App\Domain\Seo\Models\SeoSetting::query()->where('seoable_type', 'store')->whereNull('seoable_id')->value('meta_description')), 'A search engine description for your home page.', 'growth'),
-            ...($entitlements->hasFeature('domains.custom_domain') ? [
+            ...(! $domainRequired && $entitlements->hasFeature('domains.custom_domain') ? [
                 $this->check('domain', false, Domain::query()->withoutTenantScope()->where('store_id', $store->id)
                     ->where('domain_type', DomainType::CustomDomain->value)->where('status', DomainStatus::Active->value)->exists(),
                     'A custom domain (the store is always reachable on its platform subdomain).', 'growth'),
@@ -122,16 +129,17 @@ final class StorefrontSetupService
     /**
      * @return array{ok: bool, code?: string, checks?: list<array{key: string, required: bool, done: bool, message: string}>}
      */
-    public function launch(Store $store): array
+    /** @param bool $exceptOwnDomain only for demo stores (demo:store refuses to run in production), reached at /shop/<slug> */
+    public function launch(Store $store, bool $exceptOwnDomain = false): array
     {
-        return DB::transaction(function () use ($store) {
+        return DB::transaction(function () use ($store, $exceptOwnDomain) {
             $store = Store::query()->lockForUpdate()->findOrFail($store->id);
 
             if ($store->status !== StoreStatus::PendingSetup) {
                 return ['ok' => false, 'code' => $store->status === StoreStatus::Active ? 'already_launched' : 'store_not_launchable'];
             }
 
-            $checks = $this->checklist($store);
+            $checks = $this->checklist($store, $exceptOwnDomain);
             if (collect($checks)->contains(fn (array $c) => $c['required'] && ! $c['done'])) {
                 return ['ok' => false, 'code' => 'setup_incomplete', 'checks' => $checks];
             }

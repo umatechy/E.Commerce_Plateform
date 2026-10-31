@@ -84,6 +84,12 @@ final class AppServiceProvider extends ServiceProvider
             \App\Domain\DataProtection\Services\Rehearsal\RehearsalTarget::class,
             \App\Domain\DataProtection\Services\Rehearsal\MysqlRehearsalTarget::class,
         );
+        // Phase S2: DNS lookups for customers' domains (TXT ownership, A address). It was never
+        // bound, so domain verification over HTTP failed with a container error since B14.
+        $this->app->bind(
+            \App\Domain\Domains\Services\DnsResolverContract::class,
+            \App\Domain\Domains\Services\SystemDnsResolver::class,
+        );
     }
 
     public function boot(): void

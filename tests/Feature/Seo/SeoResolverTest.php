@@ -67,14 +67,10 @@ final class SeoResolverTest extends TestCase
 
         $seo = app(SeoResolver::class)->forProduct($product);
 
-        // Since Phase B14 the canonical URL is built from the store's own
-        // verified primary domain (every store gets one at creation);
-        // the config base URL is only a fallback. Either way it is
+        // The store's own live domain when it has one; until then (Phase S2: platform
+        // subdomains are not public) the configured base URL. Either way it is
         // server-derived — never the request's Host header.
-        $primary = \App\Domain\Domains\Models\Domain::query()->withoutTenantScope()
-            ->where('store_id', $store->id)->where('is_primary', true)->firstOrFail();
-
-        $this->assertSame("https://{$primary->normalized_hostname}/products/blue-shirt", $seo->canonicalUrl);
+        $this->assertSame('https://trusted-platform.example/my-store/products/blue-shirt', $seo->canonicalUrl);
     }
 
     public function test_default_robots_directives_are_index_and_follow(): void

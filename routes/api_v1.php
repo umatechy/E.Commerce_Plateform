@@ -67,6 +67,8 @@ Route::post('/auth/login', [AuthController::class, 'login'])->middleware('thrott
 $partnerJoin = \App\Domain\Resellers\Http\Controllers\PartnerJoinController::class;
 Route::post('/partner/applications', [$partnerJoin, 'apply'])->middleware('throttle:3,10,partner-apply');
 // Phase S1 (owner decision 2026-10-30): the platform is closed to sign-up; businesses ask Umar Techy for a store.
+// Phase S2: the shop's proxy asks before it requests a certificate for a customer's domain.
+Route::get('/public/tls-allowed', \App\Domain\Domains\Http\Controllers\TlsAllowedController::class)->middleware('throttle:120,1,tls-allowed');
 Route::post('/public/store-requests', [\App\Domain\Tenancy\Http\Controllers\StoreRequestController::class, 'submit'])->middleware('throttle:3,10,store-request');
 Route::post('/partner/invitations/lookup', [$partnerJoin, 'invitation'])->middleware('throttle:20,1,partner-invitation');
 Route::post('/partner/invitations/register', [$partnerJoin, 'register'])->middleware('throttle:5,1,partner-register');
@@ -495,6 +497,7 @@ Route::middleware(['auth:sanctum', 'session.track', 'staff.principal', 'required
     Route::post('/domains', [DomainController::class, 'store']);
     Route::post('/domains/{domain}/verification', [DomainController::class, 'initiateVerification']);
     Route::post('/domains/{domain}/verify', [DomainController::class, 'verify']);
+    Route::post('/domains/{domain}/check', [DomainController::class, 'check'])->middleware('throttle:20,1,domain-check'); // Phase S2
     Route::post('/domains/{domain}/primary', [DomainController::class, 'setPrimary']);
     Route::delete('/domains/{domain}', [DomainController::class, 'destroy']);
 

@@ -37,6 +37,11 @@ final class DomainVerificationServiceTest extends TestCase
             {
                 return $this->answers[$hostname] ?? [];
             }
+
+            public function lookupARecords(string $hostname): array
+            {
+                return [];
+            }
         };
     }
 

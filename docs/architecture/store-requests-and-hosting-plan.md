@@ -45,12 +45,44 @@ features; the store keeps its ID), §51 "Hosting migration", Module 04 §51.
 - `store_requests` is a platform table; a request linked to a store is purged
   with the store (StoreDataMap).
 
-## S2 — the customer's domain on Umar Techy hosting (next)
+## S2 — the customer's domain on Umar Techy hosting
 
-Separate IPv4 for the shop, its own TLS-terminating proxy that issues and
-renews a certificate for each verified domain, a private preview for the team
-and the owner while the store is being built, and no public platform
-subdomains.
+### S2a — the application (done)
+
+- **Steps to live** (`DomainConnectionService`): ownership (TXT record) →
+  address (the domain's A record is exactly `domains.shop_ipv4`, env
+  `SHOP_PUBLIC_IPV4`) → certificate (an HTTPS request with TLS verified
+  completes) → the domain is Active, and the store's address if it has no live
+  one. `domains:check-connections` runs every five minutes (domains on their way
+  at most every ten minutes each, live ones daily); "Check now" asks at once.
+- **Settings → Domains** shows those steps with the records to copy. Platform
+  subdomains are no longer listed.
+- **`GET /api/v1/public/tls-allowed?domain=`** answers the proxy's on-demand TLS
+  question: 200 only for a customer's domain with proven ownership (and its
+  `www.` form); 404 otherwise, so certificates cannot be requested for other names.
+- **Public on its own domain only:** platform subdomains are records, never
+  served or linked (`PLATFORM_SUBDOMAINS_PUBLIC`, default off). An open store's
+  `/shop/<slug>` address forwards (301) to its live domain; `www.` forwards to
+  the domain. Before launch the store is seen only by its team: that is the
+  private preview.
+- **Launch requires the domain** (`platform.custom_domain_required`, default on):
+  live with its certificate. `demo:store`, which refuses to run in production,
+  is exempt.
+- **Two earlier defects fixed:** `DnsResolverContract` was never bound, so domain
+  verification over HTTP failed since B14; and canonical URLs and email links
+  pointed at platform subdomains that production never served.
+
+### S2b — the server (needs the owner's decision)
+
+Found on the server: School ERP's Nginx publishes ports 80 and 443 on **every**
+address (`0.0.0.0`), so a second IP on the same server cannot reach a separate
+proxy on those ports unless ERP's published ports are limited to its own IP —
+which changes ERP's Compose file and recreates its Nginx container (seconds of
+ERP downtime). The options are in the phase report; nothing on the server has
+been changed for S2.
+
+**Until S2b is live no new store can launch** with the setting on, because no
+domain can reach its certificate: deploy S2a together with S2b.
 
 ## S3 — hosting choice and charges
 

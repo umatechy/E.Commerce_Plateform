@@ -163,6 +163,7 @@ final class StoreOnboardingTest extends TestCase
     public function test_a_store_goes_live_only_after_its_first_payment_when_umar_techy_requires_it(): void
     {
         $this->platform('platform.launch_requires_payment', true);
+        $this->platform('platform.custom_domain_required', false); // this test is about the payment (the domain has its own tests)
         $this->register()->assertCreated();
         $owner = User::query()->where('email', 'ayesha@example.com')->firstOrFail();
         $store = Store::query()->firstOrFail();
@@ -198,13 +199,16 @@ final class StoreOnboardingTest extends TestCase
         $setup = $this->actingAs($owner)->getJson('/api/v1/storefront/setup')->assertOk()->json('data');
         $keys = array_column($setup['checks'], 'key');
         $this->assertNotContains('payment', $keys, 'payment before launch is off by default');
-        $this->assertSame(['business_info', 'products'], $setup['blocking']);
+        // Phase S2: the store's own domain, live, is required before launch.
+        $this->assertSame(['business_info', 'products', 'domain'], $setup['blocking']);
         $this->assertSame(['essentials', 'operations', 'growth'], array_values(array_unique(array_column($setup['checks'], 'group'))));
         $this->assertSame($setup['progress']['total'], count($keys));
         $this->assertSame((int) floor($setup['progress']['done'] * 100 / $setup['progress']['total']), $setup['progress']['percent']);
 
-        // A package without custom domains does not show that step (Module 03 §58).
+        // A package without custom domains does not show that step (Module 03 §58) — when Umar Techy
+        // does not require a store's own domain (Phase S2 requires it by default, for every package).
         $this->assertContains('domain', $keys);
+        $this->platform('platform.custom_domain_required', false);
         $store = Store::query()->firstOrFail();
         $package = Subscription::query()->withoutTenantScope()->where('store_id', $store->id)->firstOrFail()->package;
         $package->entitlements()->updateOrCreate(['key' => 'domains.custom_domain'], ['type' => EntitlementType::Feature, 'boolean_value' => false]);

@@ -24,6 +24,13 @@ final class TenantContextDomainIntegrationTest extends TestCase
 {
     use RefreshDatabase;
 
+    /** These requests use the store's platform subdomain, as when such subdomains are public (Phase S2 keeps them off by default). */
+    protected function setUp(): void
+    {
+        parent::setUp();
+        config(['domains.platform_subdomains_public' => true]);
+    }
+
     public function test_a_request_with_a_matching_verified_domain_host_resolves_that_store(): void
     {
         $store = Store::factory()->create(['slug' => 'my-shop']);

@@ -45,6 +45,12 @@ final class SettingRegistry
                 key: 'platform.self_signup_enabled', scope: SettingScope::Platform, type: SettingType::Boolean,
                 default: true,
             ),
+            // Phase S2 (owner decision 2026-10-31): a store goes public only on its own domain,
+            // so it launches only once that domain is live.
+            'platform.custom_domain_required' => new SettingDefinition(
+                key: 'platform.custom_domain_required', scope: SettingScope::Platform, type: SettingType::Boolean,
+                default: true,
+            ),
             'platform.launch_requires_payment' => new SettingDefinition(
                 key: 'platform.launch_requires_payment', scope: SettingScope::Platform, type: SettingType::Boolean,
                 default: false,

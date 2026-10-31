@@ -31,7 +31,8 @@ final class StorefrontWebTest extends TestCase
             ->has('sections'));
         $html = $response->getContent();
         $this->assertStringContainsString('<title inertia>Acme Outfitters</title>', $html);
-        $this->assertStringContainsString('<link rel="canonical" href="https://'.$store->slug.'.', $html);
+        // Phase S2: no live domain of its own yet, so the platform address (platform subdomains are not public).
+        $this->assertStringContainsString('<link rel="canonical" href="'.rtrim((string) config('seo.storefront_base_url'), '/').'/'.$store->slug.'"', $html);
         $this->assertStringContainsString('"@type":"Organization"', $html);
     }
 

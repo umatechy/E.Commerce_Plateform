@@ -44,6 +44,11 @@ final class ResolveStorefrontStore
 
     public function handle(Request $request, Closure $next, string $mode = 'api'): Response
     {
+        // Phase S2: "www." in front of a customer's domain goes to the domain itself.
+        if ($mode === 'host' && ($alias = $this->domains->wwwAliasOf($request->getHost())) !== null) {
+            return redirect()->away('https://'.$alias->normalized_hostname.$request->getRequestUri(), 301);
+        }
+
         $store = match ($mode) {
             'path' => Store::query()->where('slug', (string) $request->route('storeSlug'))->first(),
             'host' => $this->domains->resolveHost($request->getHost()),
@@ -70,6 +75,14 @@ final class ResolveStorefrontStore
         app(\App\Domain\Storefront\Services\StorefrontLocale::class)->resolve($request, (string) $request->attributes->get('storefront.base_path'));
 
         $availability = $this->gate->availability($store);
+        // Phase S2 (owner decision 2026-10-31): an open store is public on its own domain only;
+        // its platform address forwards there once the domain is live with its certificate.
+        if ($mode === 'path' && $availability === StorefrontAvailability::Open && ($own = $this->domains->primaryDomainFor($store)) !== null
+            && $own->ssl_status === \App\Domain\Domains\Models\SslStatus::Active) {
+            $rest = (string) preg_replace('#^/shop/'.preg_quote($store->slug, '#').'#', '', $request->getRequestUri());
+
+            return redirect()->away('https://'.$own->normalized_hostname.($rest === '' ? '/' : $rest), 301);
+        }
         $preview = $availability === StorefrontAvailability::NotLaunched && $mode !== 'api' && $this->isStaffOf($request, $store);
         $request->attributes->set('storefront.preview', $preview);
 

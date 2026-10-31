@@ -24,6 +24,10 @@ final class DomainResource extends JsonResource
             'is_primary' => $this->is_primary,
             'ssl_status' => $this->ssl_status->value,
             'verified_at' => $this->verified_at?->toIso8601String(),
+            // Phase S2: where the domain stands on its way to going live.
+            'dns_status' => $this->dns_status,
+            'dns_checked_at' => $this->dns_checked_at?->toIso8601String(),
+            'ssl_checked_at' => $this->ssl_checked_at?->toIso8601String(),
         ];
     }
 }

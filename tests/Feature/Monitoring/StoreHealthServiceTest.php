@@ -38,6 +38,7 @@ final class StoreHealthServiceTest extends TestCase
         $store = Store::factory()->create(['status' => 'active']);
         Subscription::factory()->for($store)->for($package ?? Package::factory()->create())->create(['status' => SubscriptionStatus::Active]);
         Backup::factory()->create(['store_id' => $store->id, 'verified_at' => now()->subHour()]);
+        \App\Domain\Domains\Models\Domain::factory()->create(['store_id' => $store->id, 'domain_type' => 'custom_domain', 'status' => 'active', 'ssl_status' => 'active', 'is_primary' => true]);
         app(TenantContext::class)->resolveToStore($store->id);
 
         return $store;
@@ -140,6 +141,14 @@ final class StoreHealthServiceTest extends TestCase
 
         $this->assertSame('ok', $check['status']);
         $this->assertSame([], $check['metrics']['limits']);
+    }
+
+    public function test_a_store_without_its_own_domain_yet_is_a_warning(): void
+    {
+        $store = $this->healthyStore();
+        \App\Domain\Domains\Models\Domain::query()->where('domain_type', 'custom_domain')->delete();
+
+        $this->assertSame('warning', $this->check($this->evaluate($store), 'domains')['status']);
     }
 
     public function test_a_store_without_an_active_primary_domain_is_critical(): void

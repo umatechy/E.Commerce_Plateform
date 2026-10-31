@@ -77,3 +77,5 @@ Schedule::command('resellers:follow-up')->hourly()->withoutOverlapping();
 Schedule::command('loyalty:follow-up')->everyFifteenMinutes()->withoutOverlapping();
 // Phase P4b: automatic marketing messages that are due (welcome, post-purchase, win-back, birthday). Idempotent.
 Schedule::command('marketing:automations')->hourly()->withoutOverlapping();
+// Phase S2: customers' domains — ownership, address, certificate; live when ready.
+Schedule::command('domains:check-connections')->everyFiveMinutes()->withoutOverlapping();

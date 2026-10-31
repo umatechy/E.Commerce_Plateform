@@ -100,6 +100,10 @@ final class StorefrontAvailabilityTest extends TestCase
         // Phase B44: business information is a launch requirement too (Module 03 §25).
         $this->assertFalse($checks['business_info']['done']);
         $this->actingAs($owner)->putJson('/api/v1/store/settings/store.contact_email', ['value' => 'hello@example.com'])->assertOk();
+        // Phase S2: not without its own domain, live with its certificate.
+        $this->actingAs($owner)->postJson('/api/v1/storefront/launch')->assertStatus(422)->assertJsonPath('code', 'setup_incomplete');
+        \App\Domain\Domains\Models\Domain::query()->withoutTenantScope()->create(['store_id' => $store->id, 'hostname' => 'acme-shop.pk', 'normalized_hostname' => 'acme-shop.pk',
+            'domain_type' => 'custom_domain', 'status' => 'active', 'ssl_status' => 'active', 'is_primary' => true, 'verified_at' => now()]);
         $this->actingAs($owner)->postJson('/api/v1/storefront/launch')
             ->assertOk()->assertJsonPath('data.launched', true)->assertJsonPath('data.availability', 'open');
 

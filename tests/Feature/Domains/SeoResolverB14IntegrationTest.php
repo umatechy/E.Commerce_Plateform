@@ -25,6 +25,13 @@ final class SeoResolverB14IntegrationTest extends TestCase
 {
     use RefreshDatabase;
 
+    /** B14's platform subdomains, as when they are public (Phase S2 keeps them off by default). */
+    protected function setUp(): void
+    {
+        parent::setUp();
+        config(['domains.platform_subdomains_public' => true]);
+    }
+
     public function test_canonical_url_uses_the_verified_primary_domain_not_the_placeholder(): void
     {
         $store = Store::factory()->create(['slug' => 'my-shop']);

@@ -37,6 +37,7 @@ final class Domain extends Model
         'store_id', 'hostname', 'normalized_hostname', 'domain_type', 'status',
         'is_primary', 'verification_token', 'verification_token_expires_at',
         'verified_at', 'ssl_status',
+        'dns_status', 'dns_checked_at', 'ssl_checked_at', // Phase S2
     ];
 
     protected $hidden = ['verification_token'];
@@ -50,6 +51,8 @@ final class Domain extends Model
             'is_primary' => 'boolean',
             'verification_token_expires_at' => 'datetime',
             'verified_at' => 'datetime',
+            'dns_checked_at' => 'datetime',
+            'ssl_checked_at' => 'datetime',
         ];
     }
 }

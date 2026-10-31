@@ -184,7 +184,8 @@ final class CreateDemoStoreCommand extends Command
         }
 
         $customer = Customer::query()->create(['name' => 'Demo Customer', 'email' => $customerEmail, 'password' => $customerPassword]);
-        $launch = $setup->launch($store);
+        // A demo store opens at /shop/<slug>: it has no domain of its own (Phase S2).
+        $launch = $setup->launch($store, exceptOwnDomain: true);
         $content->dressLanguages($owner->id);
         $content->dressMerchandising($owner->id);
         $theme = $this->dress($store, $owner->id, $content);

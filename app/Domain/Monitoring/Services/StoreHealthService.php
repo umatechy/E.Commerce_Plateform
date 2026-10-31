@@ -223,6 +223,12 @@ final class StoreHealthService
         ];
 
         if ($primary === null) {
+            // Phase S2: a store without its own domain yet is a step to finish; a domain that stopped is an outage.
+            $stopped = $customDomains->contains(fn (Domain $domain) => $domain->is_primary && in_array($domain->status, [DomainStatus::Suspended, DomainStatus::Disabled], true));
+            if (! $stopped && ! config('domains.platform_subdomains_public')) {
+                return new HealthCheckResult('domains', HealthStatus::Warning, 'The store has no live domain of its own yet, so it is not public on its own address.', $metrics);
+            }
+
             return new HealthCheckResult('domains', HealthStatus::Critical, 'The storefront has no active primary domain, so it cannot be reached.', $metrics);
         }
 

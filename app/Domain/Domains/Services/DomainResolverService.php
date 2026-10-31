@@ -41,7 +41,7 @@ final class DomainResolverService
             ->where('normalized_hostname', $normalized)
             ->first();
 
-        if ($domain === null || ! $domain->status->resolvesTraffic()) {
+        if ($domain === null || ! $domain->status->resolvesTraffic() || ! self::servable($domain)) {
             return null;
         }
 
@@ -55,6 +55,34 @@ final class DomainResolverService
             ->where('store_id', $store->id)
             ->where('is_primary', true)
             ->where('status', DomainStatus::Active->value)
+            ->when(! config('domains.platform_subdomains_public'), fn ($q) => $q->where('domain_type', \App\Domain\Domains\Models\DomainType::CustomDomain->value))
             ->first();
+    }
+
+    /**
+     * Phase S2: the customer's own domain with "www." in front (redirected to the domain).
+     * Returns the domain the host stands for, or null.
+     */
+    public function wwwAliasOf(string $rawHost): ?Domain
+    {
+        $host = strtolower($rawHost);
+        if (! str_starts_with($host, 'www.')) {
+            return null;
+        }
+        try {
+            $normalized = $this->normalizer->normalize(substr($host, 4));
+        } catch (\App\Domain\Domains\Exceptions\InvalidHostnameException) {
+            return null;
+        }
+        $domain = Domain::query()->withoutTenantScope()->where('normalized_hostname', $normalized)
+            ->where('domain_type', \App\Domain\Domains\Models\DomainType::CustomDomain->value)->first();
+
+        return $domain !== null && $domain->status->resolvesTraffic() ? $domain : null;
+    }
+
+    /** Phase S2: platform subdomains are records only, never served, unless turned on. */
+    private static function servable(Domain $domain): bool
+    {
+        return $domain->domain_type !== \App\Domain\Domains\Models\DomainType::PlatformSubdomain || (bool) config('domains.platform_subdomains_public');
     }
 }

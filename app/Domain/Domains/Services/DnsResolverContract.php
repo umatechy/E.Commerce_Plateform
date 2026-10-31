@@ -15,4 +15,7 @@ interface DnsResolverContract
 {
     /** @return list<string> every TXT record value found for $hostname, or an empty list if none/lookup failed */
     public function lookupTxtRecords(string $hostname): array;
+
+    /** @return list<string> every IPv4 address (A record) found for $hostname, or an empty list if none/lookup failed (Phase S2) */
+    public function lookupARecords(string $hostname): array;
 }
