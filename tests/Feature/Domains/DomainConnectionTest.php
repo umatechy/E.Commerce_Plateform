@@ -135,7 +135,7 @@ final class DomainConnectionTest extends TestCase
         [$store] = $this->store();
         $subdomain = $store->slug.'.'.config('domains.platform_base_domain');
         // Platform subdomains are records only.
-        $this->get("http://{$subdomain}/")->assertNotFound();
+        $this->withoutVite()->get("http://{$subdomain}/")->assertNotFound();
 
         Domain::query()->withoutTenantScope()->create(['store_id' => $store->id, 'hostname' => 'roseattars.pk', 'normalized_hostname' => 'roseattars.pk', 'domain_type' => 'custom_domain',
             'status' => 'active', 'ssl_status' => 'active', 'is_primary' => true, 'verified_at' => now()]);
@@ -143,7 +143,7 @@ final class DomainConnectionTest extends TestCase
 
         $this->get("/shop/{$store->slug}/products?sort=newest")->assertRedirect('https://roseattars.pk/products?sort=newest')->assertStatus(301);
         $this->get('http://www.roseattars.pk/products/blue')->assertRedirect('https://roseattars.pk/products/blue')->assertStatus(301);
-        $this->withoutVite()->get('http://roseattars.pk/')->assertOk();
+        $this->get('http://roseattars.pk/')->assertOk();
         // The shop's API keeps working by slug (checkout, cart).
         $this->getJson('/api/v1/storefront/products', ['X-Store-Slug' => $store->slug])->assertOk();
 
