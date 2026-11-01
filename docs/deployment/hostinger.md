@@ -75,6 +75,23 @@ removed before real customers' data arrives here, and they are kept up to date.
 The databases `u511003721_shop` and `u511003721_rehearsal` exist. hPanel lists
 them under `umartechy.com`.
 
+## Open risk: Hostinger's firewall can block buyers (blocks a decision to move)
+
+Found in the pilot. The owner's home connection cannot reach any site on the
+account, while mobile data can, and `store.umartechy.com` on Hetzner opens from
+that same connection. Hostinger's support agent answered on 2026-11-01:
+
+- The client IP is blocked by Hostinger's firewall for a high abuse score, and no
+  exception or whitelist is allowed while the score stays high.
+- A legitimate buyer can be blocked the same way, especially on a shared IP.
+- The owner generally cannot see or remove these blocks for visitors.
+- Behind CGNAT, everyone sharing the blocked address is affected.
+- A CDN proxy in front of the storefront "can reduce exposure". Not tested.
+
+A blocked buyer sees a timeout, not an error, and the platform never hears of it.
+How many buyers this would touch is unknown. The same applies to staff using the
+admin. No application code can change it.
+
 ## Pilot results (2026-11-01, an almost empty database)
 
 | Checked on the server | Result |
