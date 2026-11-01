@@ -10,6 +10,9 @@ NAME="$(basename "$FILE" .tar.gz)"
 RELEASE="$SHOP/releases/$NAME"
 
 [ -f "$SHOP/shared/.env" ] || { echo "$SHOP/shared/.env is missing."; exit 1; }
+# The web server must pass through these folders; .env itself stays 600.
+chmod 711 "$SHOP" "$SHOP/shared"
+chmod 600 "$SHOP/shared/.env"
 mkdir -p "$RELEASE"
 tar -xzf "$FILE" -C "$RELEASE"
 mkdir -p "$SHOP/shared/storage/app/public" "$SHOP/shared/storage/framework/cache" "$SHOP/shared/storage/framework/sessions" "$SHOP/shared/storage/framework/views" "$SHOP/shared/storage/logs"

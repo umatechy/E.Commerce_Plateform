@@ -1,8 +1,8 @@
 # Running on Hostinger shared hosting (Business Web Hosting)
 
-Status: **prepared, not yet run on a real account.** Everything marked "pilot"
-below is unproven until the pilot passes. The Hetzner deployment
-(`production.md`) stays live until the owner approves a move.
+Status: **pilot running on `shop-test.umartechy.com` since 2026-11-01** (see
+"Pilot results"). The Hetzner deployment (`production.md`) stays live until the
+owner approves a move.
 
 ## Limits read from the owner's hPanel (2026-10-31)
 
@@ -24,7 +24,9 @@ website must be checked itself; `php artisan hosting:preflight` does that.
 documents it as disabled by default on newly created accounts, so if it appears
 on the shop's website it has to be removed from the list.
 
-Not yet known: the database engine and version.
+The database is **MariaDB 11.8.9**. The shell's `php` is 8.2: use
+`/opt/alt/php83/usr/bin/php` (`~/shop/shared/php-bin`). `crontab` does not exist
+here; cron entries are made in hPanel.
 
 A release (`build-release.sh`) measured 18.3 MB and 16,713 files, so one copy takes
 about 17K inodes, and each kept release as many again.
@@ -73,6 +75,26 @@ removed before real customers' data arrives here, and they are kept up to date.
 The databases `u511003721_shop` and `u511003721_rehearsal` exist. hPanel lists
 them under `umartechy.com`.
 
+## Pilot results (2026-11-01, an almost empty database)
+
+| Checked on the server | Result |
+|---|---|
+| Migrations on MariaDB 11.8.9 | All ran |
+| `hosting:preflight` | Nothing required missing; warnings: MariaDB, local backup disk (pilot only) |
+| Website through the `public_html` link | Works once `~/shop` and `~/shop/shared` are 711 |
+| Certificate | Let's Encrypt, issued by hPanel, valid |
+| Browser: home and login | No errors, no failed requests |
+| `.env`, logs, `composer.json`, `artisan`, deploy files over HTTP | 403 or 404 |
+| `schedule:run` by hand; queue emptied | Worked, none failed |
+| Encrypted backup, verification | Verified |
+| Restore rehearsal | All 6 checks passed; prepared database emptied |
+
+The whole backend suite also passes on MariaDB 11.8 in CI (`backend-mariadb`).
+
+Not proven yet: the cron entry itself, a customer's domain as a second website,
+speed under load, and backup and restore at real data sizes (RTO). The test
+database is tiny, so its 8-second rehearsal says nothing about the RTO.
+
 ## Pilot
 
 Run on a throw-away website and database. Hetzner and the WordPress sites are
@@ -84,6 +106,8 @@ not touched.
    `sh deploy/hostinger/build-release.sh`, then `scp -P <port> shop-<sha>.tar.gz <user>@<ip>:~/`
 3. On the server: `mkdir -p ~/shop/shared && tar -xzf ~/shop-<sha>.tar.gz -C ~/shop/shared ./deploy/hostinger`,
    copy `deploy/hostinger/env.hostinger.example` to `~/shop/shared/.env`, and fill it in there.
+   Passwords go in with `sh ~/shop/shared/deploy/hostinger/set-secret.sh DB_PASSWORD`,
+   typed by the owner in hPanel's terminal.
 4. `sh ~/shop/shared/deploy/hostinger/activate.sh ~/shop-<sha>.tar.gz`, then read
    every line of `hosting:preflight`.
 5. Link `public_html` as in step 3 of "Each customer's domain".
