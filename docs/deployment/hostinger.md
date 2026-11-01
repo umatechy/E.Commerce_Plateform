@@ -77,7 +77,7 @@ them under `umartechy.com`.
 
 ## Open risk: Hostinger's firewall can block buyers (blocks a decision to move)
 
-Found in the pilot. The owner's home connection cannot reach any site on the
+Found in the pilot. The office WiFi connection cannot reach any site on the
 account, while mobile data can, and `store.umartechy.com` on Hetzner opens from
 that same connection. Hostinger's support agent answered on 2026-11-01:
 
