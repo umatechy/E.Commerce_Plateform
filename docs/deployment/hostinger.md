@@ -87,6 +87,8 @@ that same connection. Hostinger's support agent answered on 2026-11-01:
 - The owner generally cannot see or remove these blocks for visitors.
 - Behind CGNAT, everyone sharing the blocked address is affected.
 - A CDN proxy in front of the storefront "can reduce exposure". Not tested.
+- A Hostinger VPS is behind the same network filtering: such a block happens before
+  traffic reaches the VPS and cannot be seen or removed from it (same agent).
 
 A blocked buyer sees a timeout, not an error, and the platform never hears of it.
 How many buyers this would touch is unknown. The same applies to staff using the
