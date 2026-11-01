@@ -206,10 +206,20 @@ minutes; build outside ERP's busy hours.
 ## Known on rc.4: outbox events are not consumed
 
 The running worker reads only the `default` queue, while outbox events wait on
-`outbox`. Checked on the server on 2026-10-31 (read-only): 26 jobs waiting on
-`outbox`, and the worker's command has no `--queue`. Fixed in the repository
-(033a2f6), not deployed. **On the first deployment with the fix those 26 run**,
-so whatever they would send has to be looked at first.
+`outbox`, and its command has no `--queue`. Fixed in the repository (033a2f6), not
+deployed.
+
+Checked on the server on 2026-11-01 (read-only): 31 events, all still `processing`,
+from 2026-10-24 on; **none has ever been delivered.** Critical alerts go through the
+outbox (`CriticalAlertNotifier`), so **no security or backup alert has reached anyone
+from production.** The count grows daily.
+
+**On the first deployment with the fix they all run.** Expect, at least: 2
+`billing.invoice_issued` (invoice emails to the owners of stores 1 and 2, unless the
+total is 0), 2 `security.alert` of 2026-10-24 and 1 `backup.overdue` of 2026-11-01
+(alerts to the operators, now old). The rest are `setting.changed`, `store.created`,
+`catalog.starter_template_applied`, `backup.requested` and `backup.verified`.
+The store has 0 customers and 0 orders, so no shopper receives anything.
 
 ## 9. Not part of the first launch
 

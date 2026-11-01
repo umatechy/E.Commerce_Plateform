@@ -104,13 +104,13 @@ admin. No application code can change it.
 | Certificate | Let's Encrypt, issued by hPanel, valid |
 | Browser: home and login | No errors, no failed requests |
 | `.env`, logs, `composer.json`, `artisan`, deploy files over HTTP | 403 or 404 |
-| `schedule:run` by hand; queue emptied | Worked, none failed |
+| The hPanel cron entry alone | Ran a queued job about 40 seconds after it was queued |
 | Encrypted backup, verification | Verified |
 | Restore rehearsal | All 6 checks passed; prepared database emptied |
 
 The whole backend suite also passes on MariaDB 11.8 in CI (`backend-mariadb`).
 
-Not proven yet: the cron entry itself, a customer's domain as a second website,
+Not proven yet: a customer's domain as a second website,
 speed under load, and backup and restore at real data sizes (RTO). The test
 database is tiny, so its 8-second rehearsal says nothing about the RTO.
 
