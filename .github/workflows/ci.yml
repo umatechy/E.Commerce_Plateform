@@ -70,6 +70,67 @@ jobs:
           DB_PASSWORD: ""
           REDIS_HOST: 127.0.0.1
 
+  # Phase H1: Hostinger shared hosting runs MariaDB 11.8, not MySQL 8. The same
+  # migrations and tests, on that engine, with its client for the backup tests.
+  backend-mariadb:
+    runs-on: ubuntu-24.04
+    services:
+      mariadb:
+        image: mariadb:11.8
+        env:
+          MARIADB_ALLOW_EMPTY_ROOT_PASSWORD: "1"
+          MARIADB_DATABASE: umartechy_ecommerce_test
+        ports: ["3306:3306"]
+        options: >-
+          --health-cmd="healthcheck.sh --connect --innodb_initialized" --health-interval=10s --health-timeout=5s --health-retries=10
+      redis:
+        image: redis:7
+        ports: ["6379:6379"]
+        options: >-
+          --health-cmd="redis-cli ping" --health-interval=10s --health-timeout=5s --health-retries=5
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.3"
+          extensions: mbstring, pdo_mysql, redis, gd, zip, sodium
+          coverage: none
+
+      - name: MariaDB client
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq mariadb-client
+          mysql --version
+          mysql -h 127.0.0.1 -u root -e "SELECT VERSION()"
+
+      - name: Install Composer dependencies
+        run: composer install --no-interaction --prefer-dist --optimize-autoloader
+
+      - name: Copy .env
+        run: cp .env.example .env
+
+      - name: Generate app key
+        run: php artisan key:generate
+
+      - name: Run migrations (test DB)
+        run: php artisan migrate --force
+        env:
+          DB_HOST: 127.0.0.1
+          DB_DATABASE: umartechy_ecommerce_test
+          DB_USERNAME: root
+          DB_PASSWORD: ""
+
+      - name: PHPUnit / Laravel Feature Tests
+        run: php artisan test
+        env:
+          DB_HOST: 127.0.0.1
+          DB_DATABASE: umartechy_ecommerce_test
+          DB_USERNAME: root
+          DB_PASSWORD: ""
+          REDIS_HOST: 127.0.0.1
+
   # SRS SEC-013 / SEC-014, Module 32 §48 (Phase B29): known-vulnerability
   # scan of the dependencies. A finding fails the build.
   security:
