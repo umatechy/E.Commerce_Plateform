@@ -57,7 +57,7 @@ final class MysqlRehearsalTarget implements RehearsalTarget
             $created = true;
 
             $started = hrtime(true);
-            $this->client->run('mysql', [$database, '-e', 'source '.MysqlClient::sourcePath($plainSqlPath)], 'the dump could not be imported', $account);
+            $this->client->import($database, $plainSqlPath, 'the dump could not be imported', $account);
             $importMs = (int) ((hrtime(true) - $started) / 1_000_000);
 
             $started = hrtime(true);

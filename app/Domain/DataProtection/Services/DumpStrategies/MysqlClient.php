@@ -39,9 +39,10 @@ final class MysqlClient
      * @param 'mysqldump'|'mysql' $binary
      * @param list<string> $arguments
      * @param array<string, string> $as another account on the server: username, password
+     * @param resource|null $input what the binary reads from standard input
      * @throws BackupIntegrityException when the binary cannot run or exits non-zero
      */
-    public function run(string $binary, array $arguments, string $failure, array $as = []): ProcessResult
+    public function run(string $binary, array $arguments, string $failure, array $as = [], $input = null): ProcessResult
     {
         $config = [...$this->connection(), ...$as];
         $credentialsFile = tempnam(sys_get_temp_dir(), 'mysql_cnf_') ?: throw new BackupIntegrityException('A working file could not be created.');
@@ -56,7 +57,7 @@ final class MysqlClient
         @chmod($credentialsFile, 0600);
 
         try {
-            $result = Process::timeout((int) config('backup.process_timeout', 3600))->env($this->environment())->run([
+            $result = Process::timeout((int) config('backup.process_timeout', 3600))->env($this->environment())->input($input)->run([
                 (string) config("backup.binaries.{$binary}", $binary),
                 '--defaults-extra-file='.$credentialsFile,
                 ...$arguments,
@@ -93,10 +94,26 @@ final class MysqlClient
         return ['SystemRoot' => $root];
     }
 
-    /** A path the mysql client's `source` command accepts on every platform. */
-    public static function sourcePath(string $path): string
+    /**
+     * Imports a dump through the client's standard input, not its `source`
+     * command: MariaDB's client exits 0 when a sourced file fails, so a broken
+     * import would look like a good one. On standard input both clients stop
+     * at the first error and exit non-zero.
+     *
+     * @param array<string, string> $as
+     * @throws BackupIntegrityException
+     */
+    public function import(string $database, string $file, string $failure, array $as = []): void
     {
-        return str_replace('\\', '/', $path);
+        $input = @fopen($file, 'rb') ?: throw new BackupIntegrityException("{$failure}: the file could not be opened.");
+
+        try {
+            $this->run('mysql', [$database], $failure, $as, $input);
+        } finally {
+            if (is_resource($input)) {
+                fclose($input);
+            }
+        }
     }
 
     /** @param array<string, string> $as */
